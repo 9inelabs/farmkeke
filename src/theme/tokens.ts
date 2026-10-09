@@ -1,97 +1,88 @@
+// Design tokens taken from the Farmkeke Figma frames (390 x 844) and the PRD
+// palette. Every screen uses these; avoid raw values in components.
+
 export const colors = {
-  harvestGreen: '#3F7A52', // primary actions
-  terracotta: '#C97C4B', // accent (wordmark)
-  warmCream: '#F7F1E6', // app background
-  deepSoil: '#2A2420', // primary text, dark pills
-  goldenWheat: '#E0A63D', // decorative accent ONLY — see note
-
-  // Accessible variant of goldenWheat for text on cream.
-  // goldenWheat on warmCream is 1.93:1 and fails WCAG AA.
-  // This is 5.01:1. Use for all warning/helper copy.
-  goldenWheatText: '#8A5F10',
-
-  surface: '#FFFFFF', // input fields
-  skeleton: '#EAE2D4', // skeleton base
-  skeletonHi: '#F4EEE2', // skeleton shimmer highlight
-  textPrimary: '#2A2420',
-  textMuted: '#6B625B',
-  danger: '#B3261E',
+  forest: "#1E3B16",
+  lime: "#A9D654",
+  tint: "#F2F8E6",
+  white: "#FFFFFF",
+  ink: "#1A1A1A",
+  // Figma uses ink at 70% / 50% opacity for secondary and tertiary text
+  inkSoft: "rgba(26, 26, 26, 0.7)",
+  inkMuted: "rgba(26, 26, 26, 0.5)",
+  // Forest at 30%: placeholder text and inactive icons
+  forestFaint: "rgba(30, 59, 22, 0.3)",
+  line: "#DFDFDF",
+  placeholder: "#D9D9D9",
+  surfaceMuted: "#F7F7F7",
+  stepperTrack: "#EFEEEE",
+  // Scrim behind bottom sheets (Figma: #2C2C2C at 76%)
+  scrim: "rgba(44, 44, 44, 0.76)",
+  // Product card fill: tint at 25%
+  cardFill: "rgba(242, 248, 230, 0.25)",
+  success: "#2F9E44",
+  error: "#D64545",
+  pending: "#E6A23C",
+  // Notification badge red (Alerts pill)
+  badge: "#E90303",
+  successSoft: "#E6F4E9",
+  errorSoft: "#FBEAEA",
+  pendingSoft: "#FDF3E3",
 } as const;
 
-// 8pt spacing scale. Keyed by the raw point value (not semantic tiers like
-// sm/md/lg) so nothing beyond what's specified in the design doc is invented.
 export const spacing = {
-  4: 4,
-  8: 8,
-  12: 12,
-  16: 16,
-  20: 20,
-  24: 24,
-  32: 32,
-  40: 40,
-  48: 48,
+  xxs: 4,
+  xs: 6,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  // Horizontal screen margin in every Figma frame
+  screen: 20,
 } as const;
 
-// Geometry measured from the reference SVGs (section 2 of the build spec).
-export const geometry = {
-  screenPaddingButtons: 20,
-  screenPaddingInputs: 36,
-  primaryButton: {
-    height: 60,
-    radius: 30,
-  },
-  // Fill is harvestGreen at 20% (the design frame's own
-  // fill-opacity="0.2"), with a deepSoil label — NOT a green one. Both
-  // measured off assets/design/Onboarding.svg, replacing an earlier
-  // 0.15/green-label guess.
-  secondaryButton: {
-    height: 60,
-    radius: 30,
-    opacity: 0.2,
-  },
-  // "Log Out" on welcome-back: deepSoil at 30%, which lands on the warm grey
-  // (#B9B3AB over cream) the design shows.
-  mutedButton: {
-    height: 60,
-    radius: 30,
-    opacity: 0.3,
-  },
-  textInput: {
-    height: 70,
-    radius: 25,
-  },
-  // Exact rect from the design frame: 188.5x40.5 @ r20.25, goldenWheat
-  // fill at 20% behind a 0.5pt goldenWheat stroke, 10.5 apart.
-  socialButton: {
-    height: 40.5,
-    radius: 20.25,
-    width: 188.5,
-    gap: 10.5,
-    borderWidth: 0.5,
-    opacity: 0.2,
-  },
-  signInPill: {
-    width: 90,
-    height: 39,
-    radius: 19.5,
-  },
-  // Rounded card the brand lock-up sits in on the photo backdrop. Sized from
-  // its contents (leaf + gap + wordmark = 186x38) plus the padding measured
-  // off the uploaded welcome mockup.
-  brandCard: {
-    radius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
+export const radii = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  // Buttons and input fields
+  control: 17,
+  pill: 999,
 } as const;
 
-// Converts a "#rrggbb" color token into an rgba() string at the given alpha.
-// For translucent fills (e.g. secondaryButton's 20% tint) — needed because
-// View's own `opacity` style cascades to children/text, which is not what
-// "fill X @ N% opacity" means in the design doc.
-export function withOpacity(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+export const borders = {
+  // Figma hairlines are 0.4–0.5pt
+  hairline: 0.5,
+} as const;
+
+export const sizes = {
+  buttonHeight: 48,
+  buttonHeightLarge: 54,
+  inputHeight: 56,
+  searchHeight: 58,
+  chipHeight: 36,
+  categoryTile: 63,
+  addButton: 28,
+  tabBarHeight: 64,
+  headerIconHit: 44,
+} as const;
+
+// Motion tokens from the Farmkeke Design System (PRD): ease-out by default.
+export const motion = {
+  fast: 150,
+  base: 250,
+  slow: 350,
+} as const;
+
+export const shadow = {
+  // Soft lift for floating controls (tab bar, sheets, photo badges)
+  raised: {
+    shadowColor: "#1A1A1A",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+} as const;

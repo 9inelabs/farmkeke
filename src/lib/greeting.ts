@@ -1,8 +1,7 @@
-// "Good Morning"/"Good Afternoon"/"Good Evening" — shared by both Home
-// variants' header.
-export function timeOfDayGreeting(date: Date = new Date()): string {
+/** "Good morning" / "Good afternoon" / "Good evening" for the phone's local time. */
+export function greeting(date = new Date()): string {
   const hour = date.getHours();
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  return 'Good Evening';
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }

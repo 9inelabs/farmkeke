@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "convex": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "convex", "mcp", "start"]
+    }
+  }
+}

@@ -1,28 +1,27 @@
 {
   "expo": {
-    "name": "market2pot",
-    "slug": "market2pot",
+    "name": "Farmkeke",
+    "slug": "farmkeke",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "market2pot",
+    "scheme": "farmkeke",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.market2pot.app"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.farmkeke.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F7F1E6",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.market2pot.app",
+      "package": "com.farmkeke.app",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ]
@@ -37,31 +36,31 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "backgroundColor": "#F7F1E6",
-          "imageWidth": 200
+          "backgroundColor": "#FFFFFF",
+          "imageWidth": 220
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Market2pot needs access to your photos so you can set a profile picture and add photos to your produce listings.",
-          "cameraPermission": "Market2pot needs access to your camera so you can take a profile picture and photograph your produce."
+          "photosPermission": "Farmkeke needs your photos so you can add pictures of your produce and your farm documents.",
+          "cameraPermission": "Farmkeke needs your camera so you can photograph your produce and your farm documents.",
+          "microphonePermission": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Market2pot uses your location to fill in your delivery address and show you farmers near you."
+          "locationWhenInUsePermission": "Farmkeke uses your location to show produce that can reach you and the pickup points closest to you."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      "expo-image"
     ],
     "owner": "9inelabs",
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "36c7205c-1bd8-4c86-9026-7da2d7480647"
-      }
+      "router": {}
     }
   }
 }

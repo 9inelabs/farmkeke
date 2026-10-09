@@ -3,19 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@convex/*": ["./convex/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  // Deno Edge Functions live outside this project's type-checking world —
-  // each has its own deno.json import map and Deno-global APIs (Deno.env,
-  // npm:/jsr: specifiers) that this Node/Expo tsconfig doesn't understand.
-  "exclude": [
-    "supabase/functions"
-  ]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "convex"]
 }

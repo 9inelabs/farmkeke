@@ -1,99 +1,90 @@
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import type { ComponentProps, ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  type StyleProp,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import type { LucideIcon } from "lucide-react-native";
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
+import { PressableScale } from "./PressableScale";
+import { Text } from "./Text";
 
-import { colors, geometry, withOpacity } from '@/theme/tokens';
-import { typography } from '@/theme/typography';
-
-type Variant = 'primary' | 'secondary' | 'muted';
+type Variant = "primary" | "dark" | "secondary" | "outline" | "ghost" | "danger";
 
 type Props = {
   label: string;
-  onPress: () => void;
+  onPress?: () => void;
   variant?: Variant;
-  // Dims to 40% opacity and genuinely blocks onPress (validation gates —
-  // nothing is happening, tapping just wouldn't do anything valid yet). For
-  // a button that should stay tappable but do something different while
-  // "off" (e.g. Welcome's feature-flagged buttons showing a "Coming soon"
-  // toast), don't pass disabled — just branch inside onPress instead.
-  disabled?: boolean;
-  // A request is genuinely in flight — swaps the label for a spinner (full
-  // color, not dimmed, since something IS actively happening) and blocks
-  // onPress the same as disabled. Distinct from `disabled` on purpose: a
-  // dimmed-but-static button reads as "broken" while something is loading.
+  size?: "default" | "large" | "small";
+  icon?: LucideIcon;
   loading?: boolean;
-  icon?: ComponentProps<typeof FontAwesome5>['name'];
+  disabled?: boolean;
+  fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
-  // Size overrides for the brand screens, whose type is scaled off the
-  // design frame rather than taken from the fixed typography scale.
-  textStyle?: StyleProp<TextStyle>;
-  children?: ReactNode;
+  accessibilityHint?: string;
+};
+
+const palette: Record<Variant, { bg: string; fg: string; border?: string }> = {
+  // Lime fill with dark text: the main call to action in every Figma frame
+  primary: { bg: colors.lime, fg: colors.forest },
+  dark: { bg: colors.forest, fg: colors.white },
+  secondary: { bg: colors.tint, fg: colors.forest, border: colors.lime },
+  outline: { bg: colors.white, fg: colors.forest, border: colors.forest },
+  ghost: { bg: "transparent", fg: colors.forest },
+  danger: { bg: colors.errorSoft, fg: colors.error },
 };
 
 export function Button({
   label,
   onPress,
-  variant = 'primary',
-  disabled,
-  loading,
-  icon,
+  variant = "primary",
+  size = "default",
+  icon: Icon,
+  loading = false,
+  disabled = false,
+  fullWidth = false,
   style,
-  textStyle,
+  accessibilityHint,
 }: Props) {
-  // Labels on the tinted variants are deepSoil, not the fill color — that's
-  // what the design frame shows for "Browse products" and "Log Out", and a
-  // green-on-green-tint label was never legible enough to be right.
-  const textColor = variant === 'primary' ? colors.warmCream : colors.textPrimary;
+  const { bg, fg, border } = palette[variant];
+  const height =
+    size === "large" ? sizes.buttonHeightLarge : size === "small" ? sizes.chipHeight : sizes.buttonHeight;
+  const inactive = disabled || loading;
 
   return (
-    <Pressable
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: inactive, busy: loading }}
+      disabled={inactive}
       onPress={onPress}
-      disabled={disabled || loading}
-      style={[styles.base, styles[variant], disabled && !loading && styles.disabled, style]}
+      style={[
+        styles.base,
+        {
+          height,
+          backgroundColor: bg,
+          borderRadius: size === "small" ? radii.pill : radii.control,
+          paddingHorizontal: size === "small" ? spacing.lg : spacing.xxl,
+        },
+        border !== undefined && { borderColor: border, borderWidth: variant === "outline" ? 1 : borders.hairline },
+        fullWidth && styles.fullWidth,
+        disabled && !loading && styles.disabled,
+        style,
+      ]}
     >
       {loading ? (
-        <ActivityIndicator color={textColor} />
+        <ActivityIndicator color={fg} />
       ) : (
-        <>
-          {icon ? <FontAwesome5 name={icon} size={16} color={textColor} /> : null}
-          <Text style={[typography.button, { color: textColor }, textStyle]}>{label}</Text>
-        </>
+        <View style={styles.content}>
+          {Icon !== undefined && <Icon size={size === "small" ? 16 : 20} color={fg} strokeWidth={2} />}
+          <Text variant="button" color={fg} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  base: {
-    height: geometry.primaryButton.height,
-    borderRadius: geometry.primaryButton.radius,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingHorizontal: geometry.screenPaddingButtons,
-  },
-  primary: {
-    backgroundColor: colors.harvestGreen,
-  },
-  // "fill harvestGreen @ 20% opacity" means a translucent tint on the
-  // background, not the whole view at 20% opacity — that would fade the
-  // label text to near-invisibility too. rgba keeps the text fully opaque.
-  secondary: {
-    backgroundColor: withOpacity(colors.harvestGreen, geometry.secondaryButton.opacity),
-  },
-  muted: {
-    backgroundColor: withOpacity(colors.deepSoil, geometry.mutedButton.opacity),
-  },
-  disabled: {
-    opacity: 0.4,
-  },
+  base: { alignItems: "center", justifyContent: "center" },
+  fullWidth: { alignSelf: "stretch" },
+  content: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  disabled: { opacity: 0.45 },
 });
