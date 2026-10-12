@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, Button, ListGroup, ListRow, Notice, Skeleton, StatusBadge, Text } from "@/components/ui";
+import { Stagger } from "@/components/motion/reveal";
 import { LEAD_TIMES } from "@/features/farmer/constants";
 import { SetupCard, setupDone } from "@/features/farmer/SetupCard";
 import { SwitchModeSheet } from "@/features/farmer/SwitchModeSheet";
@@ -23,6 +24,7 @@ export default function FarmTab() {
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Stagger>
         {farm ? (
           <View style={styles.profile}>
             {farm.photoUrl ? (
@@ -87,6 +89,7 @@ export default function FarmTab() {
           <BadgeCheck size={14} color={colors.inkMuted} />
           <Text variant="small">Farmer mode</Text>
         </View>
+        </Stagger>
       </ScrollView>
       <SwitchModeSheet visible={switching} onClose={() => setSwitching(false)} />
     </SafeAreaView>

@@ -9,7 +9,7 @@ type Tone = "brand" | "error" | "pending";
 const tones: Record<Tone, { bg: string; fg: string; border: string; icon: LucideIcon }> = {
   brand: { bg: colors.tint, fg: colors.forest, border: colors.lime, icon: Info },
   error: { bg: colors.errorSoft, fg: colors.error, border: colors.errorSoft, icon: AlertCircle },
-  pending: { bg: colors.pendingSoft, fg: "#8A5A10", border: colors.pendingSoft, icon: Info },
+  pending: { bg: colors.pendingSoft, fg: colors.pendingInk, border: colors.pendingSoft, icon: Info },
 };
 
 type Props = {

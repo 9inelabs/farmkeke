@@ -23,6 +23,8 @@ export const colors = {
   success: "#2F9E44",
   error: "#D64545",
   pending: "#E6A23C",
+  // Readable text on pendingSoft (amber on light amber)
+  pendingInk: "#9A6412",
   // Notification badge red (Alerts pill)
   badge: "#E90303",
   successSoft: "#E6F4E9",
@@ -61,7 +63,7 @@ export const sizes = {
   buttonHeight: 48,
   buttonHeightLarge: 54,
   inputHeight: 56,
-  searchHeight: 58,
+  searchHeight: 52,
   chipHeight: 36,
   categoryTile: 63,
   addButton: 28,

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader, Text, Wordmark } from "@/components/ui";
+import { Reveal, Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
 import { closeAuth } from "./navigation";
 
@@ -44,20 +45,24 @@ export function AuthScreen({ title, subtitle, nav = "close", backTitle, children
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {nav === "close" && <Wordmark width={120} />}
-          <View style={styles.heading}>
-            <Text variant="displaySmall" accessibilityRole="header">
-              {title}
-            </Text>
-            {subtitle !== undefined && (
-              <Text variant="body" color={colors.inkSoft}>
-                {subtitle}
+          <Stagger>
+            {nav === "close" && <Wordmark width={120} />}
+            <View style={styles.heading}>
+              <Text variant="displaySmall" accessibilityRole="header">
+                {title}
               </Text>
-            )}
-          </View>
-          {children}
+              {subtitle !== undefined && (
+                <Text variant="body" color={colors.inkSoft}>
+                  {subtitle}
+                </Text>
+              )}
+            </View>
+            {children}
+          </Stagger>
         </ScrollView>
-        <View style={styles.footer}>{footer}</View>
+        <Reveal index={4} style={styles.footer}>
+          {footer}
+        </Reveal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

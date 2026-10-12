@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
+import { stackScreenOptions } from "@/theme/navigation";
 
 export default function OnboardingLayout() {
-  return <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />;
+  return <Stack screenOptions={stackScreenOptions} />;
 }

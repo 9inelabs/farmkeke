@@ -16,6 +16,7 @@ import type * as admin_catalog from "../admin/catalog.js";
 import type * as admin_consumers from "../admin/consumers.js";
 import type * as admin_farmerRequests from "../admin/farmerRequests.js";
 import type * as admin_farmers from "../admin/farmers.js";
+import type * as admin_listings from "../admin/listings.js";
 import type * as admin_platform from "../admin/platform.js";
 import type * as admin_staff from "../admin/staff.js";
 import type * as appConfig from "../appConfig.js";
@@ -31,11 +32,14 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_banks from "../lib/banks.js";
 import type * as lib_counters from "../lib/counters.js";
 import type * as lib_email from "../lib/email.js";
+import type * as lib_listing from "../lib/listing.js";
 import type * as lib_passwordProvider from "../lib/passwordProvider.js";
 import type * as lib_phone from "../lib/phone.js";
 import type * as lib_uploads from "../lib/uploads.js";
 import type * as lib_validate from "../lib/validate.js";
+import type * as listings from "../listings.js";
 import type * as seed from "../seed.js";
+import type * as storefront from "../storefront.js";
 import type * as users from "../users.js";
 
 import type {
@@ -53,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   "admin/consumers": typeof admin_consumers;
   "admin/farmerRequests": typeof admin_farmerRequests;
   "admin/farmers": typeof admin_farmers;
+  "admin/listings": typeof admin_listings;
   "admin/platform": typeof admin_platform;
   "admin/staff": typeof admin_staff;
   appConfig: typeof appConfig;
@@ -68,11 +73,14 @@ declare const fullApi: ApiFromModules<{
   "lib/banks": typeof lib_banks;
   "lib/counters": typeof lib_counters;
   "lib/email": typeof lib_email;
+  "lib/listing": typeof lib_listing;
   "lib/passwordProvider": typeof lib_passwordProvider;
   "lib/phone": typeof lib_phone;
   "lib/uploads": typeof lib_uploads;
   "lib/validate": typeof lib_validate;
+  listings: typeof listings;
   seed: typeof seed;
+  storefront: typeof storefront;
   users: typeof users;
 }>;
 

@@ -62,6 +62,22 @@ export const applicationSection = v.union(
   v.literal("payout"),
 );
 
+export const listingStatus = v.union(
+  v.literal("draft"),
+  v.literal("under_review"),
+  v.literal("needs_changes"),
+  v.literal("live"),
+  v.literal("paused"),
+);
+
+// One way a listing is sold: its unit, price, stock left and minimum order.
+export const listingUnit = v.object({
+  unitId: v.id("units"),
+  priceKobo: v.number(),
+  stock: v.number(),
+  minOrder: v.number(),
+});
+
 export default defineSchema({
   ...authTables,
 
@@ -277,6 +293,51 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_status", ["status"]),
+
+  // F-20 to F-31. A farm's produce listing. "Out of stock" is a live listing
+  // with no stock left in any unit, not a separate status.
+  listings: defineTable({
+    farmId: v.id("farms"),
+    status: listingStatus,
+    name: v.string(),
+    categoryId: v.optional(v.id("categories")),
+    description: v.optional(v.string()),
+    // "YYYY-MM-DD"
+    harvestedOn: v.optional(v.string()),
+    // The first photo is the cover.
+    photoIds: v.array(v.id("_storage")),
+    units: v.array(listingUnit),
+    delivery: v.boolean(),
+    pickup: v.boolean(),
+    // Staff's reason when sent back or unpublished (F-31)
+    reviewNote: v.optional(v.string()),
+    submittedAt: v.optional(v.number()),
+    liveAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_farmId_and_status", ["farmId", "status"])
+    .index("by_status_and_submittedAt", ["status", "submittedAt"])
+    .index("by_status_and_harvestedOn", ["status", "harvestedOn"])
+    .index("by_categoryId_and_status", ["categoryId", "status"]),
+
+  // A-86. Featured banners on Home ("Harvest of the week"). Each points at a
+  // listing; its price, unit, farm and photo are read from that listing.
+  homeBanners: defineTable({
+    tag: v.string(),
+    title: v.string(),
+    buttonLabel: v.string(),
+    listingId: v.id("listings"),
+    active: v.boolean(),
+    sortOrder: v.number(),
+  }).index("by_active_and_sortOrder", ["active", "sortOrder"]),
+
+  // A-42 price and unit history, and the listing's moderation trail.
+  listingEvents: defineTable({
+    listingId: v.id("listings"),
+    actorId: v.id("users"),
+    kind: v.string(),
+    details: v.optional(v.string()),
+  }).index("by_listingId", ["listingId"]),
 
   // A-90. Every sensitive staff action, with who, what, when and why.
   auditLog: defineTable({

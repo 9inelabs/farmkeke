@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CategoryTile, Skeleton, Text } from "@/components/ui";
+import { Stagger } from "@/components/motion/reveal";
 import { radii, spacing } from "@/theme/tokens";
 
 export default function Categories() {
@@ -12,6 +13,7 @@ export default function Categories() {
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
+        <Stagger>
         <Text variant="title" accessibilityRole="header">
           Categories
         </Text>
@@ -22,6 +24,7 @@ export default function Categories() {
                 <CategoryTile key={c._id} name={c.name} illustration={c.illustration} onPress={() => {}} />
               ))}
         </View>
+        </Stagger>
       </ScrollView>
     </SafeAreaView>
   );

@@ -11,6 +11,7 @@ import { SUPPORT_EMAIL } from "@/content/help";
 import { useSwitchMode } from "@/features/farmer/useSwitchMode";
 import { TabBar } from "@/features/shell/TabBar";
 import { usePrefs } from "@/store/prefs";
+import { tabTransition } from "@/theme/navigation";
 import { colors } from "@/theme/tokens";
 
 export default function FarmTabs() {
@@ -52,7 +53,7 @@ export default function FarmTabs() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
       <Tabs
-        screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.white } }}
+        screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.white }, ...tabTransition }}
         tabBar={(props) => (
           <>
             <OfflineBanner />

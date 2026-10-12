@@ -13,7 +13,7 @@ export default function SetupChecklist() {
     ? [
         { icon: Store, title: "Business profile", body: "Add a farm photo and a short description buyers will read.", done: farm.checklist.profile, path: "/farm-settings/profile" },
         { icon: Truck, title: "Collection settings", body: "Confirm where and when riders collect orders.", done: farm.checklist.collection, path: "/farm-settings/fulfilment" },
-        { icon: Sprout, title: "First listing", body: "Photograph your produce and set a price. Listings open in the next update.", done: farm.checklist.firstListing },
+        { icon: Sprout, title: "First listing", body: "Photograph your produce, set a price and stock, and send it for review.", done: farm.checklist.firstListing, path: farm.checklist.firstListing ? "/listings" : "/listing/new" },
       ]
     : [];
 

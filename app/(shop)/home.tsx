@@ -1,62 +1,56 @@
-// M-10 Home — Phase 2 shell. Listings, search, Fresh Picks and farms near
-// you arrive in Phase 5; the header, escrow card and categories are live now.
+// M-10 Home. The layout is HomeView; this route gives it live data.
+// Search, product pages, farm pages and the cart aren't built yet, so those
+// parts are drawn but don't open anything until their screens exist.
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { Sprout } from "lucide-react-native";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CategoryTile, EmptyState, EscrowCard, LocationChip, Skeleton, Text } from "@/components/ui";
+import { HomeView } from "@/features/home/HomeView";
+import { formatNaira } from "@/lib/money";
 import { usePrefs } from "@/store/prefs";
-import { radii, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
+
+// The phone's own date, "YYYY-MM-DD": what "Picked Today" means for this shopper.
+const localDay = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function Home() {
   const area = usePrefs((s) => s.area);
+  const [today] = useState(localDay);
   const categories = useQuery(api.catalog.listCategories);
+  const home = useQuery(api.storefront.home, { today, state: area?.state, lga: area?.lga });
+  const openCategories = () => router.push("/categories");
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <LocationChip
-            label={area ? `${area.name}, ${area.state}` : "Choose your area"}
-            onPress={() => router.push({ pathname: "/choose-area", params: { from: "home" } })}
-          />
-        </View>
-
-        <EscrowCard />
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categories}
-          style={styles.bleed}
-        >
-          {categories === undefined
-            ? Array.from({ length: 5 }, (_, i) => <Skeleton key={i} width={63} height={63} radius={radii.lg} />)
-            : categories.map((c) => (
-                <CategoryTile key={c._id} name={c.name} illustration={c.illustration} onPress={() => router.push("/categories")} />
-              ))}
-        </ScrollView>
-
-        <Text variant="section" style={styles.section}>
-          Fresh Picks
-        </Text>
-        <EmptyState
-          icon={Sprout}
-          title="Fresh produce is on its way"
-          message="Farms near you are setting up their stalls. Their produce will show up here."
-        />
-      </ScrollView>
+      <HomeView
+        areaLabel={area ? `${area.name}, ${area.state}` : "Choose your area"}
+        categories={categories?.map((c) => ({ id: c._id, name: c.name, illustration: c.illustration }))}
+        freshPicks={home?.freshPicks}
+        pickedToday={home?.pickedToday}
+        banner={
+          home === undefined
+            ? undefined
+            : home.banner && {
+                tag: home.banner.tag,
+                title: home.banner.title,
+                subtitle: `From ${formatNaira(home.banner.listing.priceKobo)} per ${home.banner.listing.unit} • ${home.banner.farmName}`,
+                buttonLabel: home.banner.buttonLabel,
+                imageUrl: home.banner.listing.imageUrl,
+              }
+        }
+        farms={home?.farms}
+        onChangeArea={() => router.push({ pathname: "/choose-area", params: { from: "home" } })}
+        onCategory={openCategories}
+        onSeeAllFresh={openCategories}
+        onSeeAllPicked={openCategories}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  bleed: { marginHorizontal: -spacing.screen },
-  categories: { paddingHorizontal: spacing.screen, gap: spacing.sm },
-  section: { marginTop: spacing.sm },
+  screen: { flex: 1, backgroundColor: colors.white },
 });

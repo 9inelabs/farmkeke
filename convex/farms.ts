@@ -15,6 +15,18 @@ export const mine = query({
     const farm = await ctx.db.query("farms").withIndex("by_userId", (q) => q.eq("userId", user._id)).unique();
     if (farm === null) return null;
     const categories = await Promise.all(farm.categoryIds.map((id) => ctx.db.get("categories", id)));
+    // F-14 "First listing": any listing that has been submitted.
+    let hasListing = false;
+    for (const status of ["live", "under_review", "paused", "needs_changes"] as const) {
+      const first = await ctx.db
+        .query("listings")
+        .withIndex("by_farmId_and_status", (q) => q.eq("farmId", farm._id).eq("status", status))
+        .first();
+      if (first !== null) {
+        hasListing = true;
+        break;
+      }
+    }
     return {
       ...farm,
       // Payout details stay on the server; the app shows the bank and last 4 digits.
@@ -25,8 +37,7 @@ export const mine = query({
       checklist: {
         profile: farm.profileConfirmedAt !== undefined,
         collection: farm.collectionConfirmedAt !== undefined,
-        // First listing arrives with listings (Phase 4)
-        firstListing: false,
+        firstListing: hasListing,
       },
     };
   },

@@ -42,6 +42,11 @@ export default function Gallery() {
 
   return (
     <Screen scroll header={<ScreenHeader title="Components" />}>
+      <Section title="Design review shortcuts">
+        <Button label="Open onboarding (M-03)" variant="secondary" onPress={() => router.push("/welcome")} />
+        <Button label="Open Get started (M-04)" variant="secondary" onPress={() => router.push("/get-started")} />
+        <Button label="Open Home with sample content (M-10)" variant="secondary" onPress={() => router.push("/dev/home-preview")} />
+      </Section>
       <Section title="Type">
         <Text variant="display">Fresh from the farm</Text>
         <Text variant="title">Screen title</Text>

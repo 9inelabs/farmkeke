@@ -22,6 +22,7 @@ export { SearchPill } from "./SearchPill";
 export { Skeleton } from "./Skeleton";
 export { StatusBadge, type BadgeTone } from "./StatusBadge";
 export { StatusScreen } from "./StatusScreen";
+export { StepScreen } from "./StepScreen";
 export { Text } from "./Text";
 export { TextField } from "./TextField";
 export { Wordmark } from "./Wordmark";

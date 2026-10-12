@@ -1,6 +1,9 @@
-import { ArrowLeftRight, Bell, MapPin } from "lucide-react-native";
+import { Bell } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
+import PinIcon from "../../../assets/icons/location-pin.svg";
+import SwapIcon from "../../../assets/icons/swap.svg";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 import { Text } from "./Text";
 
 /** Home header: current delivery area with a change affordance. */
@@ -12,11 +15,11 @@ export function LocationChip({ label, onPress }: { label: string; onPress: () =>
       onPress={onPress}
       style={styles.location}
     >
-      <MapPin size={18} color={colors.forest} fill={colors.forest} stroke={colors.tint} strokeWidth={2} />
-      <Text variant="label" color={colors.forest} numberOfLines={1} style={styles.shrink}>
+      <PinIcon width={16} height={19} />
+      <Text variant="label" color={colors.lime} numberOfLines={1} maxFontSizeMultiplier={1.3} style={styles.locationLabel}>
         {label}
       </Text>
-      <ArrowLeftRight size={14} color={colors.forest} />
+      <SwapIcon width={10} height={11} />
     </Pressable>
   );
 }
@@ -47,18 +50,20 @@ export function AlertsPill({ unread, onPress }: { unread: number; onPress: () =>
 
 const styles = StyleSheet.create({
   location: {
-    height: 40,
-    maxWidth: 220,
+    alignSelf: "flex-start",
+    minHeight: 40,
+    maxWidth: "100%",
     borderRadius: radii.md,
-    backgroundColor: colors.tint,
+    backgroundColor: colors.forest,
     borderWidth: borders.hairline,
     borderColor: colors.lime,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  shrink: { flexShrink: 1 },
+  locationLabel: { flexShrink: 1, fontFamily: fonts.bold },
   alerts: {
     height: 38,
     borderRadius: radii.pill,

@@ -2,6 +2,7 @@ import { Image, type ImageSource } from "expo-image";
 import { Sprout } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 import { PressableScale } from "./PressableScale";
 import { Text } from "./Text";
 
@@ -41,7 +42,7 @@ export function CategoryTile({ name, illustration, selected = false, onPress }: 
           <Sprout size={28} color={colors.forest} strokeWidth={1.75} />
         )}
       </View>
-      <Text variant="small" color={colors.ink} align="center" numberOfLines={2} style={styles.label}>
+      <Text variant="small" color={colors.ink} align="center" numberOfLines={2} maxFontSizeMultiplier={1.3} style={styles.label}>
         {name}
       </Text>
     </PressableScale>
@@ -49,7 +50,7 @@ export function CategoryTile({ name, illustration, selected = false, onPress }: 
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: sizes.categoryTile + 8, alignItems: "center", gap: spacing.sm },
+  wrap: { width: sizes.categoryTile + 8, alignItems: "center", gap: spacing.xs + 1 },
   tile: {
     width: sizes.categoryTile,
     height: sizes.categoryTile,
@@ -59,6 +60,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileSelected: { backgroundColor: colors.lime },
-  art: { width: 48, height: 48 },
-  label: { fontSize: 12, lineHeight: 15 },
+  art: { width: 40, height: 40 },
+  label: { alignSelf: "stretch", fontFamily: fonts.medium },
 });

@@ -72,7 +72,7 @@ export default function OutsideArea() {
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.pin}>
-            <MapPin size={28} color="#9A6412" />
+            <MapPin size={28} color={colors.pendingInk} />
           </View>
           <Text variant="displaySmall" align="center" accessibilityRole="header">
             We don't deliver to {place} yet

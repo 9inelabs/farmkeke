@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { Plus } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
+import AddIcon from "../../../assets/icons/add-button.svg";
 import { formatNaira } from "@/lib/money";
 import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
 import { PressableScale } from "./PressableScale";
@@ -12,47 +12,56 @@ type Props = {
   /** e.g. "basket" → shown as "per basket" */
   unit: string;
   imageUrl?: string | null;
+  /** Rows pass a width that suits the screen; the photo and text follow it. */
   width?: number;
-  onPress: () => void;
+  // Without a handler the card (or its add button) is drawn but doesn't respond.
+  onPress?: () => void;
   onAdd?: () => void;
 };
 
-/** Product card from the Home / Categories frames. */
+/** Product card from the Home / Categories designs. */
 export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPress, onAdd }: Props) {
   const price = formatNaira(priceKobo);
   return (
     <PressableScale
-      accessibilityRole="button"
+      accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={`${name}, ${price} per ${unit}`}
+      disabled={onPress === undefined}
       onPress={onPress}
       style={[styles.card, { width }]}
     >
-      <View style={styles.imageWrap}>
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" transition={150} />
-        ) : (
-          <View style={[styles.image, styles.imagePlaceholder]} />
-        )}
-      </View>
-      <View style={styles.footer}>
-        <View style={styles.copy}>
-          <Text variant="label" numberOfLines={1}>
-            {name}
-          </Text>
-          <Text variant="price">{price}</Text>
-          <Text variant="small">per {unit}</Text>
-        </View>
-        {onAdd !== undefined && (
+      {imageUrl ? (
+        <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" transition={150} />
+      ) : (
+        <View style={styles.image} />
+      )}
+      <View>
+        <Text variant="label" numberOfLines={1} maxFontSizeMultiplier={1.3}>
+          {name}
+        </Text>
+        {/* Price and unit share the row with the add button, so they can't run under it. */}
+        <View style={styles.buy}>
+          <View style={styles.copy}>
+            <Text variant="price" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={1.3} style={styles.price}>
+              {price}
+            </Text>
+            {/* Long units ("tray of eggs") wrap instead of being cut off */}
+            <Text variant="small" numberOfLines={2} maxFontSizeMultiplier={1.3}>
+              per {unit}
+            </Text>
+          </View>
           <Pressable
-            accessibilityRole="button"
+            accessibilityRole={onAdd ? "button" : undefined}
             accessibilityLabel={`Add ${name} to cart`}
+            accessible={onAdd !== undefined}
+            disabled={onAdd === undefined}
             hitSlop={8}
             onPress={onAdd}
-            style={styles.add}
+            style={({ pressed }) => pressed && styles.pressed}
           >
-            <Plus size={18} color={colors.forest} strokeWidth={2.5} />
+            <AddIcon width={sizes.addButton} height={sizes.addButton} />
           </Pressable>
-        )}
+        </View>
       </View>
     </PressableScale>
   );
@@ -64,21 +73,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardFill,
     borderWidth: borders.hairline,
     borderColor: colors.tint,
-    padding: 7,
-    gap: spacing.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    gap: spacing.sm,
   },
-  imageWrap: { borderRadius: radii.sm, overflow: "hidden" },
-  image: { width: "100%", aspectRatio: 1, borderRadius: radii.sm },
-  imagePlaceholder: { backgroundColor: colors.placeholder },
-  footer: { flexDirection: "row", alignItems: "flex-end", gap: spacing.xs, paddingHorizontal: 3 },
+  image: { width: "100%", aspectRatio: 1, borderRadius: radii.sm, backgroundColor: colors.placeholder },
+  buy: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   copy: { flex: 1 },
-  add: {
-    width: sizes.addButton,
-    height: sizes.addButton,
-    borderRadius: sizes.addButton / 2,
-    backgroundColor: colors.lime,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
-  },
+  price: { fontSize: 16, lineHeight: 20 },
+  pressed: { opacity: 0.7 },
 });

@@ -64,7 +64,7 @@ export default function ApplicationStatus() {
       >
         <View style={styles.body}>
           <View style={[styles.icon, { backgroundColor: colors.pendingSoft }]}>
-            <FileWarning size={28} color="#9A6412" />
+            <FileWarning size={28} color={colors.pendingInk} />
           </View>
           <Text variant="displaySmall" accessibilityRole="header">
             We need a bit more

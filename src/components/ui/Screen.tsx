@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import { Reveal, Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
   background?: string;
   edges?: Edge[];
   contentStyle?: StyleProp<ViewStyle>;
+  /** Set false when the content reveals itself (e.g. StatusScreen), so it isn't animated twice. */
+  revealContent?: boolean;
 };
 
 /** Safe-area screen with the standard 20pt side margin. */
@@ -23,6 +26,7 @@ export function Screen({
   background = colors.white,
   edges = ["top", "bottom"],
   contentStyle,
+  revealContent = true,
 }: Props) {
   const content = scroll ? (
     <ScrollView
@@ -30,8 +34,11 @@ export function Screen({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {children}
+      {revealContent ? <Stagger>{children}</Stagger> : children}
     </ScrollView>
+  ) : revealContent ? (
+    // Usually one list or scroll view that must fill the screen, so it reveals as a whole.
+    <Reveal style={[styles.content, styles.fill, contentStyle]}>{children}</Reveal>
   ) : (
     <View style={[styles.content, styles.fill, contentStyle]}>{children}</View>
   );
@@ -40,7 +47,11 @@ export function Screen({
     <SafeAreaView edges={edges} style={[styles.fill, { backgroundColor: background }]}>
       {header}
       {content}
-      {footer !== undefined && <View style={styles.footer}>{footer}</View>}
+      {footer !== undefined && (
+        <Reveal index={4} style={styles.footer}>
+          {footer}
+        </Reveal>
+      )}
     </SafeAreaView>
   );
 }

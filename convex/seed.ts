@@ -1,6 +1,7 @@
 // Starting configuration data. Idempotent: inserts what is missing and never
 // overwrites rows staff have since edited.
 //   npx convex run seed:run
+import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 
 const CATEGORIES = [
@@ -167,5 +168,90 @@ export const run = internalMutation({
     }
 
     return added;
+  },
+});
+
+// DEMO produce for looking at the shopping screens during development: the
+// items from the Home design, with no photos. Never run this on production.
+//   npx convex run seed:demoStorefront '{"today":"2026-10-11"}'
+// Run it again on a later day to move "Picked Today" to that day.
+const DEMO_NOTE = "Demo listing for design review.";
+const DEMO_LISTINGS = [
+  { name: "Fresh tomatoes", category: "vegetables", unit: "basket", priceKobo: 4_500_00, pickedToday: true },
+  { name: "Yam tubers", category: "grains-tubers", unit: "tuber", priceKobo: 5_500_00, pickedToday: true },
+  { name: "Oshombo pepper", category: "vegetables", unit: "basket", priceKobo: 6_000_00, pickedToday: true },
+  { name: "Ugwu leaves", category: "vegetables", unit: "bunch", priceKobo: 800_00, pickedToday: false },
+  { name: "Ripe plantain", category: "fruits", unit: "bunch", priceKobo: 3_500_00, pickedToday: false },
+  { name: "Brown eggs", category: "poultry-eggs", unit: "tray-of-eggs", priceKobo: 4_200_00, pickedToday: false },
+];
+
+export const demoStorefront = internalMutation({
+  args: { today: v.string() },
+  handler: async (ctx, args) => {
+    const farms = (
+      await ctx.db
+        .query("farms")
+        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .take(20)
+    ).filter((farm) => !farm.holidayMode);
+    if (farms.length === 0) return { added: 0, updated: 0, banner: false, note: "No open farms to list produce under." };
+
+    let added = 0;
+    let updated = 0;
+    let yam = null;
+    for (const [index, item] of DEMO_LISTINGS.entries()) {
+      const farm = farms[index % farms.length];
+      const category = await ctx.db
+        .query("categories")
+        .withIndex("by_slug", (q) => q.eq("slug", item.category))
+        .unique();
+      const unit = await ctx.db
+        .query("units")
+        .withIndex("by_slug", (q) => q.eq("slug", item.unit))
+        .unique();
+      if (category === null || unit === null) continue;
+      const harvestedOn = item.pickedToday ? args.today : undefined;
+      const live = await ctx.db
+        .query("listings")
+        .withIndex("by_farmId_and_status", (q) => q.eq("farmId", farm._id).eq("status", "live"))
+        .take(200);
+      const existing = live.find((l) => l.name === item.name && l.description === DEMO_NOTE);
+      let listingId = existing?._id;
+      if (existing === undefined) {
+        listingId = await ctx.db.insert("listings", {
+          farmId: farm._id,
+          status: "live",
+          name: item.name,
+          categoryId: category._id,
+          description: DEMO_NOTE,
+          harvestedOn,
+          photoIds: [],
+          units: [{ unitId: unit._id, priceKobo: item.priceKobo, stock: 40, minOrder: 1 }],
+          delivery: true,
+          pickup: true,
+          submittedAt: Date.now(),
+          liveAt: Date.now(),
+        });
+        added++;
+      } else if (existing.harvestedOn !== harvestedOn) {
+        await ctx.db.patch("listings", existing._id, { harvestedOn });
+        updated++;
+      }
+      if (item.name === "Yam tubers") yam = listingId ?? null;
+    }
+
+    const banners = await ctx.db.query("homeBanners").take(1);
+    const banner = banners.length === 0 && yam !== null;
+    if (banner && yam !== null) {
+      await ctx.db.insert("homeBanners", {
+        tag: "Harvest of the week",
+        title: "New-Season yam from Okigwe",
+        buttonLabel: "Shop Yam",
+        listingId: yam,
+        active: true,
+        sortOrder: 1,
+      });
+    }
+    return { added, updated, banner };
   },
 });

@@ -1,5 +1,5 @@
-import { Search } from "lucide-react-native";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import SearchButton from "../../../assets/icons/search-button.svg";
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
@@ -8,27 +8,28 @@ const PLACEHOLDER = "Search tomatoes, yam, ugwu...";
 
 type Props =
   // Tappable pill that opens the search screen (Home)
-  | { mode: "button"; onPress: () => void }
+  | { mode: "button"; onPress?: () => void }
   // Live input (Search screen)
   | ({ mode: "input"; onSubmit?: () => void } & Omit<TextInputProps, "style">);
 
 /** Figma search pill with the round lime search button. */
 export function SearchPill(props: Props) {
   const button = (
-    <View style={styles.searchButton} pointerEvents="none">
-      <Search size={20} color={colors.white} strokeWidth={2.5} />
+    <View pointerEvents="none">
+      <SearchButton width={40} height={40} />
     </View>
   );
 
   if (props.mode === "button") {
     return (
       <Pressable
-        accessibilityRole="search"
+        accessibilityRole={props.onPress ? "search" : undefined}
         accessibilityLabel="Search produce"
+        disabled={props.onPress === undefined}
         onPress={props.onPress}
         style={styles.pill}
       >
-        <Text variant="body" color={colors.inkMuted} style={styles.flex} numberOfLines={1}>
+        <Text variant="body" color={colors.inkMuted} style={styles.flex} numberOfLines={1} maxFontSizeMultiplier={1.3}>
           {PLACEHOLDER}
         </Text>
         {button}
@@ -65,18 +66,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: spacing.xl,
-    paddingRight: spacing.sm,
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.xs,
     gap: spacing.sm,
   },
   flex: { flex: 1 },
   input: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink, paddingVertical: 0 },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.lime,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });

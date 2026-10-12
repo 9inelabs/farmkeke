@@ -3,6 +3,7 @@ import { Wallet } from "lucide-react-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, Text } from "@/components/ui";
+import { Stagger } from "@/components/motion/reveal";
 import { formatNaira } from "@/lib/money";
 import { colors, radii, spacing } from "@/theme/tokens";
 
@@ -16,6 +17,7 @@ export default function Earnings() {
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
+        <Stagger>
         <Text variant="title" accessibilityRole="header">
           Earnings
         </Text>
@@ -29,6 +31,7 @@ export default function Earnings() {
           ))}
         </View>
         <EmptyState icon={Wallet} title="No money movements yet" message="Every payment held, released and paid out will be listed here." />
+        </Stagger>
       </ScrollView>
     </SafeAreaView>
   );

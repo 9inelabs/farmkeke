@@ -24,6 +24,11 @@ const ICONS: Record<string, TabMeta> = {
   farm: { label: "Farm", lucide: Store },
 };
 
+// Icons sit in a box of one height so every label lines up.
+const ICON_BOX = 22;
+// Inactive icons and labels, as in the Home design
+const INACTIVE = "rgba(0, 0, 0, 0.3)";
+
 type Route = { key: string; name: string };
 type Props = {
   state: { index: number; routes: Route[] };
@@ -31,16 +36,20 @@ type Props = {
   badges?: Partial<Record<string, number>>;
 };
 
-/** Figma bottom navigation: Home, Categories, Cart, Orders, Account. */
+/**
+ * Bottom navigation from the Home design: white, with a soft shadow along
+ * the top edge. The five tabs share the width equally, and the bar grows by
+ * the phone's bottom inset (home indicator or system buttons).
+ */
 export function TabBar({ state, navigation, badges = {} }: Props) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]} accessibilityRole="tablist">
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.sm) + 2 }]} accessibilityRole="tablist">
       {state.routes.map((route, index) => {
         const meta = ICONS[route.name];
         if (meta === undefined) return null;
         const focused = state.index === index;
-        const tint = focused ? colors.forest : colors.inkMuted;
+        const tint = focused ? colors.forest : INACTIVE;
         const badge = badges[route.name];
         return (
           <Pressable
@@ -54,7 +63,7 @@ export function TabBar({ state, navigation, badges = {} }: Props) {
             }}
             style={styles.tab}
           >
-            <View>
+            <View style={styles.icon}>
               {"lucide" in meta ? (
                 <meta.lucide size={21} color={tint} strokeWidth={focused ? 2.25 : 1.75} />
               ) : (
@@ -67,13 +76,14 @@ export function TabBar({ state, navigation, badges = {} }: Props) {
               )}
               {badge !== undefined && badge > 0 && (
                 <View style={styles.badge}>
-                  <Text variant="small" color={colors.forest} style={styles.badgeText}>
+                  <Text variant="small" color={colors.ink} maxFontSizeMultiplier={1} style={styles.badgeText}>
                     {badge > 9 ? "9+" : badge}
                   </Text>
                 </View>
               )}
             </View>
-            <Text variant="small" color={tint} style={focused ? styles.labelOn : undefined}>
+            {/* Capped so a large-text setting can't push labels into each other. */}
+            <Text variant="small" color={tint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} maxFontSizeMultiplier={1.15} style={styles.label}>
               {meta.label}
             </Text>
           </Pressable>
@@ -87,16 +97,17 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: "row",
     backgroundColor: colors.white,
-    paddingTop: spacing.md,
-    borderTopWidth: 0.5,
-    borderTopColor: colors.line,
+    paddingTop: spacing.sm + 2,
+    boxShadow: "0px -3px 19px 0px rgba(0, 0, 0, 0.09)",
   },
-  tab: { flex: 1, alignItems: "center", gap: 6, minHeight: 44 },
-  labelOn: { fontFamily: fonts.medium },
+  tab: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.xxs, minHeight: 44 },
+  icon: { height: ICON_BOX, alignItems: "center", justifyContent: "center" },
+  label: { alignSelf: "stretch", textAlign: "center", fontFamily: fonts.medium },
   badge: {
     position: "absolute",
-    top: -7,
-    right: -10,
+    top: -6,
+    left: "50%",
+    marginLeft: 3,
     minWidth: 16,
     height: 16,
     borderRadius: 8,

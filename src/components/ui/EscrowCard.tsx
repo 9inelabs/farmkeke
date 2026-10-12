@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Lock } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
+import LockIcon from "../../../assets/icons/lock.svg";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
 import { Wordmark } from "./Wordmark";
@@ -18,22 +18,23 @@ export function EscrowCard({
   return (
     <LinearGradient
       colors={[colors.tint, colors.white]}
+      locations={[0, 0.95]}
       start={{ x: 0, y: 0.5 }}
       end={{ x: 1, y: 0.5 }}
       style={styles.card}
       accessible
       accessibilityLabel={`${title}. ${message}`}
     >
-      <Lock size={18} color={colors.ink} strokeWidth={2} />
+      <LockIcon width={12} height={13} />
       <View style={styles.copy}>
-        <Text variant="bodyMedium" color={colors.forest}>
+        <Text variant="label" color={colors.forest}>
           {title}
         </Text>
-        <Text variant="caption" color={colors.inkMuted}>
+        <Text variant="small">
           {message}
         </Text>
       </View>
-      <Wordmark width={56} />
+      <Wordmark width={52} />
     </LinearGradient>
   );
 }
@@ -45,9 +46,9 @@ const styles = StyleSheet.create({
     borderColor: colors.lime,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm + 2,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm + 2,
   },
-  copy: { flex: 1, gap: 2 },
+  copy: { flex: 1, gap: 1 },
 });

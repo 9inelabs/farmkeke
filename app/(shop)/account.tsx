@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, BottomSheet, Button, ListGroup, ListRow, Skeleton, Text } from "@/components/ui";
+import { Stagger } from "@/components/motion/reveal";
 import { SellingEntry } from "@/features/farmer/SellingEntry";
 import { APP_VERSION } from "@/features/system/AppGate";
 import { useSignOut } from "@/lib/session";
@@ -51,7 +52,7 @@ export default function Account() {
             <Skeleton height={180} radius={radii.lg} />
           </View>
         ) : signedIn ? (
-          <>
+          <Stagger>
             <View style={styles.profile}>
               <Avatar name={viewer.name} size={52} />
               <View style={styles.profileCopy}>
@@ -102,9 +103,9 @@ export default function Account() {
             <ListGroup>
               <ListRow icon={LogOut} title="Sign out" tone="danger" onPress={() => setConfirmSignOut(true)} />
             </ListGroup>
-          </>
+          </Stagger>
         ) : (
-          <>
+          <Stagger>
             <View style={styles.heading}>
               <Text variant="title" accessibilityRole="header">
                 Account
@@ -133,7 +134,7 @@ export default function Account() {
             </View>
             {help}
             <SellingEntry signedIn={false} />
-          </>
+          </Stagger>
         )}
       </ScrollView>
 

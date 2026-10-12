@@ -7,7 +7,7 @@ export type BadgeTone = "success" | "pending" | "error" | "brand" | "neutral";
 
 const tones: Record<BadgeTone, { bg: string; fg: string }> = {
   success: { bg: colors.successSoft, fg: colors.success },
-  pending: { bg: colors.pendingSoft, fg: "#9A6412" },
+  pending: { bg: colors.pendingSoft, fg: colors.pendingInk },
   error: { bg: colors.errorSoft, fg: colors.error },
   brand: { bg: colors.tint, fg: colors.forest },
   neutral: { bg: colors.surfaceMuted, fg: colors.inkSoft },

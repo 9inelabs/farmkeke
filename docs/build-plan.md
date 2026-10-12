@@ -1,6 +1,6 @@
 # Farmkeke mobile app: build plan
 
-Status: approved 9 Oct 2026. Phases 1–3 done (see `docs/reports/`).
+Status: approved 9 Oct 2026. Phases 1–4 done (see `docs/reports/`). Design pass next, batch by batch.
 
 Sources: `assets/new assets/Documentation/` (PRD and Screen Inventory & Build Plan). Screen IDs (M-, F-, A-) below are from the Screen Inventory.
 
