@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — report a problem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:28px;line-height:36px;letter-spacing:-0.02em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:17px;line-height:24px;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 20px;border-radius:14px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.dark{background:#1E3B16;color:#FFFFFF}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.me{width:30px;height:30px;border-radius:999px;background:#E4F2C7;color:#1E3B16;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.lay{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:24px;align-items:start}
+.q{padding:24px}.q+.q{box-shadow:inset 0 1px 0 #EEF0EB}
+.qn{width:26px;height:26px;border-radius:999px;background:#1E3B16;color:#FFFFFF;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.rs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.r{display:flex;gap:10px;align-items:center;padding:14px;border-radius:14px;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:14px;font-weight:600;cursor:pointer;background:#FFFFFF;border:0;font-family:inherit;text-align:left;color:#1A1A1A}
+.r.on{box-shadow:inset 0 0 0 2px #1E3B16;background:#F7FAF1}
+.ri{display:flex;gap:12px;align-items:center;padding:12px 0}.ri+.ri{box-shadow:inset 0 1px 0 #EEF0EB}
+.ri input{width:20px;height:20px;margin:0;accent-color:#1E3B16}
+.ph{width:96px;height:96px;border-radius:14px;flex:none;position:relative}
+.fin{border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:14px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A;resize:none}
+.sel{height:36px;border-radius:10px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 10px;font:inherit;font-size:13px;background:#FFFFFF}
+@media (max-width:760px){.wrap{padding:0 16px}.lay,.rs{grid-template-columns:minmax(0,1fr)}.toprow{flex-wrap:wrap;height:auto;padding:12px 0}.search{order:3;flex-basis:100%}}
+</style>
+</helmet>
+<div class="fk">
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink" href="W-43-Account-overview.dc.html" style="background: #F2F8E6"><span class="me">AN</span>Adaeze</a>
+<a class="hlink" href="W-20-Cart.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart</a>
+</div>
+</header>
+<main class="wrap" style="padding-top: 28px">
+<a href="W-51-Tracking.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Back to order</a>
+<div style="margin: 12px 0 24px"><h1 class="h1">Report a problem</h1><p class="p" style="margin-top: 4px">FK-10234 · Okafor Farms · Delivered Sun 18 Oct</p></div>
+<div class="lay">
+<form class="card">
+<div class="q"><div style="display: flex; gap: 10px; align-items: center"><span class="qn">1</span><h2 class="h2">What went wrong?</h2></div>
+<div class="rs" role="radiogroup" aria-label="Problem type">
+<button class="r" type="button" role="radio" aria-checked="false">Items missing</button>
+<button class="r on" type="button" role="radio" aria-checked="true">Damaged or spoiled</button>
+<button class="r" type="button" role="radio" aria-checked="false">Wrong item sent</button>
+<button class="r" type="button" role="radio" aria-checked="false">Less than I ordered</button>
+<button class="r" type="button" role="radio" aria-checked="false">Something else</button>
+</div></div>
+<div class="q"><div style="display: flex; gap: 10px; align-items: center"><span class="qn">2</span><h2 class="h2">Which items are affected?</h2></div>
+<div style="margin-top: 10px">
+<label class="ri"><input type="checkbox" defaultChecked="{{yes}}"><span style="width: 44px; height: 44px; border-radius: 10px; background: #F6E3DC; flex: none"></span><span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 15px">Fresh tomatoes</span><span style="display: block; font-size: 12px; color: #7A7E75">Basket × 2 · ₦9,000</span></span><select class="sel" aria-label="How many baskets"><option>1 of 2 baskets</option><option>2 of 2 baskets</option></select></label>
+<label class="ri"><input type="checkbox"><span style="width: 44px; height: 44px; border-radius: 10px; background: #F7E0D6; flex: none"></span><span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 15px">Scotch bonnet pepper</span><span style="display: block; font-size: 12px; color: #7A7E75">Small basket × 1 · ₦2,500</span></span></label>
+</div></div>
+<div class="q"><div style="display: flex; gap: 10px; align-items: center"><span class="qn">3</span><h2 class="h2">Add photos</h2></div>
+<p class="cap" style="margin: 6px 0 0">Clear photos help us resolve this faster. Up to 5.</p>
+<div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap">
+<div class="ph" style="background: #EBD3C9"><button type="button" aria-label="Remove photo" style="position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 999px; border: 0; background: rgba(26,26,26,0.7); color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+<div class="ph" style="background: #E3CFC6"><button type="button" aria-label="Remove photo" style="position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 999px; border: 0; background: rgba(26,26,26,0.7); color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+<button type="button" class="ph" style="border: 0; background: #F7F8F5; box-shadow: inset 0 0 0 1.5px #C9CEC2; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #1E3B16; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>Add photo</button>
+</div></div>
+<div class="q"><div style="display: flex; gap: 10px; align-items: center"><span class="qn">4</span><h2 class="h2">Tell us what happened</h2></div>
+<textarea class="fin" rows="3" aria-label="Describe the problem" style="margin-top: 14px" defaultValue="One basket of tomatoes was soft and some had burst. The second basket was fine."></textarea>
+</div>
+</form>
+
+<aside style="display: flex; flex-direction: column; gap: 20px">
+<section class="card" style="padding: 22px">
+<div style="display: flex; gap: 12px; align-items: flex-start"><span style="width: 42px; height: 42px; border-radius: 12px; background: #F2F8E6; color: #1E3B16; display: flex; align-items: center; justify-content: center; flex: none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg></span><div><div style="font-weight: 700; font-size: 15px">Your ₦12,700 stays held</div><p style="margin: 4px 0 0; font-size: 13px; line-height: 19px; color: #5A5E56">Nothing is paid to the farm until this is resolved.</p></div></div>
+</section>
+<section class="card" style="padding: 22px">
+<h2 class="h2" style="font-size: 16px">What happens next</h2>
+<div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px; font-size: 14px; line-height: 20px">
+<div style="display: flex; gap: 12px"><span style="width: 24px; height: 24px; border-radius: 999px; background: #E4F2C7; color: #1E3B16; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none">1</span><span>Okafor Farms sees your report and can reply within 12 hours</span></div>
+<div style="display: flex; gap: 12px"><span style="width: 24px; height: 24px; border-radius: 999px; background: #E4F2C7; color: #1E3B16; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none">2</span><span>Our team reviews the photos and both sides</span></div>
+<div style="display: flex; gap: 12px"><span style="width: 24px; height: 24px; border-radius: 999px; background: #E4F2C7; color: #1E3B16; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none">3</span><span>We decide: a full or part refund to you, or release to the farm</span></div>
+</div>
+<a class="btn lime" href="W-53b-Problem-reported.dc.html" style="width: 100%; margin-top: 20px">Submit report</a>
+<p class="cap" style="margin: 10px 0 0; text-align: center">We'll update you by SMS and email</p>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true };
+  }
+}
+</script>
+</body>
+</html>

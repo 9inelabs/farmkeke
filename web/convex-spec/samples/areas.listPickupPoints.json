@@ -1,0 +1,191 @@
+[
+  {
+    "_creationTime": 1791533630883.523,
+    "_id": "k5717atpfcd7whjqegqs3jebhn8fyksk",
+    "active": true,
+    "address": "Independence Layout, GRA",
+    "collectWithinDays": 2,
+    "hours": [
+      {
+        "closes": "18:00",
+        "day": 1,
+        "opens": "08:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 2,
+        "opens": "08:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 3,
+        "opens": "08:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 4,
+        "opens": "08:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 5,
+        "opens": "08:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 6,
+        "opens": "08:00"
+      }
+    ],
+    "latitude": 6.4519,
+    "lga": "Enugu North",
+    "longitude": 7.5139,
+    "name": "Farmkeke Pickup · Enugu GRA",
+    "phone": "+2348035550145",
+    "photoUrl": null,
+    "state": "Enugu"
+  },
+  {
+    "_creationTime": 1791533630883.5222,
+    "_id": "k5726xhvqe84jrq8g7w3b07b2h8fy5dq",
+    "active": true,
+    "address": "22 Ikenegbu Layout, beside Access Bank",
+    "collectWithinDays": 2,
+    "hours": [
+      {
+        "closes": "19:00",
+        "day": 1,
+        "opens": "08:00"
+      },
+      {
+        "closes": "19:00",
+        "day": 2,
+        "opens": "08:00"
+      },
+      {
+        "closes": "19:00",
+        "day": 3,
+        "opens": "08:00"
+      },
+      {
+        "closes": "19:00",
+        "day": 4,
+        "opens": "08:00"
+      },
+      {
+        "closes": "19:00",
+        "day": 5,
+        "opens": "08:00"
+      },
+      {
+        "closes": "19:00",
+        "day": 6,
+        "opens": "08:00"
+      }
+    ],
+    "latitude": 5.4986,
+    "lga": "Owerri Municipal",
+    "longitude": 7.0342,
+    "name": "Farmkeke Pickup · Ikenegbu",
+    "phone": "+2348035550142",
+    "photoUrl": null,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.5225,
+    "_id": "k57bztxp9cgcxat6yfkh9hqam98fy02j",
+    "active": true,
+    "address": "World Bank Housing Estate, Umuguma Road",
+    "collectWithinDays": 2,
+    "hours": [
+      {
+        "closes": "18:00",
+        "day": 1,
+        "opens": "09:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 2,
+        "opens": "09:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 3,
+        "opens": "09:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 4,
+        "opens": "09:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 5,
+        "opens": "09:00"
+      },
+      {
+        "closes": "18:00",
+        "day": 6,
+        "opens": "09:00"
+      }
+    ],
+    "latitude": 5.4697,
+    "lga": "Owerri North",
+    "longitude": 7.0006,
+    "name": "Farmkeke Pickup · World Bank",
+    "phone": "+2348035550143",
+    "photoUrl": null,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.5227,
+    "_id": "k57627yhw718angjzp1rg4a24n8fz5wh",
+    "active": true,
+    "address": "Douglas Road, Owerri",
+    "collectWithinDays": 2,
+    "hours": [
+      {
+        "closes": "20:00",
+        "day": 0,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 1,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 2,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 3,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 4,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 5,
+        "opens": "08:00"
+      },
+      {
+        "closes": "20:00",
+        "day": 6,
+        "opens": "08:00"
+      }
+    ],
+    "latitude": 5.4836,
+    "lga": "Owerri Municipal",
+    "longitude": 7.0333,
+    "name": "Farmkeke Pickup · Douglas Road",
+    "phone": "+2348035550144",
+    "photoUrl": null,
+    "state": "Imo"
+  }
+]

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — create account</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.au{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:900px;font-family:Inter,system-ui,sans-serif;color:#1A1A1A;-webkit-font-smoothing:antialiased}
+.side{background:#1E3B16;color:#FFFFFF;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.formcol{padding:40px 56px;display:flex;flex-direction:column}
+.form{width:100%;max-width:420px;margin:auto}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:30px;line-height:38px;letter-spacing:-0.02em;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;color:#2E322B}
+.fin{height:52px;border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 14px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:54px;padding:0 22px;border-radius:14px;font-weight:600;font-size:16px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap;width:100%}
+.lime{background:#A9D654;color:#1A1A1A}
+.cap{font-size:12px;line-height:17px;color:#7A7E75}
+.rule{display:flex;gap:6px;align-items:center;font-size:12px}
+.mini{background:rgba(255,255,255,0.08);border-radius:16px;padding:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12)}
+@media (max-width:760px){.au{grid-template-columns:minmax(0,1fr)}.side{display:none}.formcol{padding:24px 20px}}
+</style>
+</helmet>
+<div class="au">
+<div class="formcol">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<div class="form">
+<h1 class="h1">Create your account</h1>
+<p class="p" style="margin-top: 6px">Save your addresses, follow orders from any device and check out in seconds.</p>
+<form style="display: flex; flex-direction: column; gap: 18px; margin-top: 26px">
+<label><span class="lbl">Full name</span><input class="fin" type="text" autocomplete="name" placeholder="Adaeze Nwankwo"></label>
+<label><span class="lbl">Email</span><input class="fin" type="email" autocomplete="email" placeholder="adaeze@example.com"></label>
+<label><span class="lbl">Password</span><span style="position: relative; display: block"><input class="fin" type="password" autocomplete="new-password" defaultValue="farmfresh2" style="padding-right: 64px; box-shadow: inset 0 0 0 1.5px #1E3B16"><button type="button" style="position: absolute; right: 8px; top: 8px; height: 36px; padding: 0 10px; border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #1E3B16; cursor: pointer">Show</button></span>
+<span style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px">
+<span class="rule" style="color: #237A35"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>8 or more characters</span>
+<span class="rule" style="color: #237A35"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>A letter</span>
+<span class="rule" style="color: #237A35"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>A number</span>
+</span></label>
+<label style="display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 19px; color: #3B3F38; cursor: pointer"><input type="checkbox" style="width: 18px; height: 18px; margin: 1px 0 0; accent-color: #1E3B16; flex: none">I agree to the <a href="#terms" style="font-weight: 600">Terms of use</a> and <a href="#privacy" style="font-weight: 600">Privacy policy</a></label>
+<a class="btn lime" href="W-42-Account-created.dc.html" style="margin-top: 2px">Create account</a>
+</form>
+<p class="cap" style="text-align: center; margin: 20px 0 0; font-size: 14px">Already have an account? <a href="W-40-Sign-in.dc.html" style="font-weight: 600">Sign in</a></p>
+<div style="margin-top: 24px; padding: 14px 16px; border-radius: 12px; background: #F7F8F5; display: flex; gap: 10px; font-size: 13px; line-height: 19px; color: #3B3F38"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path></svg><span>Ordered as a guest before? We'll find orders made with this email and offer to add them to your account.</span></div>
+</div>
+</div>
+<aside class="side" aria-hidden="true">
+<div style="position: absolute; right: -120px; top: -120px; width: 380px; height: 380px; border-radius: 999px; background: rgba(169,214,84,0.10)"></div>
+<div style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 38px; line-height: 46px; letter-spacing: -0.02em; max-width: 440px; position: relative">Fresh food, fairer prices, every week</div>
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 380px; position: relative">
+<div class="mini" style="display: flex; gap: 12px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 999px; background: #A9D654; color: #1E3B16; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex: none">1</span><div style="font-size: 14px">Save delivery addresses</div></div>
+<div class="mini" style="display: flex; gap: 12px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 999px; background: #A9D654; color: #1E3B16; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex: none">2</span><div style="font-size: 14px">Track orders on any device</div></div>
+<div class="mini" style="display: flex; gap: 12px; align-items: center"><span style="width: 36px; height: 36px; border-radius: 999px; background: #A9D654; color: #1E3B16; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex: none">3</span><div style="font-size: 14px">Keep a list of saved produce</div></div>
+</div>
+<div style="font-size: 13px; color: #C9D8BE; position: relative">Verified farmers · Protected payments · Delivery or pickup</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

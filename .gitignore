@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Original docs archive (extracted into farmkeke-docs/)
+farmkeke-docs.zip

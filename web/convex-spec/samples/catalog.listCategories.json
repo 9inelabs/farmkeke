@@ -1,0 +1,74 @@
+[
+  {
+    "_creationTime": 1791533630883.516,
+    "_id": "k179n7mvn37g8x5a16grh2kreh8fyjcg",
+    "hidden": false,
+    "illustration": "vegetables",
+    "name": "Vegetables",
+    "slug": "vegetables",
+    "sortOrder": 1
+  },
+  {
+    "_creationTime": 1791533630883.5164,
+    "_id": "k1736vq2k726xgcgmdjfs2q6k98fzrcr",
+    "hidden": false,
+    "illustration": "fruits",
+    "name": "Fruits",
+    "slug": "fruits",
+    "sortOrder": 2
+  },
+  {
+    "_creationTime": 1791533630883.5166,
+    "_id": "k17401awdcmv5jvbjphfwedr7s8fzdj3",
+    "hidden": false,
+    "illustration": "grains-tubers",
+    "name": "Grains & Tubers",
+    "slug": "grains-tubers",
+    "sortOrder": 3
+  },
+  {
+    "_creationTime": 1791533630883.5168,
+    "_id": "k172tqq37tvfbcmbpqwe40eteh8fz9ya",
+    "hidden": false,
+    "illustration": "poultry-eggs",
+    "name": "Poultry & Eggs",
+    "slug": "poultry-eggs",
+    "sortOrder": 4
+  },
+  {
+    "_creationTime": 1791533630883.517,
+    "_id": "k17d9x3fbf3qx53wa7smw3zrdn8fy8gf",
+    "hidden": false,
+    "illustration": "meat-fish",
+    "name": "Meat & Fish",
+    "slug": "meat-fish",
+    "sortOrder": 5
+  },
+  {
+    "_creationTime": 1791533630883.5173,
+    "_id": "k17btcct2z11yfdjrq5tm6zwc18fyn8w",
+    "hidden": false,
+    "illustration": "herbs-spices",
+    "name": "Herbs & Spices",
+    "slug": "herbs-spices",
+    "sortOrder": 6
+  },
+  {
+    "_creationTime": 1791533630883.5176,
+    "_id": "k175ssa93t55rcbbm81cm4pb5x8fzp9j",
+    "hidden": false,
+    "illustration": "legumes-nuts",
+    "name": "Legumes & Nuts",
+    "slug": "legumes-nuts",
+    "sortOrder": 7
+  },
+  {
+    "_creationTime": 1791533630883.5178,
+    "_id": "k17fv680s1crkb3ve7x6d0pfrs8fz130",
+    "hidden": false,
+    "illustration": "dairy",
+    "name": "Dairy",
+    "slug": "dairy",
+    "sortOrder": 8
+  }
+]

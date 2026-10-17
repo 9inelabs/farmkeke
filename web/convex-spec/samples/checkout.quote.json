@@ -1,0 +1,45 @@
+{
+  "area": {
+    "_id": "k97dzsk13556a55d5vgp2ybm958fz31f",
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.4705,
+    "lga": "Owerri North",
+    "longitude": 7.027,
+    "name": "New Owerri",
+    "state": "Imo"
+  },
+  "changes": [],
+  "deliveryBlockers": [],
+  "deliveryFeeKobo": 100000,
+  "farms": [
+    {
+      "deliveryFeeKobo": 100000,
+      "farmArea": "Owerri North",
+      "farmId": "mh7dyptb8nd2xa9mdca3cbrees8fzp42",
+      "farmName": "other Farm",
+      "farmPhotoUrl": null,
+      "itemsTotalKobo": 840000,
+      "lines": [
+        {
+          "delivery": true,
+          "imageUrl": null,
+          "lineTotalKobo": 840000,
+          "listingId": "ms7dz1abdwgatemvpjq5svcwt58g07d8",
+          "minOrder": 1,
+          "name": "Brown eggs",
+          "pickup": true,
+          "priceKobo": 420000,
+          "quantity": 2,
+          "stock": 40,
+          "unitId": "kd7awt8k6f6qd3a77f8qc39ced8fzpn7",
+          "unitPlural": "trays of eggs",
+          "unitSingular": "tray of eggs"
+        }
+      ],
+      "totalKobo": 940000
+    }
+  ],
+  "itemsTotalKobo": 840000,
+  "pickupBlockers": [],
+  "totalKobo": 940000
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — refund status</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:10px;font-weight:600;font-size:13px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.dark{background:#1E3B16;color:#FFFFFF}
+.tl{display:flex;gap:14px;position:relative;padding-bottom:20px}
+.tl:not(:last-child)::before{content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;background:#E6E8E2}
+.tl.done:not(:last-child)::before{background:#1E3B16}
+.d{width:28px;height:28px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:12px 0}.kv+.kv{box-shadow:inset 0 1px 0 #EEF0EB}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.me{width:30px;height:30px;border-radius:999px;background:#E4F2C7;color:#1E3B16;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #F4F5F1; font-family: Inter, system-ui, sans-serif; color: #1A1A1A">
+<header style="height: 76px; background: #FFFFFF; box-shadow: inset 0 -1px 0 #E6E8E2; display: flex; align-items: center; justify-content: space-between; padding: 0 40px"><a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a><a class="hlink" href="W-43-Account-overview.dc.html" style="background: #F2F8E6"><span class="me">AN</span>Adaeze</a></header>
+<main style="max-width: 720px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 18px">
+<a href="W-44-My-orders.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>My orders</a>
+<section style="border-radius: 22px; background: #1E3B16; color: #FFFFFF; padding: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap">
+<div><div style="font-size: 13px; font-weight: 600; color: #A9D654">Refund for case DSP-2041</div><div style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 40px; line-height: 48px; letter-spacing: -0.02em; margin-top: 6px">₦4,500</div><div style="font-size: 14px; color: #C9D8BE; margin-top: 4px">1 basket of fresh tomatoes · Order FK-10234</div></div>
+<span style="display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; background: #A9D654; color: #1E3B16; font-size: 13px; font-weight: 700">On its way to you</span>
+</section>
+<section class="card" style="padding: 24px">
+<h1 style="margin: 0; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 17px">Refund progress</h1>
+<div style="margin-top: 18px">
+<div class="tl done"><span class="d" style="background: #1E3B16; color: #FFFFFF"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Decision made: part refund</div><div class="cap" style="margin-top: 2px">Mon 19 Oct, 10:15 · Farmkeke support</div></div></div>
+<div class="tl done"><span class="d" style="background: #1E3B16; color: #FFFFFF"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Refund sent</div><div class="cap" style="margin-top: 2px">Mon 19 Oct, 10:16 · Back to your card ending 4081</div></div></div>
+<div class="tl"><span class="d" style="background: #A9D654; box-shadow: 0 0 0 5px #E4F2C7"></span><div><div style="font-weight: 700; font-size: 15px">With your bank</div><div class="cap" style="margin-top: 2px">Banks can take a few working days to show it on your statement</div></div></div>
+<div class="tl"><span class="d" style="background: #FFFFFF; box-shadow: inset 0 0 0 2px #D6DAD0"></span><div style="color: #9A9E95"><div style="font-weight: 600; font-size: 15px">In your account</div></div></div>
+</div>
+</section>
+<section class="card" style="padding: 6px 24px">
+<div class="kv"><span style="color: #6B6F66">Refund method</span><span style="font-weight: 600">Card ending 4081</span></div>
+<div class="kv"><span style="color: #6B6F66">Refund reference</span><span style="font-weight: 600">RF-58213</span></div>
+<div class="kv"><span style="color: #6B6F66">Released to Okafor Farms</span><span style="font-weight: 600">₦7,000 for items delivered</span></div>
+<div class="kv"><span style="color: #6B6F66">Delivery fee</span><span style="font-weight: 600">₦1,200</span></div>
+<div class="kv"><span style="color: #6B6F66">Order total</span><span style="font-weight: 600">₦12,700</span></div>
+</section>
+<section class="card" style="padding: 18px 22px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap">
+<div style="flex: 1; min-width: 240px"><div style="font-weight: 600; font-size: 15px">Not received after 7 working days?</div><div class="cap" style="margin-top: 2px">Share the refund reference with your bank, or ask us to check.</div></div>
+<a class="btn dark" href="#support">Contact support</a>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

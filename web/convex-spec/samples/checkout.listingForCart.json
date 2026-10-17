@@ -1,0 +1,20 @@
+{
+  "available": true,
+  "delivery": true,
+  "farmId": "mh7dyptb8nd2xa9mdca3cbrees8fzp42",
+  "farmName": "other Farm",
+  "id": "ms7dz1abdwgatemvpjq5svcwt58g07d8",
+  "imageUrl": null,
+  "name": "Brown eggs",
+  "pickup": true,
+  "units": [
+    {
+      "minOrder": 1,
+      "plural": "trays of eggs",
+      "priceKobo": 420000,
+      "singular": "tray of eggs",
+      "stock": 40,
+      "unitId": "kd7awt8k6f6qd3a77f8qc39ced8fzpn7"
+    }
+  ]
+}

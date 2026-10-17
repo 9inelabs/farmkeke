@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — find my order</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:54px;padding:0 22px;border-radius:14px;font-weight:600;font-size:16px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.dark{background:#1E3B16;color:#FFFFFF}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.lbl{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#2E322B}
+.fin{height:52px;border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 14px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.hint{display:block;font-size:12px;line-height:17px;color:#7A7E75;margin-top:6px}
+@media (max-width:760px){.wrap{padding:0 16px}.toprow{flex-wrap:wrap;height:auto;padding:12px 0}.search{order:3;flex-basis:100%}}
+</style>
+</helmet>
+<div class="fk">
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink" href="W-40-Sign-in.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Sign in</a>
+<a class="hlink" href="W-20-Cart.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart</a>
+</div>
+</header>
+<main style="max-width: 500px; margin: 0 auto; padding: 64px 20px">
+<section style="background: #FFFFFF; border-radius: 24px; box-shadow: inset 0 0 0 1px #E6E8E2; padding: 36px">
+<span style="width: 56px; height: 56px; border-radius: 16px; background: #F2F8E6; color: #1E3B16; display: flex; align-items: center; justify-content: center"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path></svg></span>
+<h1 style="margin: 20px 0 0; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 26px; line-height: 34px; letter-spacing: -0.02em">Find my order</h1>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 24px; color: #5A5E56">Ordered as a guest? Look up your order with the order number and the phone number you used.</p>
+<form style="display: flex; flex-direction: column; gap: 18px; margin-top: 24px">
+<label><span class="lbl">Order number</span><input class="fin" type="text" placeholder="FK-10234" style="text-transform: uppercase"><span class="hint">It's in the SMS and email we sent when you ordered.</span></label>
+<label><span class="lbl">Phone number</span><div style="display: flex; gap: 8px"><span class="fin" style="width: 88px; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 600; background: #F7F8F5">+234</span><input class="fin" type="tel" placeholder="803 123 4567"></div></label>
+<a class="btn lime" href="W-51c-Tracking-view-only.dc.html" style="width: 100%">Find order</a>
+</form>
+<div style="margin-top: 22px; padding: 14px 16px; border-radius: 12px; background: #F7F8F5; display: flex; gap: 10px; font-size: 13px; line-height: 19px; color: #3B3F38"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg><span>On this device you can view the order. To confirm delivery, use the phone or browser you ordered on, or <a href="W-41-Create-account.dc.html" style="font-weight: 600">create an account</a>.</span></div>
+</section>
+<p style="text-align: center; margin: 20px 0 0; font-size: 14px; color: #5A5E56">Have an account? <a href="W-40-Sign-in.dc.html" style="font-weight: 600">Sign in to see all your orders</a></p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

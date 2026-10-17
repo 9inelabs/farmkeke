@@ -1,0 +1,101 @@
+[
+  {
+    "_creationTime": 1791533630883.518,
+    "_id": "kd75q5d7vgnr72mddmghg45rgn8fyrr8",
+    "plural": "kg",
+    "retired": false,
+    "singular": "kg",
+    "slug": "kg",
+    "sortOrder": 1
+  },
+  {
+    "_creationTime": 1791533630883.5183,
+    "_id": "kd782dywgypp042tb0jxwa7wn58fzwmf",
+    "plural": "baskets",
+    "retired": false,
+    "singular": "basket",
+    "slug": "basket",
+    "sortOrder": 2
+  },
+  {
+    "_creationTime": 1791533630883.5186,
+    "_id": "kd75vqh7sk39hdbqxwrckqq7zx8fz741",
+    "plural": "tubers",
+    "retired": false,
+    "singular": "tuber",
+    "slug": "tuber",
+    "sortOrder": 3
+  },
+  {
+    "_creationTime": 1791533630883.5188,
+    "_id": "kd76n2p3ccdrx8gqw7hwwk3he98fyxa2",
+    "plural": "crates",
+    "retired": false,
+    "singular": "crate",
+    "slug": "crate",
+    "sortOrder": 4
+  },
+  {
+    "_creationTime": 1791533630883.519,
+    "_id": "kd7e7xzk9kxfzepn4q0yhbpzy98fy9m7",
+    "plural": "bunches",
+    "retired": false,
+    "singular": "bunch",
+    "slug": "bunch",
+    "sortOrder": 5
+  },
+  {
+    "_creationTime": 1791533630883.5193,
+    "_id": "kd783js3dra66d34vwsq69541h8fyzaw",
+    "plural": "dericas",
+    "retired": false,
+    "singular": "derica",
+    "slug": "derica",
+    "sortOrder": 6
+  },
+  {
+    "_creationTime": 1791533630883.5195,
+    "_id": "kd70p8e57gr5n46v9st1230fpd8fzys8",
+    "plural": "mudus",
+    "retired": false,
+    "singular": "mudu",
+    "slug": "mudu",
+    "sortOrder": 7
+  },
+  {
+    "_creationTime": 1791533630883.5198,
+    "_id": "kd7920qwypybgrnw97wq9673118fz1xd",
+    "plural": "paint buckets",
+    "retired": false,
+    "singular": "paint bucket",
+    "slug": "paint-bucket",
+    "sortOrder": 8
+  },
+  {
+    "_creationTime": 1791533630883.52,
+    "_id": "kd7awt8k6f6qd3a77f8qc39ced8fzpn7",
+    "plural": "trays of eggs",
+    "retired": false,
+    "singular": "tray of eggs",
+    "slug": "tray-of-eggs",
+    "sortOrder": 9
+  },
+  {
+    "_creationTime": 1791533630883.5203,
+    "_id": "kd7cys7zrv1gaqfspsf6qmatn18fz83p",
+    "plural": "pieces",
+    "retired": false,
+    "singular": "piece",
+    "slug": "piece",
+    "sortOrder": 10
+  },
+  {
+    "_creationTime": 1791533630883.5205,
+    "_id": "kd7fy10pr426kdrh7z8pczz5318fyedw",
+    "plural": "bags",
+    "retired": false,
+    "singular": "bag",
+    "slug": "bag",
+    "sortOrder": 11
+  }
+]

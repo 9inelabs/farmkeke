@@ -1,0 +1,80 @@
+[
+  {
+    "_creationTime": 1791533630883.5208,
+    "_id": "k97dzsk13556a55d5vgp2ybm958fz31f",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.4705,
+    "lga": "Owerri North",
+    "longitude": 7.027,
+    "name": "New Owerri",
+    "radiusKm": 3,
+    "sortOrder": 1,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.521,
+    "_id": "k97ecyqf3rm4qwz152ga2nsqfd8fyqd5",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.4985,
+    "lga": "Owerri Municipal",
+    "longitude": 7.034,
+    "name": "Ikenegbu",
+    "radiusKm": 2,
+    "sortOrder": 2,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.5212,
+    "_id": "k976y5f1nhv8jmys2je3t4z10s8fypk7",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.47,
+    "lga": "Owerri North",
+    "longitude": 7.0006,
+    "name": "World Bank",
+    "radiusKm": 2.5,
+    "sortOrder": 3,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.5215,
+    "_id": "k9767bm3xpttes8m03s2pfc1xs8fynh4",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.7957,
+    "lga": "Orlu",
+    "longitude": 7.0351,
+    "name": "Orlu",
+    "radiusKm": 6,
+    "sortOrder": 4,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.5217,
+    "_id": "k970t3w85c9s9nypywn093t9yd8fyjpv",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.8292,
+    "lga": "Okigwe",
+    "longitude": 7.35,
+    "name": "Okigwe",
+    "radiusKm": 6,
+    "sortOrder": 5,
+    "state": "Imo"
+  },
+  {
+    "_creationTime": 1791533630883.522,
+    "_id": "k97asqf50xsgbf2pthb9ed03w58fy3v5",
+    "active": true,
+    "deliveryFeeKobo": 100000,
+    "latitude": 5.45,
+    "lga": "Aboh Mbaise",
+    "longitude": 7.23,
+    "name": "Mbaise",
+    "radiusKm": 8,
+    "sortOrder": 6,
+    "state": "Imo"
+  }
+]

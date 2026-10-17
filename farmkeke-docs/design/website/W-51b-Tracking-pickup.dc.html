@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — ready for pickup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:28px;line-height:36px;letter-spacing:-0.02em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:17px;line-height:24px;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 18px;border-radius:12px;font-weight:600;font-size:14px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.dark{background:#1E3B16;color:#FFFFFF}
+.badge{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-ok{background:#EAF6EC;color:#237A35}.b-held{background:#E7EEE4;color:#1E3B16}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.me{width:30px;height:30px;border-radius:999px;background:#E4F2C7;color:#1E3B16;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.lay{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:24px;align-items:start}
+.tl{display:flex;gap:14px;position:relative;padding-bottom:20px}
+.tl:not(:last-child)::before{content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;background:#E6E8E2}
+.tl.done:not(:last-child)::before{background:#1E3B16}
+.d{width:28px;height:28px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.d.done{background:#1E3B16;color:#FFFFFF}.d.cur{background:#A9D654;box-shadow:0 0 0 5px #E4F2C7}.d.todo{background:#FFFFFF;box-shadow:inset 0 0 0 2px #D6DAD0}
+.digit{width:56px;height:68px;border-radius:14px;background:#FFFFFF;color:#1E3B16;font-family:Montserrat,sans-serif;font-weight:800;font-size:34px;display:flex;align-items:center;justify-content:center}
+@media (max-width:760px){.wrap{padding:0 16px}.lay{grid-template-columns:minmax(0,1fr)}.toprow{flex-wrap:wrap;height:auto;padding:12px 0}.search{order:3;flex-basis:100%}}
+</style>
+</helmet>
+<div class="fk">
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink" href="W-43-Account-overview.dc.html" style="background: #F2F8E6"><span class="me">AN</span>Adaeze</a>
+<a class="hlink" href="W-20-Cart.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart</a>
+</div>
+</header>
+<main class="wrap" style="padding-top: 28px">
+<a href="W-44-My-orders.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>My orders</a>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 12px 0 24px">
+<div><h1 class="h1">Order FK-10241</h1><p class="p" style="margin-top: 4px">Okafor Farms · Pickup · Ordered Mon 19 Oct</p></div>
+<div style="display: flex; gap: 8px"><span class="badge b-ok">Ready for pickup</span><span class="badge b-held">₦11,500 held</span></div>
+</div>
+
+<div class="lay">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<section style="border-radius: 22px; background: #1E3B16; color: #FFFFFF; padding: 28px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap">
+<div style="flex: 1; min-width: 260px">
+<div style="font-size: 13px; font-weight: 600; color: #A9D654">Your pickup code</div>
+<div style="display: flex; gap: 10px; margin-top: 12px" aria-label="Pickup code 4 8 2 9"><span class="digit">4</span><span class="digit">8</span><span class="digit">2</span><span class="digit">9</span></div>
+<p style="margin: 14px 0 0; font-size: 14px; line-height: 21px; color: #C9D8BE">Show this code at the counter. Only hand it over when you're collecting your order.</p>
+</div>
+<div role="img" aria-label="QR code of your pickup code" style="width: 132px; height: 132px; border-radius: 16px; background: #FFFFFF; padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 40px; flex: none"><div style="border: 6px solid #1A1A1A; border-radius: 6px"></div><div style="border: 6px solid #1A1A1A; border-radius: 6px"></div><div style="border: 6px solid #1A1A1A; border-radius: 6px"></div><div style="background: repeating-linear-gradient(90deg, #1A1A1A 0 4px, transparent 4px 8px); border-radius: 2px"></div></div>
+</section>
+
+<section class="card" style="padding: 24px">
+<h2 class="h2">Progress</h2>
+<div style="margin-top: 20px">
+<div class="tl done"><span class="d done"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Order placed and paid</div><div class="cap" style="margin-top: 2px">Mon 19 Oct, 09:12</div></div></div>
+<div class="tl done"><span class="d done"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Accepted and packed by Okafor Farms</div><div class="cap" style="margin-top: 2px">Mon 19 Oct, 10:30</div></div></div>
+<div class="tl"><span class="d cur"></span><div><div style="font-weight: 700; font-size: 15px">Waiting at the pickup point</div><div class="cap" style="margin-top: 2px">Arrived Tue 20 Oct, 08:40 · Collect by Fri 23 Oct</div></div></div>
+<div class="tl"><span class="d todo"></span><div style="color: #9A9E95"><div style="font-weight: 600; font-size: 15px">Collected</div></div></div>
+<div class="tl"><span class="d todo"></span><div style="color: #9A9E95"><div style="font-weight: 600; font-size: 15px">You confirm receipt</div><div class="cap" style="margin-top: 2px; color: #9A9E95">Then Okafor Farms is paid</div></div></div>
+</div>
+</section>
+</div>
+
+<aside style="display: flex; flex-direction: column; gap: 20px">
+<section class="card" style="overflow: hidden">
+<div style="height: 140px; background: #EEF2E8; position: relative" role="img" aria-label="Map showing the pickup point">
+<div style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(30,59,22,0.05) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(30,59,22,0.05) 0 1px, transparent 1px 28px)"></div>
+<div style="position: absolute; left: 0; right: 0; top: 55%; height: 12px; background: #FFFFFF"></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="#A9D654" stroke="#1E3B16" stroke-width="1.5" aria-hidden="true" style="position: absolute; left: 46%; top: 22%"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path></svg>
+</div>
+<div style="padding: 20px">
+<div style="font-weight: 700; font-size: 16px">Ikenegbu pickup point</div>
+<div style="font-size: 14px; color: #5A5E56; margin-top: 4px">[Pickup point address], Ikenegbu, Owerri</div>
+<div class="cap" style="margin-top: 8px">Mon – Sat, 8am – 7pm</div>
+<div style="display: flex; gap: 10px; margin-top: 16px"><a class="btn sm ghost" href="#directions">Get directions</a><a class="btn sm ghost" href="#call">Call pickup point</a></div>
+</div>
+</section>
+<section class="card" style="padding: 22px">
+<div style="font-size: 12px; font-weight: 600; color: #4C7A1F">Next step</div>
+<div style="font-family: Montserrat, sans-serif; font-weight: 700; font-size: 17px; line-height: 24px; margin-top: 6px">Collect your order, then confirm</div>
+<p style="margin: 6px 0 0; font-size: 14px; line-height: 21px; color: #5A5E56">Check everything at the counter. Something wrong? Report it before confirming.</p>
+<a class="btn lime" href="W-52-Confirm-receipt.dc.html" style="width: 100%; margin-top: 16px">I've collected my order</a>
+</section>
+<section class="card" style="padding: 20px">
+<div style="font-weight: 600; font-size: 14px">Items</div>
+<div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 10px"><span>Fresh tomatoes × 2</span><span>₦9,000</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 6px"><span>Scotch bonnet pepper × 1</span><span>₦2,500</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-top: 10px; padding-top: 10px; box-shadow: inset 0 1px 0 #EEF0EB"><span>Total paid</span><span>₦11,500</span></div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

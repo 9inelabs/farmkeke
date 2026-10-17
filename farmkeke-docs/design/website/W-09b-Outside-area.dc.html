@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — outside service area</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.fin{height:50px;border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 14px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.sk{background:#ECEEE8;border-radius:16px}
+.pill{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;background:#F4F5F1;font-size:13px;font-weight:500;color:#2E322B}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #F4F5F1; font-family: Inter, system-ui, sans-serif; color: #1A1A1A">
+<div aria-hidden="true">
+<div style="height: 76px; background: #FFFFFF; box-shadow: inset 0 -1px 0 #E6E8E2; display: flex; align-items: center; gap: 16px; padding: 0 80px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="" style="height: 20px; width: auto"><div style="flex: 1; height: 46px; border-radius: 12px; background: #F4F5F1; margin-left: 140px"></div><div style="width: 200px"></div></div>
+<div style="padding: 28px 80px; display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 20px"><div class="sk" style="height: 340px; background: #1E3B16"></div><div style="display: flex; flex-direction: column; gap: 20px"><div class="sk" style="flex: 1"></div><div class="sk" style="flex: 1"></div></div></div>
+<div style="padding: 0 80px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px"><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div><div class="sk" style="height: 110px"></div></div>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(26,26,26,0.45)"></div>
+
+<div role="dialog" aria-modal="true" aria-labelledby="out-title" style="position: absolute; left: 50%; top: 90px; transform: translateX(-50%); width: 520px; background: #FFFFFF; border-radius: 24px; box-shadow: 0 24px 64px rgba(0,0,0,0.18); padding: 32px">
+<button type="button" aria-label="Close" style="position: absolute; right: 20px; top: 20px; width: 40px; height: 40px; border-radius: 10px; border: 0; background: #F4F5F1; display: flex; align-items: center; justify-content: center; color: #1A1A1A; cursor: pointer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+<span style="width: 64px; height: 64px; border-radius: 20px; background: #FDF3E3; color: #8A5A0B; display: flex; align-items: center; justify-content: center"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><path d="m9.5 7.5 5 5"></path><path d="m14.5 7.5-5 5"></path></svg></span>
+<h2 id="out-title" style="margin: 18px 0 0; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 22px; line-height: 30px">We're not delivering to Aba yet</h2>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 23px; color: #5A5E56">Farmkeke is growing area by area. Leave your phone number or email and we'll tell you as soon as we arrive.</p>
+<form style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px">
+<label style="font-size: 13px; font-weight: 600; color: #2E322B" for="notify">Phone number or email</label>
+<div style="display: flex; gap: 10px"><input id="notify" class="fin" type="text" placeholder="0803 123 4567"><button class="btn lime" type="button">Notify me</button></div>
+</form>
+<div style="margin-top: 24px; padding-top: 20px; box-shadow: inset 0 1px 0 #EEF0EB">
+<div style="font-size: 13px; font-weight: 600; color: #2E322B">Areas we deliver to now</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px"><span class="pill">Owerri North</span><span class="pill">Owerri Municipal</span><span class="pill">Owerri West</span><span class="pill">Mbaitoli</span></div>
+</div>
+<a class="btn ghost" href="W-09-Choose-area.dc.html" style="width: 100%; margin-top: 24px">Choose another area</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

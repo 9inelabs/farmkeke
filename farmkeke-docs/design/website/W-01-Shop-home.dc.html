@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}a:hover{color:#142a0e}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.mont{font-family:Montserrat,system-ui,sans-serif}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:34px;line-height:42px;letter-spacing:-0.025em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:24px;line-height:32px;letter-spacing:-0.02em;margin:0}
+.h3{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:17px;line-height:24px;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.sm{font-size:13px;line-height:18px;color:#6B6F66}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:12px;font-weight:600;font-size:15px;line-height:20px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}.btn.lg{height:52px;font-size:16px;border-radius:14px}
+.lime{background:#A9D654;color:#1A1A1A}.lime:hover{background:#9BCB45;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}.ghost:hover{background:#F7F8F5;color:#1A1A1A}
+.dark{background:#1E3B16;color:#FFFFFF}.dark:hover{background:#16300f;color:#FFFFFF}
+.tile{width:42px;height:42px;border-radius:12px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:13px;font-weight:500;color:#1A1A1A;border:0;font-family:inherit;white-space:nowrap}
+.chip.on{background:#1E3B16;color:#FFFFFF;box-shadow:none}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-fresh{background:#F2F8E6;color:#1E3B16}.b-held{background:#E7EEE4;color:#1E3B16}.b-ok{background:#EAF6EC;color:#237A35}.b-pend{background:#FDF3E3;color:#8A5A0B}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.hlink:hover{background:#F4F5F1;color:#1A1A1A}
+.area{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 14px;border-radius:12px;box-shadow:inset 0 0 0 1px #E2E5DC;font-size:14px;color:#1A1A1A;white-space:nowrap;background:#FFFFFF}
+.cnav{display:flex;gap:28px;height:50px;align-items:stretch;font-size:14px;font-weight:500;overflow-x:auto}
+.cnav a{color:#3B3F38;display:flex;align-items:center;white-space:nowrap}.cnav a.on{color:#1E3B16;font-weight:600;box-shadow:inset 0 -2px 0 #A9D654}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#A9D654;color:#1A1A1A;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.pc{background:#FFFFFF;border-radius:16px;box-shadow:inset 0 0 0 1px #E6E8E2;padding:10px;display:flex;flex-direction:column;gap:10px}
+.pimg{aspect-ratio:4/3;border-radius:11px;position:relative;display:flex;align-items:center;justify-content:center;color:rgba(30,59,22,0.32)}
+.pimg .badge{position:absolute;left:8px;top:8px;background:#FFFFFF;color:#1E3B16}
+.save{position:absolute;right:8px;top:8px;width:34px;height:34px;border-radius:999px;background:#FFFFFF;border:0;display:flex;align-items:center;justify-content:center;color:#1A1A1A;cursor:pointer}
+.pname{font-weight:600;font-size:15px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfarm{font-size:12px;line-height:16px;color:#6B6F66;display:flex;gap:4px;align-items:center;margin-top:2px}
+.price{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:17px;line-height:22px;color:#1E3B16}
+.unit{font-family:Inter,system-ui,sans-serif;font-weight:500;font-size:12px;color:#7A7E75}
+.add{width:38px;height:38px;border-radius:11px;background:#A9D654;color:#1A1A1A;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.g8{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}
+.crumb{display:flex;gap:8px;font-size:13px;color:#7A7E75;align-items:center}.crumb a{color:#5A5E56}
+.sechd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+.more{font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.foot{background:#FFFFFF;box-shadow:inset 0 1px 0 #E6E8E2;margin-top:96px}
+.fl{display:flex;flex-direction:column;gap:10px}.fl a{color:#5A5E56;font-size:14px}.fl a:hover{color:#1A1A1A}
+.gfoot{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:32px}
+.split{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:20px}
+@media (max-width:760px){
+.wrap{padding:0 16px}
+.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g8{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split,.g2{grid-template-columns:minmax(0,1fr)}
+.hide-m{display:none}
+.h1{font-size:26px;line-height:34px}
+.gfoot{grid-template-columns:repeat(2,minmax(0,1fr))}
+.toprow{flex-wrap:wrap;height:auto;padding:12px 0}
+.search{order:3;flex-basis:100%}
+}
+</style>
+</helmet>
+<div class="fk">
+
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<a class="area hide-m" href="W-09-Choose-area.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span><span class="cap" style="display: block; line-height: 12px">Deliver to</span><span style="font-weight: 600">Owerri North</span></span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink hide-m" href="#saved"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>Saved</a>
+<a class="hlink" href="#signin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Sign in</a>
+<a class="hlink" href="W-08-Mini-cart.dc.html" style="background: #F4F5F1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart<span class="count">2</span></a>
+</div>
+<nav class="wrap cnav" aria-label="Categories">
+<a href="W-02-All-categories.dc.html">All categories</a><a href="W-03-Category.dc.html">Vegetables</a><a href="#fruits">Fruits</a><a href="#grains">Grains and tubers</a><a href="#poultry">Poultry and eggs</a><a href="#meat">Meat and fish</a><a href="#herbs">Herbs and spices</a><a href="#legumes">Legumes and nuts</a><a href="#dairy">Dairy</a>
+</nav>
+</header>
+
+<main class="wrap" style="padding-top: 28px">
+
+<section class="split">
+<div style="border-radius: 24px; background: #1E3B16; padding: 44px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; min-height: 340px">
+<div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start">
+<span class="badge" style="background: rgba(169,214,84,0.18); color: #CFE8A0">Harvested this week</span>
+<h1 class="h1" style="color: #FFFFFF; font-size: 38px; line-height: 46px">Fresh picks from farms near you</h1>
+<p class="p" style="color: #C9D8BE">Buy straight from verified farmers in Owerri. Your money is held safely until your order arrives.</p>
+<a class="btn lime lg" href="#fresh" style="margin-top: 6px">Shop fresh picks</a>
+</div>
+<div class="hide-m" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="aspect-ratio: 1; border-radius: 18px; background: #F6E3DC; display: flex; align-items: flex-end; padding: 12px; font-size: 12px; font-weight: 600; color: #6B3B2C">Tomatoes</div>
+<div style="aspect-ratio: 1; border-radius: 18px; background: #EFE8D8; display: flex; align-items: flex-end; padding: 12px; font-size: 12px; font-weight: 600; color: #5C4F33">Puna yam</div>
+<div style="aspect-ratio: 1; border-radius: 18px; background: #E2EEDA; display: flex; align-items: flex-end; padding: 12px; font-size: 12px; font-weight: 600; color: #2F4D25">Ugu leaves</div>
+<div style="aspect-ratio: 1; border-radius: 18px; background: #F4EEDD; display: flex; align-items: flex-end; padding: 12px; font-size: 12px; font-weight: 600; color: #5C5233">Farm eggs</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div class="card" style="padding: 24px; display: flex; gap: 14px; flex: 1">
+<span class="tile"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg></span>
+<div><h2 class="h3">Your money is protected</h2><p class="sm" style="margin-top: 6px">We hold your payment and release it to the farmer only after you confirm delivery.</p><a class="more" href="#escrow" style="margin-top: 10px">How escrow works</a></div>
+</div>
+<div class="card" style="padding: 24px; display: flex; gap: 14px; flex: 1">
+<span class="tile"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg></span>
+<div><h2 class="h3">Delivery or pickup</h2><p class="sm" style="margin-top: 6px">Farmkeke riders deliver to your door, or collect from a pickup point near you.</p><a class="more" href="#pickup" style="margin-top: 10px">See pickup points</a></div>
+</div>
+</div>
+</section>
+
+<section style="margin-top: 56px">
+<div class="sechd"><h2 class="h2">Shop by category</h2><a class="more" href="W-02-All-categories.dc.html">All categories <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+<div class="g8">
+<a class="card" href="W-03-Category.dc.html" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.27 21.7s9.87-3.5 12.73-6.36a4.5 4.5 0 0 0-6.36-6.37C5.77 11.84 2.27 21.7 2.27 21.7z"></path><path d="M22 9s-1.33-2-3.5-2C16.86 7 15 9 15 9s1.33 2 3.5 2S22 9 22 9z"></path><path d="M15 2s-2 1.33-2 3.5S15 9 15 9s2-1.84 2-3.5C17 3.33 15 2 15 2z"></path></svg></span>Vegetables</a>
+<a class="card" href="#fruits" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.528V3a1 1 0 0 1 1-1"></path><path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21"></path></svg></span>Fruits</a>
+<a class="card" href="#grains" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 22 16 8"></path><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"></path></svg></span>Grains and tubers</a>
+<a class="card" href="#poultry" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2C8 2 4 8 4 14a8 8 0 0 0 16 0c0-6-4-12-8-12"></path></svg></span>Poultry and eggs</a>
+<a class="card" href="#meat" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"></path><path d="M18 12v.5"></path><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"></path></svg></span>Meat and fish</a>
+<a class="card" href="#herbs" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg></span>Herbs and spices</a>
+<a class="card" href="#legumes" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.165 6.598C9.954 7.478 9.64 8.36 9 9c-.64.64-1.521.954-2.402 1.165A6 6 0 0 0 8 22c7.732 0 14-6.268 14-14a6 6 0 0 0-11.835-1.402Z"></path><path d="M5.341 10.62a4 4 0 1 0 5.279-5.28"></path></svg></span>Legumes and nuts</a>
+<a class="card" href="#dairy" style="padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: #1A1A1A; text-align: center; font-size: 13px; font-weight: 600"><span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8"></path><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2"></path><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0"></path></svg></span>Dairy</a>
+</div>
+</section>
+
+<section id="fresh" style="margin-top: 56px">
+<div class="sechd"><div><h2 class="h2">Fresh picks near you</h2><p class="sm" style="margin-top: 4px">Harvested in the last few days by farms around Owerri</p></div><a class="more" href="W-03-Category.dc.html">See all <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+<div class="g4">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<div class="pc">
+<a class="pimg" href="W-06-Product-detail.dc.html" style="background: {{p.tint}}" aria-label="{{p.name}}"><span class="badge">{{p.fresh}}</span><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"></path><path d="M10 20c5.5-2.5.8-6.4 3-10"></path><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"></path><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"></path></svg></a>
+<div style="padding: 0 4px">
+<div class="pname">{{p.name}}</div>
+<div class="pfarm">{{p.farm}}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Verified farm"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m9 12 2 2 4-4"></path></svg></div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 10px"><div class="price">{{p.price}} <span class="unit">/ {{p.unit}}</span></div><button class="add" type="button" aria-label="Add {{p.name}} to cart"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></button></div>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="margin-top: 56px">
+<div class="sechd"><div><h2 class="h2">Farms near you</h2><p class="sm" style="margin-top: 4px">Every farm is verified by the Farmkeke team</p></div></div>
+<div class="g4">
+<sc-for list="{{farms}}" as="f" hint-placeholder-count="4">
+<a class="card" href="W-07-Farm-profile.dc.html" style="padding: 20px; display: flex; flex-direction: column; gap: 14px; color: #1A1A1A">
+<div style="display: flex; gap: 12px; align-items: center"><span style="width: 48px; height: 48px; border-radius: 999px; background: {{f.tint}}; color: #1E3B16; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex: none">{{f.initials}}</span><div style="min-width: 0"><div style="font-weight: 600; font-size: 15px; display: flex; gap: 5px; align-items: center">{{f.name}}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Verified farm"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m9 12 2 2 4-4"></path></svg></div><div class="cap" style="margin-top: 2px">{{f.place}}</div></div></div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; padding-top: 12px; box-shadow: inset 0 1px 0 #EEF0EB"><span style="display: flex; gap: 4px; align-items: center; font-weight: 600"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#E6A23C" stroke="#E6A23C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>{{f.rating}}</span><span style="color: #6B6F66">{{f.products}}</span></div>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section style="margin-top: 56px">
+<div class="card" style="padding: 28px 32px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap">
+<span class="tile" style="width: 52px; height: 52px; border-radius: 16px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"></rect><path d="M12 18h.01"></path></svg></span>
+<div style="flex: 1; min-width: 240px"><h2 class="h3">Shop faster in the Farmkeke app</h2><p class="sm" style="margin-top: 4px">Get order updates, chat with farmers and reorder in a tap.</p></div>
+<a class="btn dark" href="#appstore">App Store</a><a class="btn dark" href="#googleplay">Google Play</a>
+</div>
+</section>
+</main>
+
+<footer class="foot">
+<div class="wrap" style="padding-top: 56px; padding-bottom: 28px">
+<div class="gfoot">
+<div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start"><div style="display: flex; align-items: center; gap: 8px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 30px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 19px; width: auto"></div><p class="sm">From the farm directly to your home.</p><a href="#mail" style="font-size: 14px; font-weight: 600">hello@farmkeke.com</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmkeke</div><a href="Main.dc.html">About</a><a href="#how">How it works</a><a href="#pickup">Pickup locations</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Shop</div><a href="W-02-All-categories.dc.html">All categories</a><a href="#find">Find my order</a><a href="#help">Help and FAQ</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmers</div><a href="#sell">Sell on Farmkeke</a><a href="#farmer-terms">Farmer terms</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Legal</div><a href="#terms">Terms of use</a><a href="#privacy">Privacy policy</a><a href="#refunds">Refund and dispute policy</a></div>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; box-shadow: inset 0 1px 0 #EEF0EB"><span class="cap">© 2026 Farmkeke. All rights reserved.</span><span class="cap">Made in Owerri, Nigeria</span></div>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      products: [
+        { name: 'Fresh tomatoes', farm: 'Okafor Farms', price: '₦4,500', unit: 'basket', fresh: 'Harvested today', tint: '#F6E3DC' },
+        { name: 'Puna yam', farm: 'Ada Agro', price: '₦12,000', unit: '5 tubers', fresh: 'Harvested 2 days ago', tint: '#EFE8D8' },
+        { name: 'Farm eggs', farm: 'Green Valley Poultry', price: '₦5,200', unit: 'crate', fresh: 'Collected today', tint: '#F4EEDD' },
+        { name: 'Ugu leaves', farm: 'Mama Chi Farms', price: '₦1,500', unit: 'bunch', fresh: 'Harvested today', tint: '#E2EEDA' },
+        { name: 'Ripe plantain', farm: 'Nwosu Farms', price: '₦3,800', unit: 'bunch', fresh: 'Harvested yesterday', tint: '#F1EBCF' },
+        { name: 'Scotch bonnet pepper', farm: 'Okafor Farms', price: '₦2,500', unit: 'small basket', fresh: 'Harvested today', tint: '#F7E0D6' },
+        { name: 'Fresh catfish', farm: 'Riverside Fish Farm', price: '₦3,500', unit: 'kg', fresh: 'Caught today', tint: '#DDE7EC' },
+        { name: 'Garden egg', farm: 'Ada Agro', price: '₦2,000', unit: 'basket', fresh: 'Harvested yesterday', tint: '#E6EEDC' }
+      ],
+      farms: [
+        { name: 'Okafor Farms', initials: 'OF', place: 'Owerri North · 4 km away', rating: '4.8 (126)', products: '18 products', tint: '#E4F2C7' },
+        { name: 'Ada Agro', initials: 'AA', place: 'Mbaitoli · 9 km away', rating: '4.7 (88)', products: '12 products', tint: '#EFE8D8' },
+        { name: 'Green Valley Poultry', initials: 'GV', place: 'Owerri West · 6 km away', rating: '4.9 (204)', products: '6 products', tint: '#F4EEDD' },
+        { name: 'Riverside Fish Farm', initials: 'RF', place: 'Ohaji · 15 km away', rating: '4.6 (57)', products: '5 products', tint: '#DDE7EC' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

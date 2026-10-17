@@ -1,0 +1,413 @@
+@import "tailwindcss";
+
+/*
+ * Farmkeke design tokens, taken from the approved designs in
+ * farmkeke-docs/design/website. Tailwind utilities use them as e.g.
+ * bg-forest, text-muted, shadow-line. Phone layout starts below 760px:
+ * use the `m:` variant (max-width 760px) and `d:` (761px and up).
+ */
+@custom-variant m (@media (max-width: 760px));
+@custom-variant d (@media (min-width: 761px));
+
+@theme {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-montserrat), system-ui, sans-serif;
+
+  /* Brand */
+  --color-forest: #1e3b16;
+  --color-forest-hover: #16300f;
+  --color-forest-ink: #142a0e;
+  --color-lime: #a9d654;
+  --color-lime-hover: #9bcb45;
+  --color-lime-soft: #e4f2c7;
+  --color-tint: #f2f8e6;
+  --color-on-forest: #c9d8be;
+  --color-on-forest-lime: #cfe8a0;
+
+  /* Surfaces */
+  --color-canvas: #f4f5f1;
+  --color-surface: #ffffff;
+  --color-soft: #f7f8f5;
+  --color-sunk: #eef0eb;
+  --color-tabs: #e9ebe5;
+
+  /* Text */
+  --color-ink: #1a1a1a;
+  --color-ink-2: #2e322b;
+  --color-ink-3: #3b3f38;
+  --color-muted: #5a5e56;
+  --color-muted-2: #6b6f66;
+  --color-subtle: #7a7e75;
+  --color-faint: #8a8e85;
+
+  /* Lines (designs draw borders as inset box-shadows) */
+  --color-line: #e6e8e2;
+  --color-line-2: #dce0d6;
+  --color-line-3: #d9dcd3;
+  --color-line-soft: #eef0eb;
+  --color-field: #e2e5dc;
+  --color-radio: #b9beb1;
+
+  /* Status (PRD palette + design badge pairs) */
+  --color-success: #2f9e44;
+  --color-error: #d64545;
+  --color-pending: #e6a23c;
+  --color-ok: #237a35;
+  --color-ok-bg: #eaf6ec;
+  --color-held-bg: #e7eee4;
+  --color-pend: #8a5a0b;
+  --color-pend-bg: #fdf3e3;
+  --color-err: #b83232;
+  --color-err-bg: #fbecec;
+  --color-grey-bg: #f1f2ee;
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+  --radius-3xl: 24px;
+
+  /* Motion tokens (PRD: 150 / 250 / 350 ms, ease-out) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 350ms;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a {
+    color: var(--color-forest);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-forest-ink);
+  }
+  /* Clear, high-contrast keyboard focus everywhere */
+  :focus-visible {
+    outline: 3px solid var(--color-forest);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--color-lime);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  /* Respect the device's reduce-motion setting for CSS too */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Page widths: shop and app pages 1280, marketing pages 1200 */
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .wrap-site {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  @media (max-width: 760px) {
+    .wrap {
+      padding: 0 16px;
+    }
+    .wrap-site {
+      padding: 0 20px;
+    }
+  }
+
+  /* Type scale used across shop, checkout and account screens */
+  .mont {
+    font-family: var(--font-display);
+  }
+  .h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 34px;
+    line-height: 42px;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+  .h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 32px;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 24px;
+    margin: 0;
+  }
+  .p {
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--color-muted);
+    margin: 0;
+  }
+  .sm {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-muted-2);
+  }
+  .cap {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-subtle);
+  }
+  @media (max-width: 760px) {
+    .h1 {
+      font-size: 26px;
+      line-height: 34px;
+    }
+  }
+
+  .card {
+    background: var(--color-surface);
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+
+  /* Buttons. Small buttons stay 40px tall so they are easy to tap. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 20px;
+    border: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    transition:
+      background-color var(--duration-fast) var(--ease-out-soft),
+      box-shadow var(--duration-fast) var(--ease-out-soft);
+  }
+  .btn.sm {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+  .btn.lg {
+    min-height: 52px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn.lime {
+    background: var(--color-lime);
+    color: var(--color-ink);
+  }
+  .btn.lime:hover {
+    background: var(--color-lime-hover);
+    color: var(--color-ink);
+  }
+  .btn.ghost {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: inset 0 0 0 1px var(--color-line-3);
+  }
+  .btn.ghost:hover {
+    background: var(--color-soft);
+    color: var(--color-ink);
+  }
+  .btn.dark {
+    background: var(--color-forest);
+    color: #ffffff;
+  }
+  .btn.dark:hover {
+    background: var(--color-forest-hover);
+    color: #ffffff;
+  }
+  .btn.danger {
+    background: var(--color-error);
+    color: #ffffff;
+  }
+  .btn.danger:hover {
+    background: #c03a3a;
+    color: #ffffff;
+  }
+  .btn.link {
+    min-height: 44px;
+    padding: 0 4px;
+    background: transparent;
+    color: var(--color-forest);
+  }
+
+  .tile {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: var(--color-tint);
+    color: var(--color-forest);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line-2);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-ink);
+    border: 0;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .chip.on,
+  .chip[aria-pressed="true"] {
+    background: var(--color-forest);
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .b-fresh {
+    background: var(--color-tint);
+    color: var(--color-forest);
+  }
+  .b-held {
+    background: var(--color-held-bg);
+    color: var(--color-forest);
+  }
+  .b-ok {
+    background: var(--color-ok-bg);
+    color: var(--color-ok);
+  }
+  .b-pend {
+    background: var(--color-pend-bg);
+    color: var(--color-pend);
+  }
+  .b-err {
+    background: var(--color-err-bg);
+    color: var(--color-err);
+  }
+  .b-grey {
+    background: var(--color-grey-bg);
+    color: var(--color-muted);
+  }
+
+  /* Forms */
+  .lbl {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--color-ink-2);
+  }
+  .fin {
+    height: 52px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px var(--color-line-2);
+    border: 0;
+    padding: 0 14px;
+    font-size: 15px;
+    width: 100%;
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+  textarea.fin {
+    height: auto;
+    min-height: 120px;
+    padding: 14px;
+    line-height: 22px;
+    resize: vertical;
+  }
+  .fin::placeholder {
+    color: var(--color-faint);
+  }
+  .fin:focus-visible {
+    outline: 0;
+    box-shadow: inset 0 0 0 2px var(--color-forest);
+  }
+  .fin[aria-invalid="true"] {
+    box-shadow: inset 0 0 0 2px var(--color-error);
+  }
+  .hint {
+    display: block;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--color-subtle);
+    margin-top: 6px;
+  }
+  .field-error {
+    display: block;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-err);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  .sr-only-focusable:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

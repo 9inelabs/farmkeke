@@ -1,0 +1,14 @@
+{
+  "farms": [],
+  "hasMore": false,
+  "items": [
+    {
+      "id": "ms7d3f1bvya1szk38jbad3qacs8g0jw6",
+      "imageUrl": null,
+      "name": "Fresh tomatoes",
+      "priceKobo": 450000,
+      "unit": "basket"
+    }
+  ],
+  "total": 1
+}

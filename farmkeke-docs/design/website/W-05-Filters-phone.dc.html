@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — filters on a phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:14px;font-weight:500;color:#1A1A1A;border:0;font-family:inherit;white-space:nowrap;cursor:pointer}
+.chip.on{background:#1E3B16;color:#FFFFFF;box-shadow:none}
+.fg{padding:20px 16px}.fg+.fg{box-shadow:inset 0 1px 0 #EEF0EB}
+.ft{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:15px;margin:0 0 12px}
+.fin{height:46px;border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 12px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:#EDEFE9}
+.seg button{height:38px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:13px;font-weight:600;color:#5A5E56}
+.seg button.on{background:#FFFFFF;color:#1A1A1A;box-shadow:0 1px 2px rgba(0,0,0,0.08)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; font-family: Inter, system-ui, sans-serif; color: #1A1A1A; display: flex; flex-direction: column">
+<div style="height: 44px; background: #F1F2EE; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #5A5E56; flex: none">farmkeke.com/shop/vegetables</div>
+<div style="height: 60px; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; padding: 0 8px; box-shadow: inset 0 -1px 0 #EEF0EB; flex: none">
+<button type="button" aria-label="Close filters" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #1A1A1A"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+<h1 style="margin: 0; text-align: center; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 17px">Filters</h1>
+<button type="button" style="border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #1E3B16; text-align: right; padding-right: 8px">Reset</button>
+</div>
+<div style="flex: 1; overflow: hidden">
+<div class="fg"><p class="ft">Type</p><div style="display: flex; flex-wrap: wrap; gap: 8px"><button class="chip on" type="button">Tomatoes</button><button class="chip" type="button">Peppers</button><button class="chip" type="button">Leafy greens</button><button class="chip" type="button">Onions</button><button class="chip" type="button">Garden egg</button><button class="chip" type="button">Okra</button></div></div>
+<div class="fg"><p class="ft">Price (₦)</p><div style="display: flex; gap: 10px; align-items: center"><input class="fin" type="text" inputmode="numeric" aria-label="Minimum price" defaultValue="1,000"><span style="font-size: 13px; color: #7A7E75">to</span><input class="fin" type="text" inputmode="numeric" aria-label="Maximum price" defaultValue="8,000"></div></div>
+<div class="fg"><p class="ft">Harvested</p><div class="seg"><button type="button">Today</button><button class="on" type="button">Last 3 days</button><button type="button">This week</button></div></div>
+<div class="fg"><p class="ft">Distance to farm</p><div class="seg"><button type="button">5 km</button><button class="on" type="button">15 km</button><button type="button">Any</button></div></div>
+<div class="fg"><p class="ft">Get it by</p><div style="display: flex; gap: 8px"><button class="chip on" type="button">Delivery</button><button class="chip on" type="button">Pickup point</button></div></div>
+<div class="fg" style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><div><div style="font-weight: 600; font-size: 15px">Top-rated farms only</div><div style="font-size: 12px; color: #7A7E75; margin-top: 2px">Rated 4.5 and above</div></div><button type="button" role="switch" aria-checked="false" aria-label="Top-rated farms only" style="width: 48px; height: 28px; border-radius: 999px; border: 0; background: #D6DAD0; position: relative; flex: none"><span style="position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></span></button></div>
+</div>
+<div style="padding: 12px 16px 28px; box-shadow: inset 0 1px 0 #EEF0EB; background: #FFFFFF; flex: none">
+<a href="W-03-Category.dc.html" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 14px; background: #A9D654; color: #1A1A1A; font-weight: 600; font-size: 16px; text-decoration: none">Show 24 results</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

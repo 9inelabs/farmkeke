@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — empty cart</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 22px;border-radius:14px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.dark{background:#1E3B16;color:#FFFFFF}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:14px;font-weight:500;color:#1A1A1A}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.foot{background:#FFFFFF;box-shadow:inset 0 1px 0 #E6E8E2;margin-top:96px}
+@media (max-width:760px){.wrap{padding:0 16px}.toprow{flex-wrap:wrap;height:auto;padding:12px 0}.search{order:3;flex-basis:100%}}
+</style>
+</helmet>
+<div class="fk">
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink" href="#signin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Sign in</a>
+<a class="hlink" href="W-20b-Cart-empty.dc.html" style="background: #F2F8E6; color: #1E3B16"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart</a>
+</div>
+</header>
+<main class="wrap" style="padding-top: 48px">
+<section class="card" style="padding: 72px 32px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px">
+<span style="width: 88px; height: 88px; border-radius: 28px; background: #F2F8E6; color: #1E3B16; display: flex; align-items: center; justify-content: center"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 11-1 9"></path><path d="m19 11-4-7"></path><path d="M2 11h20"></path><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"></path><path d="M4.5 15.5h15"></path><path d="m5 11 4-7"></path><path d="m9 11 1 9"></path></svg></span>
+<h1 style="margin: 0; font-family: Montserrat, sans-serif; font-weight: 800; font-size: 30px; line-height: 38px; letter-spacing: -0.02em">Your cart is ready for fresh picks</h1>
+<p style="margin: 0; font-size: 15px; line-height: 24px; color: #5A5E56; max-width: 460px">Add produce from verified farms near you. Your payment stays protected until your order arrives.</p>
+<a class="btn lime" href="W-01-Shop-home.dc.html" style="margin-top: 8px">Start shopping</a>
+<div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 18px; align-items: center"><span class="cap">Popular now:</span><a class="chip" href="W-03-Category.dc.html">Tomatoes</a><a class="chip" href="#yam">Yam</a><a class="chip" href="#eggs">Eggs</a><a class="chip" href="#plantain">Plantain</a><a class="chip" href="#catfish">Catfish</a></div>
+</section>
+<div class="card" style="margin-top: 20px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+<div style="flex: 1; min-width: 240px"><div style="font-weight: 600; font-size: 15px">Placed an order as a guest?</div><div style="font-size: 13px; color: #6B6F66; margin-top: 2px">Find it with your order number and phone number.</div></div>
+<a class="btn ghost" href="#find">Find my order</a>
+</div>
+</main>
+<footer class="foot">
+<div class="wrap" style="padding-top: 28px; padding-bottom: 28px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap"><span class="cap">© 2026 Farmkeke. All rights reserved.</span><span class="cap"><a href="#terms" style="color: #5A5E56">Terms</a> · <a href="#privacy" style="color: #5A5E56">Privacy</a> · <a href="#refunds" style="color: #5A5E56">Refund and dispute policy</a> · <a href="#help" style="color: #5A5E56">Help</a></span></div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

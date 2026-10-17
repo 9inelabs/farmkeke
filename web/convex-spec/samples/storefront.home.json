@@ -1,0 +1,87 @@
+{
+  "banner": {
+    "buttonLabel": "Shop Yam",
+    "farmName": "lister Farm",
+    "listing": {
+      "id": "ms707p6s0rh1mv3zfect21pjch8g05t4",
+      "imageUrl": null,
+      "name": "Yam tubers",
+      "priceKobo": 550000,
+      "unit": "tuber"
+    },
+    "tag": "Harvest of the week",
+    "title": "New-Season yam from Okigwe"
+  },
+  "farms": [
+    {
+      "area": "Orlu",
+      "id": "mh7cb0cqt2v2efr0ttszxv531h8fyb46",
+      "name": "Ada Greens",
+      "photoUrl": null
+    },
+    {
+      "area": "Owerri North",
+      "id": "mh7d2ng9pygdaf9ngjtdx47d6s8fzp44",
+      "name": "lister Farm",
+      "photoUrl": null
+    },
+    {
+      "area": "Owerri North",
+      "id": "mh7dyptb8nd2xa9mdca3cbrees8fzp42",
+      "name": "other Farm",
+      "photoUrl": null
+    }
+  ],
+  "freshPicks": [
+    {
+      "id": "ms7dz1abdwgatemvpjq5svcwt58g07d8",
+      "imageUrl": null,
+      "name": "Brown eggs",
+      "priceKobo": 420000,
+      "unit": "tray of eggs"
+    },
+    {
+      "id": "ms7cymcjsv5znmk6dmt35f2y1n8g1f7m",
+      "imageUrl": null,
+      "name": "Ripe plantain",
+      "priceKobo": 350000,
+      "unit": "bunch"
+    },
+    {
+      "id": "ms74jgnb0phctfq828vfxbkdms8g074a",
+      "imageUrl": null,
+      "name": "Ugwu leaves",
+      "priceKobo": 80000,
+      "unit": "bunch"
+    },
+    {
+      "id": "ms7aqxm38qxtarr7k0pyq3b2x98g0gdx",
+      "imageUrl": null,
+      "name": "Oshombo pepper",
+      "priceKobo": 600000,
+      "unit": "basket"
+    },
+    {
+      "id": "ms707p6s0rh1mv3zfect21pjch8g05t4",
+      "imageUrl": null,
+      "name": "Yam tubers",
+      "priceKobo": 550000,
+      "unit": "tuber"
+    },
+    {
+      "id": "ms7d3f1bvya1szk38jbad3qacs8g0jw6",
+      "imageUrl": null,
+      "name": "Fresh tomatoes",
+      "priceKobo": 450000,
+      "unit": "basket"
+    },
+    {
+      "id": "ms716w38d65t6qqvesajh6cekn8fzna1",
+      "imageUrl": "https://incredible-wolf-877.eu-west-1.convex.cloud/api/storage/644c0414-cc1f-4366-8e54-ace0d4b947f5",
+      "name": "Big yam tubers",
+      "priceKobo": 320000,
+      "unit": "tuber"
+    }
+  ],
+  "pickedToday": []
+}

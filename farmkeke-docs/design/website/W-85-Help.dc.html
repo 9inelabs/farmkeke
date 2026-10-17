@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — help and FAQ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.mont{font-family:Montserrat,system-ui,sans-serif}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:52px;line-height:60px;letter-spacing:-0.03em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:34px;line-height:42px;letter-spacing:-0.02em;margin:0}
+.h3{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:18px;line-height:25px;letter-spacing:-0.01em;margin:0}
+.lead{font-size:18px;line-height:29px;color:#5A5E56;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px 0 6px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #E2E5DC;font-size:13px;font-weight:500;color:#1A1A1A}
+.eyebrow .dot{width:20px;height:20px;border-radius:999px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center}
+.sechead{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:680px;margin:0 auto 44px}
+.sec{padding:96px 0 0}
+.card{background:#FFFFFF;border-radius:20px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:12px;font-weight:600;font-size:15px;line-height:20px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:40px;padding:0 16px;font-size:14px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.dark{background:#1E3B16;color:#FFFFFF}
+.tile{width:46px;height:46px;border-radius:13px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:13px;font-weight:500;color:#1A1A1A}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-ok{background:#EAF6EC;color:#237A35}.b-pend{background:#FDF3E3;color:#8A5A0B}.b-held{background:#E7EEE4;color:#1E3B16}.b-err{background:#FBECEC;color:#B83232}
+.nl{color:#3B3F38;font-size:14px;font-weight:500;padding:8px 2px}
+.nl.on{color:#1E3B16;font-weight:600;box-shadow:inset 0 -2px 0 #A9D654}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.panel{border-radius:28px;padding:56px}
+.num{width:40px;height:40px;border-radius:999px;background:#1E3B16;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:16px;flex:none}
+.ok{width:22px;height:22px;border-radius:999px;background:#A9D654;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:12px 0}.kv+.kv{box-shadow:inset 0 1px 0 #EEF0EB}
+.gfoot{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:32px}
+.fl{display:flex;flex-direction:column;gap:12px}
+.fl a{color:#5A5E56;font-size:14px}
+.store{display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 22px 0 18px;border-radius:14px;background:#1A1A1A;color:#FFFFFF;text-align:left}
+.store .s1{display:block;font-size:11px;line-height:14px;color:#C8C8C8}
+.store .s2{display:block;font-family:Montserrat,system-ui,sans-serif;font-size:18px;line-height:22px;font-weight:700}
+.crumb{display:flex;align-items:center;gap:6px;font-size:13px;color:#7A7E75}
+.crumb a{color:#5A5E56}
+.navmenu{display:none}
+@media (max-width:760px){
+.wrap{padding:0 20px}
+.h1{font-size:36px;line-height:44px}
+.h2{font-size:27px;line-height:35px}
+.lead{font-size:16px;line-height:26px}
+.sec{padding:64px 0 0}
+.navlinks,.navshop{display:none}
+.navmenu{display:inline-flex}
+.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
+.gfoot{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gfoot>div:first-child{grid-column:1/-1}
+.panel{padding:28px 20px;border-radius:22px}
+.hide-m{display:none}
+}
+
+.topic{display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:20px;border-radius:18px;border:0;background:#FFFFFF;box-shadow:inset 0 0 0 1px #E6E8E2;cursor:pointer;font-family:inherit;color:#1A1A1A;text-align:left}
+.topic.on{box-shadow:inset 0 0 0 2px #1E3B16;background:#FBFDF7}
+.faqq{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;background:transparent;border:0;font-family:Montserrat,system-ui,sans-serif;font-size:16px;font-weight:700;color:#1A1A1A;text-align:left;cursor:pointer}
+.faqi+.faqi{box-shadow:inset 0 1px 0 #E6E8E2}
+
+</style>
+</helmet>
+<div class="fk">
+<header class="wrap" style="padding-top: 20px">
+<nav aria-label="Main" style="display: flex; align-items: center; gap: 20px; height: 66px; padding: 0 12px 0 20px; background: #FFFFFF; border-radius: 18px; box-shadow: inset 0 0 0 1px #E6E8E2">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 34px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 22px; width: auto"></a>
+<div class="navlinks" style="flex: 1; display: flex; justify-content: center; gap: 28px"><a class="nl" href="W-80-How-it-works.dc.html">How it works</a><a class="nl" href="W-81-Escrow.dc.html">Payment protection</a><a class="nl" href="W-60-Sell.dc.html">Sell on Farmkeke</a><a class="nl on" href="W-85-Help.dc.html">Help</a></div>
+<div class="navmenu" style="flex: 1"></div>
+<a class="btn sm ghost navshop" href="W-01-Shop-home.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path><path d="M2 7h20"></path><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path></svg>Shop on the web</a>
+<a class="btn sm lime" href="W-83-Get-the-app.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"></rect><path d="M12 18h.01"></path></svg>Get the app</a>
+</nav>
+</header>
+
+<main class="wrap" style="padding-top: 56px">
+<div class="panel" style="background: #1E3B16; text-align: center; padding: 56px">
+<h1 class="h1" style="color: #FFFFFF; font-size: 44px; line-height: 52px">How can we help?</h1>
+<p class="lead" style="color: #C9D8BE; margin-top: 10px">Search our help articles or choose a topic below.</p>
+<label style="display: flex; align-items: center; gap: 12px; height: 58px; max-width: 640px; margin: 28px auto 0; padding: 0 8px 0 20px; border-radius: 16px; background: #FFFFFF; color: #8A8E85"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Try &quot;refund&quot;, &quot;pickup code&quot; or &quot;change address&quot;" aria-label="Search help" style="flex: 1; border: 0; background: transparent; font: inherit; font-size: 16px; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm lime">Search</span></label>
+<div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px"><a class="chip" href="W-50-Find-order.dc.html" style="background: rgba(255,255,255,0.1); color: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path></svg>Find my order</a><a class="chip" href="W-81-Escrow.dc.html" style="background: rgba(255,255,255,0.1); color: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>How refunds work</a><a class="chip" href="W-82-Pickup-locations.dc.html" style="background: rgba(255,255,255,0.1); color: #FFFFFF; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>Pickup points</a></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-top: 28px"><button type="button" class="{{c0}}" aria-pressed="{{p0}}" onClick="{{pick0}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path></svg></span><span style="font-weight: 600; font-size: 15px">Ordering</span></button><button type="button" class="{{c1}}" aria-pressed="{{p1}}" onClick="{{pick1}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg></span><span style="font-weight: 600; font-size: 15px">Payment and protection</span></button><button type="button" class="{{c2}}" aria-pressed="{{p2}}" onClick="{{pick2}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg></span><span style="font-weight: 600; font-size: 15px">Delivery and pickup</span></button><button type="button" class="{{c3}}" aria-pressed="{{p3}}" onClick="{{pick3}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span><span style="font-weight: 600; font-size: 15px">Problems and refunds</span></button><button type="button" class="{{c4}}" aria-pressed="{{p4}}" onClick="{{pick4}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span><span style="font-weight: 600; font-size: 15px">Your account</span></button><button type="button" class="{{c5}}" aria-pressed="{{p5}}" onClick="{{pick5}}"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"></path><path d="M10 20c5.5-2.5.8-6.4 3-10"></path><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"></path><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"></path></svg></span><span style="font-weight: 600; font-size: 15px">Selling</span></button></div>
+<div style="display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 24px; margin-top: 28px; align-items: start">
+<section>
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px"><h2 class="h3" style="font-size: 22px; line-height: 30px">{{topicName}}</h2><span class="cap">{{count}} articles</span></div>
+<div class="card" style="overflow: hidden">
+<sc-for list="{{faqs}}" as="f" hint-placeholder-count="5">
+<div class="faqi">
+<button class="faqq" type="button" onClick="{{f.toggle}}" aria-expanded="{{f.expanded}}">{{f.q}}
+<sc-if value="{{f.open}}" hint-placeholder-val="{{false}}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14"></path></svg></sc-if>
+<sc-if value="{{f.closed}}" hint-placeholder-val="{{true}}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></sc-if>
+</button>
+<sc-if value="{{f.open}}" hint-placeholder-val="{{false}}"><p class="p" style="padding: 0 24px 22px; margin-top: -4px">{{f.a}}</p></sc-if>
+</div>
+</sc-for>
+</div>
+</section>
+<aside style="display: flex; flex-direction: column; gap: 16px">
+<div class="card" style="padding: 24px">
+<h2 class="h3" style="font-size: 17px">Still need help?</h2>
+<p class="p" style="font-size: 14px; margin-top: 4px">Our support team replies within a few hours, Monday to Saturday.</p>
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px">
+<a class="btn sm dark" href="W-86-Contact.dc.html" style="width: 100%"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Chat with support</a>
+<a class="btn sm ghost" href="W-86-Contact.dc.html" style="width: 100%"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>Send us a message</a>
+</div>
+</div>
+<div class="card" style="padding: 24px; display: flex; gap: 14px"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Problem with an order?</div><p class="p" style="font-size: 14px; margin-top: 2px">Report it from your order page before you confirm, so your money stays held.</p><a href="W-44-My-orders.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; margin-top: 8px">Go to my orders<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a></div></div>
+</aside>
+</div>
+</main>
+<footer style="margin-top: 96px; background: #FFFFFF; box-shadow: inset 0 1px 0 #E6E8E2">
+<div class="wrap" style="padding-top: 56px; padding-bottom: 28px">
+<div class="gfoot">
+<div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+<div style="display: flex; align-items: center; gap: 10px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 34px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 22px; width: auto"></div>
+<p class="p" style="max-width: 280px">From the farm directly to your home.</p>
+<a href="W-86-Contact.dc.html" style="font-size: 14px; font-weight: 600">hello@farmkeke.com</a>
+</div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmkeke</div><a href="W-84-About.dc.html">About</a><a href="W-80-How-it-works.dc.html">How it works</a><a href="W-82-Pickup-locations.dc.html">Pickup locations</a><a href="W-81-Escrow.dc.html">Payment protection</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Shop</div><a href="W-01-Shop-home.dc.html">Shop on the web</a><a href="W-50-Find-order.dc.html">Find my order</a><a href="W-83-Get-the-app.dc.html">Get the app</a><a href="W-85-Help.dc.html">Help and FAQ</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmers</div><a href="W-60-Sell.dc.html">Sell on Farmkeke</a><a href="W-60-Sell.dc.html">How to apply</a><a href="W-87-Legal.dc.html">Farmer terms</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Legal</div><a href="W-87-Legal.dc.html">Terms of use</a><a href="W-87-Legal.dc.html">Privacy policy</a><a href="W-87-Legal.dc.html">Refund and dispute policy</a><a href="W-86-Contact.dc.html">Contact</a></div>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; padding-top: 22px; box-shadow: inset 0 1px 0 #EEF0EB">
+<span class="cap">© 2026 Farmkeke. All rights reserved.</span>
+<span class="cap">Made in Owerri, Nigeria</span>
+</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 1800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { topic: 3, open: 0 };
+  }
+  renderVals() {
+    const names = ['Ordering', 'Payment and protection', 'Delivery and pickup', 'Problems and refunds', 'Your account', 'Selling'];
+    const data = [
+      [
+        ['Do I need an account to order?', 'No. You can check out as a guest with your name and phone number. You can save your details as an account afterwards, and your guest orders are linked to it.'],
+        ['Can I order from more than one farm?', 'Yes. Your cart can hold items from several farms. At checkout, each farm gets its own order, with its own delivery fee and tracking.'],
+        ['How do I find my order as a guest?', 'Go to Find my order and enter your order number and phone number. On a different device, you can view the order but not confirm it.'],
+        ['Can I change or cancel my order?', 'You can cancel for a full refund until the farm accepts it. After that, contact support and we will check with the farm.']
+      ],
+      [
+        ['How can I pay?', 'Card, bank transfer or USSD, all through Paystack. Farmkeke never sees your full card number.'],
+        ['When is the farmer paid?', 'Only after you confirm your order arrived as expected. Until then, Farmkeke holds the money.'],
+        ['What if the farm does not accept my order?', 'Farms have 24 hours to accept. If they do not, your payment is refunded in full automatically.'],
+        ['A farmer asked me to pay them directly. What should I do?', 'Do not pay. Payments outside Farmkeke are not protected. Please report it to support.']
+      ],
+      [
+        ['Where do you deliver?', 'Within our service areas in Owerri. Enter your area when you start shopping to see delivery and pickup options.'],
+        ['How much is delivery?', 'Each farm order has its own delivery fee, shown at checkout before you pay. Pickup is free.'],
+        ['How long do I have to collect a pickup order?', 'Your order waits at the pickup point for 3 days. Bring your 4-digit pickup code.'],
+        ['Can someone else collect for me?', 'Yes. Share the pickup code and order number with them. Only confirm once you know everything is correct.']
+      ],
+      [
+        ['Something is wrong with my order. What do I do?', 'Open your order and choose Report a problem before you confirm. Add photos and tell us which items were affected. Your money stays held.'],
+        ['How long does a problem report take?', 'The farm has 12 hours to reply. Farmkeke then decides the outcome, usually within about a day.'],
+        ['Will the delivery fee be refunded?', 'For a part refund, you are refunded for the affected items only. The delivery fee is not refunded because the delivery still happened.'],
+        ['Where does my refund go?', 'Back to the card or bank account you paid with. Your bank may take a few working days to show it.'],
+        ['I already confirmed. Can I still report a problem?', 'Confirming releases the money to the farm and cannot be undone. Contact support and we will try to help with the farm.']
+      ],
+      [
+        ['I forgot my password', 'On the sign-in page, choose Forgot password. We will email you a reset link that works for 30 minutes.'],
+        ['How do I change my delivery address?', 'Go to Your account, then Addresses. You can add, edit or set a default address.'],
+        ['Can I turn off messages?', 'You can turn off most updates in Notification preferences. Messages about payments and refunds always stay on.'],
+        ['How do I delete my account?', 'Go to Your account, then Delete account. You cannot delete it while an order is still in progress.']
+      ],
+      [
+        ['How do I become a Farmkeke farmer?', 'Download the app, go to Account, then Sell on Farmkeke, and submit your application with the required documents.'],
+        ['What documents do I need?', 'Government ID, farm photos, proof of address, a farmers association letter and bank details for payouts.'],
+        ['Can I sell on the website?', 'Not yet. Farmers apply and manage everything in the Farmkeke app.']
+      ]
+    ];
+    const t = this.state.topic;
+    const vals = {
+      topicName: names[t],
+      count: String(data[t].length),
+      faqs: data[t].map((qa, i) => ({
+        q: qa[0],
+        a: qa[1],
+        open: this.state.open === i,
+        closed: this.state.open !== i,
+        expanded: this.state.open === i ? 'true' : 'false',
+        toggle: () => this.setState({ open: this.state.open === i ? -1 : i })
+      }))
+    };
+    for (let i = 0; i < 6; i++) {
+      vals['c' + i] = i === t ? 'topic on' : 'topic';
+      vals['p' + i] = i === t ? 'true' : 'false';
+      vals['pick' + i] = () => this.setState({ topic: i, open: 0 });
+    }
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

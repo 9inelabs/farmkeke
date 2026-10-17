@@ -1,0 +1,32 @@
+{
+  "category": {
+    "id": "k179n7mvn37g8x5a16grh2kreh8fyjcg",
+    "name": "Vegetables",
+    "slug": "vegetables"
+  },
+  "hasMore": false,
+  "items": [
+    {
+      "id": "ms74jgnb0phctfq828vfxbkdms8g074a",
+      "imageUrl": null,
+      "name": "Ugwu leaves",
+      "priceKobo": 80000,
+      "unit": "bunch"
+    },
+    {
+      "id": "ms7aqxm38qxtarr7k0pyq3b2x98g0gdx",
+      "imageUrl": null,
+      "name": "Oshombo pepper",
+      "priceKobo": 600000,
+      "unit": "basket"
+    },
+    {
+      "id": "ms7d3f1bvya1szk38jbad3qacs8g0jw6",
+      "imageUrl": null,
+      "name": "Fresh tomatoes",
+      "priceKobo": 450000,
+      "unit": "basket"
+    }
+  ],
+  "total": 3
+}

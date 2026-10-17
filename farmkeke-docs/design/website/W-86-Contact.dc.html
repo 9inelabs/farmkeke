@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — contact</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.mont{font-family:Montserrat,system-ui,sans-serif}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:52px;line-height:60px;letter-spacing:-0.03em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:34px;line-height:42px;letter-spacing:-0.02em;margin:0}
+.h3{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:18px;line-height:25px;letter-spacing:-0.01em;margin:0}
+.lead{font-size:18px;line-height:29px;color:#5A5E56;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 14px 0 6px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #E2E5DC;font-size:13px;font-weight:500;color:#1A1A1A}
+.eyebrow .dot{width:20px;height:20px;border-radius:999px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center}
+.sechead{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:680px;margin:0 auto 44px}
+.sec{padding:96px 0 0}
+.card{background:#FFFFFF;border-radius:20px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 22px;border-radius:12px;font-weight:600;font-size:15px;line-height:20px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:40px;padding:0 16px;font-size:14px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.dark{background:#1E3B16;color:#FFFFFF}
+.tile{width:46px;height:46px;border-radius:13px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:13px;font-weight:500;color:#1A1A1A}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-ok{background:#EAF6EC;color:#237A35}.b-pend{background:#FDF3E3;color:#8A5A0B}.b-held{background:#E7EEE4;color:#1E3B16}.b-err{background:#FBECEC;color:#B83232}
+.nl{color:#3B3F38;font-size:14px;font-weight:500;padding:8px 2px}
+.nl.on{color:#1E3B16;font-weight:600;box-shadow:inset 0 -2px 0 #A9D654}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.panel{border-radius:28px;padding:56px}
+.num{width:40px;height:40px;border-radius:999px;background:#1E3B16;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:16px;flex:none}
+.ok{width:22px;height:22px;border-radius:999px;background:#A9D654;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:12px 0}.kv+.kv{box-shadow:inset 0 1px 0 #EEF0EB}
+.gfoot{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:32px}
+.fl{display:flex;flex-direction:column;gap:12px}
+.fl a{color:#5A5E56;font-size:14px}
+.store{display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 22px 0 18px;border-radius:14px;background:#1A1A1A;color:#FFFFFF;text-align:left}
+.store .s1{display:block;font-size:11px;line-height:14px;color:#C8C8C8}
+.store .s2{display:block;font-family:Montserrat,system-ui,sans-serif;font-size:18px;line-height:22px;font-weight:700}
+.crumb{display:flex;align-items:center;gap:6px;font-size:13px;color:#7A7E75}
+.crumb a{color:#5A5E56}
+.navmenu{display:none}
+@media (max-width:760px){
+.wrap{padding:0 20px}
+.h1{font-size:36px;line-height:44px}
+.h2{font-size:27px;line-height:35px}
+.lead{font-size:16px;line-height:26px}
+.sec{padding:64px 0 0}
+.navlinks,.navshop{display:none}
+.navmenu{display:inline-flex}
+.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}
+.gfoot{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gfoot>div:first-child{grid-column:1/-1}
+.panel{padding:28px 20px;border-radius:22px}
+.hide-m{display:none}
+}
+
+</style>
+</helmet>
+<div class="fk">
+<header class="wrap" style="padding-top: 20px">
+<nav aria-label="Main" style="display: flex; align-items: center; gap: 20px; height: 66px; padding: 0 12px 0 20px; background: #FFFFFF; border-radius: 18px; box-shadow: inset 0 0 0 1px #E6E8E2">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 34px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 22px; width: auto"></a>
+<div class="navlinks" style="flex: 1; display: flex; justify-content: center; gap: 28px"><a class="nl" href="W-80-How-it-works.dc.html">How it works</a><a class="nl" href="W-81-Escrow.dc.html">Payment protection</a><a class="nl" href="W-60-Sell.dc.html">Sell on Farmkeke</a><a class="nl" href="W-85-Help.dc.html">Help</a></div>
+<div class="navmenu" style="flex: 1"></div>
+<a class="btn sm ghost navshop" href="W-01-Shop-home.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path><path d="M2 7h20"></path><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"></path></svg>Shop on the web</a>
+<a class="btn sm lime" href="W-83-Get-the-app.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"></rect><path d="M12 18h.01"></path></svg>Get the app</a>
+</nav>
+</header>
+
+<main class="wrap" style="padding-top: 56px">
+<div style="max-width: 680px"><span class="eyebrow"><span class="dot"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span>Contact</span><h1 class="h1" style="margin-top: 14px; font-size: 44px; line-height: 52px">We're here to help</h1><p class="lead" style="margin-top: 10px">Support is open Monday to Saturday, 8am to 8pm. We usually reply within a few hours.</p></div>
+<div class="g3" style="margin-top: 36px">
+<div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 12px"><span class="tile"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg></span><h3 class="h3" style="font-size: 17px">Chat with us</h3><p class="p" style="font-size: 14px">The fastest way to get help with an order.</p><div style="font-weight: 600; font-size: 15px">In the app or on your order page</div><span class="btn sm ghost" style="align-self: flex-start; margin-top: 4px"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Start a chat</span></div>
+<div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 12px"><span class="tile"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></span><h3 class="h3" style="font-size: 17px">Call or WhatsApp</h3><p class="p" style="font-size: 14px">Speak to someone on our support team.</p><div style="font-weight: 600; font-size: 15px">+234 [support line]</div><span class="btn sm ghost" style="align-self: flex-start; margin-top: 4px"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>Call support</span></div>
+<div class="card" style="padding: 26px; display: flex; flex-direction: column; gap: 12px"><span class="tile"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span><h3 class="h3" style="font-size: 17px">Email</h3><p class="p" style="font-size: 14px">For anything that is not urgent, or to send documents.</p><div style="font-weight: 600; font-size: 15px">support@farmkeke.com</div><span class="btn sm ghost" style="align-self: flex-start; margin-top: 4px"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>Send an email</span></div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; margin-top: 24px; align-items: start">
+<form class="card" style="padding: 36px">
+<h2 class="h3" style="font-size: 22px; line-height: 30px">Send us a message</h2>
+<p class="p" style="margin-top: 4px; font-size: 14px">We'll reply by email, and by SMS if it's about an order.</p>
+<div class="g2" style="gap: 16px; margin-top: 24px">
+<label><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">Your name</span><input type="text" defaultValue="Adaeze Nwankwo" style="height: 50px; width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 0 14px; font: inherit; font-size: 15px; background: #FFFFFF"></label>
+<label><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">Phone number</span><input type="tel" defaultValue="+234 803 123 4567" style="height: 50px; width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 0 14px; font: inherit; font-size: 15px; background: #FFFFFF"></label>
+</div>
+<label style="display: block; margin-top: 16px"><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">Email address</span><input type="email" defaultValue="adaeze@example.com" style="height: 50px; width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 0 14px; font: inherit; font-size: 15px; background: #FFFFFF"></label>
+<div class="g2" style="gap: 16px; margin-top: 16px">
+<label><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">What is it about?</span><select defaultValue="order" style="height: 50px; width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 0 14px; font: inherit; font-size: 15px; background: #FFFFFF; appearance: auto"><option value="order">An order</option><option value="payment">Payment or refund</option><option value="account">My account</option><option value="selling">Selling on Farmkeke</option><option value="other">Something else</option></select></label>
+<label><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">Order number <span style="font-weight: 500; color: #7A7E75">(if you have one)</span></span><input type="text" placeholder="For example FK-10234" style="height: 50px; width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 0 14px; font: inherit; font-size: 15px; background: #FFFFFF"></label>
+</div>
+<label style="display: block; margin-top: 16px"><span style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px">Your message</span><textarea rows="5" placeholder="Tell us what happened and how we can help" style="width: 100%; border-radius: 12px; box-shadow: inset 0 0 0 1px #DCE0D6; border: 0; padding: 14px; font: inherit; font-size: 15px; resize: none"></textarea></label>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 20px; flex-wrap: wrap"><span class="cap">By sending, you agree to our privacy policy.</span><button class="btn lime" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>Send message</button></div>
+</form>
+<aside style="display: flex; flex-direction: column; gap: 16px">
+<div class="card" style="padding: 26px">
+<h2 class="h3" style="font-size: 17px">Office</h2>
+<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px; font-size: 14px; color: #3B3F38">
+<div style="display: flex; gap: 10px"><span style="color: #1E3B16"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></span><span>[Office address], Owerri, Imo State</span></div>
+<div style="display: flex; gap: 10px"><span style="color: #1E3B16"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></span><span>Monday to Saturday, 8am to 8pm</span></div>
+<div style="display: flex; gap: 10px"><span style="color: #1E3B16"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></span><span>hello@farmkeke.com for partnerships and press</span></div>
+</div>
+</div>
+<div class="card" style="padding: 26px; display: flex; gap: 14px"><span class="tile" style="width: 40px; height: 40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></span><div><div style="font-weight: 600; font-size: 15px">Quick answers</div><p class="p" style="font-size: 14px; margin-top: 2px">Many questions are answered in our help centre.</p><a href="W-85-Help.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; margin-top: 8px">Visit help and FAQ<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a></div></div>
+<div style="display: flex; gap: 12px; padding: 18px 20px; border-radius: 16px; background: #FDF3E3; font-size: 13px; line-height: 19px; color: #5E3E08"><span style="color: #8A5A0B; flex: none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg></span><span>Farmkeke staff will never ask for your card PIN, password or a one-time code.</span></div>
+</aside>
+</div>
+</main>
+<footer style="margin-top: 96px; background: #FFFFFF; box-shadow: inset 0 1px 0 #E6E8E2">
+<div class="wrap" style="padding-top: 56px; padding-bottom: 28px">
+<div class="gfoot">
+<div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+<div style="display: flex; align-items: center; gap: 10px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 34px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 22px; width: auto"></div>
+<p class="p" style="max-width: 280px">From the farm directly to your home.</p>
+<a href="W-86-Contact.dc.html" style="font-size: 14px; font-weight: 600">hello@farmkeke.com</a>
+</div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmkeke</div><a href="W-84-About.dc.html">About</a><a href="W-80-How-it-works.dc.html">How it works</a><a href="W-82-Pickup-locations.dc.html">Pickup locations</a><a href="W-81-Escrow.dc.html">Payment protection</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Shop</div><a href="W-01-Shop-home.dc.html">Shop on the web</a><a href="W-50-Find-order.dc.html">Find my order</a><a href="W-83-Get-the-app.dc.html">Get the app</a><a href="W-85-Help.dc.html">Help and FAQ</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmers</div><a href="W-60-Sell.dc.html">Sell on Farmkeke</a><a href="W-60-Sell.dc.html">How to apply</a><a href="W-87-Legal.dc.html">Farmer terms</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Legal</div><a href="W-87-Legal.dc.html">Terms of use</a><a href="W-87-Legal.dc.html">Privacy policy</a><a href="W-87-Legal.dc.html">Refund and dispute policy</a><a href="W-86-Contact.dc.html">Contact</a></div>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; padding-top: 22px; box-shadow: inset 0 1px 0 #EEF0EB">
+<span class="cap">© 2026 Farmkeke. All rights reserved.</span>
+<span class="cap">Made in Owerri, Nigeria</span>
+</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 1750}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

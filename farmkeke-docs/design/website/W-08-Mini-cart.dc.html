@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — mini-cart</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0}.item+.item{box-shadow:inset 0 1px 0 #EEF0EB}
+.thumb{width:56px;height:56px;border-radius:12px;flex:none}
+.qty{display:flex;align-items:center;height:34px;border-radius:10px;box-shadow:inset 0 0 0 1px #DCE0D6}
+.qty button{width:32px;height:34px;border:0;background:transparent;color:#1E3B16;font-size:16px;font-weight:600;cursor:pointer}
+.sk{background:#ECEEE8;border-radius:16px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #F4F5F1; font-family: Inter, system-ui, sans-serif; color: #1A1A1A">
+<div aria-hidden="true">
+<div style="height: 76px; background: #FFFFFF; box-shadow: inset 0 -1px 0 #E6E8E2; display: flex; align-items: center; gap: 16px; padding: 0 80px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="" style="height: 20px; width: auto"><div style="flex: 1; height: 46px; border-radius: 12px; background: #F4F5F1; margin-left: 140px"></div><div style="width: 200px"></div></div>
+<div style="padding: 32px 80px; display: flex; gap: 28px"><div class="sk" style="width: 280px; height: 700px"></div><div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px"><div class="sk" style="height: 300px; background: #F6E3DC"></div><div class="sk" style="height: 300px"></div><div class="sk" style="height: 300px"></div><div class="sk" style="height: 300px"></div><div class="sk" style="height: 300px"></div><div class="sk" style="height: 300px"></div></div></div>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(26,26,26,0.45)"></div>
+
+<aside role="dialog" aria-modal="true" aria-labelledby="mc-title" style="position: absolute; top: 0; right: 0; bottom: 0; width: 440px; background: #FFFFFF; box-shadow: -12px 0 40px rgba(0,0,0,0.12); display: flex; flex-direction: column">
+<div style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: inset 0 -1px 0 #EEF0EB">
+<h2 id="mc-title" style="margin: 0; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 20px">Your cart <span style="font-family: Inter, sans-serif; font-weight: 500; font-size: 14px; color: #7A7E75">(3 items)</span></h2>
+<button type="button" aria-label="Close cart" style="width: 40px; height: 40px; border-radius: 10px; border: 0; background: #F4F5F1; display: flex; align-items: center; justify-content: center; color: #1A1A1A; cursor: pointer"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+</div>
+<div style="margin: 16px 24px 0; padding: 12px 14px; border-radius: 12px; background: #EAF6EC; color: #237A35; display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Fresh tomatoes added to your cart</div>
+
+<div style="flex: 1; overflow: hidden; padding: 8px 24px">
+<div style="padding-top: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-weight: 600; font-size: 14px">Okafor Farms</span><span style="font-size: 12px; color: #7A7E75">Order 1 of 2</span></div>
+<div class="item"><div class="thumb" style="background: #F6E3DC"></div><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">Fresh tomatoes</div><div style="font-size: 12px; color: #7A7E75">Basket · ₦4,500</div></div><div class="qty"><button type="button" aria-label="Decrease">−</button><span style="width: 20px; text-align: center; font-weight: 600; font-size: 14px">2</span><button type="button" aria-label="Increase">+</button></div></div>
+<div class="item"><div class="thumb" style="background: #F7E0D6"></div><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">Scotch bonnet pepper</div><div style="font-size: 12px; color: #7A7E75">Small basket · ₦2,500</div></div><div class="qty"><button type="button" aria-label="Decrease">−</button><span style="width: 20px; text-align: center; font-weight: 600; font-size: 14px">1</span><button type="button" aria-label="Increase">+</button></div></div>
+</div>
+<div style="padding-top: 18px; margin-top: 8px; box-shadow: inset 0 1px 0 #E6E8E2">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-weight: 600; font-size: 14px">Green Valley Poultry</span><span style="font-size: 12px; color: #7A7E75">Order 2 of 2</span></div>
+<div class="item"><div class="thumb" style="background: #F4EEDD"></div><div style="flex: 1; min-width: 0"><div style="font-weight: 600; font-size: 14px">Farm eggs</div><div style="font-size: 12px; color: #7A7E75">Crate · ₦5,200</div></div><div class="qty"><button type="button" aria-label="Decrease">−</button><span style="width: 20px; text-align: center; font-weight: 600; font-size: 14px">1</span><button type="button" aria-label="Increase">+</button></div></div>
+</div>
+<div style="margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #F4F7EE; display: flex; gap: 10px; font-size: 13px; line-height: 18px; color: #3B4636"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>Items from different farms become separate orders, each delivered on its own.</div>
+</div>
+
+<div style="padding: 20px 24px 24px; box-shadow: inset 0 1px 0 #EEF0EB; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; color: #5A5E56">Subtotal</span><span style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 22px; color: #1E3B16">₦16,700</span></div>
+<div style="font-size: 12px; color: #7A7E75; margin-top: -8px">Delivery fee is added at checkout</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><a class="btn ghost" href="#cart">View cart</a><a class="btn lime" href="#checkout">Checkout</a></div>
+</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

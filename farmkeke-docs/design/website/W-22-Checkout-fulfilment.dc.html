@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke checkout — delivery or pickup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1160px;margin:0 auto;padding:0 32px}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:28px;line-height:36px;letter-spacing:-0.02em;margin:0}
+.h2{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:18px;line-height:26px;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.card{background:#FFFFFF;border-radius:20px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:54px;padding:0 24px;border-radius:14px;font-weight:600;font-size:16px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lime{background:#A9D654;color:#1A1A1A}
+.ckhead{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.steps{display:flex;align-items:center;gap:10px}
+.st{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#9A9E95;white-space:nowrap}
+.st .n{width:26px;height:26px;border-radius:999px;background:#ECEEE8;color:#6B6F66;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.st.done{color:#1E3B16}.st.done .n{background:#1E3B16;color:#FFFFFF}
+.st.cur{color:#1A1A1A}.st.cur .n{background:#A9D654;color:#1A1A1A}
+.sep{width:36px;height:1px;background:#D9DCD3}
+.lay{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:28px;align-items:start}
+.opt{display:flex;gap:16px;align-items:flex-start;padding:20px;border-radius:16px;border:0;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font:inherit;text-align:left;width:100%;cursor:pointer;color:#1A1A1A}
+.opt.on{box-shadow:inset 0 0 0 2px #1E3B16;background:#F7FAF1}
+.radio{width:22px;height:22px;border-radius:999px;box-shadow:inset 0 0 0 1.5px #B9BEB1;flex:none;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.radio.on{box-shadow:inset 0 0 0 1.5px #1E3B16}.radio.on span{width:12px;height:12px;border-radius:999px;background:#1E3B16}
+.ic{width:46px;height:46px;border-radius:13px;background:#F2F8E6;color:#1E3B16;display:flex;align-items:center;justify-content:center;flex:none}
+.line{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;color:#3B3F38}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;background:#E4F2C7;color:#1E3B16}
+@media (max-width:760px){.wrap{padding:0 16px}.lay{grid-template-columns:minmax(0,1fr)}.st .lab{display:none}.sep{width:16px}}
+</style>
+</helmet>
+<div class="fk">
+<header class="ckhead">
+<div class="wrap" style="height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 30px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 19px; width: auto"></a>
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #1E3B16"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Secure checkout</span>
+<a href="W-20-Cart.dc.html" style="font-size: 14px; font-weight: 600">Back to cart</a>
+</div>
+</header>
+<main class="wrap" style="padding-top: 32px">
+<nav class="steps" aria-label="Checkout steps"><span class="st done"><span class="n"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span><span class="lab">Contact</span></span><span class="sep"></span><span class="st cur" aria-current="step"><span class="n">2</span><span class="lab">Delivery</span></span><span class="sep"></span><span class="st"><span class="n">3</span><span class="lab">Details</span></span><span class="sep"></span><span class="st"><span class="n">4</span><span class="lab">Review and pay</span></span></nav>
+
+<div class="lay" style="margin-top: 28px">
+<section class="card" style="padding: 32px">
+<h1 class="h1">How do you want to get your order?</h1>
+<p class="p" style="margin-top: 6px">This applies to both farms in your cart.</p>
+<div role="radiogroup" aria-label="Delivery or pickup" style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px">
+<button class="{{deliveryCls}}" type="button" role="radio" aria-checked="{{deliveryChecked}}" onClick="{{pickDelivery}}">
+<span class="{{deliveryRadio}}"><span></span></span>
+<span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg></span>
+<span style="flex: 1"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 700; font-size: 16px">Home delivery</span><span style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 16px">₦2,700</span></span><span style="display: block; font-size: 14px; color: #5A5E56; margin-top: 4px">A Farmkeke rider brings each farm's order to your door. Usually same day or next day.</span><span style="display: block; font-size: 12px; color: #7A7E75; margin-top: 6px">Okafor Farms ₦1,200 · Green Valley Poultry ₦1,500</span></span>
+</button>
+<button class="{{pickupCls}}" type="button" role="radio" aria-checked="{{pickupChecked}}" onClick="{{pickPickup}}">
+<span class="{{pickupRadio}}"><span></span></span>
+<span class="ic"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+<span style="flex: 1"><span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-weight: 700; font-size: 16px">Pickup point <span class="tag" style="margin-left: 6px">No fee</span></span><span style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 16px">₦0</span></span><span style="display: block; font-size: 14px; color: #5A5E56; margin-top: 4px">Collect from a Farmkeke pickup point near you with your pickup code. Ready the day after the farms accept.</span><span style="display: block; font-size: 12px; color: #7A7E75; margin-top: 6px">3 pickup points in Owerri North</span></span>
+</button>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 28px; padding-top: 24px; box-shadow: inset 0 1px 0 #EEF0EB">
+<a href="W-21-Checkout-contact.dc.html" style="font-size: 14px; font-weight: 600">Back</a>
+<sc-if value="{{isDelivery}}" hint-placeholder-val="{{true}}"><a class="btn lime" href="W-23-Checkout-address.dc.html" style="min-width: 220px">Continue</a></sc-if>
+<sc-if value="{{isPickup}}" hint-placeholder-val="{{false}}"><a class="btn lime" href="W-24-Checkout-pickup.dc.html" style="min-width: 220px">Continue</a></sc-if>
+</div>
+</section>
+
+<aside class="card" style="padding: 24px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="h2">Order summary</h2><a href="W-20-Cart.dc.html" style="font-size: 13px; font-weight: 600">Edit</a></div>
+<div class="cap" style="margin-top: 2px">2 farms · 3 items</div>
+<div style="margin-top: 16px">
+<div class="line"><span>Okafor Farms (2 items)</span><span>₦11,500</span></div>
+<div class="line"><span>Green Valley Poultry (1 item)</span><span>₦5,200</span></div>
+</div>
+<div style="margin-top: 10px; padding-top: 10px; box-shadow: inset 0 1px 0 #EEF0EB">
+<div class="line"><span>Items</span><span>₦16,700</span></div>
+<div class="line"><span>{{feeLabel}}</span><span>{{fee}}</span></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; margin-top: 6px; box-shadow: inset 0 1px 0 #EEF0EB"><span style="font-weight: 600">Total</span><span style="font-family: Montserrat, sans-serif; font-weight: 800; font-size: 22px; color: #1E3B16">{{total}}</span></div>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'delivery' };
+  }
+  renderVals() {
+    const d = this.state.mode === 'delivery';
+    return {
+      isDelivery: d,
+      isPickup: !d,
+      deliveryCls: d ? 'opt on' : 'opt',
+      pickupCls: d ? 'opt' : 'opt on',
+      deliveryRadio: d ? 'radio on' : 'radio',
+      pickupRadio: d ? 'radio' : 'radio on',
+      deliveryChecked: d ? 'true' : 'false',
+      pickupChecked: d ? 'false' : 'true',
+      pickDelivery: () => this.setState({ mode: 'delivery' }),
+      pickPickup: () => this.setState({ mode: 'pickup' }),
+      feeLabel: d ? 'Delivery (2 orders)' : 'Pickup',
+      fee: d ? '₦2,700' : 'No fee',
+      total: d ? '₦19,400' : '₦16,700'
+    };
+  }
+}
+</script>
+</body>
+</html>

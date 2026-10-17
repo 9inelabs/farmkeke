@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke shop — vegetables</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F1}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}a:hover{color:#142a0e}
+.fk{font-family:Inter,system-ui,sans-serif;color:#1A1A1A;background:#F4F5F1;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.h1{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:34px;line-height:42px;letter-spacing:-0.025em;margin:0}
+.h3{font-family:Montserrat,system-ui,sans-serif;font-weight:700;font-size:17px;line-height:24px;margin:0}
+.p{font-size:15px;line-height:24px;color:#5A5E56;margin:0}
+.sm{font-size:13px;line-height:18px;color:#6B6F66}
+.cap{font-size:12px;line-height:16px;color:#7A7E75}
+.card{background:#FFFFFF;border-radius:18px;box-shadow:inset 0 0 0 1px #E6E8E2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:12px;font-weight:600;font-size:15px;line-height:20px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:10px}
+.lime{background:#A9D654;color:#1A1A1A}.lime:hover{background:#9BCB45;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}.ghost:hover{background:#F7F8F5;color:#1A1A1A}
+.dark{background:#1E3B16;color:#FFFFFF}.dark:hover{background:#16300f;color:#FFFFFF}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:13px;font-weight:500;color:#1A1A1A;border:0;font-family:inherit;white-space:nowrap;cursor:pointer}
+.chip.on{background:#E7EEE4;color:#1E3B16;box-shadow:none}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:600;white-space:nowrap}
+.top{background:#FFFFFF;box-shadow:inset 0 -1px 0 #E6E8E2}
+.toprow{display:flex;align-items:center;gap:16px;height:76px}
+.search{flex:1;display:flex;align-items:center;gap:10px;height:46px;padding:0 6px 0 16px;border-radius:12px;background:#F4F5F1;box-shadow:inset 0 0 0 1px #E2E5DC;color:#8A8E85;font-size:15px}
+.hlink{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:10px;color:#1A1A1A;font-size:14px;font-weight:500;white-space:nowrap}
+.hlink:hover{background:#F4F5F1;color:#1A1A1A}
+.area{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 14px;border-radius:12px;box-shadow:inset 0 0 0 1px #E2E5DC;font-size:14px;color:#1A1A1A;white-space:nowrap;background:#FFFFFF}
+.cnav{display:flex;gap:28px;height:50px;align-items:stretch;font-size:14px;font-weight:500;overflow-x:auto}
+.cnav a{color:#3B3F38;display:flex;align-items:center;white-space:nowrap}.cnav a.on{color:#1E3B16;font-weight:600;box-shadow:inset 0 -2px 0 #A9D654}
+.count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#A9D654;color:#1A1A1A;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.pc{background:#FFFFFF;border-radius:16px;box-shadow:inset 0 0 0 1px #E6E8E2;padding:10px;display:flex;flex-direction:column;gap:10px}
+.pimg{aspect-ratio:4/3;border-radius:11px;position:relative;display:flex;align-items:center;justify-content:center;color:rgba(30,59,22,0.32)}
+.pimg .badge{position:absolute;left:8px;top:8px;background:#FFFFFF;color:#1E3B16}
+.pname{font-weight:600;font-size:15px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfarm{font-size:12px;line-height:16px;color:#6B6F66;display:flex;gap:4px;align-items:center;margin-top:2px}
+.price{font-family:Montserrat,system-ui,sans-serif;font-weight:800;font-size:17px;line-height:22px;color:#1E3B16}
+.unit{font-family:Inter,system-ui,sans-serif;font-weight:500;font-size:12px;color:#7A7E75}
+.add{width:38px;height:38px;border-radius:11px;background:#A9D654;color:#1A1A1A;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.crumb{display:flex;gap:8px;font-size:13px;color:#7A7E75;align-items:center}.crumb a{color:#5A5E56}
+.layout{display:flex;gap:28px;align-items:flex-start}
+.side{width:280px;flex:none;overflow:hidden}
+.fg{padding:20px 22px}.fg+.fg{box-shadow:inset 0 1px 0 #EEF0EB}
+.ft{font-weight:600;font-size:14px;margin:0 0 12px}
+.opt{display:flex;align-items:center;gap:10px;font-size:14px;padding:5px 0;color:#2E322B;cursor:pointer}
+.opt input{width:18px;height:18px;margin:0;accent-color:#1E3B16}
+.opt .n{margin-left:auto;font-size:12px;color:#9A9E95}
+.fin{height:42px;border-radius:10px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 12px;font:inherit;font-size:14px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.sel{height:40px;border-radius:10px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 12px;font:inherit;font-size:14px;background:#FFFFFF;color:#1A1A1A}
+.foot{background:#FFFFFF;box-shadow:inset 0 1px 0 #E6E8E2;margin-top:96px}
+.fl{display:flex;flex-direction:column;gap:10px}.fl a{color:#5A5E56;font-size:14px}.fl a:hover{color:#1A1A1A}
+.gfoot{display:grid;grid-template-columns:minmax(0,2fr) repeat(4,minmax(0,1fr));gap:32px}
+.filterbtn{display:none}
+@media (max-width:760px){
+.wrap{padding:0 16px}
+.g3{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.side,.hide-m{display:none}
+.filterbtn{display:inline-flex}
+.h1{font-size:26px;line-height:34px}
+.gfoot{grid-template-columns:repeat(2,minmax(0,1fr))}
+.toprow{flex-wrap:wrap;height:auto;padding:12px 0}
+.search{order:3;flex-basis:100%}
+}
+</style>
+</helmet>
+<div class="fk">
+
+<header class="top">
+<div class="wrap toprow">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; flex: none" aria-label="Farmkeke home"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 20px; width: auto"></a>
+<a class="area hide-m" href="W-09-Choose-area.dc.html"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span><span class="cap" style="display: block; line-height: 12px">Deliver to</span><span style="font-weight: 600">Owerri North</span></span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></a>
+<label class="search"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input type="search" placeholder="Search tomatoes, yam, eggs or a farm" aria-label="Search Farmkeke" style="flex: 1; border: 0; background: transparent; font: inherit; color: #1A1A1A; outline: none; min-width: 0"><span class="btn sm dark">Search</span></label>
+<a class="hlink hide-m" href="#saved"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>Saved</a>
+<a class="hlink" href="#signin"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Sign in</a>
+<a class="hlink" href="W-08-Mini-cart.dc.html" style="background: #F4F5F1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>Cart<span class="count">2</span></a>
+</div>
+<nav class="wrap cnav" aria-label="Categories">
+<a href="W-02-All-categories.dc.html">All categories</a><a class="on" href="W-03-Category.dc.html">Vegetables</a><a href="#fruits">Fruits</a><a href="#grains">Grains and tubers</a><a href="#poultry">Poultry and eggs</a><a href="#meat">Meat and fish</a><a href="#herbs">Herbs and spices</a><a href="#legumes">Legumes and nuts</a><a href="#dairy">Dairy</a>
+</nav>
+</header>
+
+<main class="wrap" style="padding-top: 28px">
+<nav class="crumb" aria-label="Breadcrumb"><a href="W-01-Shop-home.dc.html">Shop</a><span aria-hidden="true">/</span><a href="W-02-All-categories.dc.html">All categories</a><span aria-hidden="true">/</span><span style="color: #1A1A1A; font-weight: 500">Vegetables</span></nav>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 16px 0 28px; flex-wrap: wrap">
+<div><h1 class="h1">Vegetables</h1><p class="p" style="margin-top: 4px">86 products from 21 farms delivering to Owerri North</p></div>
+<div style="display: flex; gap: 10px; align-items: center">
+<a class="btn sm ghost filterbtn" href="W-05-Filters-phone.dc.html">Filters</a>
+<label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #5A5E56">Sort by <select class="sel"><option>Recommended</option><option>Price: low to high</option><option>Price: high to low</option><option>Nearest farm</option><option>Freshest first</option></select></label>
+</div>
+</div>
+
+<div class="layout">
+<aside class="card side" aria-label="Filters">
+<div class="fg" style="display: flex; justify-content: space-between; align-items: center"><span class="h3" style="font-size: 16px">Filters</span><button type="button" style="border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #1E3B16; cursor: pointer">Clear all</button></div>
+<div class="fg"><p class="ft">Type</p>
+<label class="opt"><input type="checkbox" defaultChecked="{{yes}}">Tomatoes<span class="n">14</span></label>
+<label class="opt"><input type="checkbox">Peppers<span class="n">11</span></label>
+<label class="opt"><input type="checkbox">Leafy greens<span class="n">19</span></label>
+<label class="opt"><input type="checkbox">Onions<span class="n">8</span></label>
+<label class="opt"><input type="checkbox">Garden egg<span class="n">7</span></label>
+<a href="#more" style="font-size: 13px; font-weight: 600; display: inline-block; margin-top: 6px">Show all 9</a>
+</div>
+<div class="fg"><p class="ft">Price (₦)</p>
+<div style="display: flex; gap: 8px; align-items: center"><input class="fin" type="text" inputmode="numeric" aria-label="Minimum price" defaultValue="1,000"><span class="cap">to</span><input class="fin" type="text" inputmode="numeric" aria-label="Maximum price" defaultValue="8,000"></div>
+</div>
+<div class="fg"><p class="ft">Harvested</p>
+<label class="opt"><input type="radio" name="h">Today</label>
+<label class="opt"><input type="radio" name="h" defaultChecked="{{yes}}">In the last 3 days</label>
+<label class="opt"><input type="radio" name="h">This week</label>
+</div>
+<div class="fg"><p class="ft">Distance to farm</p>
+<label class="opt"><input type="radio" name="d">Within 5 km</label>
+<label class="opt"><input type="radio" name="d" defaultChecked="{{yes}}">Within 15 km</label>
+<label class="opt"><input type="radio" name="d">Any distance</label>
+</div>
+<div class="fg"><p class="ft">Get it by</p>
+<label class="opt"><input type="checkbox" defaultChecked="{{yes}}">Delivery</label>
+<label class="opt"><input type="checkbox" defaultChecked="{{yes}}">Pickup point</label>
+</div>
+<div class="fg"><label class="opt" style="padding: 0"><input type="checkbox">Top-rated farms only (4.5+)</label></div>
+</aside>
+
+<div style="flex: 1; min-width: 0">
+<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; align-items: center">
+<button class="chip on" type="button">Tomatoes <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-label="Remove filter" role="img"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+<button class="chip on" type="button">₦1,000 – ₦8,000 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-label="Remove filter" role="img"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+<button class="chip on" type="button">Last 3 days <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-label="Remove filter" role="img"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+<span class="sm" style="margin-left: 4px">24 results</span>
+</div>
+<div class="g3">
+<sc-for list="{{products}}" as="p" hint-placeholder-count="9">
+<div class="pc">
+<a class="pimg" href="W-06-Product-detail.dc.html" style="background: {{p.tint}}" aria-label="{{p.name}}"><span class="badge">{{p.fresh}}</span><svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"></path><path d="M10 20c5.5-2.5.8-6.4 3-10"></path><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"></path><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"></path></svg></a>
+<div style="padding: 0 4px">
+<div class="pname">{{p.name}}</div>
+<div class="pfarm">{{p.farm}} · {{p.dist}}</div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 10px"><div class="price">{{p.price}} <span class="unit">/ {{p.unit}}</span></div><button class="add" type="button" aria-label="Add {{p.name}} to cart"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></button></div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 36px">
+<span class="sm">Showing 9 of 24</span>
+<div style="width: 220px; height: 4px; border-radius: 4px; background: #E3E6DE"><div style="width: 38%; height: 4px; border-radius: 4px; background: #1E3B16"></div></div>
+<button class="btn ghost" type="button" style="margin-top: 6px">Load more</button>
+</div>
+</div>
+</div>
+</main>
+
+<footer class="foot">
+<div class="wrap" style="padding-top: 56px; padding-bottom: 28px">
+<div class="gfoot">
+<div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start"><div style="display: flex; align-items: center; gap: 8px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 30px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="Farmkeke" style="height: 19px; width: auto"></div><p class="sm">From the farm directly to your home.</p><a href="#mail" style="font-size: 14px; font-weight: 600">hello@farmkeke.com</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmkeke</div><a href="Main.dc.html">About</a><a href="#how">How it works</a><a href="#pickup">Pickup locations</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Shop</div><a href="W-02-All-categories.dc.html">All categories</a><a href="#find">Find my order</a><a href="#help">Help and FAQ</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Farmers</div><a href="#sell">Sell on Farmkeke</a><a href="#farmer-terms">Farmer terms</a></div>
+<div class="fl"><div style="font-weight: 600; font-size: 14px">Legal</div><a href="#terms">Terms of use</a><a href="#privacy">Privacy policy</a><a href="#refunds">Refund and dispute policy</a></div>
+</div>
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; box-shadow: inset 0 1px 0 #EEF0EB"><span class="cap">© 2026 Farmkeke. All rights reserved.</span><span class="cap">Made in Owerri, Nigeria</span></div>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      products: [
+        { name: 'Fresh tomatoes', farm: 'Okafor Farms', dist: '4 km', price: '₦4,500', unit: 'basket', fresh: 'Harvested today', tint: '#F6E3DC' },
+        { name: 'Cherry tomatoes', farm: 'Ada Agro', dist: '9 km', price: '₦3,000', unit: 'small basket', fresh: 'Harvested today', tint: '#F7DDD5' },
+        { name: 'Roma tomatoes', farm: 'Nwosu Farms', dist: '7 km', price: '₦5,200', unit: 'basket', fresh: 'Harvested yesterday', tint: '#F5E4DA' },
+        { name: 'Tomatoes, big bag', farm: 'Okafor Farms', dist: '4 km', price: '₦7,800', unit: 'bag', fresh: 'Harvested today', tint: '#F3E1D8' },
+        { name: 'Green tomatoes', farm: 'Mama Chi Farms', dist: '6 km', price: '₦2,800', unit: 'basket', fresh: 'Harvested 2 days ago', tint: '#E6EEDC' },
+        { name: 'Tomatoes, small paint', farm: 'Ada Agro', dist: '9 km', price: '₦1,500', unit: 'paint', fresh: 'Harvested today', tint: '#F6E6DF' },
+        { name: 'Plum tomatoes', farm: 'Ihiagwa Growers', dist: '12 km', price: '₦4,200', unit: 'basket', fresh: 'Harvested yesterday', tint: '#F4DFD7' },
+        { name: 'Tomatoes and pepper mix', farm: 'Okafor Farms', dist: '4 km', price: '₦3,600', unit: 'basket', fresh: 'Harvested today', tint: '#F7E0D6' },
+        { name: 'Beef tomatoes', farm: 'Nwosu Farms', dist: '7 km', price: '₦6,000', unit: 'basket', fresh: 'Harvested 2 days ago', tint: '#F2E3DA' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

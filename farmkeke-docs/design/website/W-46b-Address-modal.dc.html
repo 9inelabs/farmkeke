@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Farmkeke — add an address</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+a{color:#1E3B16;text-decoration:none}
+.sk{background:#E9EBE5;border-radius:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 22px;border-radius:14px;font-weight:600;font-size:15px;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lime{background:#A9D654;color:#1A1A1A}
+.ghost{background:#FFFFFF;color:#1A1A1A;box-shadow:inset 0 0 0 1px #D9DCD3}
+.lbl{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#2E322B}
+.fin{height:48px;border-radius:12px;box-shadow:inset 0 0 0 1px #DCE0D6;border:0;padding:0 14px;font:inherit;font-size:15px;width:100%;background:#FFFFFF;color:#1A1A1A}
+.chip{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px #DCE0D6;font-size:14px;font-weight:600;color:#1A1A1A;border:0;font-family:inherit;cursor:pointer}
+.chip.on{background:#1E3B16;color:#FFFFFF;box-shadow:none}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #F4F5F1; font-family: Inter, system-ui, sans-serif; color: #1A1A1A">
+<div aria-hidden="true">
+<div style="height: 76px; background: #FFFFFF; box-shadow: inset 0 -1px 0 #E6E8E2; display: flex; align-items: center; gap: 8px; padding: 0 80px"><img src="/_blob/8bc992a8c0f358ec047cd465f029bccb" alt="" style="height: 32px; width: auto"><img src="/_blob/a925936206f50c1f37b2db4a1b9a1074" alt="" style="height: 20px; width: auto"></div>
+<div style="padding: 32px 80px; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 28px"><div class="sk" style="height: 460px; background: #FFFFFF"></div><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-content: start; padding-top: 80px"><div class="sk" style="height: 220px; background: #FFFFFF"></div><div class="sk" style="height: 220px; background: #FFFFFF"></div></div></div>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(26,26,26,0.45)"></div>
+<div role="dialog" aria-modal="true" aria-labelledby="addr-title" style="position: absolute; left: 50%; top: 48px; transform: translateX(-50%); width: 580px; background: #FFFFFF; border-radius: 24px; box-shadow: 0 24px 64px rgba(0,0,0,0.18); overflow: hidden">
+<div style="padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; box-shadow: inset 0 -1px 0 #EEF0EB">
+<h2 id="addr-title" style="margin: 0; font-family: Montserrat, sans-serif; font-weight: 700; font-size: 20px">Add an address</h2>
+<a href="W-46-Addresses.dc.html" aria-label="Close" style="width: 40px; height: 40px; border-radius: 10px; background: #F4F5F1; display: flex; align-items: center; justify-content: center; color: #1A1A1A"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></a>
+</div>
+<form style="padding: 22px 28px; display: flex; flex-direction: column; gap: 16px">
+<div><span class="lbl">Label</span><div style="display: flex; gap: 8px"><button class="chip" type="button">Home</button><button class="chip on" type="button">Work</button><button class="chip" type="button">Other</button></div></div>
+<label><span class="lbl">Street address</span><input class="fin" type="text" placeholder="Building number and street"></label>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<label><span class="lbl">Area</span><select class="fin"><option>Owerri Municipal</option><option>Owerri North</option><option>Owerri West</option><option>Mbaitoli</option></select></label>
+<label><span class="lbl">Nearest landmark</span><input class="fin" type="text" placeholder="Opposite the filling station"></label>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #F7F8F5"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3B16" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg><span style="flex: 1; font-size: 14px">Pin your exact location so riders find you faster</span><button class="btn ghost" type="button" style="height: 36px; font-size: 13px; padding: 0 12px">Set pin</button></div>
+<label><span class="lbl">Directions for the rider <span style="font-weight: 500; color: #7A7E75">(optional)</span></span><input class="fin" type="text" placeholder="Ask for Adaeze at reception"></label>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 14px; cursor: pointer"><input type="checkbox" style="width: 18px; height: 18px; margin: 0; accent-color: #1E3B16">Make this my default address</label>
+</form>
+<div style="padding: 18px 28px 24px; box-shadow: inset 0 1px 0 #EEF0EB; display: flex; justify-content: flex-end; gap: 10px">
+<a class="btn ghost" href="W-46-Addresses.dc.html">Cancel</a>
+<a class="btn lime" href="W-46-Addresses.dc.html" style="min-width: 160px">Save address</a>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
