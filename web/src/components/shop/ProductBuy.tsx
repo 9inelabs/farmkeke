@@ -11,14 +11,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { api, type Id } from "@/convex/api";
-import type { ServiceArea } from "@/convex/returns/common";
 import type { ProductDetail } from "@/convex/returns/storefront";
-import { area } from "@/lib/area";
 import { useViewer } from "@/lib/auth";
 import { cart, miniCart } from "@/lib/cart";
 import { naira, tintFor } from "@/lib/format";
 import { m, pressable } from "@/lib/motion";
 import { routes } from "@/lib/routes";
+import { distanceText, useShopper } from "./live";
+
+/**
+ * storefront.product asked again with the shopper's area (delivery fee) and
+ * position (farm distance). One subscription, shared by every caller.
+ */
+function useProductForArea(id: string, today: string) {
+  const { chosen, point } = useShopper();
+  const data = useQuery(
+    api.storefront.product,
+    chosen ? { id, today, serviceAreaId: chosen.id, ...point } : "skip",
+  ) as ProductDetail | null | undefined;
+  return { chosen, data: data && "farm" in data ? data : undefined };
+}
+
+/** " · 4 km from you" once the shopper's position is known (W-06 farm card). */
+export function FarmDistance({ id, today, after = "" }: { id: string; today: string; after?: string }) {
+  const { data } = useProductForArea(id, today);
+  const dist = distanceText(data?.farm.distanceKm);
+  return dist ? <>{` · ${dist}${after}`}</> : null;
+}
 
 export function ProductGallery({
   id,
@@ -131,7 +150,18 @@ function SaveButton({ listingId }: { listingId: string }) {
   );
 }
 
-export function BuyBox({ product, harvestedText }: { product: ProductDetail; harvestedText?: string }) {
+export function BuyBox({
+  product,
+  harvestedText,
+  today,
+  subtype,
+}: {
+  product: ProductDetail;
+  harvestedText?: string;
+  today: string;
+  /** The subtype's display name, e.g. "Tomatoes" */
+  subtype?: string;
+}) {
   const units = product.units;
   const firstInStock = Math.max(0, units.findIndex((u) => u.stock > 0));
   const [unitIndex, setUnitIndex] = useState(firstInStock);
@@ -171,6 +201,7 @@ export function BuyBox({ product, harvestedText }: { product: ProductDetail; har
       <div>
         <div className="flex flex-wrap gap-2">
           {product.category ? <span className="badge b-fresh">{product.category.name}</span> : null}
+          {subtype ? <span className="badge b-fresh">{subtype}</span> : null}
           {!product.available ? (
             <span className="badge b-grey">Not available right now</span>
           ) : soldOut ? (
@@ -274,7 +305,7 @@ export function BuyBox({ product, harvestedText }: { product: ProductDetail; har
         {harvestedText ? (
           <Row icon={<Calendar aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />} title={harvestedText} sub="Picked to order and packed the same day" />
         ) : null}
-        <DeliveryRow delivery={product.delivery} pickup={product.pickup} />
+        <DeliveryRow id={product.id} today={today} delivery={product.delivery} pickup={product.pickup} />
         <Row
           icon={<ShieldCheck aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />}
           title="Your payment is held until you confirm"
@@ -304,20 +335,18 @@ function Row({ icon, title, sub }: { icon: React.ReactNode; title: React.ReactNo
   );
 }
 
-function DeliveryRow({ delivery, pickup }: { delivery: boolean; pickup: boolean }) {
-  const chosen = area.use();
-  const areas = useQuery(api.areas.listServiceAreas, chosen && delivery ? { state: chosen.state } : "skip") as
-    | ServiceArea[]
-    | undefined;
-  const fee = areas?.find((a) => a._id === chosen?.id)?.deliveryFeeKobo;
+function DeliveryRow({ id, today, delivery, pickup }: { id: string; today: string; delivery: boolean; pickup: boolean }) {
+  const { chosen, data } = useProductForArea(id, today);
   const icon = <Truck aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />;
   if (!delivery) {
     return <Row icon={icon} title="Pickup only" sub="Collect for free at a Farmkeke pickup point" />;
   }
-  const title = chosen
-    ? fee !== undefined
-      ? `Delivery to ${chosen.name} from ${naira(fee)}`
-      : `Delivery to ${chosen.name}`
+  const where = data?.deliveryArea?.name ?? chosen?.name;
+  const fee = data?.deliveryFeeKobo;
+  const title = where
+    ? typeof fee === "number"
+      ? `Delivery to ${where} from ${naira(fee)}`
+      : `Delivery to ${where}`
     : "Delivery by Farmkeke riders";
   return (
     <Row

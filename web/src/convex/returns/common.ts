@@ -12,6 +12,20 @@ export type ListingSummary = {
   /** Present on some responses only */
   farmName?: string;
   harvestedOn?: string | null;
+  // Phase 3c additions (storefront.* cards). Optional so older shapes still type-check.
+  farmId?: string;
+  farmVerified?: boolean;
+  farmRating?: number | null;
+  farmRatingCount?: number;
+  /** "Harvested today", "Harvested yesterday", "Harvested 3 days ago" (needs `today`) */
+  freshness?: string | null;
+  inStock?: boolean;
+  delivery?: boolean;
+  pickup?: boolean;
+  category?: { slug: string; name: string } | null;
+  subtype?: string | null;
+  /** Needs the shopper's lat/lng */
+  distanceKm?: number | null;
 };
 
 /** checkout.listingForCart */

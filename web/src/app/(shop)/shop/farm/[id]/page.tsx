@@ -6,9 +6,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
-import { Breadcrumb, FarmAvatar, RatingBars, ratingText, ReviewRow } from "@/components/shop/bits";
-import { freshnessLabel, getFarm, getReviews, getToday, siteUrl } from "@/components/shop/data";
-import { FarmListings, ShareFarmButton } from "@/components/shop/FarmParts";
+import { acceptsText, Breadcrumb, FarmAvatar, RatingBars, ratingText, ReviewRow } from "@/components/shop/bits";
+import { getFarm, getReviews, getToday, siteUrl } from "@/components/shop/data";
+import { FarmDistance, FarmListings, ShareFarmButton } from "@/components/shop/FarmParts";
 import { GridSkeleton } from "@/components/shop/ListPieces";
 import { routes } from "@/lib/routes";
 
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function FarmPage(props: Props) {
   return (
-    <div className="wrap pt-7">
+    <div className="wrap type-compact pt-7">
       <Suspense fallback={<FarmSkeleton />}>
         <FarmContent {...props} />
       </Suspense>
@@ -49,11 +49,10 @@ async function FarmContent({ params }: Props) {
   const avg = ratingText(summary.average ?? farm.rating);
   const count = summary.count || farm.ratingCount;
   const listings = farm.onBreak ? [] : farm.listings;
-  const freshness: Record<string, string> = {};
-  for (const l of listings) {
-    const f = freshnessLabel(l.harvestedOn, today);
-    if (f) freshness[l.id] = f;
-  }
+  const productCount = farm.productCount ?? listings.length;
+  const delivery = farm.delivery ?? true;
+  const pickup = farm.pickup ?? true;
+  const getItBy = delivery && pickup ? "Delivery or pickup" : delivery ? "Delivery only" : pickup ? "Pickup only" : "Not taking orders";
   const tagCounts = new Map<string, number>();
   for (const r of reviews.page.page) for (const t of r.tags ?? []) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
   const topTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -97,7 +96,7 @@ async function FarmContent({ params }: Props) {
             className="rounded-[28px] shadow-[0_0_0_6px_#FFFFFF]"
             textClass="text-[34px] font-extrabold"
           />
-          <div className="min-w-[260px] flex-1 pb-1 m:min-w-0">
+          <div className="min-w-[260px] flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="h1">{farm.name}</h1>
               {farm.verified ? (
@@ -111,6 +110,7 @@ async function FarmContent({ params }: Props) {
             <div className="sm mt-1.5 flex items-center gap-1.5">
               <MapPin aria-hidden className="size-3.5" strokeWidth={1.75} />
               {farm.lga}, {farm.state}
+              <FarmDistance initial={farm} today={today} />
             </div>
           </div>
           <ShareFarmButton name={farm.name} url={`${siteUrl}${routes.farm(farm.id)}`} />
@@ -128,13 +128,9 @@ async function FarmContent({ params }: Props) {
               "No reviews yet"
             )}
           </Stat>
-          <Stat label="Products">{listings.length} listed</Stat>
-          <Stat label="On Farmkeke since">
-            {new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "Africa/Lagos" }).format(
-              farm.joinedAt,
-            )}
-          </Stat>
-          <Stat label="Get it by">Delivery or pickup</Stat>
+          <Stat label="Products">{productCount} listed</Stat>
+          <Stat label="Accepts orders">{acceptsText(farm.responseTimeHours, farm.acceptsWithinHours)}</Stat>
+          <Stat label="Get it by">{getItBy}</Stat>
         </dl>
       </section>
 
@@ -158,7 +154,7 @@ async function FarmContent({ params }: Props) {
               </div>
             </div>
           ) : listings.length ? (
-            <FarmListings items={listings} freshness={freshness} />
+            <FarmListings items={listings} categories={farm.categories} />
           ) : (
             <p className="p card px-6 py-8 text-center">{farm.name} has nothing for sale right now. Check back soon.</p>
           )}

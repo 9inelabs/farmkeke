@@ -176,3 +176,15 @@ Before finishing, re-read each of your designs side by side with your code: copy
 3. Anything you couldn't do, and differences from the design, with reasons.
 4. Changes you need in shared files (exact change and why).
 5. Backend gaps: things the live functions don't support. These go into `farmkeke-docs/pending-backend/README.md`, which the integrator updates.
+
+## 11. Heading sizes differ per design
+
+Each design file defines its own `.h1`/`.h2` sizes, so check them in the design's `<style>`. The shared `h1`/`h2` classes default to the W-01 scale (34/42 and 24/32). To use another design's scale, add one of these classes to the page wrapper (`globals.css`):
+
+| Class | h1 | h2 | Designs |
+|---|---|---|---|
+| `type-search` | 30/38 (24/32 on phones) | 20/28 | W-04, W-04b |
+| `type-product` | 34/42 | 20/28 | W-06 |
+| `type-compact` | 32/40 (24/32 on phones) | 18/26 | W-07, W-20, W-20c |
+
+For any other design whose sizes differ, add a matching `type-*` class next to these, or set `--h1-size`, `--h1-lh`, `--h2-size`, `--h2-lh` and `--h2-ls` on the page wrapper.

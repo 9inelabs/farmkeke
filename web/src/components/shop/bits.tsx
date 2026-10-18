@@ -181,3 +181,35 @@ export function ReviewRow({ review }: { review: PublicReview }) {
 
 /** "4.8" from a farm rating, or null when there are no reviews yet. */
 export const ratingText = (avg: number | null | undefined) => (avg ? avg.toFixed(1) : null);
+
+/** Hours rounded up to whole hours, at least 1: "2 hours", "1 hour". */
+const hoursText = (h: number) => {
+  const n = Math.max(1, Math.ceil(h));
+  return `${n} ${n === 1 ? "hour" : "hours"}`;
+};
+
+/**
+ * W-07 "Accepts orders" stat: "Usually within 2 hours" from the farm's
+ * median response time, or the rule ("Within 24 hours") when it has no
+ * history yet.
+ */
+export function acceptsText(responseTimeHours: number | null | undefined, acceptsWithinHours: number | undefined) {
+  if (typeof responseTimeHours === "number") return `Usually within ${hoursText(responseTimeHours)}`;
+  return `Within ${hoursText(acceptsWithinHours ?? 24)}`;
+}
+
+/** W-06 "Usually accepts orders within 2 hours." (only when the farm has a history) */
+export function usuallyAcceptsText(responseTimeHours: number | null | undefined) {
+  return typeof responseTimeHours === "number" ? `Usually accepts orders within ${hoursText(responseTimeHours)}.` : null;
+}
+
+/** W-06 "Ships within": "24 hours of your order" */
+export const shipsWithinText = (acceptsWithinHours: number | undefined) => `${hoursText(acceptsWithinHours ?? 24)} of your order`;
+
+/** A subtype's display name from its slug ("leafy-greens" → "Leafy greens") when the name isn't known. */
+export function subtypeName(slug: string, known?: Array<{ slug: string; name: string }>) {
+  const hit = known?.find((s) => s.slug === slug);
+  if (hit) return hit.name;
+  const words = slug.replace(/[-_]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}

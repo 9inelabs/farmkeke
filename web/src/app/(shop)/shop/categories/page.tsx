@@ -1,11 +1,11 @@
-// W-02 All categories. Server-rendered with a product count per category.
+// W-02 All categories. Server-rendered with a product count and the
+// subtypes (catalog.listCategoriesWithCounts) per category.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CategoryBar } from "@/components/layout/CategoryBar";
 import { ButtonLink } from "@/components/ui/Button";
 import { Breadcrumb, CategoryIcon } from "@/components/shop/bits";
-import { getCategoryCounts, siteUrl } from "@/components/shop/data";
-import { getCategories } from "@/convex/cached";
+import { getCategoriesWithCounts, siteUrl } from "@/components/shop/data";
 import { plural } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AllCategories() {
-  const [categories, counts] = await Promise.all([getCategories(), getCategoryCounts()]);
+  const categories = await getCategoriesWithCounts();
   return (
     <>
       <CategoryBar active={routes.categories} />
@@ -39,8 +39,17 @@ export default async function AllCategories() {
                 </span>
                 <div>
                   <h2 className="h3">{c.name}</h2>
-                  <div className="cap mt-0.5">{plural(counts[c.slug] ?? 0, "product")}</div>
+                  <div className="cap mt-0.5">{plural(c.productCount, "product")}</div>
                 </div>
+                {c.subtypes.length ? (
+                  <span className="flex flex-wrap gap-1.5">
+                    {c.subtypes.map((s) => (
+                      <span key={s.slug} className="rounded-lg bg-canvas px-[9px] py-1 text-xs font-medium text-ink-3">
+                        {s.name}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
               </Link>
             </li>
           ))}

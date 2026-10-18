@@ -152,20 +152,21 @@
   .mont {
     font-family: var(--font-display);
   }
+  /* Heading sizes differ per design; a page picks its scale with a type-* class below. */
   .h1 {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 34px;
-    line-height: 42px;
+    font-size: var(--h1-size, 34px);
+    line-height: var(--h1-lh, 42px);
     letter-spacing: -0.025em;
     margin: 0;
   }
   .h2 {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 24px;
-    line-height: 32px;
-    letter-spacing: -0.02em;
+    font-size: var(--h2-size, 24px);
+    line-height: var(--h2-lh, 32px);
+    letter-spacing: var(--h2-ls, -0.02em);
     margin: 0;
   }
   .h3 {
@@ -193,9 +194,36 @@
   }
   @media (max-width: 760px) {
     .h1 {
-      font-size: 26px;
-      line-height: 34px;
+      font-size: var(--h1-size-m, 26px);
+      line-height: var(--h1-lh-m, 34px);
     }
+  }
+  /* Per-design heading scales, from each design's own .h1/.h2 rules */
+  .type-search {
+    /* W-04, W-04b */
+    --h1-size: 30px;
+    --h1-lh: 38px;
+    --h1-size-m: 24px;
+    --h1-lh-m: 32px;
+    --h2-size: 20px;
+    --h2-lh: 28px;
+    --h2-ls: -0.015em;
+  }
+  .type-product {
+    /* W-06 */
+    --h2-size: 20px;
+    --h2-lh: 28px;
+    --h2-ls: -0.015em;
+  }
+  .type-compact {
+    /* W-07 farm profile; W-20 and W-20c cart */
+    --h1-size: 32px;
+    --h1-lh: 40px;
+    --h1-size-m: 24px;
+    --h1-lh-m: 32px;
+    --h2-size: 18px;
+    --h2-lh: 26px;
+    --h2-ls: -0.01em;
   }
 
   .card {

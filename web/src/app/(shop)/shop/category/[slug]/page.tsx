@@ -1,23 +1,15 @@
 // W-03 Category page. Server-rendered; sort and filters come from the URL.
-import { Sprout } from "lucide-react";
+// The results are a client island that adds distances once the shopper's
+// area is known (see CategoryResults).
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CategoryBar, CategoryBarForSlug } from "@/components/layout/CategoryBar";
-import { ButtonLink } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Breadcrumb } from "@/components/shop/bits";
-import { getCategoryListings, getFarmAreas, parseFilters, siteUrl } from "@/components/shop/data";
-import { ActiveChips, FilterPanel, FilterSidebar, SortSelect } from "@/components/shop/Filters";
-import {
-  filterValues,
-  GridSkeleton,
-  hasFilters,
-  HeadingSkeleton,
-  hrefWith,
-  LoadMore,
-} from "@/components/shop/ListPieces";
-import { ProductCard } from "@/components/shop/ProductCard";
+import { CategoryResults, CategorySummary } from "@/components/shop/CategoryResults";
+import { categoryArgs, getCategoryListings, getToday, needsLocation, parseFilters, siteUrl } from "@/components/shop/data";
+import { FilterPanel, FilterSidebar, SortSelect } from "@/components/shop/Filters";
+import { filterValues, GridSkeleton, HeadingSkeleton } from "@/components/shop/ListPieces";
 import { plural } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
@@ -31,6 +23,7 @@ const SORT_OPTIONS = [
   { value: "", label: "Recommended" },
   { value: "price_low", label: "Price: low to high" },
   { value: "price_high", label: "Price: high to low" },
+  { value: "nearest", label: "Nearest farm" },
   { value: "freshest", label: "Freshest first" },
 ];
 
@@ -71,10 +64,11 @@ async function CategoryContent({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const filters = parseFilters(sp, PAGE);
   const current = filterValues(sp);
-  const [data, areas] = await Promise.all([getCategoryListings(slug, filters), getFarmAreas()]);
+  const [data, today] = await Promise.all([getCategoryListings(slug, filters), getToday()]);
   if (!data) notFound();
-  const { category, items, total } = data;
-  const filtered = hasFilters(current);
+  const { category } = data;
+  const subtypes = category.subtypes ?? [];
+  const live = { args: categoryArgs(slug, filters, today), initial: data, needsLocation: needsLocation(filters) };
 
   return (
     <>
@@ -88,54 +82,18 @@ async function CategoryContent({ params, searchParams }: Props) {
       <div className="mt-4 mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="h1">{category.name}</h1>
-          <p className="p mt-1">{plural(total, "product")} from verified farms</p>
+          <CategorySummary {...live} />
         </div>
         <div className="flex items-center gap-2.5">
-          <FilterPanel current={current} areas={areas} scope={{ kind: "category", slug }} trigger="button" />
+          <FilterPanel current={current} scope={{ kind: "category", slug }} subtypes={subtypes} trigger="button" />
           <SortSelect value={current.sort} options={SORT_OPTIONS} current={current} />
         </div>
       </div>
 
       <div className="flex items-start gap-7">
-        <FilterSidebar current={current} areas={areas} />
+        <FilterSidebar current={current} subtypes={subtypes} />
         <div className="min-w-0 flex-1">
-          <ActiveChips current={current} total={total} />
-          {items.length ? (
-            <>
-              <div className="grid grid-cols-3 gap-5 m:grid-cols-2 m:gap-3">
-                {items.map((p, i) => (
-                  <ProductCard key={p.id} item={p} priority={i < 3} />
-                ))}
-              </div>
-              <LoadMore
-                shown={items.length}
-                total={total}
-                href={hrefWith(routes.category(slug), { ...current, show: String(items.length + PAGE) })}
-              />
-            </>
-          ) : filtered ? (
-            <EmptyState
-              icon={<Sprout aria-hidden className="size-7" strokeWidth={1.6} />}
-              title="No products match these filters"
-              body="Try a wider price range, another farm area, or both delivery and pickup."
-              action={
-                <ButtonLink href={routes.category(slug)} variant="ghost">
-                  Clear all filters
-                </ButtonLink>
-              }
-            />
-          ) : (
-            <EmptyState
-              icon={<Sprout aria-hidden className="size-7" strokeWidth={1.6} />}
-              title={`Nothing in ${category.name} right now`}
-              body="Farms add new harvests every day. Have a look at another category in the meantime."
-              action={
-                <ButtonLink href={routes.categories} variant="ghost">
-                  All categories
-                </ButtonLink>
-              }
-            />
-          )}
+          <CategoryResults {...live} current={current} slug={slug} name={category.name} pageSize={PAGE} subtypes={subtypes} />
         </div>
       </div>
     </>

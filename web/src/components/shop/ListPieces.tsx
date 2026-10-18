@@ -16,10 +16,16 @@ export function filterValues(sp: Sp): FilterValues & { q?: string; tab?: string 
     min: one(sp.min),
     max: one(sp.max),
     area: one(sp.area),
+    type: one(sp.type),
+    fresh: one(sp.fresh),
+    dist: one(sp.dist),
+    rated: one(sp.rated),
+    cat: one(sp.cat),
   };
 }
 
-export const hasFilters = (f: FilterValues) => Boolean(f.get || f.min || f.max || f.area);
+export const hasFilters = (f: FilterValues) =>
+  Boolean(f.get || f.min || f.max || f.area || f.type || f.fresh || f.dist || f.rated || f.cat);
 
 export function hrefWith(path: string, values: Record<string, string | undefined>) {
   const qs = new URLSearchParams();

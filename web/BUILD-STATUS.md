@@ -105,6 +105,8 @@ Build in this order. Commit and push after each group.
 
 (Cloud session: add a line per group, e.g. "A — done — notes".)
 
+- Phase 4 (local) — done — shop pages W-01 to W-07, W-09, W-09b, W-10 restored to their designs with the Phase 3c data: product cards (farm + verified tick, freshness badge, distance, sold out), farm cards and rows (rating with count, product count, place and distance), W-02 counts and subtypes, W-03/W-04 Type, Harvested, Distance and Top-rated filters with the Nearest sort, W-05 every filter group, W-06 "Ships within", delivery fee for the chosen area, distance, "More from" and subtype, W-07 stats, category chips and delivery/pickup, W-09b phone or email. The chosen area now stores latitude/longitude (`src/lib/area.ts`, optional, backfilled for older saved values).
+
 ## Shared-file changes
 
 (Cloud session: list every change to a shared file here.)
@@ -112,3 +114,5 @@ Build in this order. Commit and push after each group.
 ## Backend gaps found
 
 (List anything a screen needs that `convex/` doesn't provide. The local session builds it.)
+
+- **Pre-order questions (W-06 "Ask a question").** Chat only exists inside an order (`chat:*` needs an orderId), so a shopper can't ask a farm about a product before buying. The button links to `/contact?farm=<farmId>&product=<listingId>` for now. Needed: a pre-order question thread (shopper ↔ farm, tied to a listing), with the farm notified, plus the contact form reading those query params to prefill the topic.
