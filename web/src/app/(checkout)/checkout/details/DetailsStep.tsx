@@ -7,6 +7,7 @@ import { useQuery } from "convex/react";
 import { MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { addressExtras } from "@/components/account/addressExtras";
 import { groupByFarm, useQuote } from "@/components/cart/parts";
 import { draft, type CheckoutDraft } from "@/components/checkout/draft";
 import {
@@ -91,7 +92,13 @@ function DeliveryDetails() {
   if (!prefilled && saved && area) {
     setPrefilled(true);
     const match = saved.find((a) => a.serviceAreaId === area.id && a.isDefault) ?? saved.find((a) => a.serviceAreaId === area.id);
-    if (match && !addr.street) setAddr({ ...addr, street: match.street, landmark: match.landmark });
+    if (match && !addr.street) {
+      const extra = addressExtras.get(match._id);
+      const latitude = match.latitude ?? extra?.latitude;
+      const longitude = match.longitude ?? extra?.longitude;
+      setAddr({ ...addr, street: match.street, landmark: match.landmark, note: addr.note || extra?.directions || "", latitude, longitude });
+      if (latitude !== undefined) setPinNote("Pin set from your saved address.");
+    }
   }
 
   // A chosen window that's no longer offered doesn't count.

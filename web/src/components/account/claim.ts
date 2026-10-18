@@ -60,3 +60,37 @@ export async function claimPendingGuestOrders(
   }
   return null;
 }
+
+// What the guest had, kept for W-42 "We found 2 earlier orders" (the orders
+// can't be read again once the new account is signed in, until claimed).
+export type ClaimSnapshot = {
+  orders: Array<{ id: string; number: string; farmId: string; farmName: string; totalKobo: number; status: string; fulfilment: "delivery" | "pickup" }>;
+  email: string | null;
+  phone: string | null;
+};
+const SNAPSHOT_KEY = "fk.guestClaim.orders";
+
+export function saveClaimSnapshot(s: ClaimSnapshot) {
+  try {
+    window.sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(s));
+  } catch {
+    // Storage blocked: W-42 shows a shorter message.
+  }
+}
+
+export function claimSnapshot(): ClaimSnapshot | null {
+  try {
+    const raw = window.sessionStorage.getItem(SNAPSHOT_KEY);
+    return raw ? (JSON.parse(raw) as ClaimSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function forgetClaimSnapshot() {
+  try {
+    window.sessionStorage.removeItem(SNAPSHOT_KEY);
+  } catch {
+    // Nothing stored.
+  }
+}

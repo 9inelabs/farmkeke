@@ -31,6 +31,8 @@ type DialogProps = {
   headerClassName?: string;
   /** Replaces the footer's classes (default "border-t border-line-soft px-6 py-4 m:px-4"). */
   footerClassName?: string;
+  /** Replaces the scrolling body's padding (default "px-6 pb-6 m:px-4"). */
+  bodyClassName?: string;
 };
 
 const FOCUSABLE =
@@ -129,7 +131,7 @@ function Header({
   );
 }
 
-export function Modal({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, width = 520, className }: DialogProps) {
+export function Modal({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 520, className }: DialogProps) {
   const titleId = useId();
   const descId = useId();
   const panel = useDialogBehaviour(open, onClose);
@@ -163,7 +165,7 @@ export function Modal({ open, onClose, title, description, children, footer, hid
             transition={transition.base}
           >
             <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} titleClassName={titleClassName} headerClassName={headerClassName} />
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 m:px-4">{children}</div>
+            <div className={`min-h-0 flex-1 overflow-y-auto ${bodyClassName ?? "px-6 pb-6 m:px-4"}`}>{children}</div>
             {footer ? <div className={footerClassName ?? "border-t border-line-soft px-6 py-4 m:px-4"}>{footer}</div> : null}
           </m.div>
         </div>
@@ -173,7 +175,7 @@ export function Modal({ open, onClose, title, description, children, footer, hid
   );
 }
 
-export function Drawer({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, width = 440, className }: DialogProps) {
+export function Drawer({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 440, className }: DialogProps) {
   const titleId = useId();
   const descId = useId();
   const panel = useDialogBehaviour(open, onClose);
@@ -213,7 +215,7 @@ export function Drawer({ open, onClose, title, description, children, footer, hi
             transition={{ duration: 0.3, ease: transition.base.ease }}
           >
             <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} titleClassName={titleClassName} headerClassName={headerClassName} />
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 m:px-4">{children}</div>
+            <div className={`min-h-0 flex-1 overflow-y-auto ${bodyClassName ?? "px-6 pb-6 m:px-4"}`}>{children}</div>
             {footer ? <div className={footerClassName ?? "border-t border-line-soft px-6 py-4 m:px-4"}>{footer}</div> : null}
           </m.div>
         </div>

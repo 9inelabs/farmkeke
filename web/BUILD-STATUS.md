@@ -106,6 +106,7 @@ Build in this order. Commit and push after each group.
 (Cloud session: add a line per group, e.g. "A — done — notes".)
 
 - **A — done** — W-08 mini-cart, W-20/20b/20c cart, W-21 to W-25 checkout, W-26 to W-29 payment, W-30 confirmation. `tsc` and `eslint src` pass. `next build` compiles and typechecks, then stops prerendering the local session's `/shop` page because this cloud environment's network policy blocks `incredible-wolf-877.eu-west-1.convex.cloud`. Checked at 390px and 1440px in the dev server with browser-only data (cart, mini-cart, checkout steps): no sideways scroll. Payment and confirmation pages need the live backend, so they weren't checked in the browser.
+- **B — done** — W-40 to W-42e sign in, sign up and password reset; W-43 to W-49 account pages; the W-52 confirm-receipt modal (used here and in group C). `tsc` and `eslint src` pass. Same `next build` network block as A. Checked at 390px and 1440px: the sign-in, sign-up and password pages (no sideways scroll), and `/account` sends a signed-out visitor to `/signin?next=/account`. The signed-in account pages need the live backend, so they weren't checked in the browser.
 
 ## Shared-file changes
 
@@ -115,6 +116,8 @@ Build in this order. Commit and push after each group.
 - `lib/auth.ts`: `Viewer` gains `isGuest?`; `useViewer` treats `isAnonymous || isGuest` as a guest. The rebuilt `users.viewer` returns `isGuest`, not `isAnonymous`.
 - `components/ui/Dialog.tsx`: optional `titleClassName`, `headerClassName` and `footerClassName` on `Modal` and `Drawer`. Defaults are unchanged. Used by W-08 for its 20px title and lined header and footer.
 - `components/ui/Steps.tsx`: optional `labels` on `CheckoutSteps`. W-24 names step 2 "Pickup".
+- `components/ui/Dialog.tsx` (group B): optional `bodyClassName` on `Modal` and `Drawer` to set the body padding (W-52 and W-46b use 32px and 28px).
+- `app/layout.tsx` (group B): mounts `<SessionKeeper />` from `components/account/SessionKeeper.tsx` next to the other global pieces. It signs out on the next visit after the browser closes when "Keep me signed in" was unticked (W-40).
 - `components/layout/SimpleHeaders.tsx`: exported `NARROW_WRAP` (1160px, as in the checkout and order designs) and an optional `wrapClassName` on `CheckoutHeader` and `MinimalHeader`. The default is still `wrap`.
 
 ## Backend gaps found
@@ -127,3 +130,10 @@ Build in this order. Commit and push after each group.
 - **W-24 "Ready from Sun 18 Oct" per pickup point:** there's no per-point ready date. The page uses `deliveryWindows.readyDay` (the first day every farm can make).
 - **W-27 "Card ending 4081" and W-29 "Transfer started 10:41":** `payments/checkout.get` `lastAttempt` has no card last 4 digits or start time. The page reads `lastAttempt.cardLast4` and `lastAttempt.startedAt` when present. Until then it shows "Card", "Bank transfer" or "USSD", and no time.
 - **W-30 "A Farmkeke rider delivers to 12 Wetheral Road":** `orders/consumer.placedSummary` has no address or pickup point. The page reads `address.street` and `pickupPoint.name` when present, and falls back to what this browser entered at checkout.
+- **W-42a to W-42c, password reset link:** the email links to `CONVEX_SITE_URL/reset-password`, which only opens the app (`farmkeke://`). Someone who asked from the website needs the link to open `https://<website>/reset-password?email=…&code=…` (the W-42c page is built for that). Suggest a `returnTo: "web"` on the `reset` flow.
+- **W-41 / W-42, guest orders found "with this email or phone":** only orders from this browser can be claimed, using the `startGuestClaim` token. The page starts a claim before sign-up or sign-in when the guest has orders here. Orders placed elsewhere with the same email or phone aren't found. W-42 shows the guest's last checkout email and phone (from `checkout.contactDefaults`).
+- **W-45, change phone number:** `account.updateProfile` takes only `name`. The phone field is read-only with "To change your phone number, contact support."
+- **W-46 / W-46b, "Directions for the rider" and "Set pin":** `addresses.create` and `update` take neither. They're kept on this device per address id (`components/account/addressExtras.ts`). Checkout W-23 uses them to prefill the pin, which `checkout.place` does accept.
+- **W-47, "Back in stock" tag:** `favorites.list` has no back-in-stock flag. The page reads `backInStock` when present. "Notify me" turns on the account's back-in-stock emails (`notifications.setPreference`), since there's no per-item subscription.
+- **W-49, deletion result and reason:** `account.deleteAccount` returns nothing, so the page can't tell "deleted now" from "waiting for orders". It warns beforehand using `orders.consumer.list`. The optional "Why are you leaving?" reason isn't stored anywhere.
+- **W-44 / W-43 order rows, a thumbnail per item:** `orderRow` has only the first item's photo. Rows show it plus a "+N" tile. "Buy again" on W-43 reads up to three recent completed orders with `orders.consumer.get`; a small `orders.consumer.recentItems` query would be cheaper.

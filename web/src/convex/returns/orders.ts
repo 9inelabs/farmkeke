@@ -1,10 +1,91 @@
 // Order, dispute, refund, review and chat shapes for the order pages (W-50 to W-58).
 //
+// OrderDetail below is copied from the rebuilt backend (convex/lib/orders.ts
+// orderCore + convex/orders/consumer.ts consumerView). The older readers
+// further down stay for responses whose shape isn't pinned down yet.
+//
 // The live functions (orders/consumer.get/find, disputes.*, payments/refunds.forOrder,
 // reviews.forOrder, chat.*) need the order owner's identity, so there are no
 // samples in convex-spec/samples/. Every reader below is defensive: it accepts
 // the field names the backend is likely to use, treats everything as optional,
 // and turns the raw response into one stable "view" shape the pages render.
+
+/** orders/consumer.get and .find (consumerView). */
+export type OrderDetailItem = {
+  index: number;
+  listingId: string;
+  unitId: string;
+  name: string;
+  quantity: number;
+  priceKobo: number;
+  unitSingular: string;
+  unitPlural: string;
+  unitLabel: string;
+  lineTotalKobo: number;
+  imageUrl: string | null;
+};
+
+export type OrderPickupPoint = {
+  _id: string;
+  name: string;
+  address: string;
+  state: string;
+  lga: string;
+  latitude: number;
+  longitude: number;
+  hours: Array<{ day: number; opens: string; closes: string }>;
+  phone?: string;
+  collectWithinDays: number;
+  photoUrl: string | null;
+};
+
+export type OrderDetail = {
+  _id: string;
+  number: string;
+  status: string;
+  escrow: "none" | "held" | "released" | "refunded" | "split" | string;
+  escrowHold?: boolean;
+  fulfilment: "delivery" | "pickup";
+  farm: { _id: string; name: string; area?: string } | null;
+  farmName: string;
+  farmId: string;
+  items: OrderDetailItem[];
+  itemsTotalKobo: number;
+  deliveryFeeKobo: number;
+  totalKobo: number;
+  placedAt: number;
+  paidAt: number | null;
+  respondBy: number | null;
+  acceptedAt: number | null;
+  preparingAt: number | null;
+  packedAt: number | null;
+  readyAt: number | null;
+  outForDeliveryAt: number | null;
+  arrivedAt: number | null;
+  collectBy: number | null;
+  deliveredAt: number | null;
+  confirmedAt: number | null;
+  releasedAt: number | null;
+  endedAt: number | null;
+  declineReason: string | null;
+  cancelReason: string | null;
+  window: { day: string; from: string; to: string } | null;
+  /** street and landmark are null on a view-only order (W-51c) */
+  address: { street: string | null; landmark: string | null; areaName?: string; lga?: string; state?: string } | null;
+  pickupPoint: OrderPickupPoint | null;
+  rider: { name: string; phone?: string } | null;
+  riderCollectAt: number | null;
+  disputeId: string | null;
+  hasRefund: boolean;
+  reviewed: boolean;
+  isActive: boolean;
+  events: Array<{ kind: string; status: string; at: number; actorKind?: string; note: string | null }>;
+  pickupCode: string | null;
+  contact: { name: string; phone: string | null; email?: string };
+  canConfirm: boolean;
+  canReport: boolean;
+  viewOnly: boolean;
+};
 
 type Raw = Record<string, unknown>;
 
@@ -328,7 +409,7 @@ export function statusBadge(o: Pick<OrderView, "stage" | "fulfilment">): { label
     case "disputed":
       return { label: "Problem reported", cls: "b-err" };
     case "declined":
-      return { label: "Declined by the farm", cls: "b-grey" };
+      return { label: "Declined by farm", cls: "b-err" };
     case "expired":
       return { label: "Expired", cls: "b-grey" };
     case "cancelled":

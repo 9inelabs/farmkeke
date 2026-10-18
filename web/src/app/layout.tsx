@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import { AreaPicker } from "@/components/area/AreaPicker";
+import { SessionKeeper } from "@/components/account/SessionKeeper";
 import { MiniCart } from "@/components/cart/MiniCart";
 import { Providers } from "@/components/providers/Providers";
 import { ConnectionStatus } from "@/components/system/ConnectionStatus";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <CookieBanner />
           <ConnectionStatus />
           <MaintenanceGate />
+          <SessionKeeper />
         </Providers>
       </body>
     </html>
