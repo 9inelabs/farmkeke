@@ -4,11 +4,14 @@ import type { ReactNode } from "react";
 import { HomeLogo } from "@/components/brand/Wordmark";
 import { routes } from "@/lib/routes";
 
+/** Checkout and order pages are 1160px wide in the designs (W-21 to W-30). */
+export const NARROW_WRAP = "mx-auto max-w-[1160px] px-8 m:px-4";
+
 /** Checkout header (W-21 to W-25): wordmark · Secure checkout · Back to cart. */
-export function CheckoutHeader() {
+export function CheckoutHeader({ wrapClassName = "wrap" }: { wrapClassName?: string } = {}) {
   return (
     <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
-      <div className="wrap flex h-[72px] items-center justify-between gap-4">
+      <div className={`${wrapClassName} flex h-[72px] items-center justify-between gap-4`}>
         <HomeLogo height={22} />
         <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-forest m:hidden">
           <Lock aria-hidden className="size-4" />
@@ -26,10 +29,10 @@ export function CheckoutHeader() {
  * Logo-only header with an optional link on the right (W-30, W-42a–e,
  * W-52b, W-53b, W-56, W-57, W-58).
  */
-export function MinimalHeader({ right }: { right?: ReactNode }) {
+export function MinimalHeader({ right, wrapClassName = "wrap" }: { right?: ReactNode; wrapClassName?: string }) {
   return (
     <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
-      <div className="wrap flex h-[72px] items-center justify-between gap-4">
+      <div className={`${wrapClassName} flex h-[72px] items-center justify-between gap-4`}>
         <HomeLogo height={22} />
         {right}
       </div>

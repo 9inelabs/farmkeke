@@ -3,7 +3,8 @@
 // W-S3 Maintenance gate. Mounted in the root layout.
 // Reads api.appConfig.get and, while maintenanceActive is true, sends visitors
 // to /maintenance (remembering where they were so the page can offer a way
-// back). Nothing happens while the config is still loading.
+// back). Nothing happens while the config is still loading. While the redirect
+// is on its way, a plain cover hides the page so it never flashes.
 import { useQuery } from "convex/react";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -40,5 +41,10 @@ function Gate() {
     router.replace(routes.maintenance);
   }, [active, pathname, router]);
 
-  return null;
+  if (!active || pathname === routes.maintenance) return null;
+  return (
+    <div role="status" aria-live="polite" className="fixed inset-0 z-[90] bg-canvas">
+      <span className="sr-only">Farmkeke is briefly offline for maintenance. Taking you to the update page…</span>
+    </div>
+  );
 }

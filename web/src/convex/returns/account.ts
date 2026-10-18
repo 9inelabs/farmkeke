@@ -42,6 +42,9 @@ export type SavedAddress = {
   landmark: string;
   serviceAreaId: string;
   isDefault: boolean;
+  /** Set when the address was saved from checkout with a pin */
+  latitude?: number;
+  longitude?: number;
   area: { name: string; state: string; lga?: string } | null;
 };
 
@@ -244,3 +247,37 @@ export function readPrefs(raw: unknown): PrefRow[] | null {
   }
   return [...rows.values()];
 }
+
+// ---------- Exact shapes from the rebuilt backend (convex/) ----------
+
+/** favorites.list item (convex/favorites.ts) */
+export type FavoriteItem = {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  priceKobo: number;
+  unit: string;
+  farmName: string;
+  harvestedOn: string | null;
+  available: boolean;
+  unavailableReason: "unavailable" | "sold_out" | null;
+  savedAt: number;
+  /** Not sent yet ("Back in stock" tag, W-47); see BUILD-STATUS backend gaps. */
+  backInStock?: boolean;
+};
+
+/** notifications.preferences (convex/notifications.ts, lib/alerts.ts) */
+export type NotificationPrefs = {
+  side: "shop" | "farm";
+  channels: Array<"push" | "sms" | "email">;
+  hasEmail: boolean;
+  alerts: Array<{
+    alert: string;
+    title: string;
+    description: string;
+    locked: boolean;
+    push: boolean;
+    sms: boolean;
+    email: boolean;
+  }>;
+} | null;

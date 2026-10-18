@@ -25,6 +25,14 @@ type DialogProps = {
   /** Max width in px (modal) or width (drawer). */
   width?: number;
   className?: string;
+  /** Overrides the title's type style (default "h2 text-[22px] leading-7"). */
+  titleClassName?: string;
+  /** Replaces the title bar's classes, e.g. to add a bottom line. */
+  headerClassName?: string;
+  /** Replaces the footer's classes (default "border-t border-line-soft px-6 py-4 m:px-4"). */
+  footerClassName?: string;
+  /** Replaces the scrolling body's padding (default "px-6 pb-6 m:px-4"). */
+  bodyClassName?: string;
 };
 
 const FOCUSABLE =
@@ -87,6 +95,8 @@ function Header({
   description,
   hideTitle,
   onClose,
+  titleClassName,
+  headerClassName,
 }: {
   titleId: string;
   descId: string;
@@ -94,11 +104,13 @@ function Header({
   description?: ReactNode;
   hideTitle?: boolean;
   onClose: () => void;
+  titleClassName?: string;
+  headerClassName?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 m:px-4">
+    <div className={headerClassName ?? "flex items-start justify-between gap-4 px-6 pt-5 pb-3 m:px-4"}>
       <div className={hideTitle ? "sr-only" : "min-w-0"}>
-        <h2 id={titleId} className="h2 text-[22px] leading-7">
+        <h2 id={titleId} className={titleClassName ?? "h2 text-[22px] leading-7"}>
           {title}
         </h2>
         {description ? (
@@ -119,7 +131,7 @@ function Header({
   );
 }
 
-export function Modal({ open, onClose, title, description, children, footer, hideTitle, width = 520, className }: DialogProps) {
+export function Modal({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 520, className }: DialogProps) {
   const titleId = useId();
   const descId = useId();
   const panel = useDialogBehaviour(open, onClose);
@@ -152,9 +164,9 @@ export function Modal({ open, onClose, title, description, children, footer, hid
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={transition.base}
           >
-            <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} />
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 m:px-4">{children}</div>
-            {footer ? <div className="border-t border-line-soft px-6 py-4 m:px-4">{footer}</div> : null}
+            <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} titleClassName={titleClassName} headerClassName={headerClassName} />
+            <div className={`min-h-0 flex-1 overflow-y-auto ${bodyClassName ?? "px-6 pb-6 m:px-4"}`}>{children}</div>
+            {footer ? <div className={footerClassName ?? "border-t border-line-soft px-6 py-4 m:px-4"}>{footer}</div> : null}
           </m.div>
         </div>
       ) : null}
@@ -163,7 +175,7 @@ export function Modal({ open, onClose, title, description, children, footer, hid
   );
 }
 
-export function Drawer({ open, onClose, title, description, children, footer, hideTitle, width = 440, className }: DialogProps) {
+export function Drawer({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 440, className }: DialogProps) {
   const titleId = useId();
   const descId = useId();
   const panel = useDialogBehaviour(open, onClose);
@@ -202,9 +214,9 @@ export function Drawer({ open, onClose, title, description, children, footer, hi
             exit={isPhone() ? "hiddenSheet" : "hidden"}
             transition={{ duration: 0.3, ease: transition.base.ease }}
           >
-            <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} />
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 m:px-4">{children}</div>
-            {footer ? <div className="border-t border-line-soft px-6 py-4 m:px-4">{footer}</div> : null}
+            <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} titleClassName={titleClassName} headerClassName={headerClassName} />
+            <div className={`min-h-0 flex-1 overflow-y-auto ${bodyClassName ?? "px-6 pb-6 m:px-4"}`}>{children}</div>
+            {footer ? <div className={footerClassName ?? "border-t border-line-soft px-6 py-4 m:px-4"}>{footer}</div> : null}
           </m.div>
         </div>
       ) : null}

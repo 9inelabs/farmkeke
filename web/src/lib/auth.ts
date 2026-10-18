@@ -22,6 +22,8 @@ export type Viewer = {
   email?: string;
   phone?: string;
   isAnonymous?: boolean;
+  /** The rebuilt users.viewer (phase 3d) names the guest flag isGuest. */
+  isGuest?: boolean;
 } | null;
 
 /**
@@ -36,7 +38,7 @@ export function useViewer() {
       ? "loading"
       : !isAuthenticated || !viewer
         ? "signed-out"
-        : viewer.isAnonymous
+        : viewer.isAnonymous || viewer.isGuest
           ? "guest"
           : "signed-in";
   return { status, viewer: viewer ?? null };

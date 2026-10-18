@@ -33,6 +33,7 @@ const sameLine = (a: Pick<CartLine, "listingId" | "unitId">, b: Pick<CartLine, "
 export const cart = {
   /** Adds the line, or increases its quantity if it is already in the cart. */
   add(line: CartLine) {
+    lastAdded.set(line.name);
     store.set((s) => {
       const existing = s.lines.find((l) => sameLine(l, line));
       if (existing) {
@@ -81,8 +82,15 @@ export function quoteItems(lines: CartLine[]) {
 
 // Mini-cart drawer (W-08) open state, shared by the header and add-to-cart buttons.
 const drawer = createMemoryStore<boolean>(false);
+// Name of the item most recently added, for the drawer's "… added to your cart".
+// Cleared when the drawer closes, so opening it from the header shows no banner.
+const lastAdded = createMemoryStore<string | null>(null);
 export const miniCart = {
   open: () => drawer.set(true),
-  close: () => drawer.set(false),
+  close: () => {
+    drawer.set(false);
+    lastAdded.set(null);
+  },
   useOpen: drawer.use,
+  useLastAdded: lastAdded.use,
 };
