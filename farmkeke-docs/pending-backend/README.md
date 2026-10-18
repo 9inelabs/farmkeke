@@ -1,6 +1,6 @@
 # Backend changes waiting for the real convex/ code
 
-Last updated: 17 Oct 2026
+Last updated: 18 Oct 2026
 
 ## Why this list exists
 
@@ -67,14 +67,24 @@ Setting a variable doesn't change code. Set them with `npx convex env set NAME v
 - Terms of use, privacy policy, cookie policy and farmer terms. Only the refund and dispute policy is designed (W-87). The other pages are marked as drafts.
 - An SVG version of the wordmark, which looks sharper than the PNG.
 
-## Data the shop designs show but the backend doesn't return yet (Phase 2)
+## Data the shop designs show (Phase 2 gaps): built in Phase 3c
 
-The website hides or replaces these until the storefront functions return them:
+All of these were built in the Phase 3c backend rebuild (`docs/reports/05-storefront-rebuild.md`). They are **not deployed yet**. Every change only adds optional arguments or new fields, so the website keeps working as it is and can switch each item on after the deploy. After deploying, run `npx convex run shopStats:rebuild` once to fill the new counters and response times.
 
-- **Listing summaries:** `farmId`, `farmName` and `harvestedOn`, so product cards can show the farm and a "Harvested today" badge.
-- **Farm rows** on the shop home and search: rating, review count, product count, and distance from the shopper.
-- **Categories:** product count per category, and subtypes (the design's sub-chips and "Type" filter).
-- **Filters and sorting:** harvested-date, top-rated and distance-to-farm filters, plus a "Nearest farm" sort.
-- **Farm listings:** a category on each listing, for the farm page's category chips.
-- **Farm page:** delivery and pickup flags, and a typical response time ("Accepts orders within…").
-- **`areas:requestArea`:** accept a phone number as well as email (W-09b says "phone number or email").
+| Design gap | Status | What to use |
+| --- | --- | --- |
+| Listing summaries: farm, harvest badge | Built | Each card now also has `farmId`, `farmName`, `farmVerified`, `farmRating`, `farmRatingCount`, `harvestedOn`, `freshness` ("Harvested today", "Harvested yesterday", "Harvested N days ago"; needs `today`), `inStock`, `delivery`, `pickup`, `category` (`{ slug, name }`), `subtype` and `distanceKm` (needs `lat`/`lng`) |
+| Farm rows: rating, reviews, products, distance | Built | Farm rows (`home.farms`, `search.farms`) also have `lga`, `state`, `verified`, `rating`, `ratingCount`, `productCount` and `distanceKm`. Search farm rows add `matchCount` ("14 tomato listings"), and search returns `farmTotal` |
+| Category product counts | Built | New query `catalog:listCategoriesWithCounts` (each category plus `productCount` and `subtypes[{ slug, name, count }]`). `categoryListings.category` also has `productCount` and `subtypes`, and the response has `farmCount` ("from 21 farms") |
+| Category subtypes | Built | `categories.subtypes` (optional), edited with `admin/catalog:setSubtypes`. Listings have an optional `subtype`, set through `listings:saveDetails({ subtype })`. Filter with `categoryListings({ subtype })` |
+| Harvested, top-rated and distance filters; Nearest sort | Built | On `categoryListings`, `search` and `collection`: `harvestedWithinDays` (with `today`), `minRating`, `maxDistanceKm` (with `lat`/`lng`), and `sort: "nearest"` (with `lat`/`lng`) or `"top_rated"`. `search` also takes `categorySlug` |
+| Farm listings: a category on each | Built | `farm.listings[].category`, plus `farm.categories[{ slug, name, count }]` for the chips |
+| Farm page: delivery, pickup, response time | Built | `farm` also returns `delivery`, `pickup`, `responseTimeHours` (median payment-to-acceptance time; null with no history), `acceptsWithinHours` (24), `productCount`, `area` and `distanceKm`. New optional args `today`, `lat`, `lng` |
+| Product page extras | Built | `product.farm` adds `responseTimeHours`, `acceptsWithinHours`, `distanceKm`, `productCount`, `joinedAt` and `onBreak`. `product` adds `inStock`, `freshness`, `subtype`, `priceKobo`, `moreFromFarm`, and `deliveryFeeKobo` and `deliveryArea` for the new optional `serviceAreaId`. New optional args `today`, `lat`, `lng` and `serviceAreaId` |
+| `areas:requestArea` with a phone | Built | Takes `phone` and/or `email` (at least one; `email` is now optional). Errors: `CONTACT_REQUIRED`, `INVALID_PHONE` and `INVALID_EMAIL` |
+
+Also new in 3c:
+
+- `home` and `popular` take optional `lat`/`lng`; `popular` also takes `limit` and `today`.
+- `account:deleteAccount` now returns `{ status: "deleted" | "waiting_for_orders" }`. W-49 can tell the shopper the account will be deleted once their orders finish.
+- Problem reports alert support and operations staff in the app (`admin/staff:alerts`, `unreadAlerts` and `markAlertsRead`). The farm is reminded 2 hours before its 12-hour reply deadline. At the deadline the case is marked overdue (`farmReplyOverdue` on the dispute views).

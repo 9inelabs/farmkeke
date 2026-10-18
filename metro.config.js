@@ -3,8 +3,10 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// The Next.js website lives in web/ with its own node_modules; keep Metro out of it.
-const webDir = path.resolve(__dirname, 'web').replace(/[/\\]/g, '[/\\\\]');
+// The Next.js website (web/) and the backend tests (convex-tests/) have their
+// own node_modules; keep Metro out of both.
+const dirPattern = (name) =>
+  path.resolve(__dirname, name).replace(/[/\\]/g, '[/\\\\]').replace(/\./g, '\\.');
 
 const { transformer, resolver } = config;
 
@@ -19,7 +21,8 @@ config.resolver = {
   sourceExts: [...resolver.sourceExts, 'svg'],
   blockList: [
     ...[].concat(resolver.blockList ?? []),
-    new RegExp(`^${webDir.replace(/\./g, '\\.')}[/\\\\].*`),
+    new RegExp(`^${dirPattern('web')}[/\\\\].*`),
+    new RegExp(`^${dirPattern('convex-tests')}[/\\\\].*`),
   ],
 };
 

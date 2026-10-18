@@ -77,6 +77,7 @@ export async function disputeView(ctx: QueryCtx, dispute: Doc<"disputes">, viewe
     status: dispute.status,
     reportedAt: dispute._creationTime,
     farmReplyBy: dispute.farmReplyBy,
+    farmReplyOverdue: dispute.farmReplyOverdueAt !== undefined,
     decideBy: dispute.decideBy,
     farmResponse:
       dispute.farmRespondedAt === undefined
@@ -127,6 +128,7 @@ export async function disputeRow(ctx: QueryCtx, dispute: Doc<"disputes">, viewer
     outcome: dispute.outcome ?? null,
     reportedAt: dispute._creationTime,
     farmReplyBy: dispute.farmReplyBy,
+    farmReplyOverdue: dispute.farmReplyOverdueAt !== undefined,
     decideBy: dispute.decideBy,
     lastMessageAt: dispute.lastMessageAt ?? dispute._creationTime,
     unread: dispute.lastMessageAt !== undefined && (readAt === undefined || dispute.lastMessageAt > readAt),

@@ -7,6 +7,7 @@ import { mutation, query, type MutationCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { isOutOfStock, SEND_BACK_REASONS } from "../lib/listing";
+import { patchListing } from "../lib/listingCounts";
 import { listingStatus } from "../schema";
 
 const ROLES = ["operations" as const];
@@ -112,7 +113,7 @@ async function moderate(
   const listing = await ctx.db.get("listings", listingId);
   if (listing === null || listing.deletedAt !== undefined) throw new ConvexError("Listing not found");
   if (!(from as string[]).includes(listing.status)) throw new ConvexError(`This listing is ${listing.status}`);
-  await ctx.db.patch("listings", listing._id, {
+  await patchListing(ctx, listing, {
     status: change.status,
     reviewNote: change.reviewNote,
     liveAt: change.status === "live" ? (listing.liveAt ?? Date.now()) : listing.liveAt,

@@ -5,6 +5,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
+import { farmVisibilityChanged } from "../lib/listingCounts";
 import { normalizeNigerianPhone } from "../lib/phone";
 
 const ROLES = ["operations" as const];
@@ -66,10 +67,12 @@ export const setSuspended = mutation({
     const actor = await requireStaff(ctx, ROLES);
     const farm = await ctx.db.get("farms", args.farmId);
     if (farm === null) throw new ConvexError("Farm not found");
+    const status = args.suspended ? ("suspended" as const) : ("active" as const);
     await ctx.db.patch("farms", farm._id, {
-      status: args.suspended ? "suspended" : "active",
+      status,
       suspendedReason: args.suspended ? args.reason.trim() : undefined,
     });
+    await farmVisibilityChanged(ctx, farm, { ...farm, status });
     await writeAudit(ctx, {
       actorId: actor._id,
       action: args.suspended ? "farm.suspend" : "farm.reactivate",

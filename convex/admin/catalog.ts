@@ -83,6 +83,36 @@ export const createCategory = mutation({
   },
 });
 
+/**
+ * W-02 / W-03 sub-chips: replaces a category's subtypes, in display order.
+ * Listings keep a removed subtype's slug until the farmer edits them; the
+ * shop then just has no chip for it.
+ */
+export const setSubtypes = mutation({
+  args: {
+    categoryId: v.id("categories"),
+    subtypes: v.array(v.object({ slug: v.string(), name: v.string() })),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const category = await ctx.db.get("categories", args.categoryId);
+    if (category === null) throw new ConvexError("Category not found");
+    if (args.subtypes.length > 30) throw new ConvexError("A category can have at most 30 subtypes");
+    const subtypes = args.subtypes.map((s) => ({ slug: requireSlug(s.slug), name: requireText(s.name, "Subtype name") }));
+    if (new Set(subtypes.map((s) => s.slug)).size !== subtypes.length) throw new ConvexError("Each subtype needs its own slug");
+    await ctx.db.patch("categories", category._id, { subtypes });
+    await writeAudit(ctx, {
+      actorId: actor._id,
+      action: "category.subtypes",
+      targetTable: "categories",
+      targetId: category._id,
+      reason: args.reason,
+      details: { from: category.subtypes ?? [], to: subtypes },
+    });
+  },
+});
+
 /** Sets display order to the order of the ids given. */
 export const reorderCategories = mutation({
   args: { orderedIds: v.array(v.id("categories")), reason: v.string() },

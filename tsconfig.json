@@ -8,5 +8,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "convex", "web"]
+  "exclude": ["node_modules", "convex", "web", "convex-tests"]
 }
