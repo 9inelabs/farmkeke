@@ -1,0 +1,268 @@
+// Problem reports (M-67 to M-69, W-53, W-54, F-48). The shopper reports a
+// problem before confirming receipt; the money stays held. The farm has 12
+// hours to reply and Farmkeke decides within about a day (admin/disputes).
+import { ConvexError, v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { getViewer, requireFarmer, requireUser } from "./lib/auth";
+import { nextCounter } from "./lib/counters";
+import { disputeRow, disputeView, REASON_LABELS } from "./lib/disputes";
+import { notify, notifyConsumer, notifyFarm } from "./lib/notify";
+import { transition } from "./lib/orders";
+import { getRules, HOUR } from "./lib/settings";
+import { validateImageUpload } from "./lib/uploads";
+
+const MAX_NOTE = 2000;
+const MAX_PHOTOS = 6;
+
+const asArg = v.union(v.literal("consumer"), v.literal("farmer"));
+
+async function viewerFarm(ctx: QueryCtx, user: Doc<"users">) {
+  if (user.isAnonymous) return null;
+  return await ctx.db
+    .query("farms")
+    .withIndex("by_userId", (q) => q.eq("userId", user._id))
+    .unique();
+}
+
+function cleanText(text: string, required: boolean) {
+  const body = text.trim();
+  if (required && body.length === 0) throw new ConvexError({ code: "NOTE_REQUIRED" });
+  if (body.length > MAX_NOTE) throw new ConvexError({ code: "NOTE_TOO_LONG", max: MAX_NOTE });
+  return body;
+}
+
+async function checkPhotos(ctx: MutationCtx, photoIds: Id<"_storage">[]) {
+  if (photoIds.length > MAX_PHOTOS) throw new ConvexError({ code: "TOO_MANY_PHOTOS", max: MAX_PHOTOS });
+  for (const id of photoIds) await validateImageUpload(ctx, id);
+}
+
+/** The dispute and the caller's side, for a party acting on it. */
+async function partyDispute(ctx: MutationCtx, disputeId: Id<"disputes">, as: "consumer" | "farmer") {
+  const user = await requireUser(ctx);
+  const dispute = await ctx.db.get("disputes", disputeId);
+  if (dispute === null) throw new ConvexError({ code: "NOT_FOUND" });
+  if (as === "consumer" && dispute.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
+  if (as === "farmer") {
+    const farm = await viewerFarm(ctx, user);
+    if (farm === null || farm._id !== dispute.farmId) throw new ConvexError({ code: "NOT_FOUND" });
+  }
+  return { user, dispute };
+}
+
+/** M-67 / W-53: report a problem with a delivered or collected order. */
+export const open = mutation({
+  args: {
+    itemIndexes: v.array(v.number()),
+    note: v.string(),
+    orderId: v.id("orders"),
+    photoIds: v.array(v.id("_storage")),
+    reason: v.union(v.literal("missing"), v.literal("damaged"), v.literal("wrong_item"), v.literal("not_received")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const order = await ctx.db.get("orders", args.orderId);
+    // Only the identity (device) that placed it, like confirm receipt
+    if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
+    if (order.disputeId !== undefined) throw new ConvexError({ code: "ALREADY_REPORTED" });
+    if (order.status === "completed" || order.confirmedAt !== undefined) {
+      throw new ConvexError({ code: "ALREADY_CONFIRMED" });
+    }
+    if (order.status !== "delivered" && order.status !== "collected") {
+      throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
+    }
+    const note = cleanText(args.note, true);
+    const indexes =
+      args.reason === "not_received" && args.itemIndexes.length === 0
+        ? order.items.map((_, i) => i)
+        : [...new Set(args.itemIndexes)].sort((a, b) => a - b);
+    if (indexes.length === 0) throw new ConvexError({ code: "ITEMS_REQUIRED" });
+    if (indexes.some((i) => !Number.isInteger(i) || i < 0 || i >= order.items.length)) {
+      throw new ConvexError({ code: "INVALID_ITEM" });
+    }
+    await checkPhotos(ctx, args.photoIds);
+
+    const now = Date.now();
+    const rules = await getRules(ctx);
+    const amountKobo = indexes.reduce((sum, i) => sum + order.items[i]!.priceKobo * order.items[i]!.quantity, 0);
+    const number = `DSP-${await nextCounter(ctx, "dispute", 1001)}`;
+    const disputeId = await ctx.db.insert("disputes", {
+      orderId: order._id,
+      userId: user._id,
+      farmId: order.farmId,
+      number,
+      reason: args.reason,
+      itemIndexes: indexes,
+      note,
+      photoIds: args.photoIds,
+      amountKobo,
+      status: "open",
+      farmReplyBy: now + rules.disputeReplyHours * HOUR,
+      decideBy: now + rules.disputeDecideHours * HOUR,
+      consumerReadAt: now,
+      lastMessageAt: now,
+    });
+    // The report opens the case thread (W-54)
+    await ctx.db.insert("disputeMessages", { disputeId, authorId: user._id, as: "consumer", body: note, photoIds: args.photoIds });
+    const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
+    // Escrow stays held; the order can't be confirmed or released while disputed.
+    const disputed = await transition(ctx, order, "disputed", actor, { disputeId }, REASON_LABELS[args.reason]);
+
+    await notifyFarm(
+      ctx,
+      disputed,
+      "dispute_opened",
+      `Problem reported on order ${order.number}`,
+      `${REASON_LABELS[args.reason]}. Please reply within ${rules.disputeReplyHours} hours.`,
+    );
+    await notifyConsumer(
+      ctx,
+      disputed,
+      "dispute_opened",
+      `We've got your report (${number})`,
+      `Your payment stays held. The farm has ${rules.disputeReplyHours} hours to reply.`,
+    );
+    return { disputeId, number };
+  },
+});
+
+/** F-48: the farm's reply (once). */
+export const respond = mutation({
+  args: { disputeId: v.id("disputes"), note: v.string(), photoIds: v.array(v.id("_storage")) },
+  handler: async (ctx, args) => {
+    const { user } = await requireFarmer(ctx);
+    const { dispute } = await partyDispute(ctx, args.disputeId, "farmer");
+    if (dispute.status !== "open") throw new ConvexError({ code: "ALREADY_RESPONDED", status: dispute.status });
+    const note = cleanText(args.note, true);
+    await checkPhotos(ctx, args.photoIds);
+    const now = Date.now();
+    await ctx.db.patch("disputes", dispute._id, {
+      status: "farmer_responded",
+      farmRespondedAt: now,
+      farmResponseNote: note,
+      farmResponsePhotoIds: args.photoIds,
+      farmerReadAt: now,
+      lastMessageAt: now,
+    });
+    await ctx.db.insert("disputeMessages", {
+      disputeId: dispute._id,
+      authorId: user._id,
+      as: "farmer",
+      body: note,
+      photoIds: args.photoIds,
+    });
+    const order = await ctx.db.get("orders", dispute.orderId);
+    if (order !== null) {
+      await notifyConsumer(ctx, order, "dispute_message", `The farm replied (${dispute.number})`, note.slice(0, 140));
+    }
+  },
+});
+
+/** A message on the case from the shopper or the farm. Both of them (and staff) see it. */
+export const sendMessage = mutation({
+  args: { as: asArg, body: v.string(), disputeId: v.id("disputes"), photoIds: v.array(v.id("_storage")) },
+  handler: async (ctx, args) => {
+    const { user, dispute } = await partyDispute(ctx, args.disputeId, args.as);
+    if (dispute.status === "resolved") throw new ConvexError({ code: "DISPUTE_RESOLVED" });
+    const body = cleanText(args.body, args.photoIds.length === 0);
+    await checkPhotos(ctx, args.photoIds);
+    const now = Date.now();
+    const messageId = await ctx.db.insert("disputeMessages", {
+      disputeId: dispute._id,
+      authorId: user._id,
+      as: args.as,
+      body,
+      photoIds: args.photoIds,
+    });
+    await ctx.db.patch("disputes", dispute._id, {
+      lastMessageAt: now,
+      ...(args.as === "consumer" ? { consumerReadAt: now } : { farmerReadAt: now }),
+    });
+    const order = await ctx.db.get("orders", dispute.orderId);
+    if (order !== null) {
+      const preview = body ? body.slice(0, 140) : "Photo";
+      if (args.as === "consumer") {
+        const farm = await ctx.db.get("farms", dispute.farmId);
+        if (farm !== null) {
+          await notify(ctx, {
+            userId: farm.userId,
+            side: "farm",
+            kind: "dispute_message",
+            title: `New message on ${dispute.number}`,
+            body: preview,
+            href: `/farm-dispute/${dispute._id}`,
+            orderId: order._id,
+          });
+        }
+      } else {
+        await notifyConsumer(ctx, order, "dispute_message", `New message on ${dispute.number}`, preview);
+      }
+    }
+    return { messageId };
+  },
+});
+
+export const markRead = mutation({
+  args: { as: asArg, disputeId: v.id("disputes") },
+  handler: async (ctx, args) => {
+    const { dispute } = await partyDispute(ctx, args.disputeId, args.as);
+    await ctx.db.patch("disputes", dispute._id, args.as === "consumer" ? { consumerReadAt: Date.now() } : { farmerReadAt: Date.now() });
+  },
+});
+
+/** M-69 / W-54 or F-48: one case, for whichever party is looking. */
+export const get = query({
+  args: { disputeId: v.id("disputes") },
+  handler: async (ctx, args) => {
+    const user = await getViewer(ctx);
+    const dispute = await ctx.db.get("disputes", args.disputeId);
+    if (user === null || dispute === null) return null;
+    if (dispute.userId === user._id) return { as: "consumer" as const, ...(await disputeView(ctx, dispute, "consumer")) };
+    const farm = await viewerFarm(ctx, user);
+    if (farm !== null && farm._id === dispute.farmId) {
+      return { as: "farmer" as const, ...(await disputeView(ctx, dispute, "farmer")) };
+    }
+    return null;
+  },
+});
+
+/** The shopper's case for an order (W-51 / M-63 link), or null. */
+export const forOrder = query({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const user = await getViewer(ctx);
+    const order = await ctx.db.get("orders", args.orderId);
+    if (user === null || order === null || order.userId !== user._id || order.disputeId === undefined) return null;
+    const dispute = await ctx.db.get("disputes", order.disputeId);
+    return dispute === null ? null : await disputeView(ctx, dispute, "consumer");
+  },
+});
+
+/** The farm's view of the case on one of its orders, or null. */
+export const forFarmOrder = query({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const user = await getViewer(ctx);
+    const order = await ctx.db.get("orders", args.orderId);
+    if (user === null || order === null || order.disputeId === undefined) return null;
+    const farm = await viewerFarm(ctx, user);
+    if (farm === null || farm._id !== order.farmId) return null;
+    const dispute = await ctx.db.get("disputes", order.disputeId);
+    return dispute === null ? null : await disputeView(ctx, dispute, "farmer");
+  },
+});
+
+/** The shopper's cases, newest first. */
+export const mine = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getViewer(ctx);
+    if (user === null) return [];
+    const rows = await ctx.db
+      .query("disputes")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(50);
+    return await Promise.all(rows.map((d) => disputeRow(ctx, d, "consumer")));
+  },
+});

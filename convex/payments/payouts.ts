@@ -115,27 +115,35 @@ export const saveRecipient = internalMutation({
   },
 });
 
+/**
+ * Gives a payout a fresh reference and puts it back to pending (Paystack
+ * references are single-use). Shared with admin/payments.retryPayout.
+ */
+export async function freshReference(ctx: MutationCtx, payout: Doc<"payouts">) {
+  const base = payout.reference.replace(/-\d+$/, "");
+  const reference = `${base}-${payout.attempts + 1}`;
+  await ctx.db.patch("payouts", payout._id, {
+    reference,
+    status: "pending",
+    sending: false,
+    transferCode: undefined,
+    failureReason: undefined,
+  });
+  const entries = await ctx.db
+    .query("ledgerEntries")
+    .withIndex("by_payoutId", (q) => q.eq("payoutId", payout._id))
+    .take(10);
+  for (const e of entries) await ctx.db.patch("ledgerEntries", e._id, { status: "pending" });
+  return reference;
+}
+
 /** A fresh reference before a retry (Paystack references are single-use). */
 export const newReference = internalMutation({
   args: { payoutId: v.id("payouts") },
   handler: async (ctx, args) => {
     const payout = await ctx.db.get("payouts", args.payoutId);
     if (payout === null || payout.status === "sent") return null;
-    const base = payout.reference.replace(/-\d+$/, "");
-    const reference = `${base}-${payout.attempts + 1}`;
-    await ctx.db.patch("payouts", payout._id, {
-      reference,
-      status: "pending",
-      sending: false,
-      transferCode: undefined,
-      failureReason: undefined,
-    });
-    const entries = await ctx.db
-      .query("ledgerEntries")
-      .withIndex("by_payoutId", (q) => q.eq("payoutId", payout._id))
-      .take(10);
-    for (const e of entries) await ctx.db.patch("ledgerEntries", e._id, { status: "pending" });
-    return reference;
+    return await freshReference(ctx, payout);
   },
 });
 

@@ -331,6 +331,16 @@ export async function releaseOrder(
     "Payment released",
     `${naira(farmKobo)} for order ${order.number} is on its way to your bank.`,
   );
+  // The shopper confirmed: thank them and ask for a review (W-52b / M-66).
+  if (order.confirmedAt !== undefined && !opts.split) {
+    await notifyConsumer(
+      ctx,
+      order,
+      "order_completed",
+      `Thanks for confirming order ${order.number}`,
+      `Payment released to ${farm.name}. How was your order? Leave a review.`,
+    );
+  }
 }
 
 /** Starts the pickup clock when an order reaches the pickup point (A-54, Phase 3b dispatch). */

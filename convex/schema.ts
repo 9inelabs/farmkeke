@@ -300,7 +300,9 @@ export default defineSchema({
     userId: v.string(),
     status: v.union(v.literal("completed"), v.literal("waiting_for_orders")),
     completedAt: v.optional(v.number()),
-  }).index("by_status", ["status"]),
+  })
+    .index("by_status", ["status"])
+    .index("by_userId", ["userId"]),
 
   // Sequential human-readable numbers (application FA-10001, later orders).
   counters: defineTable({ name: v.string(), value: v.number() }).index("by_name", ["name"]),
@@ -545,7 +547,9 @@ export default defineSchema({
     .index("by_status_and_respondBy", ["status", "respondBy"])
     .index("by_status_and_deliveredAt", ["status", "deliveredAt"])
     .index("by_status_and_collectBy", ["status", "collectBy"])
-    .index("by_escrow", ["escrow"]),
+    .index("by_escrow", ["escrow"])
+    .index("by_status", ["status"])
+    .index("by_riderId", ["riderId"]),
 
   // A-51 timeline: every status change, with who did it.
   orderEvents: defineTable({
@@ -764,6 +768,8 @@ export default defineSchema({
     href: v.string(),
     orderId: v.optional(v.id("orders")),
     readAt: v.optional(v.number()),
+    // Phone to text when the alert and the person's preferences allow SMS
+    smsTo: v.optional(v.string()),
   })
     .index("by_userId_and_side", ["userId", "side"])
     .index("by_userId_and_side_and_readAt", ["userId", "side", "readAt"]),
@@ -822,6 +828,7 @@ export default defineSchema({
     decidedAt: v.optional(v.number()),
     decidedBy: v.optional(v.id("users")),
     assigneeId: v.optional(v.id("users")),
+    lastMessageAt: v.optional(v.number()),
     consumerReadAt: v.optional(v.number()),
     farmerReadAt: v.optional(v.number()),
     staffReadAt: v.optional(v.number()),
@@ -858,6 +865,8 @@ export default defineSchema({
     farmerUnread: v.number(),
     nudgedConsumerAt: v.optional(v.number()),
     nudgedFarmerAt: v.optional(v.number()),
+    consumerReadAt: v.optional(v.number()),
+    farmerReadAt: v.optional(v.number()),
   })
     .index("by_orderId", ["orderId"])
     .index("by_userId_and_lastMessageAt", ["userId", "lastMessageAt"])
@@ -919,9 +928,13 @@ export default defineSchema({
     userReadAt: v.optional(v.number()),
     staffReadAt: v.optional(v.number()),
     resolvedAt: v.optional(v.number()),
+    // Who wrote last, and a short preview, for lists and unread markers
+    lastFrom: v.optional(v.union(v.literal("user"), v.literal("staff"))),
+    preview: v.optional(v.string()),
   })
     .index("by_userId_and_side", ["userId", "side"])
-    .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"]),
+    .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"])
+    .index("by_lastMessageAt", ["lastMessageAt"]),
 
   supportMessages: defineTable({
     ticketId: v.id("supportTickets"),

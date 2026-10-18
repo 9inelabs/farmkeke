@@ -1,7 +1,8 @@
-// Notification store (Screen Inventory section 5). Phase 3a records the
-// in-app notification and, where the rules call for SMS, an smsLog row with
-// status "recorded" (no SMS provider yet). Push and SMS delivery
-// (notifications/deliver.ts) arrive in Phase 3b.
+// Notifications (Screen Inventory section 5). Every notification is stored
+// for the in-app list, then notifications/deliver.send pushes it (Expo),
+// records the SMS (no provider chosen yet) and sends the email (Resend), each
+// only when the alert type and the person's preferences allow it.
+import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 
@@ -13,7 +14,7 @@ export type NotifyArgs = {
   body: string;
   href: string;
   orderId?: Id<"orders">;
-  // Also record an SMS to this number
+  // Phone to text, if the preferences allow SMS
   smsTo?: string;
 };
 
@@ -26,20 +27,16 @@ export async function notify(ctx: MutationCtx, n: NotifyArgs): Promise<Id<"notif
     body: n.body,
     href: n.href,
     orderId: n.orderId,
+    smsTo: n.smsTo,
   });
-  if (n.smsTo) {
-    await ctx.db.insert("smsLog", {
-      to: n.smsTo,
-      body: `Farmkeke: ${n.title}. ${n.body}`,
-      status: "recorded",
-      userId: n.userId,
-      notificationId,
-    });
-  }
+  await ctx.scheduler.runAfter(0, internal.notifications.deliver.send, { notificationId });
   return notificationId;
 }
 
-/** Tells the shopper about their order. Guests get SMS only (no account to push to). */
+/**
+ * Tells the shopper about their order: push, or SMS when there is no push
+ * (guests always get SMS), plus email for the order emails.
+ */
 export async function notifyConsumer(
   ctx: MutationCtx,
   order: Doc<"orders">,
@@ -57,8 +54,7 @@ export async function notifyConsumer(
     body,
     href: `/order/${order._id}`,
     orderId: order._id,
-    // Push or SMS: until push delivery exists (3b), record SMS for guests
-    smsTo: user.isAnonymous ? order.contact.phone : undefined,
+    smsTo: order.contact.phone,
   });
 }
 
@@ -91,4 +87,20 @@ export function naira(kobo: number): string {
   const rest = Math.abs(kobo) % 100;
   const grouped = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return `${kobo < 0 ? "-" : ""}₦${grouped}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
+}
+
+const READ_BATCH = 200;
+
+/** Marks a batch of unread notifications read; schedules the next batch if more are left. */
+export async function markReadBatch(ctx: MutationCtx, userId: Id<"users">, side: "shop" | "farm") {
+  const now = Date.now();
+  const unread = await ctx.db
+    .query("notifications")
+    .withIndex("by_userId_and_side_and_readAt", (q) => q.eq("userId", userId).eq("side", side).eq("readAt", undefined))
+    .take(READ_BATCH);
+  for (const n of unread) await ctx.db.patch("notifications", n._id, { readAt: now });
+  if (unread.length === READ_BATCH) {
+    await ctx.scheduler.runAfter(0, internal.notifications.store.markAllReadBatch, { userId, side });
+  }
+  return unread.length;
 }
