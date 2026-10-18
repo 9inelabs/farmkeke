@@ -68,11 +68,19 @@ export const changeEmail = action({
   },
 });
 
+/**
+ * M-95 / W-49. Returns { status: "deleted" } when the account is gone, or
+ * { status: "waiting_for_orders" } when orders are still in progress: the
+ * account keeps working and is deleted once they end (accountsInternal).
+ */
 export const deleteAccount = action({
   args: { password: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ status: "deleted" | "waiting_for_orders" }> => {
     const user = await verifyCurrentPassword(ctx, args.password);
     if (user.staffRole !== undefined) throw new ConvexError({ code: "STAFF_ACCOUNT" });
-    await ctx.runMutation(internal.accountsInternal.deleteUserData, { userId: user._id });
+    const result: "completed" | "waiting_for_orders" = await ctx.runMutation(internal.accountsInternal.deleteUserData, {
+      userId: user._id,
+    });
+    return { status: result === "completed" ? "deleted" : "waiting_for_orders" };
   },
 });

@@ -2,29 +2,80 @@
   "category": {
     "id": "k179n7mvn37g8x5a16grh2kreh8fyjcg",
     "name": "Vegetables",
-    "slug": "vegetables"
+    "productCount": 3,
+    "slug": "vegetables",
+    "subtypes": []
   },
+  "farmCount": 2,
   "hasMore": false,
   "items": [
     {
+      "category": {
+        "name": "Vegetables",
+        "slug": "vegetables"
+      },
+      "delivery": true,
+      "distanceKm": null,
+      "farmId": "mh7cb0cqt2v2efr0ttszxv531h8fyb46",
+      "farmName": "Ada Greens",
+      "farmRating": null,
+      "farmRatingCount": 0,
+      "farmVerified": true,
+      "freshness": null,
+      "harvestedOn": null,
       "id": "ms74jgnb0phctfq828vfxbkdms8g074a",
       "imageUrl": null,
+      "inStock": true,
       "name": "Ugwu leaves",
+      "pickup": true,
       "priceKobo": 80000,
+      "subtype": null,
       "unit": "bunch"
     },
     {
+      "category": {
+        "name": "Vegetables",
+        "slug": "vegetables"
+      },
+      "delivery": true,
+      "distanceKm": null,
+      "farmId": "mh7dyptb8nd2xa9mdca3cbrees8fzp42",
+      "farmName": "other Farm",
+      "farmRating": null,
+      "farmRatingCount": 0,
+      "farmVerified": true,
+      "freshness": null,
+      "harvestedOn": "2026-10-13",
       "id": "ms7aqxm38qxtarr7k0pyq3b2x98g0gdx",
       "imageUrl": null,
+      "inStock": true,
       "name": "Oshombo pepper",
+      "pickup": true,
       "priceKobo": 600000,
+      "subtype": null,
       "unit": "basket"
     },
     {
+      "category": {
+        "name": "Vegetables",
+        "slug": "vegetables"
+      },
+      "delivery": true,
+      "distanceKm": null,
+      "farmId": "mh7cb0cqt2v2efr0ttszxv531h8fyb46",
+      "farmName": "Ada Greens",
+      "farmRating": null,
+      "farmRatingCount": 0,
+      "farmVerified": true,
+      "freshness": null,
+      "harvestedOn": "2026-10-13",
       "id": "ms7d3f1bvya1szk38jbad3qacs8g0jw6",
       "imageUrl": null,
+      "inStock": true,
       "name": "Fresh tomatoes",
+      "pickup": true,
       "priceKobo": 450000,
+      "subtype": null,
       "unit": "basket"
     }
   ],

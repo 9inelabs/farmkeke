@@ -2,6 +2,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getViewer, requireFarmer } from "./lib/auth";
+import { farmVisibilityChanged } from "./lib/listingCounts";
 import { validateImageUpload } from "./lib/uploads";
 import { requireOpeningHours } from "./lib/validate";
 import { openingHours } from "./schema";
@@ -100,6 +101,7 @@ export const updateAvailability = mutation({
     const days = [...new Set(args.openDays)].sort();
     if (days.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) throw new ConvexError({ code: "INVALID_DAYS" });
     await ctx.db.patch("farms", farm._id, { openDays: days, holidayMode: args.holidayMode });
+    await farmVisibilityChanged(ctx, farm, { ...farm, holidayMode: args.holidayMode });
   },
 });
 

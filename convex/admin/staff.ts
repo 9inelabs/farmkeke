@@ -106,3 +106,52 @@ export const setStaffRoleByEmail = internalMutation({
     });
   },
 });
+
+const ALL_ROLES = ["operations" as const, "finance" as const, "support" as const];
+
+/** A-12: the signed-in staff member's in-app alerts (problem reports, overdue farm replies), newest first. */
+export const alerts = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const user = await requireStaff(ctx, ALL_ROLES);
+    return await ctx.db
+      .query("notifications")
+      .withIndex("by_userId_and_side", (q) => q.eq("userId", user._id).eq("side", "staff"))
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
+/** A-12: unread staff alerts, capped at 99. */
+export const unreadAlerts = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireStaff(ctx, ALL_ROLES);
+    const rows = await ctx.db
+      .query("notifications")
+      .withIndex("by_userId_and_side_and_readAt", (q) => q.eq("userId", user._id).eq("side", "staff").eq("readAt", undefined))
+      .take(99);
+    return rows.length;
+  },
+});
+
+/** Marks the signed-in staff member's alerts read: one alert, or all of them (200 at a time). */
+export const markAlertsRead = mutation({
+  args: { notificationId: v.optional(v.id("notifications")) },
+  handler: async (ctx, args) => {
+    const user = await requireStaff(ctx, ALL_ROLES);
+    const now = Date.now();
+    if (args.notificationId !== undefined) {
+      const n = await ctx.db.get("notifications", args.notificationId);
+      if (n === null || n.userId !== user._id || n.side !== "staff") throw new ConvexError({ code: "NOT_FOUND" });
+      if (n.readAt === undefined) await ctx.db.patch("notifications", n._id, { readAt: now });
+      return 1;
+    }
+    const unread = await ctx.db
+      .query("notifications")
+      .withIndex("by_userId_and_side_and_readAt", (q) => q.eq("userId", user._id).eq("side", "staff").eq("readAt", undefined))
+      .take(200);
+    for (const n of unread) await ctx.db.patch("notifications", n._id, { readAt: now });
+    return unread.length;
+  },
+});

@@ -4,6 +4,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireFarmer } from "./lib/auth";
 import { isOutOfStock, listingProblems, MAX_LISTING_PHOTOS, MAX_PRICE_KOBO, MAX_STOCK } from "./lib/listing";
+import { insertListing, patchListing } from "./lib/listingCounts";
 import { validateImageUpload } from "./lib/uploads";
 import { listingUnit } from "./schema";
 
@@ -36,10 +37,12 @@ const requireActive = (farm: Doc<"farms">) => {
  * Changing what buyers see (photos, name, category, description) on a live
  * listing sends it back to review, unless the farm is trusted (A-31).
  */
-async function afterContentEdit(ctx: MutationCtx, farm: Doc<"farms">, listing: Doc<"listings">) {
+async function afterContentEdit(ctx: MutationCtx, farm: Doc<"farms">, before: Doc<"listings">) {
   if (farm.trusted) return;
-  if (listing.status === "live" || listing.status === "paused") {
-    await ctx.db.patch("listings", listing._id, { status: "under_review", submittedAt: Date.now() });
+  // Read it again: the caller has just patched it.
+  const listing = await ctx.db.get("listings", before._id);
+  if (listing !== null && (listing.status === "live" || listing.status === "paused")) {
+    await patchListing(ctx, listing, { status: "under_review", submittedAt: Date.now() });
   }
 }
 
@@ -118,7 +121,7 @@ export const createDraft = mutation({
   handler: async (ctx) => {
     const { user, farm } = await requireFarmer(ctx);
     requireActive(farm);
-    const listingId = await ctx.db.insert("listings", {
+    const listingId = await insertListing(ctx, {
       farmId: farm._id,
       status: "draft",
       name: "",
@@ -142,12 +145,12 @@ export const savePhotos = mutation({
     for (const id of ids) if (!listing.photoIds.includes(id)) await validateImageUpload(ctx, id);
     for (const old of listing.photoIds) if (!ids.includes(old)) await ctx.storage.delete(old);
     const changed = ids.join() !== listing.photoIds.join();
-    await ctx.db.patch("listings", listing._id, { photoIds: ids });
+    await patchListing(ctx, listing, { photoIds: ids });
     if (changed) await afterContentEdit(ctx, farm, listing);
   },
 });
 
-/** F-22: name, category, description, harvest date. */
+/** F-22: name, category, description, harvest date, and (Phase 3c) the category subtype. */
 export const saveDetails = mutation({
   args: {
     listingId: v.id("listings"),
@@ -155,6 +158,8 @@ export const saveDetails = mutation({
     categoryId: v.id("categories"),
     description: v.string(),
     harvestedOn: v.optional(v.string()),
+    // Slug of one of the category's subtypes (W-03 "Type"); left out = none
+    subtype: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { farm, listing } = await ownListing(ctx, args.listingId);
@@ -164,6 +169,9 @@ export const saveDetails = mutation({
     if (name.length > 60 || description.length > 600) throw new ConvexError({ code: "TOO_LONG" });
     const category = await ctx.db.get("categories", args.categoryId);
     if (category === null || category.hidden) throw new ConvexError({ code: "UNKNOWN_CATEGORY" });
+    if (args.subtype !== undefined && !(category.subtypes ?? []).some((s) => s.slug === args.subtype)) {
+      throw new ConvexError({ code: "UNKNOWN_SUBTYPE" });
+    }
     if (args.harvestedOn !== undefined) {
       const date = new Date(`${args.harvestedOn}T12:00:00Z`);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(args.harvestedOn) || Number.isNaN(date.getTime())) throw new ConvexError({ code: "INVALID_DATE" });
@@ -175,10 +183,12 @@ export const saveDetails = mutation({
     const changed =
       name !== listing.name ||
       args.categoryId !== listing.categoryId ||
+      args.subtype !== listing.subtype ||
       description !== (listing.description ?? "");
-    await ctx.db.patch("listings", listing._id, {
+    await patchListing(ctx, listing, {
       name,
       categoryId: args.categoryId,
+      subtype: args.subtype,
       description: description || undefined,
       harvestedOn: args.harvestedOn,
     });
@@ -208,7 +218,7 @@ export const savePricing = mutation({
       // Retired units stay on listings that already use them (A-81).
       if (unit === null || (unit.retired && !alreadyUsed)) throw new ConvexError({ code: "UNKNOWN_UNIT" });
     }
-    await ctx.db.patch("listings", listing._id, { units: args.units });
+    await patchListing(ctx, listing, { units: args.units });
     if (listing.status !== "draft") await logEvent(ctx, listing._id, user._id, "pricing_changed", { from: listing.units, to: args.units });
   },
 });
@@ -219,7 +229,7 @@ export const saveFulfilment = mutation({
   handler: async (ctx, args) => {
     const { listing } = await ownListing(ctx, args.listingId);
     if (!args.delivery && !args.pickup) throw new ConvexError({ code: "FULFILMENT_REQUIRED" });
-    await ctx.db.patch("listings", listing._id, { delivery: args.delivery, pickup: args.pickup });
+    await patchListing(ctx, listing, { delivery: args.delivery, pickup: args.pickup });
   },
 });
 
@@ -233,7 +243,7 @@ export const submit = mutation({
     const problems = listingProblems(listing);
     if (Object.keys(problems).length > 0) throw new ConvexError({ code: "INCOMPLETE", steps: Object.keys(problems) });
     const status = farm.trusted ? ("live" as const) : ("under_review" as const);
-    await ctx.db.patch("listings", listing._id, {
+    await patchListing(ctx, listing, {
       status,
       submittedAt: Date.now(),
       liveAt: status === "live" ? Date.now() : listing.liveAt,
@@ -257,7 +267,7 @@ export const quickUpdate = mutation({
       return change ? { ...u, priceKobo: change.priceKobo, stock: change.stock } : u;
     });
     checkUnits(units);
-    await ctx.db.patch("listings", listing._id, { units });
+    await patchListing(ctx, listing, { units });
     await logEvent(ctx, listing._id, user._id, "quick_update", { from: listing.units, to: units });
   },
 });
@@ -277,14 +287,14 @@ export const bulkAction = mutation({
       const listing = await ctx.db.get("listings", listingId);
       if (listing === null || listing.farmId !== farm._id || listing.deletedAt !== undefined) continue;
       if (args.action === "pause" && listing.status === "live") {
-        await ctx.db.patch("listings", listingId, { status: "paused" });
+        await patchListing(ctx, listing, { status: "paused" });
       } else if (args.action === "resume" && listing.status === "paused") {
-        await ctx.db.patch("listings", listingId, { status: "live" });
+        await patchListing(ctx, listing, { status: "live" });
       } else if (args.action === "out_of_stock" && listing.status !== "draft") {
-        await ctx.db.patch("listings", listingId, { units: listing.units.map((u) => ({ ...u, stock: 0 })) });
+        await patchListing(ctx, listing, { units: listing.units.map((u) => ({ ...u, stock: 0 })) });
       } else if (args.action === "delete") {
         // Kept (hidden) so past orders can still show what was bought.
-        await ctx.db.patch("listings", listingId, { deletedAt: Date.now() });
+        await patchListing(ctx, listing, { deletedAt: Date.now() });
       } else continue;
       await logEvent(ctx, listingId, user._id, args.action);
       changed++;

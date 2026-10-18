@@ -2,7 +2,7 @@
   {
     "_id": "k5726xhvqe84jrq8g7w3b07b2h8fy5dq",
     "address": "22 Ikenegbu Layout, beside Access Bank",
-    "collectWithinDays": 2,
+    "collectWithinDays": 3,
     "distanceKm": null,
     "hours": [
       {
@@ -47,7 +47,7 @@
   {
     "_id": "k57bztxp9cgcxat6yfkh9hqam98fy02j",
     "address": "World Bank Housing Estate, Umuguma Road",
-    "collectWithinDays": 2,
+    "collectWithinDays": 3,
     "distanceKm": null,
     "hours": [
       {
@@ -92,7 +92,7 @@
   {
     "_id": "k57627yhw718angjzp1rg4a24n8fz5wh",
     "address": "Douglas Road, Owerri",
-    "collectWithinDays": 2,
+    "collectWithinDays": 3,
     "distanceKm": null,
     "hours": [
       {

@@ -81,6 +81,32 @@ export async function notifyFarm(
   });
 }
 
+// Staff roles alerted about problem reports (A-12).
+const STAFF_ALERT_ROLES = ["support", "operations"] as const;
+
+/**
+ * In-app alert for Farmkeke staff (A-12 "Problem reported → admin alert"):
+ * one notifications row with side "staff" per support and operations user.
+ * Not pushed or texted; staff read them with admin/staff.alerts.
+ */
+export async function notifyStaff(
+  ctx: MutationCtx,
+  n: { kind: string; title: string; body: string; href: string; orderId?: Id<"orders"> },
+) {
+  let sent = 0;
+  for (const role of STAFF_ALERT_ROLES) {
+    const staff = await ctx.db
+      .query("users")
+      .withIndex("by_staffRole", (q) => q.eq("staffRole", role))
+      .take(100);
+    for (const user of staff) {
+      await ctx.db.insert("notifications", { userId: user._id, side: "staff", ...n });
+      sent++;
+    }
+  }
+  return sent;
+}
+
 /** "₦12,500" or "₦12,500.50" from kobo, without relying on Intl. */
 export function naira(kobo: number): string {
   const whole = Math.floor(Math.abs(kobo) / 100);

@@ -3,6 +3,7 @@
 //   npx convex run seed:run
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { insertListing, patchListing } from "./lib/listingCounts";
 
 const CATEGORIES = [
   { slug: "vegetables", name: "Vegetables", illustration: "vegetables" },
@@ -218,7 +219,7 @@ export const demoStorefront = internalMutation({
       const existing = live.find((l) => l.name === item.name && l.description === DEMO_NOTE);
       let listingId = existing?._id;
       if (existing === undefined) {
-        listingId = await ctx.db.insert("listings", {
+        listingId = await insertListing(ctx, {
           farmId: farm._id,
           status: "live",
           name: item.name,
@@ -234,7 +235,7 @@ export const demoStorefront = internalMutation({
         });
         added++;
       } else if (existing.harvestedOn !== harvestedOn) {
-        await ctx.db.patch("listings", existing._id, { harvestedOn });
+        await patchListing(ctx, existing, { harvestedOn });
         updated++;
       }
       if (item.name === "Yam tubers") yam = listingId ?? null;

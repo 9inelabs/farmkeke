@@ -6,7 +6,8 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/
 import { getViewer, requireFarmer } from "../lib/auth";
 import { notifyConsumer } from "../lib/notify";
 import { endWithFullRefund, orderCore, orderRow, transition, type OrderStatus } from "../lib/orders";
-import { commissionOn, getRules } from "../lib/settings";
+import { commissionOn, getRules, HOUR } from "../lib/settings";
+import { recordResponseTime } from "../lib/shop";
 
 const TABS = {
   new: ["paid"],
@@ -217,7 +218,10 @@ export const accept = mutation({
     if (farm.status !== "active") throw new ConvexError({ code: "FARM_SUSPENDED" });
     if (order.status !== "paid") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     if (order.respondBy !== undefined && Date.now() > order.respondBy) throw new ConvexError({ code: "EXPIRED" });
-    const accepted = await transition(ctx, order, "accepted", actor, { acceptedAt: Date.now() });
+    const acceptedAt = Date.now();
+    const accepted = await transition(ctx, order, "accepted", actor, { acceptedAt });
+    // "Usually accepts within…" on the shop's farm and product pages
+    if (order.paidAt !== undefined) await recordResponseTime(ctx, farm._id, (acceptedAt - order.paidAt) / HOUR);
     if (order.expiryJobId) {
       const job = await ctx.db.system.get("_scheduled_functions", order.expiryJobId);
       if (job !== null && job.state.kind === "pending") await ctx.scheduler.cancel(order.expiryJobId);

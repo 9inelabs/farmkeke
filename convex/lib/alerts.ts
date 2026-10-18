@@ -86,7 +86,7 @@ const FARM: Alert[] = [
     title: "Problem reports",
     description: "A shopper reported a problem, and Farmkeke's decision",
     defaults: { push: true, sms: true, email: false },
-    kinds: ["dispute_opened", "dispute_resolved", "dispute_message"],
+    kinds: ["dispute_opened", "dispute_resolved", "dispute_message", "dispute_reply_reminder"],
   },
   {
     alert: "payments",

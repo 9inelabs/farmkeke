@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getViewer } from "./lib/auth";
-import { looksLikeEmail } from "./lib/phone";
+import { looksLikeEmail, normalizeNigerianPhone } from "./lib/phone";
 
 /** Areas Farmkeke delivers to in one state (M-06 Choose your area). */
 export const listServiceAreas = query({
@@ -104,28 +104,49 @@ export const matchLocation = query({
   },
 });
 
-/** M-07 "Notify me when available". */
+/**
+ * M-07 / W-09b "Notify me when available". Takes an email, a Nigerian phone
+ * number, or both (Phase 3c: `phone` added and `email` made optional).
+ */
 export const requestArea = mutation({
   args: {
     place: v.string(),
     state: v.optional(v.string()),
-    email: v.string(),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const email = args.email.trim().toLowerCase();
-    if (!looksLikeEmail(email)) throw new ConvexError({ code: "INVALID_EMAIL" });
+    const rawEmail = args.email?.trim().toLowerCase() || undefined;
+    const rawPhone = args.phone?.trim() || undefined;
+    if (rawEmail === undefined && rawPhone === undefined) throw new ConvexError({ code: "CONTACT_REQUIRED" });
+    if (rawEmail !== undefined && !looksLikeEmail(rawEmail)) throw new ConvexError({ code: "INVALID_EMAIL" });
+    const phone = rawPhone === undefined ? undefined : normalizeNigerianPhone(rawPhone);
+    if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
+    const email = rawEmail;
+    const place = args.place.trim().slice(0, 120) || "Unknown";
     const user = await getViewer(ctx);
-    const recent = await ctx.db
-      .query("areaRequests")
-      .withIndex("by_email", (q) => q.eq("email", email))
-      .take(20);
-    if (recent.some((r) => r.place === args.place.trim())) return;
+    const recent = [
+      ...(email === undefined
+        ? []
+        : await ctx.db
+            .query("areaRequests")
+            .withIndex("by_email", (q) => q.eq("email", email))
+            .take(20)),
+      ...(phone === undefined
+        ? []
+        : await ctx.db
+            .query("areaRequests")
+            .withIndex("by_phone", (q) => q.eq("phone", phone))
+            .take(20)),
+    ];
+    if (recent.some((r) => r.place === place)) return;
     await ctx.db.insert("areaRequests", {
-      place: args.place.trim().slice(0, 120) || "Unknown",
+      place,
       state: args.state,
       email,
+      phone,
       userId: user?._id,
       latitude: args.latitude,
       longitude: args.longitude,

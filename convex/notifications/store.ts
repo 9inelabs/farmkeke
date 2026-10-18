@@ -79,8 +79,10 @@ export const markAllReadBatch = internalMutation({
 export const plan = internalQuery({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
-    const n = await ctx.db.get("notifications", args.notificationId);
-    if (n === null) return null;
+    const row = await ctx.db.get("notifications", args.notificationId);
+    // Staff alerts are in-app only (lib/notify.notifyStaff)
+    if (row === null || row.side === "staff") return null;
+    const n = { ...row, side: row.side };
     const user = await ctx.db.get("users", n.userId);
     if (user === null) return null;
     const prefs = await ctx.db

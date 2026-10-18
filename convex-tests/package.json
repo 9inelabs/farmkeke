@@ -1,0 +1,1 @@
+{"name":"farmkeke-convex-tests","private":true,"type":"module","dependencies":{"@edge-runtime/vm":"^5.0.0","convex-test":"^0.0.62","vitest":"^5.0.5"},"scripts":{"test":"node genmodules.mjs && vitest run"}}

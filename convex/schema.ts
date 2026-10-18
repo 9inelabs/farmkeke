@@ -156,6 +156,14 @@ export const actorKind = v.union(
 
 export const notificationSide = v.union(v.literal("shop"), v.literal("farm"));
 
+// Stored side of a notification. "staff" rows are in-app alerts for Farmkeke
+// staff (A-12), written by lib/notify.notifyStaff and never pushed. Function
+// arguments keep using notificationSide.
+export const storedNotificationSide = v.union(v.literal("shop"), v.literal("farm"), v.literal("staff"));
+
+// A category's sub-chips (W-03 "Type" filter), e.g. { slug: "tomatoes", name: "Tomatoes" }.
+export const categorySubtype = v.object({ slug: v.string(), name: v.string() });
+
 export const paymentMethod = v.union(
   v.literal("card"),
   v.literal("bank_transfer"),
@@ -210,6 +218,8 @@ export default defineSchema({
     illustration: v.string(),
     sortOrder: v.number(),
     hidden: v.boolean(),
+    // W-02 / W-03 sub-chips; listings pick one as their `subtype`
+    subtypes: v.optional(v.array(categorySubtype)),
   })
     .index("by_slug", ["slug"])
     .index("by_hidden_and_sortOrder", ["hidden", "sortOrder"]),
@@ -288,11 +298,15 @@ export default defineSchema({
   areaRequests: defineTable({
     place: v.string(),
     state: v.optional(v.string()),
-    email: v.string(),
+    // At least one of email and phone (W-09b "phone number or email")
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
     userId: v.optional(v.id("users")),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-  }).index("by_email", ["email"]),
+  })
+    .index("by_email", ["email"])
+    .index("by_phone", ["phone"]),
 
   // A-38. Record of account deletions. Holds no personal data.
   accountDeletions: defineTable({
@@ -395,7 +409,8 @@ export default defineSchema({
     collectionConfirmedAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .searchIndex("search_name", { searchField: "name", filterFields: ["status"] }),
 
   // F-20 to F-31. A farm's produce listing. "Out of stock" is a live listing
   // with no stock left in any unit, not a separate status.
@@ -404,6 +419,8 @@ export default defineSchema({
     status: listingStatus,
     name: v.string(),
     categoryId: v.optional(v.id("categories")),
+    // Slug of one of the category's subtypes (W-03 "Type")
+    subtype: v.optional(v.string()),
     description: v.optional(v.string()),
     // "YYYY-MM-DD"
     harvestedOn: v.optional(v.string()),
@@ -421,7 +438,27 @@ export default defineSchema({
     .index("by_farmId_and_status", ["farmId", "status"])
     .index("by_status_and_submittedAt", ["status", "submittedAt"])
     .index("by_status_and_harvestedOn", ["status", "harvestedOn"])
-    .index("by_categoryId_and_status", ["categoryId", "status"]),
+    .index("by_categoryId_and_status", ["categoryId", "status"])
+    .index("by_categoryId_and_status_and_subtype", ["categoryId", "status", "subtype"])
+    .searchIndex("search_name", { searchField: "name", filterFields: ["status", "categoryId"] }),
+
+  // Shop counters (W-01 to W-07), kept up to date by lib/listingCounts on
+  // every listing write and farm visibility change:
+  //   scope "farm"     key <farmId>              live listings of the farm
+  //   scope "category" key <categoryId>          live listings of open farms
+  //   scope "subtype"  key <categoryId>:<slug>   the same, per subtype
+  listingCounts: defineTable({
+    scope: v.union(v.literal("farm"), v.literal("category"), v.literal("subtype")),
+    key: v.string(),
+    count: v.number(),
+  }).index("by_scope_and_key", ["scope", "key"]),
+
+  // Per-farm response times for "Usually accepts within…" (W-06, W-07): the
+  // hours from payment to acceptance of the farm's most recent orders.
+  farmStats: defineTable({
+    farmId: v.id("farms"),
+    responseHours: v.array(v.number()),
+  }).index("by_farmId", ["farmId"]),
 
   // A-86. Featured banners on Home ("Harvest of the week"). Each points at a
   // listing; its price, unit, farm and photo are read from that listing.
@@ -760,7 +797,7 @@ export default defineSchema({
 
   notifications: defineTable({
     userId: v.id("users"),
-    side: notificationSide,
+    side: storedNotificationSide,
     kind: v.string(),
     title: v.string(),
     body: v.string(),
@@ -818,6 +855,9 @@ export default defineSchema({
     // Farm replies within 12h; Farmkeke decides within about a day
     farmReplyBy: v.number(),
     decideBy: v.number(),
+    // Reminder sent 2h before farmReplyBy; marked overdue at farmReplyBy
+    farmRemindedAt: v.optional(v.number()),
+    farmReplyOverdueAt: v.optional(v.number()),
     farmRespondedAt: v.optional(v.number()),
     farmResponseNote: v.optional(v.string()),
     farmResponsePhotoIds: v.optional(v.array(v.id("_storage"))),

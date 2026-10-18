@@ -3,16 +3,19 @@
 // hours to reply and Farmkeke decides within about a day (admin/disputes).
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireFarmer, requireUser } from "./lib/auth";
 import { nextCounter } from "./lib/counters";
 import { disputeRow, disputeView, REASON_LABELS } from "./lib/disputes";
-import { notify, notifyConsumer, notifyFarm } from "./lib/notify";
+import { notify, notifyConsumer, notifyFarm, notifyStaff } from "./lib/notify";
 import { transition } from "./lib/orders";
 import { getRules, HOUR } from "./lib/settings";
 import { validateImageUpload } from "./lib/uploads";
 
 const MAX_NOTE = 2000;
+// The farm is reminded this long before its reply deadline.
+const REMINDER_BEFORE = 2 * HOUR;
 const MAX_PHOTOS = 6;
 
 const asArg = v.union(v.literal("consumer"), v.literal("farmer"));
@@ -122,6 +125,17 @@ export const open = mutation({
       `We've got your report (${number})`,
       `Your payment stays held. The farm has ${rules.disputeReplyHours} hours to reply.`,
     );
+    // A-12: staff alert, then the farm's reply clock (reminder 2h before, overdue at the deadline)
+    await notifyStaff(ctx, {
+      kind: "dispute_opened",
+      title: `Problem reported: ${number}`,
+      body: `${REASON_LABELS[args.reason]} on order ${order.number}.`,
+      href: `/admin/disputes/${disputeId}`,
+      orderId: order._id,
+    });
+    const replyBy = now + rules.disputeReplyHours * HOUR;
+    await ctx.scheduler.runAt(Math.max(now, replyBy - REMINDER_BEFORE), internal.disputes.replyReminder, { disputeId });
+    await ctx.scheduler.runAt(replyBy, internal.disputes.replyOverdue, { disputeId });
     return { disputeId, number };
   },
 });
@@ -264,5 +278,45 @@ export const mine = query({
       .order("desc")
       .take(50);
     return await Promise.all(rows.map((d) => disputeRow(ctx, d, "consumer")));
+  },
+});
+
+/** Scheduled 2 hours before the farm's reply deadline: reminds the farm if it hasn't replied. */
+export const replyReminder = internalMutation({
+  args: { disputeId: v.id("disputes") },
+  handler: async (ctx, args) => {
+    const dispute = await ctx.db.get("disputes", args.disputeId);
+    if (dispute === null || dispute.status !== "open" || dispute.farmRemindedAt !== undefined) return null;
+    const order = await ctx.db.get("orders", dispute.orderId);
+    if (order === null) return null;
+    await ctx.db.patch("disputes", dispute._id, { farmRemindedAt: Date.now() });
+    const hoursLeft = Math.max(1, Math.round((dispute.farmReplyBy - Date.now()) / HOUR));
+    await notifyFarm(
+      ctx,
+      order,
+      "dispute_reply_reminder",
+      `Reply needed: ${dispute.number}`,
+      `Please reply to the problem report on order ${order.number} within ${hoursLeft} hours.`,
+    );
+    return null;
+  },
+});
+
+/** Scheduled at the farm's reply deadline: marks the case overdue and alerts staff. */
+export const replyOverdue = internalMutation({
+  args: { disputeId: v.id("disputes") },
+  handler: async (ctx, args) => {
+    const dispute = await ctx.db.get("disputes", args.disputeId);
+    if (dispute === null || dispute.status !== "open" || dispute.farmReplyOverdueAt !== undefined) return null;
+    const order = await ctx.db.get("orders", dispute.orderId);
+    await ctx.db.patch("disputes", dispute._id, { farmReplyOverdueAt: Date.now() });
+    await notifyStaff(ctx, {
+      kind: "dispute_reply_overdue",
+      title: `Farm reply overdue: ${dispute.number}`,
+      body: `The farm didn't reply in time${order ? ` on order ${order.number}` : ""}. Decide without its reply.`,
+      href: `/admin/disputes/${dispute._id}`,
+      orderId: dispute.orderId,
+    });
+    return null;
   },
 });
