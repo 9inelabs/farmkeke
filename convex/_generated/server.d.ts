@@ -35,7 +35,11 @@ type Env = {
   readonly AUTH_RESEND_KEY: string | undefined;
   readonly JWKS: string | undefined;
   readonly JWT_PRIVATE_KEY: string | undefined;
+  readonly PAYMENTS_TEST_STEP: string | undefined;
+  readonly PAYSTACK_PUBLIC_KEY: string | undefined;
+  readonly PAYSTACK_SECRET_KEY: string | undefined;
   readonly SITE_URL: string | undefined;
+  readonly WEBSITE_URL: string | undefined;
 };
 
 /**

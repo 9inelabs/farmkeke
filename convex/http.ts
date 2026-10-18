@@ -1,6 +1,8 @@
 import { httpRouter } from "convex/server";
-import { httpAction } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { httpAction, type ActionCtx } from "./_generated/server";
 import { auth } from "./auth";
+import { chargeArgs, paymentsLive, paystack, validSignature, type PaystackTransaction } from "./lib/paystack";
 
 const http = httpRouter();
 
@@ -35,6 +37,111 @@ a.btn{display:block;background:#A9D654;color:#1E3B16;font-weight:600;text-decora
 <p class="mark"><span>farm</span>keke</p>
 <h1>Make a new password</h1>
 <p>Opening the Farmkeke app on this phone…</p>
+<a class="btn" href="${escapeHtml(appLink)}">Open Farmkeke</a>
+</main><script>window.location.replace(${JSON.stringify(appLink)});</script></body></html>`;
+    return new Response(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }),
+});
+
+const str = (v: unknown) => (typeof v === "string" && v.length > 0 ? v : undefined);
+const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+
+/** Asks Paystack about one reference and applies the answer. */
+async function verifyReference(ctx: ActionCtx, reference: string) {
+  const tx = await paystack<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
+  if (tx.ok && ["success", "failed", "abandoned", "reversed"].includes(tx.data.status)) {
+    await ctx.runMutation(internal.payments.checkout.settleCharge, chargeArgs(tx.data));
+  }
+}
+
+/**
+ * Paystack webhook (one per mode, shared by the app and website). The
+ * x-paystack-signature header must be the HMAC-SHA512 of the raw body with
+ * the secret key. Charge events are re-checked with Paystack before use.
+ */
+http.route({
+  path: "/paystack/webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const raw = await request.text();
+    if (!(await validSignature(raw, request.headers.get("x-paystack-signature")))) {
+      return new Response("Invalid signature", { status: 401 });
+    }
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return new Response("Bad JSON", { status: 400 });
+    }
+    if (typeof body !== "object" || body === null) return new Response("Bad body", { status: 400 });
+    const event = str((body as { event?: unknown }).event);
+    const data = (body as { data?: unknown }).data;
+    if (event === undefined || typeof data !== "object" || data === null) {
+      return new Response("Bad body", { status: 400 });
+    }
+    const d = data as Record<string, unknown>;
+
+    if (event === "charge.success") {
+      const reference = str(d.reference);
+      if (reference === undefined) return new Response("Missing reference", { status: 400 });
+      // Trust Paystack's verify endpoint over the event body.
+      await verifyReference(ctx, reference);
+    } else if (event.startsWith("refund.")) {
+      const transactionReference = str(d.transaction_reference);
+      if (transactionReference === undefined) return new Response("Missing reference", { status: 400 });
+      await ctx.runMutation(internal.payments.refunds.settleEvent, {
+        event,
+        status: str(d.status) ?? event.slice("refund.".length),
+        transactionReference,
+        providerRefundId: d.id === undefined || d.id === null ? undefined : String(d.id),
+        amountKobo: num(d.amount),
+      });
+    } else if (event.startsWith("transfer.")) {
+      const reference = str(d.reference);
+      if (reference === undefined) return new Response("Missing reference", { status: 400 });
+      await ctx.runMutation(internal.payments.payouts.settleTransfer, {
+        event,
+        reference,
+        status: str(d.status),
+        transferCode: str(d.transfer_code),
+        amountKobo: num(d.amount),
+        reason: str(d.reason),
+      });
+    }
+    // Anything else is acknowledged and ignored.
+    return new Response("ok", { status: 200 });
+  }),
+});
+
+/**
+ * Paystack's callback for app payments (start with returnTo: "app"). Checks
+ * the payment, then hands back to the app's pay screen.
+ */
+http.route({
+  path: "/paystack/return",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const checkoutId = url.searchParams.get("checkoutId") ?? "";
+    const reference = url.searchParams.get("reference") ?? url.searchParams.get("trxref") ?? "";
+    if (reference && paymentsLive()) await verifyReference(ctx, reference);
+    const appLink = `farmkeke://checkout/pay/${encodeURIComponent(checkoutId)}${reference ? `?reference=${encodeURIComponent(reference)}` : ""}`;
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment · Farmkeke</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F2F8E6;font-family:Inter,system-ui,Arial,sans-serif;color:#1A1A1A}
+main{max-width:360px;margin:24px;background:#fff;border:1px solid #A9D654;border-radius:16px;padding:32px 24px;text-align:center}
+.mark{font-size:28px;font-weight:700;margin:0 0 20px}.mark span{color:#A9D654}
+h1{font-size:20px;color:#1E3B16;margin:0 0 8px}p{font-size:15px;line-height:22px;color:rgba(26,26,26,.7);margin:0 0 24px}
+a.btn{display:block;background:#A9D654;color:#1E3B16;font-weight:600;text-decoration:none;padding:14px;border-radius:17px}
+</style></head><body><main>
+<p class="mark"><span>farm</span>keke</p>
+<h1>Back to Farmkeke</h1>
+<p>Taking you back to the app to see your order…</p>
 <a class="btn" href="${escapeHtml(appLink)}">Open Farmkeke</a>
 </main><script>window.location.replace(${JSON.stringify(appLink)});</script></body></html>`;
     return new Response(html, {
