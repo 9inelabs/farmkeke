@@ -162,7 +162,7 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
     setError(null);
     setMethod(m);
     try {
-      const r = (await start({ checkoutId: id, method: m })) as PaymentStart;
+      const r = (await start({ checkoutId: id, method: m, returnTo: "web" })) as PaymentStart;
       try {
         await loadPaystack();
         new window.PaystackPop!().resumeTransaction(r.accessCode, {
