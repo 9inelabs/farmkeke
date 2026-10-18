@@ -625,3 +625,109 @@ export function readUploadUrl(raw: unknown): string | undefined {
   if (isObj(raw)) return str(raw, "url", "uploadUrl");
   return undefined;
 }
+
+// ---------------------------------------------------------------------------
+// Exact shapes from the rebuilt backend (convex/), used by the group C pages.
+
+/** disputes.get / disputes.forOrder (convex/lib/disputes.ts disputeView) */
+export type DisputeDetail = {
+  as?: "consumer" | "farmer";
+  _id: string;
+  number: string;
+  orderId: string;
+  orderNumber: string;
+  farmId: string;
+  farmName: string;
+  consumerFirstName: string;
+  reason: DisputeReason;
+  reasonLabel: string;
+  items: Array<{ index: number; name: string; quantity: number; unitLabel: string; lineTotalKobo: number }>;
+  note: string;
+  photos: string[];
+  amountKobo: number;
+  status: "open" | "farmer_responded" | "resolved";
+  reportedAt: number;
+  farmReplyBy: number;
+  decideBy: number;
+  farmResponse: { at: number; note: string; photos: string[] } | null;
+  decision: { outcome: "released" | "refunded" | "split"; refundKobo: number; releaseKobo: number; note: string; at: number | null } | null;
+  heldKobo: number;
+  deliveryFeeKobo: number;
+  itemsTotalKobo: number;
+  canMessage: boolean;
+  unread: boolean;
+  messages: Array<{
+    _id: string;
+    from: "consumer" | "farmer" | "staff";
+    audience: string | null;
+    mine: boolean;
+    authorName: string | null;
+    body: string;
+    photos: string[];
+    at: number;
+  }>;
+};
+
+/** payments/refunds.forOrder item (convex/payments/refunds.ts) */
+export type RefundRow = {
+  _id: string;
+  orderNumber: string;
+  amountKobo: number;
+  kind: "full" | "part";
+  status: "queued" | "sending" | "processing" | "processed" | "failed";
+  reason: string;
+  methodLabel: string;
+  channel: string | null;
+  reference: string;
+  simulated: boolean;
+  decidedAt: number;
+  sentAt: number | null;
+  expectedAt: number | null;
+  settledAt: number | null;
+};
+
+/** reviews.forOrder (convex/reviews.ts) */
+export type ReviewForOrder = {
+  orderId: string;
+  number: string;
+  status: string;
+  farmId: string;
+  farmName: string;
+  farmPhotoUrl: string | null;
+  deliveredAt: number | null;
+  items: Array<{ name: string; quantity: number; imageUrl: string | null }>;
+  canReview: boolean;
+  review: { rating: number; tags: string[]; comment?: string } | null;
+} | null;
+
+/** chat.thread (convex/chat.ts) */
+export type ChatThread = {
+  conversationId: string | null;
+  side: "shop" | "farm";
+  canSend: boolean;
+  unread: number;
+  order: {
+    _id: string;
+    number: string;
+    status: string;
+    fulfilment: "delivery" | "pickup";
+    summary: string;
+    itemCount: number;
+    totalKobo: number;
+    imageUrl: string | null;
+  };
+  counterpart: { kind: "farm" | "shopper"; name: string; photoUrl: string | null };
+  /** Not sent yet ("Usually replies within an hour"); see BUILD-STATUS backend gaps. */
+  replyNote?: string;
+} | null;
+
+/** chat.messages page item */
+export type ChatMessageRow = {
+  _id: string;
+  side: "shop" | "farm";
+  mine: boolean;
+  body: string;
+  photos: string[];
+  at: number;
+  read: boolean;
+};

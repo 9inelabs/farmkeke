@@ -88,6 +88,7 @@ export function AuthCard({
   after,
   center = false,
   padding = "36px",
+  headerRight,
 }: {
   children: ReactNode;
   width?: number;
@@ -99,11 +100,16 @@ export function AuthCard({
   after?: ReactNode;
   center?: boolean;
   padding?: string;
+  /** e.g. a "My orders" link (W-52b, W-53b); the header is then 76px tall */
+  headerRight?: ReactNode;
 }) {
   return (
     <div className="min-h-dvh bg-canvas">
-      <header className="flex h-[72px] items-center bg-surface px-10 shadow-[inset_0_-1px_0_var(--color-line)] m:px-4">
+      <header
+        className={`flex items-center justify-between gap-4 bg-surface px-10 shadow-[inset_0_-1px_0_var(--color-line)] m:px-4 ${headerRight ? "h-[76px]" : "h-[72px]"}`}
+      >
         <HomeLogo height={22} />
+        {headerRight}
       </header>
       <main
         id="main"

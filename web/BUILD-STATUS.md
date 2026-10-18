@@ -107,6 +107,7 @@ Build in this order. Commit and push after each group.
 
 - **A — done** — W-08 mini-cart, W-20/20b/20c cart, W-21 to W-25 checkout, W-26 to W-29 payment, W-30 confirmation. `tsc` and `eslint src` pass. `next build` compiles and typechecks, then stops prerendering the local session's `/shop` page because this cloud environment's network policy blocks `incredible-wolf-877.eu-west-1.convex.cloud`. Checked at 390px and 1440px in the dev server with browser-only data (cart, mini-cart, checkout steps): no sideways scroll. Payment and confirmation pages need the live backend, so they weren't checked in the browser.
 - **B — done** — W-40 to W-42e sign in, sign up and password reset; W-43 to W-49 account pages; the W-52 confirm-receipt modal (used here and in group C). `tsc` and `eslint src` pass. Same `next build` network block as A. Checked at 390px and 1440px: the sign-in, sign-up and password pages (no sideways scroll), and `/account` sends a signed-out visitor to `/signin?next=/account`. The signed-in account pages need the live backend, so they weren't checked in the browser.
+- **C — done** — W-50 Find my order; W-51, W-51b and W-51c tracking; W-52 (built in B); W-52b; W-53 and W-53b; W-54; W-56; W-57; W-58. `tsc` and `eslint src` pass. Same `next build` network block. Checked at 390px and 1440px: W-50 matches, and an unknown order id shows the "couldn't open this order" state (no sideways scroll). The other order pages need live order data, so they weren't checked in the browser.
 
 ## Shared-file changes
 
@@ -118,6 +119,7 @@ Build in this order. Commit and push after each group.
 - `components/ui/Steps.tsx`: optional `labels` on `CheckoutSteps`. W-24 names step 2 "Pickup".
 - `components/ui/Dialog.tsx` (group B): optional `bodyClassName` on `Modal` and `Drawer` to set the body padding (W-52 and W-46b use 32px and 28px).
 - `app/layout.tsx` (group B): mounts `<SessionKeeper />` from `components/account/SessionKeeper.tsx` next to the other global pieces. It signs out on the next visit after the browser closes when "Keep me signed in" was unticked (W-40).
+- No shared files changed in group C.
 - `components/layout/SimpleHeaders.tsx`: exported `NARROW_WRAP` (1160px, as in the checkout and order designs) and an optional `wrapClassName` on `CheckoutHeader` and `MinimalHeader`. The default is still `wrap`.
 
 ## Backend gaps found
@@ -137,3 +139,10 @@ Build in this order. Commit and push after each group.
 - **W-47, "Back in stock" tag:** `favorites.list` has no back-in-stock flag. The page reads `backInStock` when present. "Notify me" turns on the account's back-in-stock emails (`notifications.setPreference`), since there's no per-item subscription.
 - **W-49, deletion result and reason:** `account.deleteAccount` returns nothing, so the page can't tell "deleted now" from "waiting for orders". It warns beforehand using `orders.consumer.list`. The optional "Why are you leaving?" reason isn't stored anywhere.
 - **W-44 / W-43 order rows, a thumbnail per item:** `orderRow` has only the first item's photo. Rows show it plus a "+N" tile. "Buy again" on W-43 reads up to three recent completed orders with `orders.consumer.get`; a small `orders.consumer.recentItems` query would be cheaper.
+- **W-53, "Less than I ordered" and "Something else":** `disputes.open` takes only `missing | damaged | wrong_item | not_received`. These two choices are sent as `missing` and `damaged`, with "[Less than I ordered]" or "[Something else]" at the start of the note. Suggest adding `short` and `other`.
+- **W-53, how many units are affected ("1 of 2 baskets"):** `disputes.open` takes item indexes only, and `amountKobo` counts the whole line. The count is added to the note, e.g. "(Fresh tomatoes: 1 of 2 baskets)". Suggest `itemQuantities: number[]` and computing the amount from it.
+- **W-53 / W-54, photo uploads:** there's no `disputes.generateUploadUrl`, so the report uses `chat.generateUploadUrl`. `validateImageUpload` accepts any image either way.
+- **W-54, "Farm's response: Agrees to refund":** the farm's reply is free text, with no stance. The summary shows "Replied", "Waiting for a reply" or "No reply in time", and the reply itself is in the thread.
+- **W-57, "Rate each item":** `reviews.submit` has no per-item ratings. The stars are on the page but aren't sent. Suggest `itemRatings: Array<{ index: number; rating: number }>`.
+- **W-58, "Usually replies within an hour":** `chat.thread` has no reply-time note. The page shows `replyNote` when present.
+- **W-51c, "Use +234 803 *** 4567 and this order will be added":** as in W-41, accounts don't pick up guest orders by phone number. Only the `startGuestClaim` token from the ordering browser moves them.
