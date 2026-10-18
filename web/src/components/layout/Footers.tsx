@@ -110,7 +110,9 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
         ))}
       </div>
       <div className="mt-10 flex justify-between gap-3 pt-5 shadow-[inset_0_1px_0_var(--color-line-soft)] m:flex-col">
-        <span className="cap">© <CopyrightYear /> Farmkeke. All rights reserved.</span>
+        <span className="cap">
+          © <CopyrightYear /> Farmkeke. All rights reserved.
+        </span>
         <span className="cap">Made in Owerri, Nigeria</span>
       </div>
     </div>

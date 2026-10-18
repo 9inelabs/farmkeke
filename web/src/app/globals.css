@@ -127,6 +127,7 @@
 }
 
 @layer components {
+
   /* Page widths: shop and app pages 1280, marketing pages 1200 */
   .wrap {
     max-width: 1280px;
@@ -410,4 +411,10 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
+}
+
+/* Shop header loses its bottom line when a category bar sits under it.
+   Unlayered so it beats the header's shadow utility. */
+body:has([data-category-bar]) .shop-header {
+  box-shadow: none;
 }

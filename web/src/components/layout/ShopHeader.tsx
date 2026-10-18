@@ -8,7 +8,6 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import { HomeLogo } from "@/components/brand/Wordmark";
-import type { Category } from "@/convex/returns/common";
 import { area, areaPicker } from "@/lib/area";
 import { miniCart, useCart } from "@/lib/cart";
 import { useViewer } from "@/lib/auth";
@@ -19,9 +18,9 @@ import { routes } from "@/lib/routes";
 const hlink =
   "inline-flex min-h-11 items-center gap-2 rounded-[10px] px-2.5 text-sm font-medium whitespace-nowrap text-ink hover:bg-canvas hover:text-ink";
 
-export function ShopHeader({ categories, showCategories = true }: { categories: Category[]; showCategories?: boolean }) {
+export function ShopHeader() {
   return (
-    <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
+    <header className="shop-header bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
       <div className="wrap flex h-[76px] items-center gap-4 m:h-auto m:flex-wrap m:gap-x-2 m:gap-y-3 m:py-3">
         <HomeLogo height={24} />
         <AreaChip />
@@ -35,7 +34,6 @@ export function ShopHeader({ categories, showCategories = true }: { categories: 
         <AccountLink />
         <CartButton />
       </div>
-      {showCategories ? <CategoryNav categories={categories} /> : null}
     </header>
   );
 }
@@ -141,36 +139,5 @@ function CartButton() {
         </span>
       ) : null}
     </m.button>
-  );
-}
-
-function CategoryNav({ categories }: { categories: Category[] }) {
-  const pathname = usePathname();
-  const items: Array<{ href: string; name: string }> = [
-    { href: routes.categories as string, name: "All categories" },
-  ].concat(
-    categories.map((c) => ({ href: routes.category(c.slug), name: c.name })),
-  );
-  return (
-    <nav aria-label="Categories" className="wrap">
-      <ul className="m-0 flex h-[50px] list-none items-stretch gap-7 overflow-x-auto p-0 text-sm font-medium [scrollbar-width:none] m:gap-5">
-        {items.map((c) => {
-          const on = pathname === c.href;
-          return (
-            <li key={c.href} className="flex">
-              <Link
-                href={c.href}
-                aria-current={on ? "page" : undefined}
-                className={`flex items-center whitespace-nowrap ${
-                  on ? "font-semibold text-forest shadow-[inset_0_-2px_0_var(--color-lime)]" : "text-ink-3"
-                }`}
-              >
-                {c.name}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
   );
 }

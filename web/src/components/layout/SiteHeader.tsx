@@ -6,7 +6,7 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { HomeLogo } from "@/components/brand/Wordmark";
 import { AnimatePresence, m, pressable, transition } from "@/lib/motion";
 import { routes } from "@/lib/routes";
@@ -19,7 +19,18 @@ const LINKS = [
 ];
 
 export function SiteHeader() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<SiteHeaderInner pathname="" />}>
+      <SiteHeaderLive />
+    </Suspense>
+  );
+}
+
+function SiteHeaderLive() {
+  return <SiteHeaderInner pathname={usePathname()} />;
+}
+
+function SiteHeaderInner({ pathname }: { pathname: string }) {
   // The menu belongs to the page it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;

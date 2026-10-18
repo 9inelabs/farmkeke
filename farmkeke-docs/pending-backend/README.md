@@ -66,3 +66,15 @@ Setting a variable doesn't change code. Set them with `npx convex env set NAME v
 - The real contact inbox, phone and WhatsApp number. The website shows `hello@farmkeke.com` and `support@farmkeke.com` as placeholders.
 - Terms of use, privacy policy, cookie policy and farmer terms. Only the refund and dispute policy is designed (W-87). The other pages are marked as drafts.
 - An SVG version of the wordmark, which looks sharper than the PNG.
+
+## Data the shop designs show but the backend doesn't return yet (Phase 2)
+
+The website hides or replaces these until the storefront functions return them:
+
+- **Listing summaries:** `farmId`, `farmName` and `harvestedOn`, so product cards can show the farm and a "Harvested today" badge.
+- **Farm rows** on the shop home and search: rating, review count, product count, and distance from the shopper.
+- **Categories:** product count per category, and subtypes (the design's sub-chips and "Type" filter).
+- **Filters and sorting:** harvested-date, top-rated and distance-to-farm filters, plus a "Nearest farm" sort.
+- **Farm listings:** a category on each listing, for the farm page's category chips.
+- **Farm page:** delivery and pickup flags, and a typical response time ("Accepts orders within…").
+- **`areas:requestArea`:** accept a phone number as well as email (W-09b says "phone number or email").
