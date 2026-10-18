@@ -1,0 +1,114 @@
+# Website build status
+
+Last updated: 18 Oct 2026
+
+Read `web/BUILD-GUIDE.md` first. It covers the design sources, shared components, the rendering rules, accessibility and motion. This file says what's done, what's left, and who owns what while two sessions work at once.
+
+## Two sessions work at the same time
+
+| Session | Owns | Branch |
+|---|---|---|
+| Local (owner's PC) | `convex/` (the backend rebuild, phases 3c and 3d), `web/src/app/(shop)/shop/**`, `web/src/app/(site)/**`, `web/src/components/shop/**`, `web/src/components/area/**`, `web/src/components/site/**` | `main` |
+| Cloud (Claude Code on the web) | Every remaining screen listed below | `web-remaining-screens` |
+
+**Cloud session rules:**
+- **Never edit `convex/`.** Read it only, to learn exact return shapes.
+- **Don't edit the files the local session owns.**
+- Shared files can be **added to** but should not be rewritten. Shared files are `web/src/components/ui/**`, `components/layout/**`, `components/brand/**`, `lib/**`, `app/globals.css`, `src/convex/api.ts` and `src/convex/returns/common.ts`. List every change to a shared file at the bottom of this file, under "Shared-file changes", so the merge is easy.
+- Work and push on the branch `web-remaining-screens`. Don't push to `main`. The owner merges.
+
+## Backend facts for the cloud session
+
+- The Convex source in `convex/` was rebuilt in phases 3a and 3b. It has the same function names and arguments as the live deployment. **It is the source of truth for return shapes.** For example, `convex/orders/consumer.ts` shows exactly what `orders.consumer.get` returns.
+  - Reports: `docs/reports/06-ordering-payments-rebuild.md` and `docs/reports/08-after-sale-rebuild.md`.
+- Until phase 3d deploys it, the live deployment still runs the older compiled code. Shapes may differ slightly until then, so build against `convex/` and read optional fields defensively.
+- Call functions through `api` from `@/convex/api`, which is generated from `web/convex-spec/live-function-spec.json`. Type returns in your own `src/convex/returns/<area>.ts`.
+- If you need an argument that's only in the rebuilt code, add a local `makeFunctionReference` in your own file and note it below. Example: the optional `returnTo: "web" | "app"` on `payments/checkout:start`.
+- The cloud session has no Convex login. Never run `npx convex …`.
+
+## Done
+
+| Area | Screens | Routes |
+|---|---|---|
+| Landing and information | Main, W-00, W-60, W-80 to W-87 | `/`, `/sell`, `/how-it-works`, `/escrow`, `/pickup-locations`, `/get-the-app`, `/about`, `/help`, `/contact`, `/legal/[doc]` |
+| Shop | W-01 to W-07, W-09, W-09b, W-10 | `/shop`, `/shop/categories`, `/shop/category/[slug]`, `/shop/search`, `/shop/product/[id]`, `/shop/farm/[id]`, area picker, `sitemap.ts`, `robots.ts` |
+| System, part 1 | W-S1, W-S3 page, W-S5, W-S6, W-88 | `app/not-found.tsx`, `/maintenance`, `/session-expired`, `ConnectionStatus`, `CookieBanner` |
+
+## Left to build (cloud session)
+
+Build in this order. Commit and push after each group.
+
+### A. Cart, checkout and payment
+
+- **W-08 Mini-cart drawer:** `src/components/cart/MiniCart.tsx`, currently a stub returning null. It's mounted in the root layout and opened with `miniCart.open()` from `@/lib/cart`.
+- **W-20, W-20b, W-20c Cart, Cart empty, Items changed:** `/cart` in `src/app/(shop)/cart/`
+- **W-21 Contact:** `/checkout`
+- **W-22 Delivery or pickup:** `/checkout/delivery`
+- **W-23 Address and time / W-24 Pickup point:** `/checkout/details`
+- **W-25 Review:** `/checkout/review`, in `src/app/(checkout)/checkout/…`
+- **W-26 to W-29 Payment states:** `/checkout/pay/[checkoutId]` in `src/app/(focus)/checkout/pay/[checkoutId]/`
+  - `payments/config.get` gives `{ live, testStep }`. In test mode, show "Pay now (test)", which calls `payments/checkout.markPaidTest`.
+  - In live mode, `payments/checkout.start` returns `{ accessCode, authorizationUrl, reference }`. Use the Paystack Popup (`https://js.paystack.co/v2/inline.js`, `new PaystackPop().resumeTransaction(accessCode)`), or redirect to the authorization URL. Then poll `verify` and `get`.
+- **W-30 Order confirmation:** `/order-placed/[checkoutId]` in `src/app/(focus)/order-placed/[checkoutId]/`
+  - Offer guests "save your details as an account": `orders/consumer.startGuestClaim`, then `sessionStorage["fk.guestClaim"]`.
+- **Guest checkout:** call `useEnsureIdentity()` before `checkout.place`. One order per farm. The cart lives in the browser (`@/lib/cart`), and `checkout.quote` gives server truth: changes, blockers, fees.
+
+### B. Sign in and your account
+
+- **W-40 to W-42e:** `/signin`, `/signup`, `/account-created`, `/forgot-password`, `/check-email`, `/reset-password`, `/password-changed`, `/link-expired`, in `src/app/(focus)/…`
+  - Auth uses `useAuthActions()` with the `"password"` provider. Flows and error codes are in `src/lib/auth.ts` and `convex/lib/passwordProvider.ts`.
+  - After sign-in or sign-up, claim guest orders if `sessionStorage["fk.guestClaim"]` is set.
+- **W-43 to W-49:** `/account`, `/account/orders`, `/account/profile`, `/account/addresses`, `/account/saved`, `/account/notifications`, `/account/delete`, in `src/app/(account)/account/…`
+  - Redirect guests and signed-out users to sign-in.
+  - W-49 must warn about orders in progress before deleting. The backend finishes the deletion once they complete.
+
+### C. Orders and after-sale
+
+- **W-50 Find my order:** `/find-order`
+- **W-51, W-51b, W-51c Tracking:** delivery, pickup code, and view-only. `/orders/[orderId]` in `src/app/(shop)/…`
+- **W-52 Confirm receipt:** a modal
+- **W-52b Payment released:** `/orders/[orderId]/released`
+- **W-53 Report a problem:** `/orders/[orderId]/problem`
+- **W-53b Problem reported:** `/orders/[orderId]/problem/sent`
+- **W-54 Dispute detail:** `/orders/[orderId]/dispute`
+- **W-56 Refund status:** `/orders/[orderId]/refund`
+- **W-57 Rate and review:** `/orders/[orderId]/review`
+- **W-58 Order chat:** `/orders/[orderId]/chat`
+- **Where they go:** W-52b, W-53b, W-56, W-57 and W-58 are in `src/app/(focus)/orders/[orderId]/…`. The others are in `src/app/(shop)/orders/[orderId]/…`. A small helper already exists: `src/components/orders/format.ts`.
+
+### D. System states, part 2
+
+- **W-S2:** `src/app/error.tsx` and `src/app/global-error.tsx`
+- **W-S3:** `src/components/system/MaintenanceGate.tsx` (stub). It redirects to `/maintenance` while `appConfig.maintenanceActive` is on, and never flashes while loading.
+- **W-S4:** `loading.tsx` in `src/app/(shop)/`, `(account)/` and `(checkout)/`, using `src/components/system/skeletons/`
+
+## Done when
+
+- Every screen above matches its `farmkeke-docs/design/website/*.dc.html`:
+  - word-for-word copy
+  - exact CSS values
+  - the same structure and icons
+  - the 760px phone rules
+- These pass in `web/`:
+  - `npx tsc --noEmit --incremental false`
+  - `npx eslint src`
+  - `npx next build`
+- `web/.env.local` exists locally and is never committed:
+  ```
+  NEXT_PUBLIC_CONVEX_URL=https://incredible-wolf-877.eu-west-1.convex.cloud
+  NEXT_PUBLIC_CONVEX_SITE_URL=https://incredible-wolf-877.eu-west-1.convex.site
+  NEXT_PUBLIC_SITE_URL=http://localhost:3000
+  ```
+- Each group gets a short entry in "Progress log" below.
+
+## Progress log
+
+(Cloud session: add a line per group, e.g. "A — done — notes".)
+
+## Shared-file changes
+
+(Cloud session: list every change to a shared file here.)
+
+## Backend gaps found
+
+(List anything a screen needs that `convex/` doesn't provide. The local session builds it.)
