@@ -5,10 +5,17 @@ import { Fragment } from "react";
 
 export const CHECKOUT_STEPS = ["Contact", "Delivery", "Details", "Review and pay"] as const;
 
-export function CheckoutSteps({ current }: { current: 1 | 2 | 3 | 4 }) {
+export function CheckoutSteps({
+  current,
+  labels = CHECKOUT_STEPS,
+}: {
+  current: 1 | 2 | 3 | 4;
+  /** Step names; W-24 names step 2 "Pickup" when pickup was chosen. */
+  labels?: readonly string[];
+}) {
   return (
     <nav aria-label="Checkout steps" className="flex items-center gap-2.5">
-      {CHECKOUT_STEPS.map((label, i) => {
+      {labels.map((label, i) => {
         const n = i + 1;
         const state = n < current ? "done" : n === current ? "cur" : "todo";
         return (

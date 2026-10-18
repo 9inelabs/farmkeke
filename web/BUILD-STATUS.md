@@ -105,10 +105,25 @@ Build in this order. Commit and push after each group.
 
 (Cloud session: add a line per group, e.g. "A — done — notes".)
 
+- **A — done** — W-08 mini-cart, W-20/20b/20c cart, W-21 to W-25 checkout, W-26 to W-29 payment, W-30 confirmation. `tsc` and `eslint src` pass. `next build` compiles and typechecks, then stops prerendering the local session's `/shop` page because this cloud environment's network policy blocks `incredible-wolf-877.eu-west-1.convex.cloud`. Checked at 390px and 1440px in the dev server with browser-only data (cart, mini-cart, checkout steps): no sideways scroll. Payment and confirmation pages need the live backend, so they weren't checked in the browser.
+
 ## Shared-file changes
 
 (Cloud session: list every change to a shared file here.)
 
+- `lib/cart.ts`: added a `lastAdded` memory store. `cart.add` records the item's name, `miniCart.close` clears it, and `miniCart.useLastAdded` reads it, for W-08's "Fresh tomatoes added to your cart".
+- `lib/auth.ts`: `Viewer` gains `isGuest?`; `useViewer` treats `isAnonymous || isGuest` as a guest. The rebuilt `users.viewer` returns `isGuest`, not `isAnonymous`.
+- `components/ui/Dialog.tsx`: optional `titleClassName`, `headerClassName` and `footerClassName` on `Modal` and `Drawer`. Defaults are unchanged. Used by W-08 for its 20px title and lined header and footer.
+- `components/ui/Steps.tsx`: optional `labels` on `CheckoutSteps`. W-24 names step 2 "Pickup".
+- `components/layout/SimpleHeaders.tsx`: exported `NARROW_WRAP` (1160px, as in the checkout and order designs) and an optional `wrapClassName` on `CheckoutHeader` and `MinimalHeader`. The default is still `wrap`.
+
 ## Backend gaps found
 
 (List anything a screen needs that `convex/` doesn't provide. The local session builds it.)
+
+- **W-20 cart, farm line "Usually accepts within 2 hours":** `checkout.quote` farms have `farmArea` but no response time. The page shows it when a farm has `acceptsWithinHours` (number).
+- **W-23 "Note for the rider":** `checkout.place` has no note field. The note is kept in the browser's checkout draft only. Suggest `address.note` (string, up to 200).
+- **W-23 slots marked "Full":** `checkout.deliveryWindows` returns only open slots, so the page can't tell "full" from "too soon". Closed slots say "Not available". Suggest returning every slot with `{ from, to, open, reason: "full" | "too_soon" }`.
+- **W-24 "Ready from Sun 18 Oct" per pickup point:** there's no per-point ready date. The page uses `deliveryWindows.readyDay` (the first day every farm can make).
+- **W-27 "Card ending 4081" and W-29 "Transfer started 10:41":** `payments/checkout.get` `lastAttempt` has no card last 4 digits or start time. The page reads `lastAttempt.cardLast4` and `lastAttempt.startedAt` when present. Until then it shows "Card", "Bank transfer" or "USSD", and no time.
+- **W-30 "A Farmkeke rider delivers to 12 Wetheral Road":** `orders/consumer.placedSummary` has no address or pickup point. The page reads `address.street` and `pickupPoint.name` when present, and falls back to what this browser entered at checkout.
