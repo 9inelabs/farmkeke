@@ -101,6 +101,8 @@ export const FarmkekePassword: ConvexCredentialsConfig = ConvexCredentials<DataM
           shouldLinkViaEmail: false,
           shouldLinkViaPhone: false,
         });
+        // Welcome email (Resend), sent in the background
+        await ctx.scheduler.runAfter(0, internal.notifications.deliver.welcome, { userId: user._id });
         return { userId: user._id };
       }
 

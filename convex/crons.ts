@@ -15,4 +15,7 @@ crons.interval("abandon unpaid checkouts", { minutes: 15 }, internal.checkout.ab
 // Refunds and payouts whose send never ran
 crons.interval("resend stuck refunds and payouts", { minutes: 10 }, internal.payments.processor.run, {});
 
+// Account deletions that were waiting for orders to finish (M-95)
+crons.interval("finish waiting account deletions", { hours: 1 }, internal.accountsInternal.finishWaitingDeletions, {});
+
 export default crons;

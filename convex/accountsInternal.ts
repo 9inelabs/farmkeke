@@ -1,8 +1,10 @@
 // Internal lookups used by the password provider and account actions, which
 // run as actions and have no direct database access.
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { getViewer } from "./lib/auth";
+import { ENDED } from "./lib/orders";
 
 export const PASSWORD_PROVIDER = "password";
 // Failed sign-ins allowed per account per hour (refills gradually). M-50.
@@ -82,15 +84,82 @@ export const replaceEmail = internalMutation({
   },
 });
 
+/** Orders still in progress (or money still held), which block deletion. */
+async function hasOrdersInProgress(ctx: MutationCtx, userId: Id<"users">) {
+  const orders = await ctx.db
+    .query("orders")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .take(500);
+  return orders.some(
+    (o) => (!ENDED.includes(o.status) && o.status !== "awaiting_payment") || o.escrow === "held",
+  );
+}
+
 /**
  * M-95: removes a user's personal data and every way to sign in as them.
- * Order records arrive in Phase 6; from then on, accounts with orders still
- * on their way are recorded as "waiting_for_orders" and finished later.
+ * Accounts with orders still in progress are recorded as "waiting_for_orders"
+ * and kept working (to confirm receipt or report a problem); the hourly
+ * finishWaitingDeletions job deletes them once those orders have ended.
  */
 export const deleteUserData = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const { userId } = args;
+    if (await hasOrdersInProgress(ctx, userId)) {
+      const waiting = await ctx.db
+        .query("accountDeletions")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .take(10);
+      if (!waiting.some((d) => d.status === "waiting_for_orders")) {
+        await ctx.db.insert("accountDeletions", { userId, status: "waiting_for_orders" });
+      }
+      return "waiting_for_orders" as const;
+    }
+    await eraseUser(ctx, userId);
+    await ctx.db.insert("accountDeletions", { userId, status: "completed", completedAt: Date.now() });
+    return "completed" as const;
+  },
+});
+
+/** Cron: finishes deletions that were waiting for orders to end. */
+export const finishWaitingDeletions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const waiting = await ctx.db
+      .query("accountDeletions")
+      .withIndex("by_status", (q) => q.eq("status", "waiting_for_orders"))
+      .take(50);
+    let finished = 0;
+    for (const row of waiting) {
+      const userId = ctx.db.normalizeId("users", row.userId);
+      const user = userId ? await ctx.db.get("users", userId) : null;
+      if (userId !== null && user !== null) {
+        if (await hasOrdersInProgress(ctx, userId)) continue;
+        await eraseUser(ctx, userId);
+      }
+      await ctx.db.patch("accountDeletions", row._id, { status: "completed", completedAt: Date.now() });
+      finished++;
+    }
+    return { finished };
+  },
+});
+
+async function eraseUser(ctx: MutationCtx, userId: Id<"users">) {
+    for (const table of ["favorites", "pushTokens"] as const) {
+      for await (const row of ctx.db.query(table).withIndex("by_userId", (q) => q.eq("userId", userId))) {
+        await ctx.db.delete(table, row._id);
+      }
+    }
+    for await (const row of ctx.db.query("savedCards").withIndex("by_userId", (q) => q.eq("userId", userId))) {
+      await ctx.db.delete("savedCards", row._id);
+    }
+    for (const side of ["shop", "farm"] as const) {
+      for await (const row of ctx.db
+        .query("notificationPrefs")
+        .withIndex("by_userId_and_side", (q) => q.eq("userId", userId).eq("side", side))) {
+        await ctx.db.delete("notificationPrefs", row._id);
+      }
+    }
     for await (const address of ctx.db.query("addresses").withIndex("by_userId", (q) => q.eq("userId", userId))) {
       await ctx.db.delete("addresses", address._id);
     }
@@ -118,9 +187,7 @@ export const deleteUserData = internalMutation({
       await ctx.db.delete("authAccounts", account._id);
     }
     await ctx.db.delete("users", userId);
-    await ctx.db.insert("accountDeletions", { userId, status: "completed", completedAt: Date.now() });
-  },
-});
+}
 
 /** The caller's user (session checked), for actions that can't read the db. */
 export const currentViewer = internalQuery({
