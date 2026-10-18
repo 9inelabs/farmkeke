@@ -13,7 +13,7 @@
 // | "BLOCKED", attemptsLeft? } (see convex/lib/passwordProvider.ts).
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { api } from "@/convex/api";
 
 export type Viewer = {
@@ -42,13 +42,27 @@ export function useViewer() {
   return { status, viewer: viewer ?? null };
 }
 
-/** Makes sure there is an identity (guest if needed) before guest checkout. */
+/**
+ * Makes sure there is an identity (guest if needed) before guest checkout or
+ * a contact message. Resolves only once the Convex client is actually
+ * authenticated, so the very next mutation carries the new guest token.
+ */
 export function useEnsureIdentity() {
   const { isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
+  const authed = useRef(isAuthenticated);
+  useEffect(() => {
+    authed.current = isAuthenticated;
+  }, [isAuthenticated]);
   return useCallback(async () => {
-    if (!isAuthenticated) await signIn("anonymous");
-  }, [isAuthenticated, signIn]);
+    if (authed.current) return;
+    await signIn("anonymous");
+    const started = Date.now();
+    while (!authed.current) {
+      if (Date.now() - started > 10_000) throw new Error("Couldn't start a guest session. Check your connection.");
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  }, [signIn]);
 }
 
 /** Reads the error code thrown by the auth provider and other functions. */

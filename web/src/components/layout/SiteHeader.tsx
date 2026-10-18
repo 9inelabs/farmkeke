@@ -37,9 +37,14 @@ export function SiteHeader() {
     <header className="wrap-site relative z-40 pt-5">
       <nav
         aria-label="Main"
-        className="flex h-[66px] items-center gap-5 rounded-[18px] bg-surface pr-3 pl-5 shadow-[inset_0_0_0_1px_var(--color-line)]"
+        className="flex h-[66px] items-center gap-5 rounded-[18px] bg-surface pr-3 pl-5 shadow-[inset_0_0_0_1px_var(--color-line)] m:gap-2 m:pr-2 m:pl-4"
       >
-        <HomeLogo height={24} />
+        <span className="contents m:hidden">
+          <HomeLogo height={24} />
+        </span>
+        <span className="hidden m:contents">
+          <HomeLogo height={19} />
+        </span>
         <div className="flex flex-1 justify-center gap-8 m:hidden">
           {LINKS.map((l) => (
             <Link
@@ -59,13 +64,13 @@ export function SiteHeader() {
           </Link>
         </m.span>
         <m.span {...pressable}>
-          <Link href={routes.getTheApp} className="btn sm lime">
+          <Link href={routes.getTheApp} className="btn sm lime m:px-3">
             Get the app
           </Link>
         </m.span>
         <button
           type="button"
-          className="btn sm ghost hidden m:inline-flex"
+          className="btn sm ghost hidden m:inline-flex m:px-3"
           aria-expanded={open}
           aria-controls="site-menu"
           onClick={() => setOpen((o) => !o)}
@@ -85,18 +90,20 @@ export function SiteHeader() {
             transition={transition.base}
           >
             <ul className="m-0 list-none p-0">
-              {[...LINKS, { href: routes.shop, label: "Shop on the web" }, { href: routes.findOrder, label: "Find my order" }].map(
-                (l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="flex min-h-12 items-center rounded-xl px-4 text-base font-semibold text-ink hover:bg-canvas"
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ),
-              )}
+              {[
+                ...LINKS,
+                { href: routes.shop, label: "Shop on the web" },
+                { href: routes.findOrder, label: "Find my order" },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="flex min-h-12 items-center rounded-xl px-4 text-base font-semibold text-ink hover:bg-canvas"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </m.div>
         ) : null}

@@ -1,0 +1,118 @@
+// W-86 Contact. Phone and WhatsApp are placeholders until the real line exists
+// (farmkeke-docs/pending-backend/README.md, "Content still to provide").
+import { ArrowRight, CircleHelp, Clock, Mail, MapPin, MessageCircle, Phone, ShieldAlert } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ContactForm, SUPPORT_EMAIL } from "@/components/site/ContactForm";
+import { Eyebrow, S, Tile, h3b } from "@/components/site/ui";
+import { FadeUp } from "@/lib/motion";
+import { routes } from "@/lib/routes";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Get help from Farmkeke support. Chat, call, WhatsApp or email us, Monday to Saturday, 8am to 8pm. We usually reply within a few hours.",
+};
+
+/** Placeholder shown in the design; the call button stays disabled until a real number is set. */
+const SUPPORT_PHONE_LABEL = "+234 [support line]";
+const SUPPORT_PHONE_TEL: string | null = null;
+
+const cardBtn = "btn sm ghost mt-1 self-start px-4";
+
+export default function ContactPage() {
+  return (
+    <div className="wrap-site pt-14">
+      <FadeUp>
+        <div className="max-w-[680px]">
+          <Eyebrow icon={Mail}>Contact</Eyebrow>
+          <h1 className="mt-3.5 font-display text-[44px] leading-[52px] font-extrabold tracking-[-0.03em]">
+            We&apos;re here to help
+          </h1>
+          <p className="m-0 mt-2.5 text-lg leading-[29px] text-muted m:text-base m:leading-[26px]">
+            Support is open Monday to Saturday, 8am to 8pm. We usually reply within a few hours.
+          </p>
+        </div>
+        <div className="mt-9 grid grid-cols-3 gap-5 m:grid-cols-1">
+          <div className={`${S.card} flex flex-col gap-3 p-[26px]`}>
+            <Tile icon={MessageCircle} />
+            <h2 className={`${h3b} text-[17px] leading-[25px]`}>Chat with us</h2>
+            <p className="m-0 text-sm leading-6 text-muted">The fastest way to get help with an order.</p>
+            <div className="text-[15px] font-semibold">In the app or on your order page</div>
+            <Link href={routes.myOrders} className={cardBtn}>
+              <MessageCircle aria-hidden size={16} strokeWidth={2} />
+              Start a chat
+            </Link>
+          </div>
+          <div className={`${S.card} flex flex-col gap-3 p-[26px]`}>
+            <Tile icon={Phone} />
+            <h2 className={`${h3b} text-[17px] leading-[25px]`}>Call or WhatsApp</h2>
+            <p className="m-0 text-sm leading-6 text-muted">Speak to someone on our support team.</p>
+            <div className="text-[15px] font-semibold">{SUPPORT_PHONE_LABEL}</div>
+            {SUPPORT_PHONE_TEL ? (
+              <a href={`tel:${SUPPORT_PHONE_TEL}`} className={cardBtn}>
+                <Phone aria-hidden size={16} strokeWidth={2} />
+                Call support
+              </a>
+            ) : (
+              <span className={cardBtn} aria-disabled="true">
+                <Phone aria-hidden size={16} strokeWidth={2} />
+                Call support
+              </span>
+            )}
+          </div>
+          <div className={`${S.card} flex flex-col gap-3 p-[26px]`}>
+            <Tile icon={Mail} />
+            <h2 className={`${h3b} text-[17px] leading-[25px]`}>Email</h2>
+            <p className="m-0 text-sm leading-6 text-muted">For anything that is not urgent, or to send documents.</p>
+            <div className="text-[15px] font-semibold break-all">{SUPPORT_EMAIL}</div>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className={cardBtn}>
+              <Mail aria-hidden size={16} strokeWidth={2} />
+              Send an email
+            </a>
+          </div>
+        </div>
+      </FadeUp>
+
+      <FadeUp className="mt-6 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
+        <ContactForm />
+        <aside className="flex flex-col gap-4">
+          <div className={`${S.card} p-[26px]`}>
+            <h2 className={`${h3b} text-[17px] leading-[25px]`}>Office</h2>
+            <ul className="m-0 mt-3.5 flex list-none flex-col gap-3 p-0 text-sm text-ink-3">
+              <li className="flex gap-2.5">
+                <MapPin aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />
+                <span>[Office address], Owerri, Imo State</span>
+              </li>
+              <li className="flex gap-2.5">
+                <Clock aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />
+                <span>Monday to Saturday, 8am to 8pm</span>
+              </li>
+              <li className="flex gap-2.5">
+                <Mail aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />
+                <span>
+                  <a href="mailto:hello@farmkeke.com">hello@farmkeke.com</a> for partnerships and press
+                </span>
+              </li>
+            </ul>
+          </div>
+          <div className={`${S.card} flex gap-3.5 p-[26px]`}>
+            <Tile icon={CircleHelp} size={40} iconSize={20} />
+            <div>
+              <h2 className="m-0 text-[15px] font-semibold">Quick answers</h2>
+              <p className="m-0 mt-0.5 text-sm leading-6 text-muted">Many questions are answered in our help centre.</p>
+              <Link href={routes.help} className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold">
+                Visit help and FAQ
+                <ArrowRight aria-hidden size={16} strokeWidth={2} />
+              </Link>
+            </div>
+          </div>
+          <div className="flex gap-3 rounded-2xl bg-pend-bg px-5 py-[18px] text-[13px] leading-[19px] text-[#5E3E08]">
+            <ShieldAlert aria-hidden size={18} strokeWidth={2} className="flex-none text-pend" />
+            <span>Farmkeke staff will never ask for your card PIN, password or a one-time code.</span>
+          </div>
+        </aside>
+      </FadeUp>
+    </div>
+  );
+}
