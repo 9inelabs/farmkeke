@@ -3,15 +3,14 @@
 import type { OrderRow } from "@/convex/returns/checkout";
 import { stageOf, statusBadge } from "@/convex/returns/orders";
 import { dayMonth } from "@/lib/format";
-import { dayLabel, hm, lagosDay, windowLabel } from "./format";
+import { hm, isoDayLabel, lagosDay, windowLabel } from "./format";
 
 /** "today" / "tomorrow" / "yesterday" / "Sat 17 Oct" for a "YYYY-MM-DD" day. */
 export function relDay(day: string, now: number): string {
   if (day === lagosDay(now)) return "today";
   if (day === lagosDay(now + 86_400_000)) return "tomorrow";
   if (day === lagosDay(now - 86_400_000)) return "yesterday";
-  const [y, m, d] = day.split("-").map(Number);
-  return dayLabel(Date.UTC(y!, m! - 1, d!, 12));
+  return isoDayLabel(day);
 }
 
 /** "Delivered today, 10:52", "Arriving today, 12pm – 3pm", "Waiting for the farm to accept" */

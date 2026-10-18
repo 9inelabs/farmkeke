@@ -17,7 +17,8 @@ import { api } from "@/convex/api";
 import type { CheckoutPickupPoint, DeliveryWindows, PlaceResult } from "@/convex/returns/checkout";
 import { errorCode, errorData, useEnsureIdentity } from "@/lib/auth";
 import { quoteItems } from "@/lib/cart";
-import { clock, displayPhone, naira, plural, shortDay } from "@/lib/format";
+import { clock, displayPhone, naira, plural } from "@/lib/format";
+import { isoDayLabel } from "@/components/orders/format";
 import { routes } from "@/lib/routes";
 
 export function ReviewStep() {
@@ -257,7 +258,7 @@ function Review() {
               title={[d.address.street, area?.name].filter(Boolean).join(", ")}
               detail={[
                 d.address.landmark,
-                d.window ? `${shortDay(d.window.day)}, ${clock(d.window.from)} – ${clock(d.window.to)}` : "",
+                d.window ? `${isoDayLabel(d.window.day)}, ${clock(d.window.from)} – ${clock(d.window.to)}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -271,7 +272,7 @@ function Review() {
               title={point?.name ?? "…"}
               detail={[
                 point ? [point.address, point.lga].filter(Boolean).join(", ") : "",
-                windows?.readyDay ? `Ready from ${shortDay(windows.readyDay)}` : "",
+                windows?.readyDay ? `Ready from ${isoDayLabel(windows.readyDay)}` : "",
               ]
                 .filter(Boolean)
                 .join(" · ")}

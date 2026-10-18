@@ -23,6 +23,7 @@ const keyOf = (l: { listingId: string; unitId: string }) => `${l.listingId}:${l.
 
 /** "One price went up and one item sold out." */
 function changeSentence(changes: CartChange[]) {
+  const them = changes.length === 1 ? "it" : "them";
   const up = changes.filter((c) => c.kind === "price" && (c.priceKobo ?? 0) > (c.oldPriceKobo ?? 0)).length;
   const down = changes.filter((c) => c.kind === "price" && (c.priceKobo ?? 0) < (c.oldPriceKobo ?? 0)).length;
   const sold = changes.filter((c) => c.kind === "sold_out").length;
@@ -36,7 +37,7 @@ function changeSentence(changes: CartChange[]) {
     qty ? `${word(qty)} ${qty === 1 ? "quantity" : "quantities"} changed to what's in stock` : "",
   ].filter(Boolean);
   const joined = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}` : parts[0]!;
-  return `${capitalise(joined)}. Check them below before you pay.`;
+  return `${capitalise(joined)}. Check ${them} below before you pay.`;
 }
 
 /** The cart with the server's prices and quantities, minus what can't be bought. */
@@ -105,7 +106,7 @@ export function CartView() {
             <TriangleAlert aria-hidden className="mt-px size-[22px] flex-none text-pend" strokeWidth={1.75} />
             <div className="flex-1">
               <div className="text-[15px] font-semibold text-[#5E3E08]">
-                {plural(changes.length, "item")} changed since you added them
+                {plural(changes.length, "item")} changed since you added {changes.length === 1 ? "it" : "them"}
               </div>
               <div className="sm mt-0.5 text-[#7A5A1E]">{changeSentence(changes)}</div>
             </div>

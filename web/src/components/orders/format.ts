@@ -10,6 +10,13 @@ export function dayLabel(ms: number): string {
   return `${part(ms, { weekday: "short" })} ${part(ms, { day: "numeric" })} ${part(ms, { month: "short" })}`;
 }
 
+/** "Sat 17 Oct" from a "YYYY-MM-DD" day. Built from parts, so browsers that
+ * add a comma ("Sat, 17 Oct") still match the designs. */
+export function isoDayLabel(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return dayLabel(Date.UTC(y!, m! - 1, d!, 12));
+}
+
 /** "10:41" */
 export function hm(ms: number): string {
   return part(ms, { hour: "2-digit", minute: "2-digit", hour12: false });

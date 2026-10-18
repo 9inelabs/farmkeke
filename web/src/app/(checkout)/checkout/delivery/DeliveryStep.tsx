@@ -51,7 +51,7 @@ function Choose() {
     points === undefined
       ? ""
       : area && inArea > 0
-        ? `${plural(inArea, "pickup point")} in ${area.name}`
+        ? `${plural(inArea, "pickup point")} in ${area.lga}`
         : points.length > 0
           ? `${plural(points.length, "pickup point")}${area ? ` in ${area.state}` : ""}`
           : "No pickup points open yet";

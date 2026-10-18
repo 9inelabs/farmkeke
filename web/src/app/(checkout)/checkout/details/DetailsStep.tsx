@@ -19,7 +19,7 @@ import {
   StepActions,
   useCheckoutGuard,
 } from "@/components/checkout/Shell";
-import { hoursSummary } from "@/components/orders/format";
+import { hoursSummary, isoDayLabel } from "@/components/orders/format";
 import { Button } from "@/components/ui/Button";
 import { TextArea, TextField } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -28,7 +28,7 @@ import type { SavedAddress } from "@/convex/returns/account";
 import type { CheckoutPickupPoint, DeliveryWindows } from "@/convex/returns/checkout";
 import { areaPicker } from "@/lib/area";
 import { useViewer } from "@/lib/auth";
-import { clock, shortDay, todayInLagos } from "@/lib/format";
+import { clock, todayInLagos } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
 export function DetailsStep() {
@@ -50,7 +50,7 @@ const slotLabel = (s: { from: string; to: string }) => `${clock(s.from)} – ${c
 export function dayHeading(day: string, now: number) {
   const today = todayInLagos(new Date(now));
   const tomorrow = todayInLagos(new Date(now + 86_400_000));
-  return day === today ? `Today, ${shortDay(day)}` : day === tomorrow ? `Tomorrow, ${shortDay(day)}` : shortDay(day);
+  return day === today ? `Today, ${isoDayLabel(day)}` : day === tomorrow ? `Tomorrow, ${isoDayLabel(day)}` : isoDayLabel(day);
 }
 
 /** The farms' delivery days, asked once with the time the page opened. */
@@ -357,7 +357,7 @@ function PickupDetails() {
   const [chosen, setChosen] = useState<string | null>(() => draft.get().pickupPointId);
   const [error, setError] = useState<string | null>(null);
   const list = (points ?? []).slice(0, 8);
-  const ready = windows?.readyDay ? `Ready from ${shortDay(windows.readyDay)}` : "";
+  const ready = windows?.readyDay ? `Ready from ${isoDayLabel(windows.readyDay)}` : "";
 
   const onKey = (e: KeyboardEvent) => {
     const i = list.findIndex((p) => p._id === chosen);

@@ -13,7 +13,7 @@ import { claimPendingGuestOrders, forgetClaimToken, saveClaimToken } from "@/com
 import { draft } from "@/components/checkout/draft";
 import { looksLikeEmail } from "@/components/checkout/draft";
 import { MinimalHeader, NARROW_WRAP } from "@/components/layout/SimpleHeaders";
-import { firstName, windowLabel } from "@/components/orders/format";
+import { firstName, windowLabel, isoDayLabel } from "@/components/orders/format";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { PasswordField, TextField } from "@/components/ui/Field";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
@@ -22,7 +22,7 @@ import type { PlacedSummary } from "@/convex/returns/checkout";
 import { stageOf, statusBadge } from "@/convex/returns/orders";
 import { errorCode, useViewer } from "@/lib/auth";
 import { cart } from "@/lib/cart";
-import { displayPhone, initials, naira, plural, shortDay, tintFor } from "@/lib/format";
+import { displayPhone, initials, naira, plural, tintFor } from "@/lib/format";
 import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
@@ -133,7 +133,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
     delivery
       ? {
           title: street ? `A Farmkeke rider delivers to ${street}` : "A Farmkeke rider delivers to your address",
-          detail: win ? `${shortDay(win.day)}, ${windowLabel(win.from, win.to)}` : "",
+          detail: win ? `${isoDayLabel(win.day)}, ${windowLabel(win.from, win.to)}` : "",
         }
       : {
           title: pointName ? `Your ${orders.length > 1 ? "orders go" : "order goes"} to ${pointName}` : "Your order goes to your pickup point",
