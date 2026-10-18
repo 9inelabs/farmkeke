@@ -29,7 +29,7 @@ export const api = {
     listServedStates: makeFunctionReference<"query", Record<string, never>, any>("areas:listServedStates"),
     listServiceAreas: makeFunctionReference<"query", { "state": string }, any>("areas:listServiceAreas"),
     matchLocation: makeFunctionReference<"query", { "latitude": number; "longitude": number }, any>("areas:matchLocation"),
-    requestArea: makeFunctionReference<"mutation", { "email": string; "latitude"?: number; "longitude"?: number; "place": string; "state"?: string }, any>("areas:requestArea"),
+    requestArea: makeFunctionReference<"mutation", { "email"?: string; "latitude"?: number; "longitude"?: number; "phone"?: string; "place": string; "state"?: string }, any>("areas:requestArea"),
   },
   auth: {
     isAuthenticated: makeFunctionReference<"query", Record<string, never>, any>("auth:isAuthenticated"),
@@ -39,6 +39,7 @@ export const api = {
   catalog: {
     getCategoryBySlug: makeFunctionReference<"query", { "slug": string }, any>("catalog:getCategoryBySlug"),
     listCategories: makeFunctionReference<"query", Record<string, never>, any>("catalog:listCategories"),
+    listCategoriesWithCounts: makeFunctionReference<"query", Record<string, never>, any>("catalog:listCategoriesWithCounts"),
     listUnits: makeFunctionReference<"query", Record<string, never>, any>("catalog:listUnits"),
   },
   chat: {
@@ -104,7 +105,7 @@ export const api = {
     get: makeFunctionReference<"query", { "listingId": Id<"listings"> }, any>("listings:get"),
     mine: makeFunctionReference<"query", Record<string, never>, any>("listings:mine"),
     quickUpdate: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "units": Array<{ "priceKobo": number; "stock": number; "unitId": Id<"units"> }> }, any>("listings:quickUpdate"),
-    saveDetails: makeFunctionReference<"mutation", { "categoryId": Id<"categories">; "description": string; "harvestedOn"?: string; "listingId": Id<"listings">; "name": string }, any>("listings:saveDetails"),
+    saveDetails: makeFunctionReference<"mutation", { "categoryId": Id<"categories">; "description": string; "harvestedOn"?: string; "listingId": Id<"listings">; "name": string; "subtype"?: string }, any>("listings:saveDetails"),
     saveFulfilment: makeFunctionReference<"mutation", { "delivery": boolean; "listingId": Id<"listings">; "pickup": boolean }, any>("listings:saveFulfilment"),
     savePhotos: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "photoIds": Array<Id<"_storage">> }, any>("listings:savePhotos"),
     savePricing: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "units": Array<{ "minOrder": number; "priceKobo": number; "stock": number; "unitId": Id<"units"> }> }, any>("listings:savePricing"),
@@ -156,7 +157,7 @@ export const api = {
     checkout: {
       get: makeFunctionReference<"query", { "checkoutId": string }, any>("payments/checkout:get"),
       markPaidTest: makeFunctionReference<"mutation", { "checkoutId": Id<"checkouts"> }, any>("payments/checkout:markPaidTest"),
-      start: makeFunctionReference<"action", { "checkoutId": Id<"checkouts">; "method": "card" | "bank_transfer" | "ussd" | "saved_card"; "saveCard"?: boolean; "savedCardId"?: Id<"savedCards"> }, any>("payments/checkout:start"),
+      start: makeFunctionReference<"action", { "checkoutId": Id<"checkouts">; "method": "card" | "bank_transfer" | "ussd" | "saved_card"; "returnTo"?: "web" | "app"; "saveCard"?: boolean; "savedCardId"?: Id<"savedCards"> }, any>("payments/checkout:start"),
       verify: makeFunctionReference<"action", { "checkoutId": Id<"checkouts"> }, any>("payments/checkout:verify"),
     },
     config: {
@@ -179,14 +180,14 @@ export const api = {
     summary: makeFunctionReference<"query", { "farmId": Id<"farms"> }, any>("reviews:summary"),
   },
   storefront: {
-    categoryListings: makeFunctionReference<"query", { "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "slug": string; "sort"?: "newest" | "price_low" | "price_high" | "freshest" }, any>("storefront:categoryListings"),
-    collection: makeFunctionReference<"query", { "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "kind": "fresh" | "picked_today"; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest"; "today": string }, any>("storefront:collection"),
-    farm: makeFunctionReference<"query", { "id": string }, any>("storefront:farm"),
+    categoryListings: makeFunctionReference<"query", { "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "harvestedWithinDays"?: number; "lat"?: number; "limit"?: number; "lng"?: number; "maxDistanceKm"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "minRating"?: number; "pickup"?: boolean; "slug": string; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "subtype"?: string; "today"?: string }, any>("storefront:categoryListings"),
+    collection: makeFunctionReference<"query", { "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "harvestedWithinDays"?: number; "kind": "fresh" | "picked_today"; "lat"?: number; "limit"?: number; "lng"?: number; "maxDistanceKm"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "minRating"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "today": string }, any>("storefront:collection"),
+    farm: makeFunctionReference<"query", { "id": string; "lat"?: number; "lng"?: number; "today"?: string }, any>("storefront:farm"),
     farmAreas: makeFunctionReference<"query", Record<string, never>, any>("storefront:farmAreas"),
-    home: makeFunctionReference<"query", { "lga"?: string; "state"?: string; "today": string }, any>("storefront:home"),
-    popular: makeFunctionReference<"query", Record<string, never>, any>("storefront:popular"),
-    product: makeFunctionReference<"query", { "id": string }, any>("storefront:product"),
-    search: makeFunctionReference<"query", { "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest"; "text": string }, any>("storefront:search"),
+    home: makeFunctionReference<"query", { "lat"?: number; "lga"?: string; "lng"?: number; "state"?: string; "today": string }, any>("storefront:home"),
+    popular: makeFunctionReference<"query", { "lat"?: number; "limit"?: number; "lng"?: number; "today"?: string }, any>("storefront:popular"),
+    product: makeFunctionReference<"query", { "id": string; "lat"?: number; "lng"?: number; "serviceAreaId"?: string; "today"?: string }, any>("storefront:product"),
+    search: makeFunctionReference<"query", { "categorySlug"?: string; "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "harvestedWithinDays"?: number; "lat"?: number; "limit"?: number; "lng"?: number; "maxDistanceKm"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "minRating"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "text": string; "today"?: string }, any>("storefront:search"),
   },
   support: {
     get: makeFunctionReference<"query", { "ticketId": Id<"supportTickets"> }, any>("support:get"),

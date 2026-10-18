@@ -1,12 +1,44 @@
 {
-  "farms": [],
+  "farmTotal": 1,
+  "farms": [
+    {
+      "area": "Orlu",
+      "distanceKm": null,
+      "id": "mh7cb0cqt2v2efr0ttszxv531h8fyb46",
+      "lga": "Orlu",
+      "matchCount": 1,
+      "name": "Ada Greens",
+      "photoUrl": null,
+      "productCount": 2,
+      "rating": null,
+      "ratingCount": 0,
+      "state": "Imo",
+      "verified": true
+    }
+  ],
   "hasMore": false,
   "items": [
     {
+      "category": {
+        "name": "Vegetables",
+        "slug": "vegetables"
+      },
+      "delivery": true,
+      "distanceKm": null,
+      "farmId": "mh7cb0cqt2v2efr0ttszxv531h8fyb46",
+      "farmName": "Ada Greens",
+      "farmRating": null,
+      "farmRatingCount": 0,
+      "farmVerified": true,
+      "freshness": null,
+      "harvestedOn": "2026-10-13",
       "id": "ms7d3f1bvya1szk38jbad3qacs8g0jw6",
       "imageUrl": null,
+      "inStock": true,
       "name": "Fresh tomatoes",
+      "pickup": true,
       "priceKobo": 450000,
+      "subtype": null,
       "unit": "basket"
     }
   ],

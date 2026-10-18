@@ -455,6 +455,55 @@
       },
       "optional": false
      },
+     "reason": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "subtypes": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "object",
+        "value": {
+         "name": {
+          "fieldType": {
+           "type": "string"
+          },
+          "optional": false
+         },
+         "slug": {
+          "fieldType": {
+           "type": "string"
+          },
+          "optional": false
+         }
+        }
+       }
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "admin/catalog.js:setSubtypes",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "categoryId": {
+      "fieldType": {
+       "tableName": "categories",
+       "type": "id"
+      },
+      "optional": false
+     },
      "hidden": {
       "fieldType": {
        "type": "boolean"
@@ -527,6 +576,79 @@
    },
    "functionType": "Mutation",
    "identifier": "admin/catalog.js:updateUnit",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "paginationOpts": {
+      "fieldType": {
+       "type": "object",
+       "value": {
+        "cursor": {
+         "fieldType": {
+          "type": "union",
+          "value": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "optional": false
+        },
+        "endCursor": {
+         "fieldType": {
+          "type": "union",
+          "value": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ]
+         },
+         "optional": true
+        },
+        "id": {
+         "fieldType": {
+          "type": "number"
+         },
+         "optional": true
+        },
+        "maximumBytesRead": {
+         "fieldType": {
+          "type": "number"
+         },
+         "optional": true
+        },
+        "maximumRowsRead": {
+         "fieldType": {
+          "type": "number"
+         },
+         "optional": true
+        },
+        "numItems": {
+         "fieldType": {
+          "type": "number"
+         },
+         "optional": false
+        }
+       }
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "admin/staff.js:alerts",
    "returns": null,
    "visibility": {
     "kind": "public"
@@ -631,6 +753,26 @@
    },
    "functionType": "Query",
    "identifier": "admin/staff.js:listStaff",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "notificationId": {
+      "fieldType": {
+       "tableName": "notifications",
+       "type": "id"
+      },
+      "optional": true
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "admin/staff.js:markAlertsRead",
    "returns": null,
    "visibility": {
     "kind": "public"
@@ -754,6 +896,18 @@
   {
    "args": {
     "type": "object",
+    "value": {}
+   },
+   "functionType": "Query",
+   "identifier": "admin/staff.js:unreadAlerts",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
     "value": {
      "state": {
       "fieldType": {
@@ -834,7 +988,7 @@
       "fieldType": {
        "type": "string"
       },
-      "optional": false
+      "optional": true
      },
      "latitude": {
       "fieldType": {
@@ -845,6 +999,12 @@
      "longitude": {
       "fieldType": {
        "type": "number"
+      },
+      "optional": true
+     },
+     "phone": {
+      "fieldType": {
+       "type": "string"
       },
       "optional": true
      },
@@ -1393,6 +1553,18 @@
    }
   },
   {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Query",
+   "identifier": "catalog.js:listCategoriesWithCounts",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
    "functionType": "HttpAction",
    "method": "GET",
    "path": "/.well-known/jwks.json"
@@ -1405,7 +1577,7 @@
   {
    "functionType": "HttpAction",
    "method": "GET",
-   "path": "/paystack/return"
+   "path": "/reset-password"
   },
   {
    "functionType": "HttpAction",
@@ -1415,7 +1587,7 @@
   {
    "functionType": "HttpAction",
    "method": "GET",
-   "path": "/reset-password"
+   "path": "/paystack/return"
   },
   {
    "args": {
@@ -1587,6 +1759,18 @@
    },
    "functionType": "Mutation",
    "identifier": "accountsInternal.js:deleteUserData",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Mutation",
+   "identifier": "accountsInternal.js:finishWaitingDeletions",
    "returns": null,
    "visibility": {
     "kind": "internal"
@@ -3628,6 +3812,12 @@
        "type": "string"
       },
       "optional": false
+     },
+     "subtype": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
@@ -3847,6 +4037,49 @@
    "args": {
     "type": "object",
     "value": {
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lga": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "state": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "storefront.js:home",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
      "delivery": {
       "fieldType": {
        "type": "boolean"
@@ -3865,7 +4098,47 @@
       },
       "optional": true
      },
+     "harvestedWithinDays": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "kind": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "fresh"
+        },
+        {
+         "type": "literal",
+         "value": "picked_today"
+        }
+       ]
+      },
+      "optional": false
+     },
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
      "limit": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "maxDistanceKm": {
       "fieldType": {
        "type": "number"
       },
@@ -3878,6 +4151,135 @@
       "optional": true
      },
      "minPriceKobo": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "minRating": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "pickup": {
+      "fieldType": {
+       "type": "boolean"
+      },
+      "optional": true
+     },
+     "sort": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "newest"
+        },
+        {
+         "type": "literal",
+         "value": "price_low"
+        },
+        {
+         "type": "literal",
+         "value": "price_high"
+        },
+        {
+         "type": "literal",
+         "value": "freshest"
+        },
+        {
+         "type": "literal",
+         "value": "nearest"
+        },
+        {
+         "type": "literal",
+         "value": "top_rated"
+        }
+       ]
+      },
+      "optional": true
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "storefront.js:collection",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "delivery": {
+      "fieldType": {
+       "type": "boolean"
+      },
+      "optional": true
+     },
+     "farmLga": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "farmState": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "harvestedWithinDays": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "limit": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "maxDistanceKm": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "maxPriceKobo": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "minPriceKobo": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "minRating": {
       "fieldType": {
        "type": "number"
       },
@@ -3914,8 +4316,28 @@
         {
          "type": "literal",
          "value": "freshest"
+        },
+        {
+         "type": "literal",
+         "value": "nearest"
+        },
+        {
+         "type": "literal",
+         "value": "top_rated"
         }
        ]
+      },
+      "optional": true
+     },
+     "subtype": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
       },
       "optional": true
      }
@@ -3932,6 +4354,12 @@
    "args": {
     "type": "object",
     "value": {
+     "categorySlug": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
      "delivery": {
       "fieldType": {
        "type": "boolean"
@@ -3950,23 +4378,31 @@
       },
       "optional": true
      },
-     "kind": {
+     "harvestedWithinDays": {
       "fieldType": {
-       "type": "union",
-       "value": [
-        {
-         "type": "literal",
-         "value": "fresh"
-        },
-        {
-         "type": "literal",
-         "value": "picked_today"
-        }
-       ]
+       "type": "number"
       },
-      "optional": false
+      "optional": true
+     },
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
      },
      "limit": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "maxDistanceKm": {
       "fieldType": {
        "type": "number"
       },
@@ -3979,6 +4415,12 @@
       "optional": true
      },
      "minPriceKobo": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "minRating": {
       "fieldType": {
        "type": "number"
       },
@@ -4009,21 +4451,35 @@
         {
          "type": "literal",
          "value": "freshest"
+        },
+        {
+         "type": "literal",
+         "value": "nearest"
+        },
+        {
+         "type": "literal",
+         "value": "top_rated"
         }
        ]
       },
       "optional": true
      },
-     "today": {
+     "text": {
       "fieldType": {
        "type": "string"
       },
       "optional": false
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
    "functionType": "Query",
-   "identifier": "storefront.js:collection",
+   "identifier": "storefront.js:search",
    "returns": null,
    "visibility": {
     "kind": "public"
@@ -4038,6 +4494,67 @@
        "type": "string"
       },
       "optional": false
+     },
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "serviceAreaId": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "storefront.js:product",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "id": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "lat": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "lng": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "today": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
@@ -4064,83 +4581,9 @@
    "args": {
     "type": "object",
     "value": {
-     "lga": {
+     "lat": {
       "fieldType": {
-       "type": "string"
-      },
-      "optional": true
-     },
-     "state": {
-      "fieldType": {
-       "type": "string"
-      },
-      "optional": true
-     },
-     "today": {
-      "fieldType": {
-       "type": "string"
-      },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Query",
-   "identifier": "storefront.js:home",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {}
-   },
-   "functionType": "Query",
-   "identifier": "storefront.js:popular",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "id": {
-      "fieldType": {
-       "type": "string"
-      },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Query",
-   "identifier": "storefront.js:product",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "delivery": {
-      "fieldType": {
-       "type": "boolean"
-      },
-      "optional": true
-     },
-     "farmLga": {
-      "fieldType": {
-       "type": "string"
-      },
-      "optional": true
-     },
-     "farmState": {
-      "fieldType": {
-       "type": "string"
+       "type": "number"
       },
       "optional": true
      },
@@ -4150,58 +4593,22 @@
       },
       "optional": true
      },
-     "maxPriceKobo": {
+     "lng": {
       "fieldType": {
        "type": "number"
       },
       "optional": true
      },
-     "minPriceKobo": {
-      "fieldType": {
-       "type": "number"
-      },
-      "optional": true
-     },
-     "pickup": {
-      "fieldType": {
-       "type": "boolean"
-      },
-      "optional": true
-     },
-     "sort": {
-      "fieldType": {
-       "type": "union",
-       "value": [
-        {
-         "type": "literal",
-         "value": "newest"
-        },
-        {
-         "type": "literal",
-         "value": "price_low"
-        },
-        {
-         "type": "literal",
-         "value": "price_high"
-        },
-        {
-         "type": "literal",
-         "value": "freshest"
-        }
-       ]
-      },
-      "optional": true
-     },
-     "text": {
+     "today": {
       "fieldType": {
        "type": "string"
       },
-      "optional": false
+      "optional": true
      }
     }
    },
    "functionType": "Query",
-   "identifier": "storefront.js:search",
+   "identifier": "storefront.js:popular",
    "returns": null,
    "visibility": {
     "kind": "public"
@@ -5547,11 +5954,11 @@
        "value": [
         {
          "type": "literal",
-         "value": "sending"
+         "value": "queued"
         },
         {
          "type": "literal",
-         "value": "queued"
+         "value": "sending"
         },
         {
          "type": "literal",
@@ -6773,25 +7180,6 @@
    "args": {
     "type": "object",
     "value": {
-     "olderThanMinutes": {
-      "fieldType": {
-       "type": "number"
-      },
-      "optional": true
-     }
-    }
-   },
-   "functionType": "Mutation",
-   "identifier": "checkout.js:abandonStale",
-   "returns": null,
-   "visibility": {
-    "kind": "internal"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
      "address": {
       "fieldType": {
        "type": "object",
@@ -6990,108 +7378,19 @@
    "args": {
     "type": "object",
     "value": {
-     "orderId": {
+     "olderThanMinutes": {
       "fieldType": {
-       "tableName": "orders",
-       "type": "id"
+       "type": "number"
       },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Query",
-   "identifier": "disputes.js:forFarmOrder",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "orderId": {
-      "fieldType": {
-       "tableName": "orders",
-       "type": "id"
-      },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Query",
-   "identifier": "disputes.js:forOrder",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "disputeId": {
-      "fieldType": {
-       "tableName": "disputes",
-       "type": "id"
-      },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Query",
-   "identifier": "disputes.js:get",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "as": {
-      "fieldType": {
-       "type": "union",
-       "value": [
-        {
-         "type": "literal",
-         "value": "consumer"
-        },
-        {
-         "type": "literal",
-         "value": "farmer"
-        }
-       ]
-      },
-      "optional": false
-     },
-     "disputeId": {
-      "fieldType": {
-       "tableName": "disputes",
-       "type": "id"
-      },
-      "optional": false
+      "optional": true
      }
     }
    },
    "functionType": "Mutation",
-   "identifier": "disputes.js:markRead",
+   "identifier": "checkout.js:abandonStale",
    "returns": null,
    "visibility": {
-    "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {}
-   },
-   "functionType": "Query",
-   "identifier": "disputes.js:mine",
-   "returns": null,
-   "visibility": {
-    "kind": "public"
+    "kind": "internal"
    }
   },
   {
@@ -7249,6 +7548,154 @@
    "returns": null,
    "visibility": {
     "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "as": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "consumer"
+        },
+        {
+         "type": "literal",
+         "value": "farmer"
+        }
+       ]
+      },
+      "optional": false
+     },
+     "disputeId": {
+      "fieldType": {
+       "tableName": "disputes",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "disputes.js:markRead",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "disputeId": {
+      "fieldType": {
+       "tableName": "disputes",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "disputes.js:get",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "disputes.js:forOrder",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "disputes.js:forFarmOrder",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Query",
+   "identifier": "disputes.js:mine",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "disputeId": {
+      "fieldType": {
+       "tableName": "disputes",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "disputes.js:replyReminder",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "disputeId": {
+      "fieldType": {
+       "tableName": "disputes",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "disputes.js:replyOverdue",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
    }
   },
   {
@@ -7538,6 +7985,99 @@
    },
    "functionType": "Action",
    "identifier": "notifications/deliver.js:send",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "userId": {
+      "fieldType": {
+       "tableName": "users",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Action",
+   "identifier": "notifications/deliver.js:welcome",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "body": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "href": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "kind": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": true
+     },
+     "side": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "shop"
+        },
+        {
+         "type": "literal",
+         "value": "farm"
+        }
+       ]
+      },
+      "optional": false
+     },
+     "smsTo": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "title": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "userId": {
+      "fieldType": {
+       "tableName": "users",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "notifications/store.js:create",
    "returns": null,
    "visibility": {
     "kind": "internal"
@@ -8435,6 +8975,26 @@
   {
    "args": {
     "type": "object",
+    "value": {
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "orders/system.js:pickupWindowEnded",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
     "value": {}
    },
    "functionType": "Mutation",
@@ -8888,6 +9448,22 @@
       },
       "optional": false
      },
+     "returnTo": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "web"
+        },
+        {
+         "type": "literal",
+         "value": "app"
+        }
+       ]
+      },
+      "optional": true
+     },
      "saveCard": {
       "fieldType": {
        "type": "boolean"
@@ -9337,6 +9913,26 @@
      }
     }
    },
+   "functionType": "Mutation",
+   "identifier": "reviews.js:remind",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
    "functionType": "Query",
    "identifier": "reviews.js:forOrder",
    "returns": null,
@@ -9574,26 +10170,6 @@
    "returns": null,
    "visibility": {
     "kind": "public"
-   }
-  },
-  {
-   "args": {
-    "type": "object",
-    "value": {
-     "orderId": {
-      "fieldType": {
-       "tableName": "orders",
-       "type": "id"
-      },
-      "optional": false
-     }
-    }
-   },
-   "functionType": "Mutation",
-   "identifier": "reviews.js:remind",
-   "returns": null,
-   "visibility": {
-    "kind": "internal"
    }
   },
   {
@@ -9860,6 +10436,102 @@
    "returns": null,
    "visibility": {
     "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "table": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "orders"
+        },
+        {
+         "type": "literal",
+         "value": "checkouts"
+        },
+        {
+         "type": "literal",
+         "value": "orderEvents"
+        },
+        {
+         "type": "literal",
+         "value": "ledgerEntries"
+        },
+        {
+         "type": "literal",
+         "value": "notifications"
+        },
+        {
+         "type": "literal",
+         "value": "paymentAttempts"
+        },
+        {
+         "type": "literal",
+         "value": "unmatchedPaymentEvents"
+        },
+        {
+         "type": "literal",
+         "value": "refunds"
+        },
+        {
+         "type": "literal",
+         "value": "payouts"
+        },
+        {
+         "type": "literal",
+         "value": "payoutItems"
+        }
+       ]
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "maintenance.js:clearTable",
+   "returns": {
+    "type": "object",
+    "value": {
+     "deleted": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": false
+     },
+     "more": {
+      "fieldType": {
+       "type": "boolean"
+      },
+      "optional": false
+     }
+    }
+   },
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "dryRun": {
+      "fieldType": {
+       "type": "boolean"
+      },
+      "optional": true
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "shopStats.js:rebuild",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
    }
   }
  ]
