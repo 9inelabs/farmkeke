@@ -64,6 +64,7 @@ import type * as lib_shop from "../lib/shop.js";
 import type * as lib_uploads from "../lib/uploads.js";
 import type * as lib_validate from "../lib/validate.js";
 import type * as listings from "../listings.js";
+import type * as maintenance from "../maintenance.js";
 import type * as notifications from "../notifications.js";
 import type * as notifications_deliver from "../notifications/deliver.js";
 import type * as notifications_store from "../notifications/store.js";
@@ -147,6 +148,7 @@ declare const fullApi: ApiFromModules<{
   "lib/uploads": typeof lib_uploads;
   "lib/validate": typeof lib_validate;
   listings: typeof listings;
+  maintenance: typeof maintenance;
   notifications: typeof notifications;
   "notifications/deliver": typeof notifications_deliver;
   "notifications/store": typeof notifications_store;
