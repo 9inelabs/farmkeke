@@ -2,21 +2,65 @@
 import { getAuthSessionId, invalidateSessions, modifyAccountCredentials, retrieveAccount } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
-import { action, mutation, type ActionCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { action, mutation, type ActionCtx, type MutationCtx } from "./_generated/server";
 import { PASSWORD_PROVIDER } from "./accountsInternal";
 import { requireAccount } from "./lib/auth";
 import { assertStrongPassword } from "./lib/passwordProvider";
-import { looksLikeEmail } from "./lib/phone";
+import { looksLikeEmail, normalizeNigerianPhone } from "./lib/phone";
 
+const MAX_LEAVING_REASON = 500;
+
+const isFarmer = async (ctx: MutationCtx, userId: Id<"users">) =>
+  (await ctx.db
+    .query("farms")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .first()) !== null;
+
+/**
+ * M-82 / W-45. `phone` (Phase 5) is optional: a Nigerian mobile number, or ""
+ * to remove it. Farmers sign in with their phone, so a farmer's number can't
+ * be used by anyone else, and a farmer can't take a number someone else has.
+ */
 export const updateProfile = mutation({
-  args: { name: v.string() },
+  args: { name: v.string(), phone: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireAccount(ctx);
     const name = args.name.trim();
     if (name.length === 0) throw new ConvexError({ code: "NAME_REQUIRED" });
     if (name.length > 80) throw new ConvexError({ code: "NAME_TOO_LONG" });
-    await ctx.db.patch("users", user._id, { name });
+    if (args.phone === undefined) {
+      await ctx.db.patch("users", user._id, { name });
+      return;
+    }
+    if (args.phone.trim() === "") {
+      // A farmer's phone is how they sign in, so it can't be removed here.
+      if (user.phone !== undefined && (await isFarmer(ctx, user._id))) throw new ConvexError({ code: "PHONE_REQUIRED" });
+      await ctx.db.patch("users", user._id, { name, phone: undefined, phoneVerificationTime: undefined });
+      return;
+    }
+    const phone = normalizeNigerianPhone(args.phone);
+    if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
+    if (phone !== user.phone) {
+      const others = (
+        await ctx.db
+          .query("users")
+          .withIndex("phone", (q) => q.eq("phone", phone))
+          .take(20)
+      ).filter((u) => u._id !== user._id);
+      if (others.length > 0) {
+        const meFarmer = await isFarmer(ctx, user._id);
+        let taken = meFarmer;
+        for (const other of others) if (!taken && (await isFarmer(ctx, other._id))) taken = true;
+        if (taken) throw new ConvexError({ code: "PHONE_TAKEN" });
+      }
+    }
+    await ctx.db.patch("users", user._id, {
+      name,
+      phone,
+      // A new number hasn't been checked by SMS
+      ...(phone !== user.phone ? { phoneVerificationTime: undefined } : {}),
+    });
   },
 });
 
@@ -84,12 +128,18 @@ export const changeEmail = action({
  * account keeps working and is deleted once they end (accountsInternal).
  */
 export const deleteAccount = action({
-  args: { password: v.string() },
+  args: {
+    password: v.string(),
+    // Phase 5 (W-49): "Why are you leaving?" Stored on the deletion record only.
+    reason: v.optional(v.string()),
+  },
   handler: async (ctx, args): Promise<{ status: "deleted" | "waiting_for_orders" }> => {
     const user = await verifyCurrentPassword(ctx, args.password);
     if (user.staffRole !== undefined) throw new ConvexError({ code: "STAFF_ACCOUNT" });
+    const reason = args.reason?.trim().slice(0, MAX_LEAVING_REASON) || undefined;
     const result: "completed" | "waiting_for_orders" = await ctx.runMutation(internal.accountsInternal.deleteUserData, {
       userId: user._id,
+      reason,
     });
     return { status: result === "completed" ? "deleted" : "waiting_for_orders" };
   },

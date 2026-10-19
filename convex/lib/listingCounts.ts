@@ -5,6 +5,7 @@
 // stay right without counting rows in queries.
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { noteStockChange } from "./restock";
 
 type Scope = "farm" | "category" | "subtype";
 type ListingFields = Pick<Doc<"listings">, "farmId" | "status" | "categoryId" | "subtype" | "deletedAt">;
@@ -71,7 +72,12 @@ export async function patchListing(
   fields: Partial<Omit<Doc<"listings">, "_id" | "_creationTime">>,
 ) {
   await ctx.db.patch("listings", listing._id, fields);
-  await syncListingCounts(ctx, listing, { ...listing, ...fields });
+  const after = { ...listing, ...fields };
+  await syncListingCounts(ctx, listing, after);
+  // W-47: sold out / back in stock, and the "Notify me" emails
+  if (fields.units !== undefined || fields.status !== undefined || "deletedAt" in fields) {
+    await noteStockChange(ctx, listing, listing, after);
+  }
 }
 
 /** ctx.db.insert for listings, keeping the shop counters right. */

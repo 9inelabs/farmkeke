@@ -63,7 +63,17 @@ export const get = query({
       lastAttempt:
         last === null
           ? null
-          : { status: last.status, method: last.method ?? null, reason: last.failureReason ?? null, reference: last.reference },
+          : {
+              status: last.status,
+              method: last.method ?? null,
+              reason: last.failureReason ?? null,
+              reference: last.reference,
+              // Phase 5: W-27 "Card ending 4081", W-29 "Transfer started 10:41"
+              channel: last.channel ?? null,
+              cardBrand: last.cardBrand ?? null,
+              cardLast4: last.cardLast4 ?? null,
+              startedAt: last.startedAt ?? last._creationTime,
+            },
       orders: await Promise.all(orders.map((o) => orderRow(ctx, o))),
       payments: { live: paymentsLive(), testStep: testStepOn() },
     };
@@ -86,10 +96,12 @@ export const beginAttempt = internalMutation({
     if (checkout.status !== "awaiting_payment") throw new ConvexError({ code: "CHECKOUT_EXPIRED" });
     await hitLimit(ctx, `pay:${user._id}`, START_LIMIT.max, START_LIMIT.windowMs);
     let authorizationCode: string | undefined;
+    let savedCard: { brand: string; last4: string } | undefined;
     if (args.method === "saved_card") {
       const card = args.savedCardId ? await ctx.db.get("savedCards", args.savedCardId) : null;
       if (card === null || card.userId !== user._id) throw new ConvexError({ code: "CARD_NOT_FOUND" });
       authorizationCode = card.authorizationCode;
+      savedCard = { brand: card.brand, last4: card.last4 };
     }
     const previous = await ctx.db
       .query("paymentAttempts")
@@ -110,6 +122,10 @@ export const beginAttempt = internalMutation({
       // Guests can't keep cards (no account to keep them on)
       saveCard: args.saveCard === true && !user.isAnonymous ? true : undefined,
       savedCardId: args.savedCardId,
+      startedAt: Date.now(),
+      // A saved card is known before Paystack answers (W-27 "Card ending 4081")
+      cardBrand: savedCard?.brand,
+      cardLast4: savedCard?.last4,
     });
     return { reference, amountKobo: checkout.totalKobo, email, authorizationCode, checkoutReference: checkout.reference };
   },
@@ -267,6 +283,9 @@ export const settleCharge = internalMutation({
     paidAt: v.optional(v.number()),
     reason: v.optional(v.string()),
     card: v.optional(cardArgs),
+    // Phase 5: the card's brand and last 4 digits, also for failed payments
+    cardBrand: v.optional(v.string()),
+    cardLast4: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ outcome: string; checkoutStatus: string | null }> => {
     const attempt = await ctx.db
@@ -300,6 +319,7 @@ export const settleCharge = internalMutation({
           status: args.status === "abandoned" ? "abandoned" : "failed",
           failureReason: args.reason ?? args.status,
           channel: args.channel,
+          ...(args.cardLast4 ? { cardLast4: args.cardLast4, cardBrand: args.cardBrand } : {}),
         });
         return { outcome: "failed", checkoutStatus };
       }
@@ -312,8 +332,8 @@ export const settleCharge = internalMutation({
       paidAmountKobo: args.amountKobo,
       paidAt,
       channel: args.channel,
-      cardBrand: card?.brand,
-      cardLast4: card?.last4,
+      cardBrand: card?.brand ?? args.cardBrand ?? attempt.cardBrand,
+      cardLast4: card?.last4 ?? args.cardLast4 ?? attempt.cardLast4,
     };
     const amountOk = args.amountKobo === attempt.amountKobo && (args.currency ?? "NGN") === "NGN";
     if (checkout === null || checkout.status !== "awaiting_payment" || !amountOk) {
@@ -374,6 +394,7 @@ export const markPaidTest = mutation({
       currency: "NGN",
       paidAmountKobo: checkout.totalKobo,
       paidAt,
+      startedAt: paidAt,
     });
     await markCheckoutPaid(ctx, checkout._id, { provider: "simulated", reference, paidAt });
     return { checkoutId: checkout._id, reference };

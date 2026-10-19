@@ -10,7 +10,9 @@ import {
   emailChangedConfirmEmail,
   emailChangedNoticeEmail,
   guestOrdersAddedEmail,
+  guestOrdersConfirmEmail,
   lagosTime,
+  links,
   passwordChangedEmail,
   welcomeEmail,
   type Email,
@@ -176,6 +178,8 @@ export const accountEmail = internalAction({
       v.object({ kind: v.literal("deletion_waiting"), to: v.string(), name: v.optional(v.string()), orders: v.number() }),
       v.object({ kind: v.literal("deletion_done"), to: v.string(), name: v.optional(v.string()) }),
       v.object({ kind: v.literal("guest_orders_added"), userId: v.id("users"), numbers: v.array(v.string()), total: v.number() }),
+      // Phase 5 (W-42 / W-44): the one-time link that adds guest orders found by email
+      v.object({ kind: v.literal("guest_orders_confirm"), userId: v.id("users"), token: v.string(), total: v.number() }),
     ),
   },
   handler: async (ctx, args) => {
@@ -203,6 +207,14 @@ export const accountEmail = internalAction({
       case "guest_orders_added":
         if (user.email && e.total > 0) {
           await emailQuietly(guestOrdersAddedEmail({ to: user.email, name: user.name, numbers: e.numbers, total: e.total }));
+        }
+        return null;
+      case "guest_orders_confirm":
+        // Only ever to the account's own address
+        if (user.email && e.total > 0) {
+          await emailQuietly(
+            guestOrdersConfirmEmail({ to: user.email, name: user.name, total: e.total, link: links.linkGuestOrders(e.token) }),
+          );
         }
         return null;
     }

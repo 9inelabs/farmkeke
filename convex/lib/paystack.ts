@@ -110,6 +110,9 @@ export function chargeArgs(tx: PaystackTransaction) {
     paidAt: Number.isNaN(paidAt) ? undefined : paidAt,
     reason: tx.status === "success" ? undefined : tx.gateway_response,
     card,
+    // W-27 "Card ending 4081", even when the payment failed
+    cardBrand: tx.channel === "card" && a?.last4 ? (a.card_type ?? "card").trim() : undefined,
+    cardLast4: tx.channel === "card" ? (a?.last4 ?? undefined) : undefined,
   };
 }
 

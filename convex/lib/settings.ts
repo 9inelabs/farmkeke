@@ -36,6 +36,27 @@ export async function getRules(ctx: QueryCtx): Promise<Rules> {
   };
 }
 
+/**
+ * W-23 "Full": how many delivery orders one area can take in one time slot.
+ * A per-area, per-slot row wins over a per-area row, which wins over the
+ * default. null = no limit (the default until staff set one).
+ */
+export async function slotCapacityReader(ctx: QueryCtx) {
+  const row = await ctx.db
+    .query("platformSettings")
+    .withIndex("by_key", (q) => q.eq("key", "platform"))
+    .unique();
+  const rows = row?.slotCapacities ?? [];
+  const fallback = typeof row?.slotCapacity === "number" ? row.slotCapacity : null;
+  return (serviceAreaId: string, from: string): number | null => {
+    const exact = rows.find((r) => r.serviceAreaId === serviceAreaId && r.from === from);
+    if (exact) return exact.capacity;
+    const area = rows.find((r) => r.serviceAreaId === serviceAreaId && r.from === undefined);
+    if (area) return area.capacity;
+    return fallback;
+  };
+}
+
 /** Farmkeke's commission on a product total, rounded to the nearest kobo. */
 export const commissionOn = (itemsTotalKobo: number, bps: number) => Math.round((itemsTotalKobo * bps) / 10_000);
 

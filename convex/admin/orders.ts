@@ -127,6 +127,8 @@ export const get = query({
       contact: order.contact,
       street: order.address?.street ?? null,
       landmark: order.address?.landmark ?? null,
+      // Phase 5 (W-23)
+      riderNote: order.address?.note ?? null,
       consumer: {
         userId: order.userId,
         name: consumer?.name ?? order.contact.name,

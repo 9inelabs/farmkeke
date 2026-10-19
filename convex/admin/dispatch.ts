@@ -43,7 +43,17 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
     farm: farm === null ? null : { _id: farm._id, name: farm.name, phone: farm.phone, collectionAddress: farm.collectionAddress, lga: farm.lga },
     dropOff:
       o.fulfilment === "delivery"
-        ? { kind: "address" as const, area: o.address?.areaName ?? "", lga: o.address?.lga ?? "", street: o.address?.street ?? "", landmark: o.address?.landmark ?? "" }
+        ? {
+            kind: "address" as const,
+            area: o.address?.areaName ?? "",
+            lga: o.address?.lga ?? "",
+            street: o.address?.street ?? "",
+            landmark: o.address?.landmark ?? "",
+            // Phase 5 (W-23): the shopper's note for the rider, and the pin
+            note: o.address?.note ?? null,
+            latitude: o.address?.latitude ?? null,
+            longitude: o.address?.longitude ?? null,
+          }
         : { kind: "pickup_point" as const, name: point?.name ?? "", address: point?.address ?? "" },
     consumer: { name: o.contact.name, phone: o.contact.phone },
     window: o.window ?? null,
