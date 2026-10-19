@@ -203,6 +203,15 @@ export function usuallyAcceptsText(responseTimeHours: number | null | undefined)
   return typeof responseTimeHours === "number" ? `Usually accepts orders within ${hoursText(responseTimeHours)}.` : null;
 }
 
+/**
+ * W-20 cart farm line: "Usually accepts within 2 hours" from the median, or
+ * "Accepts within 24 hours" (the rule) when the farm has no history yet.
+ */
+export function cartAcceptsText(responseTimeHours: number | null | undefined, acceptsWithinHours: number | undefined) {
+  if (typeof responseTimeHours === "number") return `Usually accepts within ${hoursText(responseTimeHours)}`;
+  return typeof acceptsWithinHours === "number" ? `Accepts within ${hoursText(acceptsWithinHours)}` : "";
+}
+
 /** W-06 "Ships within": "24 hours of your order" */
 export const shipsWithinText = (acceptsWithinHours: number | undefined) => `${hoursText(acceptsWithinHours ?? 24)} of your order`;
 

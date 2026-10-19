@@ -1,6 +1,6 @@
 # Website build status
 
-Last updated: 18 Oct 2026
+Last updated: 19 Oct 2026
 
 Read `web/BUILD-GUIDE.md` first. It covers the design sources, shared components, the rendering rules, accessibility and motion. This file says what's done, what's left, and who owns what while two sessions work at once.
 
@@ -112,6 +112,26 @@ Build in this order. Commit and push after each group.
 - **D — done** — W-S2 `app/error.tsx` and `app/global-error.tsx` (shared `components/system/ErrorView.tsx`); W-S3 `MaintenanceGate` now covers the page while it redirects, so nothing flashes, and still waits while the config loads; W-S4 `loading.tsx` in `(shop)`, `(account)` and `(checkout)`, using `components/system/skeletons/` (Shop, Account, Checkout). The skeletons use the shared `Skeleton` pulse, not the design's shimmer, because the guide allows no custom CSS animations. `tsc` and `eslint src` pass. `next build --debug-prerender`, which carries on after errors, prerendered all 59 routes. Only `/shop` (local session) failed, on `getaddrinfo ENOTFOUND incredible-wolf-877.eu-west-1.convex.cloud`, because this cloud environment's network policy blocks that host. Run `npx next build` again where Convex is reachable.
 - **After D** — merged `main` (phase 3c, phase 3d and the refreshed `api.ts`) into `web-remaining-screens` with no conflicts. Now that the live backend accepts it, the pay page passes `returnTo: "web"` to `payments/checkout.start`. `tsc`, `eslint src` and `next build --debug-prerender` gave the same results as above.
 - **Full build** — once Convex was allowed in this environment's network settings, `NODE_USE_ENV_PROXY=1 npx next build` passed: all 59 routes, `/shop` included. The cloud sandbox needs `NODE_USE_ENV_PROXY=1` so Node's fetch uses its proxy; a normal machine just runs `npx next build`. Checked with live data at 390px and 1440px: the cart (a planted price change showed as "Items changed"), delivery or pickup, address and time, pickup point and review. That check fixed three things: "1 item changed since you added it" (it said "them"), the pickup count now names the LGA, and dates show "Mon 26 Oct" in every browser (no comma). No orders were placed, so payment, confirmation, account and order pages still need checking with a test account.
+- **Phase 5 (local) — backend gaps closed in Phase 5** (not deployed; the website parts that call new arguments or functions need the deploy). Report: `docs/reports/10-phase5-gaps.md`.
+  - W-20 cart "Usually accepts within N hours": `checkout.quote` farms send `responseTimeHours` and `acceptsWithinHours` — closed in Phase 5.
+  - W-58 "Usually replies within an hour": `chat.thread` sends `replyNote` and `replyTimeMinutes` from the farm's recent replies — closed in Phase 5.
+  - W-23 "Note for the rider": `checkout.place` `address.note` (200 characters), shown to the farm (`orders/farmer.get`) and dispatch — closed in Phase 5.
+  - W-23 "Full" slots: `checkout.deliveryWindows` takes `serviceAreaId` and returns `allDays` / `days[].allSlots` with `reason: "full" | "too_soon"`; capacity is `admin/fees.setSlotCapacity` — closed in Phase 5.
+  - W-24 "Ready from …" per pickup point (`checkout.pickupPoints` `readyDay` with `farmIds` and `now`) and a real OpenStreetMap map with A, B, C pins — closed in Phase 5.
+  - W-27 "Card ending 4081" and W-29 "Transfer started 10:41": `payments/checkout.get` `lastAttempt.cardLast4`, `cardBrand`, `startedAt` — closed in Phase 5.
+  - W-30 delivery address and pickup point from `orders/consumer.placedSummary` — closed in Phase 5.
+  - W-42 password reset link opens the website (`returnTo: "web"`); the app's bridge page falls back to the website after 1.5 seconds — closed in Phase 5.
+  - W-41 / W-42 / W-44 / W-51c guest orders found by email (never by phone): `linkableGuestOrders`, `linkGuestOrdersByEmail`, `confirmGuestOrdersLink` — closed in Phase 5.
+  - W-45 change phone number (`account.updateProfile` `phone`) — closed in Phase 5.
+  - W-46 / W-46b directions and map pin stored on the address (OpenStreetMap pin); `addressExtras.ts` removed after a one-time move of this browser's values — closed in Phase 5. W-23 uses the same map.
+  - W-47 "Back in stock" tag and per-item "Notify me" (`favorites.list` `backInStock` / `notify`, `favorites.setNotify`, `favorites.markSeen`, back-in-stock email) — closed in Phase 5.
+  - W-49 deletion result (`{ status }`) and the "Why are you leaving?" reason — closed in Phase 5.
+  - W-53 reasons "Less than I ordered" and "Something else", `itemQuantities`, and `disputes.generateUploadUrl`; no note prefixes — closed in Phase 5.
+  - W-54 "Farm's response: Agrees to refund" (`disputes.respond` `stance`) and "1 of 2 baskets" — closed in Phase 5.
+  - W-57 per-item ratings (`reviews.submit` `itemRatings`) — closed in Phase 5.
+  - W-43 "Buy again" (`orders/consumer.recentItems`) — closed in Phase 5.
+  - W-03 / W-05 several types at once (`subtypes`; `?type=a,b`) — closed in Phase 5.
+  - W-06 "Ask a question": `/contact?farm=&product=` shows "About: {product} from {farm}" and the ticket stores `listingId` / `farmId` — closed in Phase 5.
 
 ## Shared-file changes
 
@@ -126,29 +146,15 @@ Build in this order. Commit and push after each group.
 - No shared files changed in group C.
 - Group D: `components/system/MaintenanceGate.tsx` (the stub assigned to this session) keeps its redirect and adds the full-screen cover; `components/system/skeletons/` is new.
 - `components/layout/SimpleHeaders.tsx`: exported `NARROW_WRAP` (1160px, as in the checkout and order designs) and an optional `wrapClassName` on `CheckoutHeader` and `MinimalHeader`. The default is still `wrap`.
+- Phase 5 (local): new `components/maps/PinMap.tsx` and `LetteredPointsMap.tsx` (OpenStreetMap, client-only), `components/system/QuietBoundary.tsx`, `components/account/GuestOrdersByEmail.tsx`; `components/shop/bits.tsx` gains `cartAcceptsText`; `components/account/addressExtras.ts` removed; `lib/auth.ts` comment only.
 
 ## Backend gaps found
 
 (List anything a screen needs that `convex/` doesn't provide. The local session builds it.)
 
-- **Pre-order questions (W-06 "Ask a question").** Chat only exists inside an order (`chat:*` needs an orderId), so a shopper can't ask a farm about a product before buying. The button links to `/contact?farm=<farmId>&product=<listingId>` for now. Needed: a pre-order question thread (shopper ↔ farm, tied to a listing), with the farm notified, plus the contact form reading those query params to prefill the topic.
-- **W-20 cart, farm line "Usually accepts within 2 hours":** `checkout.quote` farms have `farmArea` but no response time. The page shows it when a farm has `acceptsWithinHours` (number).
-- **W-23 "Note for the rider":** `checkout.place` has no note field. The note is kept in the browser's checkout draft only. Suggest `address.note` (string, up to 200).
-- **W-23 slots marked "Full":** `checkout.deliveryWindows` returns only open slots, so the page can't tell "full" from "too soon". Closed slots say "Not available". Suggest returning every slot with `{ from, to, open, reason: "full" | "too_soon" }`.
-- **W-24 "Ready from Sun 18 Oct" per pickup point:** there's no per-point ready date. The page uses `deliveryWindows.readyDay` (the first day every farm can make).
-- **W-27 "Card ending 4081" and W-29 "Transfer started 10:41":** `payments/checkout.get` `lastAttempt` has no card last 4 digits or start time. The page reads `lastAttempt.cardLast4` and `lastAttempt.startedAt` when present. Until then it shows "Card", "Bank transfer" or "USSD", and no time.
-- **W-30 "A Farmkeke rider delivers to 12 Wetheral Road":** `orders/consumer.placedSummary` has no address or pickup point. The page reads `address.street` and `pickupPoint.name` when present, and falls back to what this browser entered at checkout.
-- **W-42a to W-42c, password reset link:** the email links to `CONVEX_SITE_URL/reset-password`, which only opens the app (`farmkeke://`). Someone who asked from the website needs the link to open `https://<website>/reset-password?email=…&code=…` (the W-42c page is built for that). Suggest a `returnTo: "web"` on the `reset` flow.
-- **W-41 / W-42, guest orders found "with this email or phone":** only orders from this browser can be claimed, using the `startGuestClaim` token. The page starts a claim before sign-up or sign-in when the guest has orders here. Orders placed elsewhere with the same email or phone aren't found. W-42 shows the guest's last checkout email and phone (from `checkout.contactDefaults`).
-- **W-45, change phone number:** `account.updateProfile` takes only `name`. The phone field is read-only with "To change your phone number, contact support."
-- **W-46 / W-46b, "Directions for the rider" and "Set pin":** `addresses.create` and `update` take neither. They're kept on this device per address id (`components/account/addressExtras.ts`). Checkout W-23 uses them to prefill the pin, which `checkout.place` does accept.
-- **W-47, "Back in stock" tag:** `favorites.list` has no back-in-stock flag. The page reads `backInStock` when present. "Notify me" turns on the account's back-in-stock emails (`notifications.setPreference`), since there's no per-item subscription.
-- **W-49, deletion result and reason:** `account.deleteAccount` returns nothing, so the page can't tell "deleted now" from "waiting for orders". It warns beforehand using `orders.consumer.list`. The optional "Why are you leaving?" reason isn't stored anywhere.
-- **W-44 / W-43 order rows, a thumbnail per item:** `orderRow` has only the first item's photo. Rows show it plus a "+N" tile. "Buy again" on W-43 reads up to three recent completed orders with `orders.consumer.get`; a small `orders.consumer.recentItems` query would be cheaper.
-- **W-53, "Less than I ordered" and "Something else":** `disputes.open` takes only `missing | damaged | wrong_item | not_received`. These two choices are sent as `missing` and `damaged`, with "[Less than I ordered]" or "[Something else]" at the start of the note. Suggest adding `short` and `other`.
-- **W-53, how many units are affected ("1 of 2 baskets"):** `disputes.open` takes item indexes only, and `amountKobo` counts the whole line. The count is added to the note, e.g. "(Fresh tomatoes: 1 of 2 baskets)". Suggest `itemQuantities: number[]` and computing the amount from it.
-- **W-53 / W-54, photo uploads:** there's no `disputes.generateUploadUrl`, so the report uses `chat.generateUploadUrl`. `validateImageUpload` accepts any image either way.
-- **W-54, "Farm's response: Agrees to refund":** the farm's reply is free text, with no stance. The summary shows "Replied", "Waiting for a reply" or "No reply in time", and the reply itself is in the thread.
-- **W-57, "Rate each item":** `reviews.submit` has no per-item ratings. The stars are on the page but aren't sent. Suggest `itemRatings: Array<{ index: number; rating: number }>`.
-- **W-58, "Usually replies within an hour":** `chat.thread` has no reply-time note. The page shows `replyNote` when present.
-- **W-51c, "Use +234 803 *** 4567 and this order will be added":** as in W-41, accounts don't pick up guest orders by phone number. Only the `startGuestClaim` token from the ordering browser moves them.
+Still open after Phase 5:
+
+- **W-44 / W-43 order rows, a thumbnail per item:** `orderRow` has only the first item's photo. Rows show it plus a "+N" tile.
+- **W-06 "Ask a question" as a farm conversation:** the question now goes to Farmkeke support as a ticket linked to the product and farm (closed in Phase 5, below). A direct shopper-to-farm thread before ordering is still not built.
+
+Every other gap listed here before was closed in Phase 5; see the Progress log.

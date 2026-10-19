@@ -11,7 +11,7 @@ export type CheckoutDraft = {
   address: {
     street: string;
     landmark: string;
-    /** Not sent yet: checkout.place has no rider note (see BUILD-STATUS backend gaps). */
+    /** "Note for the rider", sent as checkout.place address.note (Phase 5). */
     note: string;
     latitude?: number;
     longitude?: number;

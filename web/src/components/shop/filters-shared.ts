@@ -11,8 +11,8 @@ export type ListFilters = {
   maxPriceKobo?: number;
   farmLga?: string;
   farmState?: string;
-  /** W-03 "Type" */
-  subtype?: string;
+  /** W-03 "Type": one or more subtype slugs (?type=a,b) */
+  subtypes?: string[];
   /** "Harvested": 0 today, 3 last 3 days, 7 this week */
   harvestedWithinDays?: number;
   /** "Top-rated farms only (4.5+)" */
@@ -43,7 +43,7 @@ export function parseFilters(sp: RawParams, pageSize: number): ListFilters {
   const show = Number(one(sp.show));
   const fresh = one(sp.fresh) as keyof typeof HARVESTED | undefined;
   const dist = one(sp.dist);
-  const type = one(sp.type)?.trim();
+  const types = (one(sp.type) ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 20);
   const cat = one(sp.cat)?.trim();
   return {
     sort: sort && SORTS.includes(sort) ? sort : undefined,
@@ -53,7 +53,7 @@ export function parseFilters(sp: RawParams, pageSize: number): ListFilters {
     maxPriceKobo: naira(one(sp.max)),
     farmLga: farmLga || undefined,
     farmState: farmState || undefined,
-    subtype: type || undefined,
+    subtypes: types.length ? types : undefined,
     harvestedWithinDays: fresh && fresh in HARVESTED ? HARVESTED[fresh] : undefined,
     minRating: one(sp.rated) === "1" ? TOP_RATED : undefined,
     maxDistanceKm: dist && (DISTANCES as readonly string[]).includes(dist) ? Number(dist) : undefined,
@@ -76,14 +76,16 @@ export const clean = <T extends object>(o: T): T =>
 
 /** storefront.categoryListings args (without lat/lng). */
 export function categoryArgs(slug: string, f: ListFilters, today: string) {
-  const { categorySlug: _c, ...rest } = f;
+  const { categorySlug: _c, subtypes, ...rest } = f;
   void _c;
-  return clean({ slug, ...rest, today });
+  // One type goes as `subtype` (every backend takes it); several as `subtypes`
+  const types = subtypes && subtypes.length > 1 ? { subtypes } : { subtype: subtypes?.[0] };
+  return clean({ slug, ...rest, ...types, today });
 }
 
 /** storefront.search args (without lat/lng). */
 export function searchArgs(text: string, f: ListFilters, today: string) {
-  const { subtype: _s, ...rest } = f;
+  const { subtypes: _s, ...rest } = f;
   void _s;
   return clean({ text, ...rest, today });
 }

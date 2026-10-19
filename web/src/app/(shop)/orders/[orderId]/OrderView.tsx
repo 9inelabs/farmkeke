@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { capitalise, Thumb } from "@/components/cart/parts";
 import { ConfirmReceiptModal } from "@/components/orders/ConfirmReceipt";
-import { dayLabel, dayTime, hoursSummary, maskPhone, shortName, weekdayTime, windowLabel } from "@/components/orders/format";
+import { dayLabel, dayTime, hoursSummary, shortName, weekdayTime, windowLabel } from "@/components/orders/format";
 import { PickupQr } from "@/components/orders/PickupQr";
 import { relDay } from "@/components/orders/rows";
 import { useOrder } from "@/components/orders/useOrder";
@@ -40,10 +40,10 @@ export function OrderView({ orderId }: { orderId: string }) {
   const access = useOrder(orderId);
   if (access.state === "loading") return <OrderSkeleton />;
   if (access.state === "missing") return <Missing />;
-  const { order, lookup } = access;
+  const { order } = access;
   return (
     <Reveal>
-      {order.viewOnly ? <ViewOnly order={order} phone={lookup?.phone ?? null} /> : <Tracking order={order} />}
+      {order.viewOnly ? <ViewOnly order={order} /> : <Tracking order={order} />}
     </Reveal>
   );
 }
@@ -550,7 +550,7 @@ function PickupPointCard({ order: o }: { order: OrderDetail }) {
 // ---------------------------------------------------------------------------
 // W-51c View only
 
-function ViewOnly({ order: o, phone }: { order: OrderDetail; phone: string | null }) {
+function ViewOnly({ order: o }: { order: OrderDetail }) {
   const r = RANK[o.status] ?? 0;
   const badge = statusBadge({ stage: stageOf(o.status), fulfilment: o.fulfilment });
   const area = o.address?.areaName ?? o.address?.lga ?? o.pickupPoint?.name;
@@ -595,8 +595,10 @@ function ViewOnly({ order: o, phone }: { order: OrderDetail; phone: string | nul
         <div className="flex-1">
           <div className="text-[15px] font-bold text-[#5E3E08]">You&apos;re viewing this order</div>
           <div className="mt-0.5 text-[13px] leading-[19px] text-[#7A5A1E]">
-            To confirm delivery or report a problem, open it on the phone or browser you ordered on, or create an account with
-            the same phone number.
+            {/* Orders are added to an account by the email they were placed with, never by phone number alone */}
+            {o.linkEmailHint
+              ? "To confirm delivery or report a problem, open it on the phone or browser you ordered on, or create an account with the same email."
+              : "To confirm delivery or report a problem, open it on the phone or browser you ordered on."}
           </div>
         </div>
       </div>
@@ -649,18 +651,19 @@ function ViewOnly({ order: o, phone }: { order: OrderDetail; phone: string | nul
           </span>
         </div>
       </section>
-      <section className="card flex flex-wrap items-center gap-4 p-[22px] m:px-4">
-        <div className="min-w-[240px] flex-1 m:min-w-0">
-          <h2 className="h3">Create an account to manage this order</h2>
-          <p className="mt-1 text-[13px] leading-[19px] text-muted-2">
-            Use {phone ? maskPhone(phone) : "the same phone number"} and this order will be added, so you can confirm it
-            here.
-          </p>
-        </div>
-        <ButtonLink href={routes.signUp(routes.order(o._id))} variant="lime">
-          Create account
-        </ButtonLink>
-      </section>
+      {o.linkEmailHint ? (
+        <section className="card flex flex-wrap items-center gap-4 p-[22px] m:px-4">
+          <div className="min-w-[240px] flex-1 m:min-w-0">
+            <h2 className="h3">Create an account to manage this order</h2>
+            <p className="mt-1 text-[13px] leading-[19px] text-muted-2">
+              Use {o.linkEmailHint} and this order will be added, so you can confirm it here.
+            </p>
+          </div>
+          <ButtonLink href={routes.signUp(routes.order(o._id))} variant="lime">
+            Create account
+          </ButtonLink>
+        </section>
+      ) : null}
       <p className="m-0 text-center text-[13px] text-muted-2">
         Something wrong with this order?{" "}
         <Link href={routes.contact} className="font-semibold">

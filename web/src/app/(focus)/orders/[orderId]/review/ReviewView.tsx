@@ -1,8 +1,8 @@
 "use client";
 
 // W-57 Rate and review (reviews.forOrder / reviews.submit): stars, tags and an
-// optional comment. Per-item stars are shown as in the design but aren't
-// saved yet (reviews.submit has no field for them; see BUILD-STATUS).
+// optional comment, plus "Rate each item" (sent as itemRatings, only for the
+// items the shopper rated).
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronLeft, Star } from "lucide-react";
 import Link from "next/link";
@@ -136,7 +136,14 @@ function Form({ data }: { data: NonNullable<ReviewForOrder> }) {
     setBusy(true);
     setError(null);
     try {
-      await submit({ orderId: data.orderId as Id<"orders">, rating, tags, comment: comment.trim() || undefined });
+      const itemRatings = itemStars.flatMap((stars, index) => (stars > 0 ? [{ index, rating: stars }] : []));
+      await submit({
+        orderId: data.orderId as Id<"orders">,
+        rating,
+        tags,
+        comment: comment.trim() || undefined,
+        ...(itemRatings.length > 0 ? { itemRatings } : {}),
+      });
       router.push(done);
     } catch (e) {
       setBusy(false);

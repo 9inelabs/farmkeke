@@ -159,6 +159,8 @@ export const categoryListings = query({
     // Phase 3c
     subtype: v.optional(v.string()),
     today: v.optional(v.string()),
+    // Phase 5
+    subtypes: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const category = await ctx.db
@@ -169,21 +171,30 @@ export const categoryListings = query({
     const from = shopperPoint(args.lat, args.lng);
     checkFilters(args, args.today, from);
     const shop = shopReader(ctx, { today: args.today, from });
-    const subtype = args.subtype;
-    const candidates =
-      subtype === undefined
-        ? await ctx.db
-            .query("listings")
-            .withIndex("by_categoryId_and_status", (q) => q.eq("categoryId", category._id).eq("status", "live"))
-            .order("desc")
-            .take(GRID_SCAN)
-        : await ctx.db
+    // Phase 5: several types at once (W-03 / W-05 Type checkboxes); `subtype` still works
+    const wanted = [...new Set([...(args.subtypes ?? []), ...(args.subtype !== undefined ? [args.subtype] : [])])].slice(0, 20);
+    const candidates: Doc<"listings">[] = [];
+    if (wanted.length === 0) {
+      candidates.push(
+        ...(await ctx.db
+          .query("listings")
+          .withIndex("by_categoryId_and_status", (q) => q.eq("categoryId", category._id).eq("status", "live"))
+          .order("desc")
+          .take(GRID_SCAN)),
+      );
+    } else {
+      for (const subtype of wanted) {
+        candidates.push(
+          ...(await ctx.db
             .query("listings")
             .withIndex("by_categoryId_and_status_and_subtype", (q) =>
               q.eq("categoryId", category._id).eq("status", "live").eq("subtype", subtype),
             )
             .order("desc")
-            .take(GRID_SCAN);
+            .take(GRID_SCAN)),
+        );
+      }
+    }
     const sort = args.sort ?? "newest";
     const page = await listPage(shop, candidates, { ...args, sort }, args.today);
     const subtypes = await Promise.all(
@@ -218,6 +229,8 @@ export const search = query({
     // Phase 3c
     categorySlug: v.optional(v.string()),
     today: v.optional(v.string()),
+    // Phase 5 (W-04 / W-05 Type checkboxes): only these subtypes
+    subtypes: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const text = args.text.trim().slice(0, 100);
@@ -261,7 +274,9 @@ export const search = query({
       fromFarms.push(...live.filter((l) => categoryId === undefined || l.categoryId === categoryId));
     }
 
-    const page = await listPage(shop, [...byName, ...fromFarms], args, args.today);
+    const types = args.subtypes && args.subtypes.length > 0 ? new Set(args.subtypes) : null;
+    const pool = [...byName, ...fromFarms].filter((l) => types === null || (l.subtype !== undefined && types.has(l.subtype)));
+    const page = await listPage(shop, pool, args, args.today);
 
     // Farm rows: farms matching by name, then farms selling what matched
     const matches = new Map<Id<"farms">, number>();

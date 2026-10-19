@@ -119,8 +119,9 @@ function Placed({ summary }: { summary: PlacedSummary }) {
   const orders = summary.orders;
   const delivery = summary.fulfilment === "delivery";
   const win = orders.find((o) => o.window)?.window ?? null;
-  const street = summary.address?.street ?? mine?.street;
-  const pointName = summary.pickupPoint?.name ?? mine?.pointName;
+  // From the server (Phase 5); this browser's checkout only if the backend predates it
+  const street = summary.address !== undefined ? summary.address?.street : mine?.street;
+  const pointName = summary.pickupPoint !== undefined ? summary.pickupPoint?.name : mine?.pointName;
   const guest = summary.isGuest && viewerStatus !== "signed-in";
   const trackHref =
     orders.length === 1 ? routes.order(orders[0]!._id) : viewerStatus === "signed-in" ? routes.myOrders : routes.order(orders[0]!._id);

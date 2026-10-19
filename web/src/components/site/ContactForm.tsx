@@ -2,9 +2,12 @@
 
 // W-86 "Send us a message". Opens a real support ticket:
 // useEnsureIdentity() (guest identity if needed), then support.open.
-import { useMutation } from "convex/react";
+// From W-06 "Ask a question" (/contact?farm=&product=) it says what the
+// question is about and links the ticket to the product and farm for staff.
+import { useMutation, useQuery } from "convex/react";
 import { CircleCheck, Send } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextArea, TextField } from "@/components/ui/Field";
@@ -26,8 +29,26 @@ const TOPICS = [
 
 type Errors = Partial<Record<"name" | "phone" | "email" | "message" | "form", string>>;
 
-export function ContactForm() {
+/** Reads ?farm= and ?product= (render inside <Suspense>). */
+export function ContactFormFromLink() {
+  const params = useSearchParams();
+  return <ContactForm listingId={params.get("product") ?? undefined} farmId={params.get("farm") ?? undefined} />;
+}
+
+/** "About: Fresh tomatoes from Okafor Farms" for the product the question is about. */
+function useAbout(listingId: string | undefined) {
+  const p = useQuery(api.storefront.product, listingId ? { id: listingId } : "skip") as
+    | { name?: string; farm?: { name?: string } | null; farmName?: string }
+    | null
+    | undefined;
+  if (!p?.name) return null;
+  const farm = p.farm?.name ?? p.farmName;
+  return farm ? `${p.name} from ${farm}` : p.name;
+}
+
+export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?: string } = {}) {
   const ensureIdentity = useEnsureIdentity();
+  const about = useAbout(listingId);
   const open = useMutation(api.support.open);
   const [values, setValues] = useState({ name: "", phone: "", email: "", topic: "order", orderNumber: "", message: "" });
   const [errors, setErrors] = useState<Errors>({});
@@ -68,6 +89,7 @@ export function ContactForm() {
       `Phone: ${values.phone.trim() || "not given"}`,
       `Email: ${values.email.trim() || "not given"}`,
       `Topic: ${topic}`,
+      ...(about ? [`About: ${about}`] : []),
       `Order number: ${values.orderNumber.trim() || "not given"}`,
       "",
       values.message.trim(),
@@ -75,7 +97,13 @@ export function ContactForm() {
     setSending(true);
     try {
       await ensureIdentity();
-      await open({ side: "shop", body, photoIds: [] });
+      await open({
+        side: "shop",
+        body,
+        photoIds: [],
+        ...(listingId ? { listingId } : {}),
+        ...(farmId ? { farmId } : {}),
+      });
       setSentTo(values.email.trim() || values.phone.trim());
     } catch (err) {
       const code = errorCode(err);
@@ -130,6 +158,11 @@ export function ContactForm() {
       className="scroll-mt-6 rounded-[20px] bg-surface p-9 shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-7"
     >
       <h2 className={`${h3b} text-[22px] leading-[30px]`}>Send us a message</h2>
+      {about ? (
+        <p className="m-0 mt-2 text-sm text-muted">
+          About: <span className="font-semibold text-ink">{about}</span>
+        </p>
+      ) : null}
       <p className="m-0 mt-1 text-sm leading-6 text-muted">We&apos;ll reply by email, and by SMS if it&apos;s about an order.</p>
       <div className="mt-6 grid grid-cols-2 gap-4 m:grid-cols-1">
         <TextField id="contact-name" label="Your name" autoComplete="name" value={values.name} onChange={set("name")} error={errors.name} />

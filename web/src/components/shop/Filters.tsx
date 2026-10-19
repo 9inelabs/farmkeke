@@ -119,6 +119,14 @@ export function SortSelect({
 
 const TYPES_SHOWN = 5;
 
+// ?type= holds every chosen type, comma-separated (W-03 / W-05 tick several).
+const typeList = (type: string | undefined) => (type ?? "").split(",").filter(Boolean);
+const toggleType = (type: string | undefined, slug: string) => {
+  const list = typeList(type);
+  const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
+  return next.length ? next.join(",") : undefined;
+};
+
 /** W-03 desktop sidebar (hidden on phones; the Filters button opens W-05). */
 export function FilterSidebar({ current, subtypes = [] }: { current: Current; subtypes?: Subtype[] }) {
   const { go, pending } = useNavigate(current);
@@ -164,8 +172,8 @@ export function FilterSidebar({ current, subtypes = [] }: { current: Current; su
             <Opt
               key={t.slug}
               type="checkbox"
-              checked={current.type === t.slug}
-              onChange={() => go({ type: current.type === t.slug ? undefined : t.slug })}
+              checked={typeList(current.type).includes(t.slug)}
+              onChange={() => go({ type: toggleType(current.type, t.slug) })}
               count={t.count}
             >
               {t.name}
@@ -317,9 +325,9 @@ function Opt({
 export function ActiveChips({ current, total, subtypes = [] }: { current: Current; total?: number; subtypes?: Subtype[] }) {
   const { go } = useNavigate(current);
   const chips: Array<{ label: string; clear: () => void }> = [];
-  if (current.type) {
-    const t = subtypes.find((s) => s.slug === current.type);
-    chips.push({ label: t?.name ?? current.type, clear: () => go({ type: undefined }) });
+  for (const slug of typeList(current.type)) {
+    const t = subtypes.find((s) => s.slug === slug);
+    chips.push({ label: t?.name ?? slug, clear: () => go({ type: toggleType(current.type, slug) }) });
   }
   if (current.min || current.max) {
     const lo = current.min ? naira(Number(digits(current.min)) * 100) : "₦0";
@@ -529,7 +537,7 @@ export function FilterPanel({
             <PanelGroup title="Type">
               <div className="flex flex-wrap gap-2" role="group" aria-label="Type">
                 {subtypes.map((t) => (
-                  <PanelChip key={t.slug} on={type === t.slug} onClick={() => setType(type === t.slug ? undefined : t.slug)}>
+                  <PanelChip key={t.slug} on={typeList(type).includes(t.slug)} onClick={() => setType(toggleType(type, t.slug))}>
                     {t.name}
                   </PanelChip>
                 ))}

@@ -10,8 +10,10 @@ import { nextCounter } from "./lib/counters";
 import { disputeRow, disputeView, REASON_LABELS } from "./lib/disputes";
 import { notify, notifyConsumer, notifyFarm, notifyStaff } from "./lib/notify";
 import { transition } from "./lib/orders";
+import { hitLimit } from "./lib/rateLimit";
 import { getRules, HOUR } from "./lib/settings";
 import { validateImageUpload } from "./lib/uploads";
+import { disputeReason, disputeStance } from "./schema";
 
 const MAX_NOTE = 2000;
 // The farm is reminded this long before its reply deadline.
@@ -126,6 +128,8 @@ export const open = mutation({
       number,
       reason: args.reason,
       itemIndexes: indexes,
+      // Only stored when some line is partly affected
+      itemQuantities: quantities.some((q, i) => q < order.items[indexes[i]!]!.quantity) ? quantities : undefined,
       note,
       photoIds: args.photoIds,
       amountKobo,
@@ -170,9 +174,14 @@ export const open = mutation({
   },
 });
 
-/** F-48: the farm's reply (once). */
+/** F-48: the farm's reply (once). Phase 5: optional `stance` (W-54 "Farm's response"). */
 export const respond = mutation({
-  args: { disputeId: v.id("disputes"), note: v.string(), photoIds: v.array(v.id("_storage")) },
+  args: {
+    disputeId: v.id("disputes"),
+    note: v.string(),
+    photoIds: v.array(v.id("_storage")),
+    stance: v.optional(disputeStance),
+  },
   handler: async (ctx, args) => {
     const { user } = await requireFarmer(ctx);
     const { dispute } = await partyDispute(ctx, args.disputeId, "farmer");
@@ -185,6 +194,7 @@ export const respond = mutation({
       farmRespondedAt: now,
       farmResponseNote: note,
       farmResponsePhotoIds: args.photoIds,
+      farmStance: args.stance,
       farmerReadAt: now,
       lastMessageAt: now,
     });

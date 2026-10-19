@@ -37,7 +37,9 @@ export type QuoteFarm = {
   /** The farm's LGA, e.g. "Owerri North" */
   farmArea?: string;
   farmPhotoUrl?: string | null;
-  /** Not sent yet ("Usually accepts within 2 hours"); see BUILD-STATUS backend gaps. */
+  /** Phase 5: median payment-to-acceptance hours ("Usually accepts within 2 hours"); null with no history. */
+  responseTimeHours?: number | null;
+  /** Phase 5: the acceptance deadline (24). */
   acceptsWithinHours?: number;
   lines: QuoteLine[];
   itemsTotalKobo: number;
@@ -67,9 +69,14 @@ export type Quote = {
   totalKobo: number;
 };
 
+/** A W-23 time slot: open, or closed because it's full or too soon (Phase 5). */
+export type SlotState = { from: string; to: string; open: boolean; reason?: "full" | "too_soon" | null };
+
 /** checkout.deliveryWindows */
 export type DeliveryWindows = {
-  days: Array<{ day: string; slots: Array<{ from: string; to: string }> }>;
+  days: Array<{ day: string; slots: Array<{ from: string; to: string }>; allSlots?: SlotState[] }>;
+  /** Phase 5: every day the farms can make, with every slot (full days too). */
+  allDays?: Array<{ day: string; slots: SlotState[] }>;
   readyDay: string | null;
 };
 
@@ -87,6 +94,8 @@ export type CheckoutPickupPoint = {
   collectWithinDays: number;
   photoUrl?: string | null;
   distanceKm: number | null;
+  /** Phase 5 (with farmIds and now): "YYYY-MM-DD" the order can wait here from. */
+  readyDay?: string | null;
 };
 
 /** checkout.contactDefaults */
@@ -143,9 +152,11 @@ export type CheckoutForPay = {
     method: "card" | "bank_transfer" | "ussd" | "saved_card" | null;
     reason: string | null;
     reference: string;
-    /** Not sent yet: when the attempt started, and the card's last 4 digits. */
+    /** Phase 5: when the attempt started, and the card's brand and last 4 digits. */
     startedAt?: number;
-    cardLast4?: string;
+    cardLast4?: string | null;
+    cardBrand?: string | null;
+    channel?: string | null;
   } | null;
   orders: OrderRow[];
   payments?: { live: boolean; testStep: boolean };
@@ -164,9 +175,10 @@ export type PlacedSummary = {
   contact: { name: string; phone: string; email?: string };
   isGuest: boolean;
   orders: OrderRow[];
-  /** Not sent yet: where it goes, for "A Farmkeke rider delivers to …". */
-  address?: { street: string; landmark?: string; areaName?: string } | null;
-  pickupPoint?: { name: string; address?: string } | null;
+  /** Phase 5: where it goes, for "A Farmkeke rider delivers to …". */
+  address?: { street: string; landmark?: string; areaName?: string; lga?: string; state?: string; note?: string | null } | null;
+  pickupPoint?: { name: string; address?: string; lga?: string } | null;
+  window?: { day: string; from: string; to: string } | null;
 };
 
 /** payments/checkout.start (live mode) */

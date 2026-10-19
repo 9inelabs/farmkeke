@@ -2,7 +2,7 @@
 
 // W-43 Account overview: greeting, a "was delivered" banner when an order
 // waits for confirmation, three summary cards, active orders and Buy again
-// (items from recent completed orders).
+// (orders.consumer.recentItems: recently bought items that can still be bought).
 import { useQuery } from "convex/react";
 import { PackageCheck } from "lucide-react";
 import Link from "next/link";
@@ -14,11 +14,11 @@ import { ConfirmReceiptModal } from "@/components/orders/ConfirmReceipt";
 import { firstName } from "@/components/orders/format";
 import { awaitsConfirm, badgeFor, timingText } from "@/components/orders/rows";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { QuietBoundary } from "@/components/system/QuietBoundary";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
-import type { FavoriteItem, SavedAddress } from "@/convex/returns/account";
+import type { FavoriteItem, RecentItem, SavedAddress } from "@/convex/returns/account";
 import type { OrderRow } from "@/convex/returns/checkout";
-import type { OrderDetail } from "@/convex/returns/orders";
 import { useViewer } from "@/lib/auth";
 import { initials, LAGOS_TZ, naira, plural, tintFor } from "@/lib/format";
 import { routes } from "@/lib/routes";
@@ -149,7 +149,9 @@ function Overview() {
         )}
       </section>
 
-      <BuyAgain orders={orders} />
+      <QuietBoundary>
+        <BuyAgain />
+      </QuietBoundary>
 
       {confirming ? <ConfirmReceiptModal orderId={confirming} open onClose={() => setConfirming(null)} /> : null}
     </>
@@ -170,18 +172,10 @@ function Stat({ href, label, value, detail }: { href: string; label: string; val
   );
 }
 
-/** Items from the three most recent completed orders, newest first. */
-function BuyAgain({ orders }: { orders: OrderRow[] | undefined }) {
-  const done = (orders ?? []).filter((o) => o.status === "completed").slice(0, 3);
-  const a = useQuery(api.orders.consumer.get, done[0] ? { orderId: done[0]._id } : "skip") as OrderDetail | null | undefined;
-  const b = useQuery(api.orders.consumer.get, done[1] ? { orderId: done[1]._id } : "skip") as OrderDetail | null | undefined;
-  const c = useQuery(api.orders.consumer.get, done[2] ? { orderId: done[2]._id } : "skip") as OrderDetail | null | undefined;
-  const seen = new Set<string>();
-  const items = [a, b, c]
-    .flatMap((o) => o?.items ?? [])
-    .filter((it) => (seen.has(it.listingId) ? false : (seen.add(it.listingId), true)))
-    .slice(0, 3);
-  if (orders === undefined || done.length === 0 || items.length === 0) return null;
+/** Recently bought items that can still be bought, newest first (three, as designed). */
+function BuyAgain() {
+  const items = useQuery(api.orders.consumer.recentItems, { limit: 3 }) as RecentItem[] | undefined;
+  if (items === undefined || items.length === 0) return null;
   return (
     <section aria-labelledby="again-title" className="card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-[18px] shadow-[inset_0_-1px_0_#EEF0EB]">

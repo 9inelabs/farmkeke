@@ -32,7 +32,7 @@ export function CheckEmailView() {
     setSending(true);
     setNote(null);
     try {
-      await signIn("password", { flow: "reset", email });
+      await signIn("password", { flow: "reset", email, returnTo: "web" });
       setNote("We sent a new link. Use the newest email.");
       setLeft(WAIT);
     } catch {

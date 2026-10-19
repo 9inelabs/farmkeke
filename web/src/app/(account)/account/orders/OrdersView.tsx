@@ -1,10 +1,14 @@
 "use client";
 
-// W-44 My orders (Active / Past tabs) and W-44b Orders empty.
-import { useQuery } from "convex/react";
+// W-44 My orders (Active / Past tabs) and W-44b Orders empty. Above them:
+// guest orders placed elsewhere with this account's email, and the emailed
+// link that adds them (?link=, orders.consumer.confirmGuestOrdersLink).
+import { useMutation, useQuery } from "convex/react";
 import { Package } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { AccountShell, AccountTitle } from "@/components/account/AccountShell";
+import { GuestOrdersByEmail } from "@/components/account/GuestOrdersByEmail";
+import { QuietBoundary } from "@/components/system/QuietBoundary";
 import { Thumb } from "@/components/cart/parts";
 import { ConfirmReceiptModal } from "@/components/orders/ConfirmReceipt";
 import { hm, lagosDay } from "@/components/orders/format";
@@ -13,14 +17,47 @@ import { Button, ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
 import type { OrderRow } from "@/convex/returns/checkout";
-import { dayMonth, naira } from "@/lib/format";
+import { dayMonth, naira, plural } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
 export function OrdersView() {
   return (
     <AccountShell>
+      <QuietBoundary>
+        <GuestLinking />
+      </QuietBoundary>
       <Orders />
     </AccountShell>
+  );
+}
+
+/** Opens the emailed link once (?link=…), then offers any orders still to add. */
+function GuestLinking() {
+  const confirm = useMutation(api.orders.consumer.confirmGuestOrdersLink);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    const token = new URLSearchParams(window.location.search).get("link");
+    if (!token) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    confirm({ token })
+      .then((r) => {
+        const n = (r as { linked?: number } | null)?.linked ?? 0;
+        setResult({ ok: true, text: n > 0 ? `We've added ${plural(n, "order")} to your account.` : "Those orders are already in your account." });
+      })
+      .catch(() => setResult({ ok: false, text: "This link has expired or was already used. Ask for a new one below." }));
+  }, [confirm]);
+  return (
+    <>
+      {result ? (
+        <p role="status" className={`m-0 rounded-xl px-4 py-3 text-sm ${result.ok ? "bg-ok-bg text-ok" : "bg-pend-bg text-pend"}`}>
+          {result.text}
+        </p>
+      ) : null}
+      <GuestOrdersByEmail />
+    </>
   );
 }
 

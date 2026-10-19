@@ -2,8 +2,8 @@
 
 // W-49 Delete account (account.deleteAccount, password required). Orders in
 // progress are flagged first: the backend finishes the deletion once they
-// complete. The reason is optional and kept on this page only (see
-// BUILD-STATUS backend gaps).
+// complete, and says which happened ({ status }). The optional "Why are you
+// leaving?" reason is stored with the deletion record.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useAction, useQuery } from "convex/react";
 import { ChevronLeft, TriangleAlert } from "lucide-react";
@@ -47,6 +47,7 @@ function Delete() {
   const [understood, setUnderstood] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<"password" | "understood" | "form", string>>>({});
   const [busy, setBusy] = useState(false);
+  const [waiting, setWaiting] = useState<number | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,13 @@ function Delete() {
     if (Object.keys(n).length) return;
     setBusy(true);
     try {
-      await remove({ password });
+      const result = (await remove({ password, reason: reason || undefined })) as { status?: string } | null;
+      if (result?.status === "waiting_for_orders") {
+        // The account stays until the orders are done, so stay signed in.
+        setBusy(false);
+        setWaiting(Math.max(1, inProgress.length));
+        return;
+      }
       forgetShortSession();
       await signOut().catch(() => undefined);
       router.replace(routes.home);
@@ -75,6 +82,23 @@ function Delete() {
       );
     }
   };
+
+  if (waiting !== null)
+    return (
+      <div className="flex max-w-[720px] flex-col gap-5">
+        <AccountTitle title="Delete your account" />
+        <section role="status" className="card p-6 m:px-4">
+          <h2 className="m-0 text-base font-bold">We&apos;ll delete your account once your orders are done</h2>
+          <p className="p mt-2">
+            You have {plural(waiting, "order")} in progress. As soon as {waiting === 1 ? "it's" : "they're"} completed, we&apos;ll
+            delete your account and email you. Until then you can still follow {waiting === 1 ? "it" : "them"} here.
+          </p>
+          <ButtonLink href={routes.myOrders} variant="ghost" className="mt-4 text-sm">
+            See my orders
+          </ButtonLink>
+        </section>
+      </div>
+    );
 
   return (
     <div className="flex max-w-[720px] flex-col gap-5">

@@ -1,6 +1,6 @@
 # Backend changes waiting for the real convex/ code
 
-Last updated: 18 Oct 2026
+Last updated: 19 Oct 2026
 
 ## Why this list exists
 
@@ -101,3 +101,19 @@ Env vars on the dev deployment:
 There are 52 emails; see `docs/reports/09-emails.md` and `farmkeke-docs/email-previews/`.
 
 **Later:** set up `support@farmkeke.com` forwarding (ImprovMX or Cloudflare Email Routing), then change `EMAIL_REPLY_TO`.
+
+
+## Phase 5: website design gaps (built 19 Oct 2026, not deployed)
+
+Every gap in `web/BUILD-STATUS.md` "Backend gaps found" was built in `convex/`, except a direct shopper-to-farm question thread and a thumbnail per order item. Details: `docs/reports/10-phase5-gaps.md`. Only arguments and fields were added; the app's calls are unchanged.
+
+After deploying:
+
+1. Run `npx convex run shopStats:rebuild` once. It now also fills each farm's chat reply times (W-58).
+2. Optional: set a delivery slot limit with `admin/fees:setSlotCapacity` (per area, or per area and slot). Until then there is no limit and no slot shows "Full".
+3. Optional: `WEBSITE_URL` (default `https://farmkeke.com`) is now also used for the website's password reset link and the app bridge's fallback.
+4. Refresh `web/convex-spec` from the live deployment (`npx convex function-spec`), then `npm --prefix web run gen:api`. The spec was patched by hand from the local code for this phase.
+
+Deploy the backend before the website: the website now sends the new arguments (`address.note`, `returnTo`, `itemQuantities`, `itemRatings`, `phone`, `reason`, `listingId`/`farmId`, `subtypes`, address `directions`/`latitude`/`longitude`), which the current live deployment rejects.
+
+Guest orders are linked to an account only by the account's email, and only after the shopper opens a one-time link sent to that address (or once the email is verified). Never by phone number.
