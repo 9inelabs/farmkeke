@@ -88,3 +88,16 @@ Also new in 3c:
 - `home` and `popular` take optional `lat`/`lng`; `popular` also takes `limit` and `today`.
 - `account:deleteAccount` now returns `{ status: "deleted" | "waiting_for_orders" }`. W-49 can tell the shopper the account will be deleted once their orders finish.
 - Problem reports alert support and operations staff in the app (`admin/staff:alerts`, `unreadAlerts` and `markAlertsRead`). The farm is reminded 2 hours before its 12-hour reply deadline. At the deadline the case is marked overdue (`farmReplyOverdue` on the dispute views).
+
+## Email: live (19 Oct 2026)
+
+Resend is set up and sending from `Farmkeke <no-reply@farmkeke.com>`. farmkeke.com is verified in Resend.
+
+Env vars on the dev deployment:
+- `AUTH_RESEND_KEY`: a sending-only key, limited to farmkeke.com
+- `AUTH_EMAIL_FROM`
+- `EMAIL_REPLY_TO`: the owner's personal inbox for now
+
+There are 52 emails; see `docs/reports/09-emails.md` and `farmkeke-docs/email-previews/`.
+
+**Later:** set up `support@farmkeke.com` forwarding (ImprovMX or Cloudflare Email Routing), then change `EMAIL_REPLY_TO`.

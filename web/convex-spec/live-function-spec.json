@@ -1590,6 +1590,16 @@
    "path": "/paystack/return"
   },
   {
+   "functionType": "HttpAction",
+   "method": "GET",
+   "path": "/email/wordmark.png"
+  },
+  {
+   "functionType": "HttpAction",
+   "method": "GET",
+   "path": "/open-app"
+  },
+  {
    "args": {
     "type": "object",
     "value": {}
@@ -7838,6 +7848,181 @@
    "args": {
     "type": "object",
     "value": {
+     "email": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "object",
+         "value": {
+          "how": {
+           "fieldType": {
+            "type": "union",
+            "value": [
+             {
+              "type": "literal",
+              "value": "changed"
+             },
+             {
+              "type": "literal",
+              "value": "reset"
+             }
+            ]
+           },
+           "optional": false
+          },
+          "kind": {
+           "fieldType": {
+            "type": "literal",
+            "value": "password_changed"
+           },
+           "optional": false
+          },
+          "userId": {
+           "fieldType": {
+            "tableName": "users",
+            "type": "id"
+           },
+           "optional": false
+          }
+         }
+        },
+        {
+         "type": "object",
+         "value": {
+          "kind": {
+           "fieldType": {
+            "type": "literal",
+            "value": "email_changed"
+           },
+           "optional": false
+          },
+          "newEmail": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": false
+          },
+          "oldEmail": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": false
+          },
+          "userId": {
+           "fieldType": {
+            "tableName": "users",
+            "type": "id"
+           },
+           "optional": false
+          }
+         }
+        },
+        {
+         "type": "object",
+         "value": {
+          "kind": {
+           "fieldType": {
+            "type": "literal",
+            "value": "deletion_waiting"
+           },
+           "optional": false
+          },
+          "name": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": true
+          },
+          "orders": {
+           "fieldType": {
+            "type": "number"
+           },
+           "optional": false
+          },
+          "to": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": false
+          }
+         }
+        },
+        {
+         "type": "object",
+         "value": {
+          "kind": {
+           "fieldType": {
+            "type": "literal",
+            "value": "deletion_done"
+           },
+           "optional": false
+          },
+          "name": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": true
+          },
+          "to": {
+           "fieldType": {
+            "type": "string"
+           },
+           "optional": false
+          }
+         }
+        },
+        {
+         "type": "object",
+         "value": {
+          "kind": {
+           "fieldType": {
+            "type": "literal",
+            "value": "guest_orders_added"
+           },
+           "optional": false
+          },
+          "numbers": {
+           "fieldType": {
+            "type": "array",
+            "value": {
+             "type": "string"
+            }
+           },
+           "optional": false
+          },
+          "total": {
+           "fieldType": {
+            "type": "number"
+           },
+           "optional": false
+          },
+          "userId": {
+           "fieldType": {
+            "tableName": "users",
+            "type": "id"
+           },
+           "optional": false
+          }
+         }
+        }
+       ]
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Action",
+   "identifier": "notifications/deliver.js:accountEmail",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
      "tickets": {
       "fieldType": {
        "type": "array",
@@ -8005,6 +8190,31 @@
    },
    "functionType": "Action",
    "identifier": "notifications/deliver.js:welcome",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "key": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "windowMs": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "notifications/store.js:claimEmailSlot",
    "returns": null,
    "visibility": {
     "kind": "internal"
@@ -8233,6 +8443,18 @@
    },
    "functionType": "Query",
    "identifier": "notifications/store.js:plan",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Mutation",
+   "identifier": "notifications/store.js:pruneThrottles",
    "returns": null,
    "visibility": {
     "kind": "internal"
@@ -8967,6 +9189,26 @@
    },
    "functionType": "Mutation",
    "identifier": "orders/system.js:flagUnconfirmed",
+   "returns": null,
+   "visibility": {
+    "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "orderId": {
+      "fieldType": {
+       "tableName": "orders",
+       "type": "id"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "orders/system.js:pickupReminder",
    "returns": null,
    "visibility": {
     "kind": "internal"
