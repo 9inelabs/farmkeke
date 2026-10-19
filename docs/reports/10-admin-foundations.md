@@ -156,7 +156,13 @@ Commands, from the repo root unless noted:
 5. Deploy the website. Open the emailed link, make the password, and you're in.
 6. Staff apply at `/admin/apply`. You approve them under "Staff and applications".
 
-## 7. What's next
+## 7. Merging with main
+
+`main` moved on while this was built: "Phase 5 in progress: backend gap work (safety save, not deployed)", 916b917. A trial merge has no text conflicts, but:
+- `main`'s own `convex/disputes.ts` doesn't typecheck yet (`hitLimit` and `disputeReason` are missing), so the merge was not kept. This branch stays on 1f89be3 until that work is finished.
+- When merging, `admin/fees.ts:setSlotCapacity` (new on main) calls `requireStaff(ctx, ["operations"])`. Change it to `requireStaff(ctx, "fees.manage")`. Then run `node scripts/sync-generated-api.mjs` and the tests.
+
+## 8. What's next
 
 Phase 2 (approvals):
 - farmer applications and farms;
