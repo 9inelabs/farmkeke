@@ -247,13 +247,24 @@ test("roles: create, edit and delete custom roles; the Founder role is fixed", a
   );
 });
 
-test("setup: one Founder only, and legacy staff move over", async () => {
+test("setup: a second Founder from the backend, and legacy staff move over", async () => {
   mailbox();
   const t = convexTest(schema, modules);
   const s = await seed(t);
+  await t.mutation(internal.admin.setup.makeFounder, { userId: s.shopper.id, email: "ada@example.com", name: "Ada", invitePending: true });
+  const second = (await memberOf(t, s.shopper.id))!;
+  expect(second.status).toBe("approved");
+  expect(second.roleId).toBe(s.roles.founder);
+  // Running it again doesn't add a second row
+  await t.mutation(internal.admin.setup.makeFounder, { userId: s.shopper.id, email: "ada@example.com", name: "Ada", invitePending: true });
+  expect(await t.run(async (ctx) => (await ctx.db.query("staffMembers").collect()).filter((m) => m.userId === s.shopper.id).length)).toBe(1);
+  // The portal still can't give out the Founder role
+  const applicantMember = await t.run(async (ctx) =>
+    ctx.db.insert("staffMembers", { userId: s.applicant.id, name: "Amaka Nwosu", email: "amaka@example.com", jobTitle: "Ops", status: "pending", appliedAt: Date.now(), emailConfirmedAt: Date.now() } as any),
+  );
   await expect(
-    t.mutation(internal.admin.setup.makeFounder, { userId: s.shopper.id, email: "ada@example.com", name: "Ada", invitePending: true }),
-  ).rejects.toThrow(/already a Founder/);
+    as(t, s.founder).mutation(api.admin.staff.approve, { memberId: applicantMember, roleId: s.roles.founder }),
+  ).rejects.toThrow(/FOUNDER_ROLE/);
 
   const legacy = await t.run(async (ctx) =>
     ctx.db.insert("users", { name: "Fin Old", email: "fin@farmkeke.com", staffRole: "finance" }),
@@ -377,6 +388,19 @@ test("sign-in flows: apply with a code, sign in with a code, Founder sets a pass
   await as(t, { id: femi.userId, sessionId: now.sessionId }).action(api.admin.access.sendPasswordLink, {});
   expect(mail.sent.map((m) => m.subject)).toEqual(["Reset your Farmkeke admin password"]);
   await expect(t.action(api.admin.access.sendPasswordLink, {})).rejects.toThrow(/NOT_SIGNED_IN/);
+
+  // More Founders: a new email gets the set-up link; an existing account
+  // (Amaka applied above) becomes a Founder and gets a password link too
+  mail.clear();
+  expect(await t.action(internal.admin.setup.createFounder, { email: "Ejike@Example.com", name: "Ejike Dan" })).toContain("emailed to ejike@example.com");
+  expect(await t.action(internal.admin.setup.createFounder, { email: "amaka@example.com", name: "Amaka Nwosu" })).toContain("already had a Farmkeke account");
+  expect(mail.to("ejike@example.com")).toEqual(["Set up your Farmkeke admin account"]);
+  expect(mail.to("amaka@example.com")).toEqual(["Reset your Farmkeke admin password"]);
+  const founders = await t.run(async (ctx) => {
+    const role = (await ctx.db.query("staffRoles").withIndex("by_key", (q) => q.eq("key", "founder")).unique())!;
+    return (await ctx.db.query("staffMembers").collect()).filter((m) => m.roleId === role._id && m.status === "approved").map((m) => m.email).sort();
+  });
+  expect(founders).toEqual(["amaka@example.com", "ejike@example.com", "femi@farmkeke.com"]);
 });
 
 // ---------------------------------------------------------------------------

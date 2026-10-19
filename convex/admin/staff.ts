@@ -119,7 +119,7 @@ async function decide(
 async function roleFor(ctx: MutationCtx, roleId: Id<"staffRoles">, actorIsFounder: boolean) {
   const role = await ctx.db.get("staffRoles", roleId);
   if (role === null) throw new ConvexError({ code: "ROLE_NOT_FOUND" });
-  // There is one Founder; the role can't be handed out.
+  // Founders are only made from the backend (admin/setup:createFounder).
   if (role.key === "founder") throw new ConvexError({ code: "FOUNDER_ROLE" });
   // Only the Founder can give out roles that approve staff or edit roles.
   if (!actorIsFounder && (role.permissions.includes("staff.manage") || role.permissions.includes("roles.manage"))) {

@@ -2,8 +2,8 @@
 // dashboard (Functions → admin/setup) or the CLI. None of these are callable
 // from the website or the app.
 //
-// 1. Create the Founder (also creates the built-in roles). The Founder gets an
-//    email with a link to make their password:
+// 1. Create each Founder (also creates the built-in roles). Each Founder gets
+//    an email with a link to make their password:
 //      npx convex run admin/setup:createFounder '{"email":"you@farmkeke.com","name":"Your Name"}'
 // 2. Staff given a role before the portal existed: copy them over.
 //      npx convex run admin/setup:migrateLegacyStaff
@@ -56,16 +56,14 @@ export const ensureRoles = internalMutation({
   },
 });
 
-/** Makes the account the Founder. Refuses if there already is one. */
+/**
+ * Makes the account a Founder. There can be more than one, but only from
+ * here: the portal never gives out the Founder role.
+ */
 export const makeFounder = internalMutation({
   args: { userId: v.id("users"), email: v.string(), name: v.string(), invitePending: v.boolean() },
   handler: async (ctx, args) => {
     const ids = await ensureRolesImpl(ctx);
-    const founders = await ctx.db
-      .query("staffMembers")
-      .withIndex("by_roleId_and_status", (q) => q.eq("roleId", ids.founder))
-      .first();
-    if (founders !== null) throw new ConvexError("There is already a Founder account");
     const now = Date.now();
     const fields = {
       name: args.name,
@@ -101,10 +99,12 @@ const randomSecret = () => {
 };
 
 /**
- * Creates the Founder account and emails them a link to make their password
+ * Creates a Founder account and emails them a link to make their password
  * (it works for 60 minutes; after that, "Forgot password" on the portal's
  * sign-in page sends a new one). If the email already has a Farmkeke
- * account, that account becomes the Founder and keeps its password.
+ * account, that account becomes a Founder; the link is sent either way, and
+ * their old password keeps working until they make a new one. Run it once
+ * per Founder.
  */
 export const createFounder = internalAction({
   args: { email: v.string(), name: v.string() },
@@ -132,10 +132,10 @@ export const createFounder = internalAction({
       userId = user._id;
     }
     await ctx.runMutation(internal.admin.setup.makeFounder, { userId, email, name, invitePending: existing === null });
-    if (existing !== null) {
-      return `${email} already had a Farmkeke account. It's now the Founder: sign in at /admin/signin with that account's password.`;
-    }
     await ctx.runAction(api.auth.signIn, { provider: "password", params: { flow: "staffReset", email } });
+    if (existing !== null) {
+      return `${email} already had a Farmkeke account and is now a Founder. They can sign in at /admin/signin with that password, or use the link just emailed to make a new one.`;
+    }
     return `Founder account created. A link to make the password was emailed to ${email}.`;
   },
 });
