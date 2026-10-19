@@ -147,6 +147,24 @@ async function markPickupOverdue(ctx: MutationCtx, order: Doc<"orders">, now: nu
   );
 }
 
+/** A day before a pickup order's collect-by time: remind the shopper (scheduled by lib/orders.pickupDeadline). */
+export const pickupReminder = internalMutation({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get("orders", args.orderId);
+    if (order === null || order.status !== "at_pickup_point" || order.collectBy === undefined) return;
+    if (order.collectBy <= Date.now()) return;
+    const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
+    await notifyConsumer(
+      ctx,
+      order,
+      "pickup_reminder",
+      `Collect order ${order.number} by tomorrow`,
+      `It's waiting at ${point?.name ?? "the pickup point"}. Your code is ${order.pickupCode ?? "in the app"}.`,
+    );
+  },
+});
+
 /** Runs when a pickup order's 3 days at the point are up (scheduled by dispatch). */
 export const pickupWindowEnded = internalMutation({
   args: { orderId: v.id("orders") },

@@ -927,6 +927,15 @@ export default defineSchema({
     count: v.number(),
   }).index("by_userId", ["userId"]),
 
+  // Once-per-window gates for notifications: message emails (one per thread
+  // every 30 minutes) and low-stock alerts (one per listing unit a day).
+  notificationThrottles: defineTable({
+    key: v.string(),
+    lastAt: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_lastAt", ["lastAt"]),
+
   reviews: defineTable({
     orderId: v.id("orders"),
     userId: v.id("users"),

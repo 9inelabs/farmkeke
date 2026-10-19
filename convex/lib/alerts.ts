@@ -12,6 +12,8 @@ type Alert = {
   title: string;
   description: string;
   locked?: boolean;
+  /** Not shown in the preference lists (W-48, M-87, F-75) and can't be changed. */
+  hidden?: boolean;
   defaults: Record<Channel, boolean>;
   kinds: string[];
 };
@@ -26,10 +28,13 @@ const SHOP: Alert[] = [
     defaults: on,
     kinds: [
       "order_accepted",
+      "order_preparing",
+      "order_packed",
       "out_for_delivery",
       "ready_for_pickup",
       "order_delivered",
       "order_collected",
+      "pickup_reminder",
       "pickup_overdue",
       "order_cancelled",
       "dispute_opened",
@@ -78,22 +83,22 @@ const FARM: Alert[] = [
     alert: "orders",
     title: "New orders and deadlines",
     description: "New orders, deadline near, expired or cancelled orders, rider collection",
-    defaults: { push: true, sms: true, email: false },
+    defaults: { push: true, sms: true, email: true },
     kinds: ["order_new", "order_deadline", "order_expired", "order_cancelled", "rider_assigned", "deadline_extended"],
   },
   {
     alert: "problems",
     title: "Problem reports",
     description: "A shopper reported a problem, and Farmkeke's decision",
-    defaults: { push: true, sms: true, email: false },
-    kinds: ["dispute_opened", "dispute_resolved", "dispute_message", "dispute_reply_reminder"],
+    defaults: { push: true, sms: true, email: true },
+    kinds: ["dispute_opened", "dispute_resolved", "dispute_message", "dispute_reply_reminder", "dispute_reply_overdue"],
   },
   {
     alert: "payments",
     title: "Payments and payouts",
     description: "Payment released, payout sent, payout account changed",
     locked: true,
-    defaults: { push: true, sms: true, email: false },
+    defaults: { push: true, sms: true, email: true },
     kinds: ["payment_released", "payout_sent", "payout_failed", "payout_account_changed"],
   },
   {
@@ -107,8 +112,8 @@ const FARM: Alert[] = [
     alert: "listings",
     title: "Listings",
     description: "Listing approved or sent back, low stock",
-    defaults: { push: true, sms: false, email: false },
-    kinds: ["listing_approved", "listing_sent_back", "low_stock"],
+    defaults: { push: true, sms: false, email: true },
+    kinds: ["listing_approved", "listing_sent_back", "listing_unpublished", "low_stock"],
   },
   {
     alert: "reviews",
@@ -116,6 +121,17 @@ const FARM: Alert[] = [
     description: "When a shopper rates an order",
     defaults: { push: true, sms: false, email: false },
     kinds: ["review_received"],
+  },
+  {
+    // F-09: the application decision reaches applicants before they have a
+    // farm (and its F-75 settings), so it is always on and not listed.
+    alert: "application",
+    title: "Your application",
+    description: "Application received, more information needed, approved or not approved",
+    locked: true,
+    hidden: true,
+    defaults: { push: true, sms: false, email: true },
+    kinds: ["application_received", "application_more_info", "application_approved", "application_rejected"],
   },
 ];
 
@@ -128,12 +144,15 @@ const OTHER: Alert = {
   kinds: [],
 };
 
-export const alertsFor = (side: Side) => (side === "shop" ? SHOP : FARM);
+const allAlerts = (side: Side) => (side === "shop" ? SHOP : FARM);
+
+/** The alert types people can see and change. */
+export const alertsFor = (side: Side) => allAlerts(side).filter((a) => !a.hidden);
 
 export const findAlert = (side: Side, alert: string) => alertsFor(side).find((a) => a.alert === alert) ?? null;
 
 export const alertOfKind = (side: Side, kind: string) =>
-  alertsFor(side).find((a) => a.kinds.includes(kind)) ?? OTHER;
+  allAlerts(side).find((a) => a.kinds.includes(kind)) ?? OTHER;
 
 /**
  * Whether a channel is on: a row for this alert and channel wins, then a row

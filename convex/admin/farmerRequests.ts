@@ -7,7 +7,11 @@ import { mutation, query, type MutationCtx } from "../_generated/server";
 import { applicationProblems } from "../lib/application";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
+import { notify } from "../lib/notify";
 import { applicationSection, applicationStatus } from "../schema";
+
+// F-09b / F-09c / F-09d: the applicant hears about the decision (push and email).
+const APPLICATION_HREF = "/sell/status";
 
 const ROLES = ["operations" as const];
 
@@ -131,6 +135,14 @@ export const approve = mutation({
       reason: args.reason,
       details: { farmId },
     });
+    await notify(ctx, {
+      userId: app.userId,
+      side: "farm",
+      kind: "application_approved",
+      title: "You're approved",
+      body: `${app.farmName} can now sell on Farmkeke. Switch to farmer mode to finish setting up.`,
+      href: APPLICATION_HREF,
+    });
     return farmId;
   },
 });
@@ -165,6 +177,14 @@ export const requestMoreInfo = mutation({
       reason: note,
       details: { sections: args.sections },
     });
+    await notify(ctx, {
+      userId: app.userId,
+      side: "farm",
+      kind: "application_more_info",
+      title: "We need a bit more",
+      body: note.slice(0, 140),
+      href: APPLICATION_HREF,
+    });
   },
 });
 
@@ -196,6 +216,14 @@ export const reject = mutation({
       targetId: app._id,
       reason,
       details: { reapplyAfterDays: args.reapplyAfterDays },
+    });
+    await notify(ctx, {
+      userId: app.userId,
+      side: "farm",
+      kind: "application_rejected",
+      title: "Not approved this time",
+      body: reason.slice(0, 140),
+      href: APPLICATION_HREF,
     });
   },
 });

@@ -19,7 +19,9 @@ import { internal } from "../_generated/api";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import { env } from "../_generated/server";
 import { PASSWORD_PROVIDER } from "../accountsInternal";
-import { passwordResetEmail, sendEmail } from "./email";
+import { sendEmail } from "./email";
+// The reset email in the shared design (same signature as email.ts's older one)
+import { passwordResetEmail } from "./emails";
 import { looksLikeEmail, normalizeNigerianPhone } from "./phone";
 
 export type AuthErrorCode =
@@ -179,6 +181,10 @@ export const FarmkekePassword: ConvexCredentialsConfig = ConvexCredentials<DataM
         // Other phones signed in to this account are signed out (M-56).
         const keep = result!.sessionId;
         await invalidateSessions(ctx, { userId: result!.userId, except: keep ? [keep] : [] });
+        // W-42d security email, in the background
+        await ctx.scheduler.runAfter(0, internal.notifications.deliver.accountEmail, {
+          email: { kind: "password_changed", userId: result!.userId, how: "reset" },
+        });
         return { userId: result!.userId, sessionId: result!.sessionId };
       }
 

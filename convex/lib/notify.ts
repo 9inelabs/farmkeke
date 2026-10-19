@@ -115,6 +115,23 @@ export function naira(kobo: number): string {
   return `${kobo < 0 ? "-" : ""}₦${grouped}${rest ? `.${String(rest).padStart(2, "0")}` : ""}`;
 }
 
+/**
+ * A once-per-window gate (notificationThrottles): true the first time a key
+ * is used in `windowMs`, false after that. Used for message emails and
+ * low-stock alerts. Runs in a mutation, so it can't race.
+ */
+export async function claimSlot(ctx: MutationCtx, key: string, windowMs: number): Promise<boolean> {
+  const now = Date.now();
+  const row = await ctx.db
+    .query("notificationThrottles")
+    .withIndex("by_key", (q) => q.eq("key", key))
+    .first();
+  if (row !== null && now - row.lastAt < windowMs) return false;
+  if (row === null) await ctx.db.insert("notificationThrottles", { key, lastAt: now });
+  else await ctx.db.patch("notificationThrottles", row._id, { lastAt: now });
+  return true;
+}
+
 const READ_BATCH = 200;
 
 /** Marks a batch of unread notifications read; schedules the next batch if more are left. */

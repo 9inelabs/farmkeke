@@ -1,29 +1,64 @@
 // Notification store: what deliver.ts reads and writes. `plan` decides, for one
 // notification, which channels the alert type and the person's preferences
-// allow, and builds the push messages, the SMS and the email.
+// allow, and builds the push messages, the SMS and the email (orderEmail and
+// supportEmail for the shopping side, farmEmail for farms).
 import { v } from "convex/values";
+import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "../_generated/server";
 import { alertOfKind, channelOn, type Channel } from "../lib/alerts";
 import {
+  applicationApprovedEmail,
+  applicationMoreInfoEmail,
+  applicationReceivedEmail,
+  applicationRejectedEmail,
+  chatMessageEmail,
+  confirmReminderEmail,
+  disputeMessageEmail,
+  farmDeadlineEmail,
+  farmDeadlineExtendedEmail,
   farmDidNotAcceptEmail,
+  farmListingEmail,
+  farmLowStockEmail,
+  farmMessageEmail,
+  farmNewOrderEmail,
+  farmOrderEndedEmail,
+  farmPaymentReleasedEmail,
+  farmPayoutAccountChangedEmail,
+  farmPayoutFailedEmail,
+  farmPayoutSentEmail,
+  farmProblemDecisionEmail,
+  farmProblemReportedEmail,
+  farmReplyReminderEmail,
+  farmReviewEmail,
+  farmRiderAssignedEmail,
   hoursLines,
   lagosTime,
   orderAcceptedEmail,
+  orderCancelledEmail,
   orderConfirmationEmail,
   orderDeliveredEmail,
+  orderPreparingEmail,
   outForDeliveryEmail,
   paymentReleasedEmail,
+  pickupReminderEmail,
+  pickupWindowEndedEmail,
   problemDecisionEmail,
   problemReportReceivedEmail,
   readyForPickupEmail,
   refundSentEmail,
+  reviewReminderEmail,
+  supportReplyEmail,
   windowLabel,
   type ConfirmedOrder,
   type Email,
 } from "../lib/emails";
-import { markReadBatch, notify } from "../lib/notify";
-import { getRules } from "../lib/settings";
+import { claimSlot, markReadBatch, notify } from "../lib/notify";
+import { DAY, getRules, HOUR } from "../lib/settings";
+
+/** Message emails: at most one per thread in this window. */
+export const MESSAGE_EMAIL_WINDOW_MS = 30 * 60_000;
+const MESSAGE_KINDS = new Set(["chat_message", "dispute_message", "support_reply"]);
 
 export const create = internalMutation({
   args: {
@@ -116,13 +151,75 @@ export const plan = internalQuery({
       ? { to: n.smsTo!, body: `Farmkeke: ${n.title}. ${n.body}`, userId: user._id, notificationId: n._id }
       : null;
 
-    const email = allow("email") ? await orderEmail(ctx, n, user) : null;
-    return { push, sms, email };
+    const email = allow("email") ? await emailFor(ctx, n, user) : null;
+    // Message emails share a once-per-thread gate (claimEmailSlot), keyed by
+    // the person, the side, the kind and the order (or the ticket's href).
+    const emailThrottleKey =
+      email !== null && MESSAGE_KINDS.has(n.kind) ? `msg:${user._id}:${n.side}:${n.kind}:${n.orderId ?? n.href}` : undefined;
+    return { push, sms, email, emailThrottleKey };
   },
 });
 
+/**
+ * Claims a once-per-window slot (message emails, low-stock alerts). Returns
+ * false when the key was used within the window. A mutation, so two
+ * deliveries can't both win.
+ */
+export const claimEmailSlot = internalMutation({
+  args: { key: v.string(), windowMs: v.number() },
+  handler: async (ctx, args) => await claimSlot(ctx, args.key, args.windowMs),
+});
+
+const THROTTLE_KEEP_MS = 2 * DAY;
+
+/** Cron: forgets throttle rows older than two days, a batch at a time. */
+export const pruneThrottles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const old = await ctx.db
+      .query("notificationThrottles")
+      .withIndex("by_lastAt", (q) => q.lt("lastAt", Date.now() - THROTTLE_KEEP_MS))
+      .take(200);
+    for (const row of old) await ctx.db.delete("notificationThrottles", row._id);
+    if (old.length === 200) await ctx.scheduler.runAfter(0, internal.notifications.store.pruneThrottles, {});
+    return { deleted: old.length };
+  },
+});
+
+/** The email for one notification, or null (shop and farm sides). */
+async function emailFor(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
+  if (n.side === "farm") return await farmEmail(ctx, n, user);
+  if (n.kind === "support_reply") return await supportEmail(ctx, n, user);
+  return await orderEmail(ctx, n, user);
+}
+
+/** "/support/<id>" -> "<id>" (the id part of an in-app href). */
+const hrefId = (href: string, prefix: string) =>
+  href.startsWith(prefix) ? (href.slice(prefix.length).split(/[/?#]/)[0] ?? null) : null;
+
+/** Support replies on the shopping side; a ticket may have no order. */
+async function supportEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
+  const raw = hrefId(n.href, "/support/");
+  const ticketId = raw ? ctx.db.normalizeId("supportTickets", raw) : null;
+  const ticket = ticketId ? await ctx.db.get("supportTickets", ticketId) : null;
+  const order = n.orderId ? await ctx.db.get("orders", n.orderId) : null;
+  // Guests with no email get no email.
+  const to = user.isAnonymous ? order?.contact.email : (user.email ?? order?.contact.email);
+  if (!to) return null;
+  return supportReplyEmail({
+    to,
+    name: user.isAnonymous ? order?.contact.name : (user.name ?? order?.contact.name),
+    ticketNumber: ticket?.number,
+    preview: n.body,
+    order: order ? { orderId: order._id, number: order.number } : undefined,
+    isGuest: user.isAnonymous === true,
+  });
+}
+
 // ---------------------------------------------------------------------------
-// Order emails (shopping side)
+// Order emails (shopping side). Shop kinds with no email: order_packed (push
+// only, right after "being prepared"), back_in_stock and offer (nothing sends
+// them yet).
 
 const REASON_LABELS: Record<Doc<"disputes">["reason"], string> = {
   missing: "Missing items",
@@ -292,6 +389,292 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
     }
     case "order_completed":
       return paymentReleasedEmail({ ...ref, amountKobo: order.itemsTotalKobo });
+    case "order_preparing": {
+      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
+      return orderPreparingEmail({
+        ...ref,
+        fulfilment: order.fulfilment,
+        window: order.window ? windowLabel(order.window) : undefined,
+        pickupPointName: point?.name,
+        isGuest,
+      });
+    }
+    // Packed is push only: the shopper had the "being prepared" email minutes ago.
+    case "order_packed":
+      return null;
+    case "order_cancelled":
+      if (order.status !== "cancelled") return null;
+      return orderCancelledEmail({
+        ...ref,
+        refundKobo: order.totalKobo,
+        deliveryFeeKobo: order.deliveryFeeKobo,
+        paymentMethod: await paymentMethodLabel(ctx, order),
+      });
+    case "pickup_reminder": {
+      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
+      if (point === null || !order.pickupCode || order.collectBy === undefined) return null;
+      return pickupReminderEmail({
+        ...ref,
+        pickupCode: order.pickupCode,
+        pickupPoint: { name: point.name, address: point.address, hours: hoursLines(point.hours), phone: point.phone },
+        collectBy: lagosTime(order.collectBy),
+      });
+    }
+    case "pickup_overdue": {
+      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
+      return pickupWindowEndedEmail({
+        ...ref,
+        pointName: point?.name ?? "the pickup point",
+        heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
+      });
+    }
+    case "confirm_reminder":
+      if (order.status !== "delivered" && order.status !== "collected") return null;
+      return confirmReminderEmail({
+        ...ref,
+        how: order.status === "collected" ? "collected" : "delivered",
+        heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
+        isGuest,
+      });
+    case "review_reminder":
+      return reviewReminderEmail({ ...ref, isGuest });
+    case "chat_message":
+      return chatMessageEmail({ ...ref, preview: n.body, isGuest });
+    case "dispute_message": {
+      const dispute = order.disputeId ? await ctx.db.get("disputes", order.disputeId) : null;
+      if (dispute === null) return null;
+      return disputeMessageEmail({
+        ...ref,
+        caseNumber: dispute.number,
+        from: n.title.startsWith("Farmkeke support") ? "Farmkeke support" : ref.farmName,
+        preview: n.body,
+        isGuest,
+      });
+    }
+    default:
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Farm emails (farming side). Farmers act in the app, so each email says where.
+
+const SECTION_TITLES: Record<string, string> = {
+  farm: "Farm details",
+  produce: "What you grow",
+  collection: "Collection details",
+  documents: "Documents",
+  payout: "Payout details",
+};
+
+// Same as farmerApplications.REVIEW_DAYS (F-09a "Expect a decision by")
+const APPLICATION_REVIEW_DAYS = 2;
+
+async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
+  const to = user.email;
+  if (!to) return null;
+  const farm = await ctx.db
+    .query("farms")
+    .withIndex("by_userId", (q) => q.eq("userId", user._id))
+    .first();
+  const name = user.name;
+
+  // F-09: application updates (the applicant may not have a farm yet)
+  if (n.kind.startsWith("application_")) {
+    const app = await ctx.db
+      .query("farmerApplications")
+      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .first();
+    if (app === null) return null;
+    switch (n.kind) {
+      case "application_received":
+        if (!app.reference || app.submittedAt === undefined) return null;
+        return applicationReceivedEmail({
+          to,
+          name,
+          reference: app.reference,
+          decisionBy: lagosTime(app.submittedAt + APPLICATION_REVIEW_DAYS * DAY, { time: false }),
+        });
+      case "application_approved":
+        return applicationApprovedEmail({ to, name, farmName: farm?.name ?? app.farmName ?? "Your farm" });
+      case "application_rejected":
+        if (app.rejection === undefined) return null;
+        return applicationRejectedEmail({
+          to,
+          name,
+          reference: app.reference,
+          reason: app.rejection.reason,
+          note: app.rejection.note || undefined,
+          reapplyFrom: app.rejection.reapplyAfter > n._creationTime ? lagosTime(app.rejection.reapplyAfter, { time: false }) : undefined,
+        });
+      case "application_more_info":
+        if (app.moreInfo === undefined) return null;
+        return applicationMoreInfoEmail({
+          to,
+          name,
+          reference: app.reference,
+          sections: app.moreInfo.sections.map((s) => SECTION_TITLES[s] ?? s),
+          note: app.moreInfo.note,
+        });
+      default:
+        return null;
+    }
+  }
+
+  if (farm === null) return null;
+  const base = { to, name, farmName: farm.name };
+  const bank = (bankName: string, last4: string) => `${bankName} ••${last4}`;
+
+  // Notifications that aren't about one order
+  switch (n.kind) {
+    case "payout_sent":
+    case "payout_failed": {
+      const raw = hrefId(n.href, "/payouts/");
+      const payoutId = raw ? ctx.db.normalizeId("payouts", raw) : null;
+      const payout = payoutId ? await ctx.db.get("payouts", payoutId) : null;
+      if (payout === null) return null;
+      const args = { ...base, amountKobo: payout.amountKobo, bank: bank(payout.bankName, payout.accountLast4), reference: payout.reference };
+      return n.kind === "payout_sent" ? farmPayoutSentEmail(args) : farmPayoutFailedEmail({ ...args, reason: payout.failureReason });
+    }
+    case "payout_account_changed":
+      return farmPayoutAccountChangedEmail({
+        ...base,
+        bank: bank(farm.bankName, farm.accountNumber.slice(-4)),
+        accountName: farm.accountName,
+        at: lagosTime(n._creationTime),
+      });
+    case "listing_approved":
+    case "listing_sent_back":
+    case "listing_unpublished":
+    case "low_stock": {
+      const raw = hrefId(n.href, "/listing/");
+      const listingId = raw ? ctx.db.normalizeId("listings", raw) : null;
+      const listing = listingId ? await ctx.db.get("listings", listingId) : null;
+      if (listing === null || listing.farmId !== farm._id) return null;
+      if (n.kind === "low_stock") {
+        const low = [...listing.units].sort((a, b) => a.stock - b.stock)[0];
+        if (low === undefined) return null;
+        const unit = await ctx.db.get("units", low.unitId);
+        return farmLowStockEmail({ ...base, listingName: listing.name, unit: unit?.singular ?? "unit", stock: low.stock });
+      }
+      return farmListingEmail({
+        ...base,
+        listingName: listing.name,
+        outcome: n.kind === "listing_approved" ? "approved" : n.kind === "listing_unpublished" ? "unpublished" : "sent_back",
+        reason: listing.reviewNote,
+      });
+    }
+    case "support_reply":
+      return farmMessageEmail({ ...base, kind: "support", from: "Farmkeke support", preview: n.body });
+  }
+
+  // Order notifications
+  if (n.orderId === undefined) return null;
+  const order = await ctx.db.get("orders", n.orderId);
+  if (order === null || order.farmId !== farm._id) return null;
+  const rules = await getRules(ctx);
+  const ref = { ...base, number: order.number };
+  switch (n.kind) {
+    case "order_new":
+      if (order.respondBy === undefined) return null;
+      return farmNewOrderEmail({
+        ...ref,
+        items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, unit: unitOf(i), totalKobo: i.priceKobo * i.quantity })),
+        itemsKobo: order.itemsTotalKobo,
+        fulfilment: order.fulfilment,
+        acceptBy: lagosTime(order.respondBy),
+        hours: rules.farmerResponseHours,
+      });
+    case "order_deadline":
+      if (order.respondBy === undefined || order.status !== "paid") return null;
+      return farmDeadlineEmail({
+        ...ref,
+        acceptBy: lagosTime(order.respondBy),
+        hoursLeft: Math.max(1, Math.round((order.respondBy - n._creationTime) / HOUR)),
+      });
+    case "deadline_extended": {
+      if (order.respondBy === undefined) return null;
+      const hours = Number(/(\d+) more hours?/.exec(n.body)?.[1]);
+      return farmDeadlineExtendedEmail({ ...ref, acceptBy: lagosTime(order.respondBy), hours: Number.isFinite(hours) ? hours : undefined });
+    }
+    case "order_expired":
+      return farmOrderEndedEmail({ ...ref, why: "expired" });
+    case "order_cancelled":
+      return farmOrderEndedEmail({ ...ref, why: "cancelled", reason: order.cancelReason });
+    case "rider_assigned": {
+      const rider = order.riderId ? await ctx.db.get("riders", order.riderId) : null;
+      if (rider === null) return null;
+      return farmRiderAssignedEmail({
+        ...ref,
+        riderName: rider.name,
+        riderPhone: rider.phone,
+        collectAt: order.riderCollectAt ? lagosTime(order.riderCollectAt) : undefined,
+        changed: n.title.startsWith("New rider"),
+      });
+    }
+    case "chat_message":
+      return farmMessageEmail({
+        ...ref,
+        kind: "chat",
+        from: (order.contact.name || "The shopper").trim().split(/\s+/)[0] ?? "The shopper",
+        preview: n.body,
+      });
+    case "payment_released": {
+      const items = await ctx.db
+        .query("payoutItems")
+        .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
+        .take(5);
+      const amountKobo = items.reduce((sum, i) => sum + i.amountKobo, 0);
+      if (amountKobo <= 0) return null;
+      return farmPaymentReleasedEmail({ ...ref, amountKobo, bank: bank(farm.bankName, farm.accountNumber.slice(-4)) });
+    }
+  }
+
+  // Problem reports
+  const dispute = order.disputeId ? await ctx.db.get("disputes", order.disputeId) : null;
+  if (dispute === null) return null;
+  const caseRef = { ...ref, caseNumber: dispute.number };
+  switch (n.kind) {
+    case "dispute_opened": {
+      const affected = dispute.itemIndexes
+        .map((i) => order.items[i])
+        .filter((i) => i !== undefined)
+        .map((i) => `${i.name} × ${i.quantity}`);
+      return farmProblemReportedEmail({
+        ...caseRef,
+        problem: [REASON_LABELS[dispute.reason], ...affected].join(" · "),
+        note: dispute.note || undefined,
+        replyBy: lagosTime(dispute.farmReplyBy),
+        replyHours: rules.disputeReplyHours,
+      });
+    }
+    case "dispute_reply_reminder":
+      if (dispute.status !== "open") return null;
+      return farmReplyReminderEmail({
+        ...caseRef,
+        replyBy: lagosTime(dispute.farmReplyBy),
+        overdue: false,
+        hoursLeft: Math.max(1, Math.round((dispute.farmReplyBy - n._creationTime) / HOUR)),
+      });
+    case "dispute_reply_overdue":
+      return farmReplyReminderEmail({ ...caseRef, replyBy: lagosTime(dispute.farmReplyBy), overdue: true });
+    case "dispute_resolved":
+      if (dispute.outcome === undefined) return null;
+      return farmProblemDecisionEmail({
+        ...caseRef,
+        outcome: dispute.outcome === "refunded" ? "full_refund" : dispute.outcome === "split" ? "part_refund" : "no_refund",
+        reason: dispute.decisionNote ?? "",
+        refundKobo: dispute.refundKobo,
+        releasedKobo: dispute.releaseKobo,
+      });
+    case "dispute_message":
+      return farmMessageEmail({
+        ...caseRef,
+        kind: "dispute",
+        from: n.title.startsWith("Farmkeke support") ? "Farmkeke support" : "The shopper",
+        preview: n.body,
+      });
     default:
       return null;
   }

@@ -50,6 +50,10 @@ export const changePassword = action({
     // Sign out every other phone, keep this one signed in.
     const sessionId = await getAuthSessionId(ctx);
     await invalidateSessions(ctx, { userId: user._id, except: sessionId ? [sessionId] : [] });
+    // Security email, in the background so it can't fail the change
+    await ctx.scheduler.runAfter(0, internal.notifications.deliver.accountEmail, {
+      email: { kind: "password_changed", userId: user._id, how: "changed" },
+    });
   },
 });
 
@@ -65,6 +69,12 @@ export const changeEmail = action({
       newEmail,
     });
     if (result === "EMAIL_TAKEN") throw new ConvexError({ code: "EMAIL_TAKEN" });
+    if (result === "OK") {
+      // Security notice to the old address, confirmation to the new one
+      await ctx.scheduler.runAfter(0, internal.notifications.deliver.accountEmail, {
+        email: { kind: "email_changed", userId: user._id, oldEmail: user.email!, newEmail },
+      });
+    }
   },
 });
 

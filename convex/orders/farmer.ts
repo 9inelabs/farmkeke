@@ -272,8 +272,15 @@ export const decline = mutation({
 export const startPreparing = mutation({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    const { order, actor } = await ownOrder(ctx, args.orderId);
-    await transition(ctx, order, "preparing", actor, { preparingAt: Date.now() });
+    const { farm, order, actor } = await ownOrder(ctx, args.orderId);
+    const preparing = await transition(ctx, order, "preparing", actor, { preparingAt: Date.now() });
+    await notifyConsumer(
+      ctx,
+      preparing,
+      "order_preparing",
+      `Order ${order.number} is being prepared`,
+      `${farm.name} is preparing your order.`,
+    );
   },
 });
 
@@ -286,6 +293,14 @@ export const markPacked = mutation({
     if (order.packedAt !== undefined) return;
     await ctx.db.patch("orders", order._id, { packedAt: Date.now() });
     await ctx.db.insert("orderEvents", { orderId: order._id, kind: "packed", actorKind: actor.kind, actorId: actor.id });
+    // Push (or SMS) only; the "being prepared" email already went out.
+    await notifyConsumer(
+      ctx,
+      order,
+      "order_packed",
+      `Order ${order.number} is packed`,
+      order.fulfilment === "delivery" ? "It's waiting for a Farmkeke rider." : "It's waiting for a rider to take it to your pickup point.",
+    );
   },
 });
 

@@ -174,6 +174,13 @@ export const claimGuestOrders = mutation({
       .withIndex("by_userId_and_side", (q) => q.eq("userId", guest._id).eq("side", "shop"))
       .take(500);
     for (const n of notifications) await ctx.db.patch("notifications", n._id, { userId: account._id });
+    if (claimed > 0) {
+      // Security email: guest orders were added to this account
+      const numbers = [...orders].sort((a, b) => b._creationTime - a._creationTime).map((o) => o.number);
+      await ctx.scheduler.runAfter(0, internal.notifications.deliver.accountEmail, {
+        email: { kind: "guest_orders_added", userId: account._id, numbers: numbers.slice(0, 10), total: claimed },
+      });
+    }
     return { claimed };
   },
 });

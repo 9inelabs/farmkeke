@@ -20,6 +20,9 @@ const app = defineApp({
     PAYMENTS_TEST_STEP: v.optional(v.string()),
     // Where Paystack returns website shoppers, e.g. "https://farmkeke.com"
     WEBSITE_URL: v.optional(v.string()),
+    // Optional folder for email images (holds wordmark.png). Unset: emails use
+    // this deployment's GET /email/wordmark.png route.
+    EMAIL_ASSETS_URL: v.optional(v.string()),
   },
 });
 

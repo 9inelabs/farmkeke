@@ -1,8 +1,9 @@
 import { httpRouter } from "convex/server";
 import { internal } from "./_generated/api";
-import { httpAction, type ActionCtx } from "./_generated/server";
+import { env, httpAction, type ActionCtx } from "./_generated/server";
 import { auth } from "./auth";
 import { chargeArgs, paymentsLive, paystack, validSignature, type PaystackTransaction } from "./lib/paystack";
+import { wordmarkPng } from "./lib/wordmarkPng";
 
 const http = httpRouter();
 
@@ -143,6 +144,57 @@ a.btn{display:block;background:#A9D654;color:#1E3B16;font-weight:600;text-decora
 <h1>Back to Farmkeke</h1>
 <p>Taking you back to the app to see your order…</p>
 <a class="btn" href="${escapeHtml(appLink)}">Open Farmkeke</a>
+</main><script>window.location.replace(${JSON.stringify(appLink)});</script></body></html>`;
+    return new Response(html, {
+      status: 200,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }),
+});
+
+/** The logo every email shows (lib/emails.wordmarkUrl). Cached for a year. */
+http.route({
+  path: "/email/wordmark.png",
+  method: "GET",
+  handler: httpAction(async () => {
+    return new Response(wordmarkPng(), {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }),
+});
+
+/**
+ * Farm emails' "Open the Farmkeke app" button (https works in every mail
+ * client). Opens the app; without it installed, links to the website's
+ * Get the app page.
+ */
+http.route({
+  path: "/open-app",
+  method: "GET",
+  handler: httpAction(async () => {
+    const appLink = "farmkeke://";
+    const getApp = `${(env.WEBSITE_URL ?? "https://farmkeke.com").replace(/\/+$/, "")}/get-the-app`;
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Open Farmkeke</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F2F8E6;font-family:Inter,system-ui,Arial,sans-serif;color:#1A1A1A}
+main{max-width:360px;margin:24px;background:#fff;border:1px solid #A9D654;border-radius:16px;padding:32px 24px;text-align:center}
+.mark{font-size:28px;font-weight:700;margin:0 0 20px}.mark span{color:#A9D654}
+h1{font-size:20px;color:#1E3B16;margin:0 0 8px}p{font-size:15px;line-height:22px;color:rgba(26,26,26,.7);margin:0 0 24px}
+a.btn{display:block;background:#A9D654;color:#1E3B16;font-weight:600;text-decoration:none;padding:14px;border-radius:17px}
+a.alt{display:block;margin-top:16px;color:#1E3B16;font-size:14px}
+</style></head><body><main>
+<p class="mark"><span>farm</span>keke</p>
+<h1>Open the Farmkeke app</h1>
+<p>Opening Farmkeke on this phone… Switch to farmer mode to see your farm.</p>
+<a class="btn" href="${escapeHtml(appLink)}">Open Farmkeke</a>
+<a class="alt" href="${escapeHtml(getApp)}">Don't have the app? Get it here</a>
 </main><script>window.location.replace(${JSON.stringify(appLink)});</script></body></html>`;
     return new Response(html, {
       status: 200,

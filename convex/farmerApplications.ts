@@ -6,6 +6,7 @@ import { applicationProblems, EDITABLE_STATUSES, MAX_FARM_PHOTOS } from "./lib/a
 import { getViewer, requireAccount } from "./lib/auth";
 import { bankName } from "./lib/banks";
 import { nextCounter } from "./lib/counters";
+import { notify } from "./lib/notify";
 import { normalizeNigerianPhone } from "./lib/phone";
 import { validateImageUpload } from "./lib/uploads";
 import { requireOpeningHours } from "./lib/validate";
@@ -276,6 +277,15 @@ export const submit = mutation({
       termsAcceptedAt: Date.now(),
       submittedAt: Date.now(),
       moreInfo: app.status === "more_info" ? app.moreInfo : undefined,
+    });
+    // F-09a: "We received your application" (push and email)
+    await notify(ctx, {
+      userId: user._id,
+      side: "farm",
+      kind: "application_received",
+      title: "We received your application",
+      body: `Reference ${reference}. Expect a decision within ${REVIEW_DAYS} working days.`,
+      href: "/sell/status",
     });
     return { reference };
   },

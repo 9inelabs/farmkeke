@@ -33,6 +33,7 @@ type Env = {
   readonly AUTH_DEV_LOG_EMAILS: string | undefined;
   readonly AUTH_EMAIL_FROM: string | undefined;
   readonly AUTH_RESEND_KEY: string | undefined;
+  readonly EMAIL_ASSETS_URL: string | undefined;
   readonly JWKS: string | undefined;
   readonly JWT_PRIVATE_KEY: string | undefined;
   readonly PAYMENTS_TEST_STEP: string | undefined;

@@ -5,7 +5,17 @@ import { v, type Infer } from "convex/values";
 import { internal } from "../_generated/api";
 import { env, internalAction, type ActionCtx } from "../_generated/server";
 import { sendEmail } from "../lib/email";
-import { welcomeEmail, type Email } from "../lib/emails";
+import {
+  accountDeletionEmail,
+  emailChangedConfirmEmail,
+  emailChangedNoticeEmail,
+  guestOrdersAddedEmail,
+  lagosTime,
+  passwordChangedEmail,
+  welcomeEmail,
+  type Email,
+} from "../lib/emails";
+import { MESSAGE_EMAIL_WINDOW_MS } from "./store";
 
 const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
 const EXPO_RECEIPTS = "https://exp.host/--/api/v2/push/getReceipts";
@@ -70,9 +80,12 @@ async function pushNow(ctx: ActionCtx, messages: PushMessage[], attempt: number)
   }
 }
 
+/** Whether email can go out: a Resend key, or dev logging. */
+const emailOn = () => Boolean(env.AUTH_RESEND_KEY) || env.AUTH_DEV_LOG_EMAILS === "true";
+
 /** Sends an email if Resend is set up. Without a key: logs in dev, otherwise skips quietly. */
 async function emailQuietly(email: Email) {
-  if (!env.AUTH_RESEND_KEY && env.AUTH_DEV_LOG_EMAILS !== "true") return;
+  if (!emailOn()) return;
   try {
     await sendEmail(email);
   } catch (error) {
@@ -88,7 +101,16 @@ export const send = internalAction({
     if (plan.push.length > 0) await pushNow(ctx, plan.push, 0);
     // No SMS provider yet: record what would be sent.
     if (plan.sms) await ctx.runMutation(internal.notifications.store.logSms, { ...plan.sms, status: "recorded" });
-    if (plan.email) await emailQuietly(plan.email);
+    if (plan.email && emailOn()) {
+      // Message emails: at most one per thread every 30 minutes
+      const allowed =
+        plan.emailThrottleKey === undefined ||
+        (await ctx.runMutation(internal.notifications.store.claimEmailSlot, {
+          key: plan.emailThrottleKey,
+          windowMs: MESSAGE_EMAIL_WINDOW_MS,
+        }));
+      if (allowed) await emailQuietly(plan.email);
+    }
     return null;
   },
 });
@@ -137,5 +159,52 @@ export const welcome = internalAction({
     if (user === null || user.isAnonymous || !user.email) return null;
     await emailQuietly(welcomeEmail({ to: user.email, name: user.name }));
     return null;
+  },
+});
+
+/**
+ * Account security emails (both the app and the website). Always sent,
+ * whatever the notification preferences. Scheduled by account.ts,
+ * accountsInternal.ts, lib/passwordProvider.ts and orders/consumer.ts, so a
+ * failed email never fails the change itself.
+ */
+export const accountEmail = internalAction({
+  args: {
+    email: v.union(
+      v.object({ kind: v.literal("password_changed"), userId: v.id("users"), how: v.union(v.literal("changed"), v.literal("reset")) }),
+      v.object({ kind: v.literal("email_changed"), userId: v.id("users"), oldEmail: v.string(), newEmail: v.string() }),
+      v.object({ kind: v.literal("deletion_waiting"), to: v.string(), name: v.optional(v.string()), orders: v.number() }),
+      v.object({ kind: v.literal("deletion_done"), to: v.string(), name: v.optional(v.string()) }),
+      v.object({ kind: v.literal("guest_orders_added"), userId: v.id("users"), numbers: v.array(v.string()), total: v.number() }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const e = args.email;
+    const at = lagosTime(Date.now());
+    switch (e.kind) {
+      case "deletion_waiting":
+        await emailQuietly(accountDeletionEmail({ to: e.to, name: e.name, status: "waiting", orders: e.orders }));
+        return null;
+      case "deletion_done":
+        await emailQuietly(accountDeletionEmail({ to: e.to, name: e.name, status: "deleted" }));
+        return null;
+    }
+    const user = await ctx.runQuery(internal.accountsInternal.userById, { userId: e.userId });
+    if (user === null || user.isAnonymous) return null;
+    switch (e.kind) {
+      case "password_changed":
+        if (user.email) await emailQuietly(passwordChangedEmail({ to: user.email, name: user.name, how: e.how, at }));
+        return null;
+      case "email_changed":
+        // The old address hears about it (security), the new one confirms it.
+        await emailQuietly(emailChangedNoticeEmail({ to: e.oldEmail, name: user.name, newEmail: e.newEmail, at }));
+        await emailQuietly(emailChangedConfirmEmail({ to: e.newEmail, name: user.name, oldEmail: e.oldEmail }));
+        return null;
+      case "guest_orders_added":
+        if (user.email && e.total > 0) {
+          await emailQuietly(guestOrdersAddedEmail({ to: user.email, name: user.name, numbers: e.numbers, total: e.total }));
+        }
+        return null;
+    }
   },
 });

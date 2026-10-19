@@ -1,9 +1,10 @@
 // Farmkeke email templates (moved from farmkeke-docs/pending-backend/emails).
 //
-// Pure TypeScript: no imports, no dependencies, no Node APIs. Used by
-// notifications/store.plan (order emails) and notifications/deliver.welcome,
-// and sent with sendEmail() from ./email.ts. Every function returns the same
-// `Email` shape that sendEmail() takes.
+// Plain TypeScript with one import (env, for the website and image URLs); no
+// Node APIs. Used by notifications/store.plan (order, message and farm emails)
+// and notifications/deliver (welcome and account emails), and sent with
+// sendEmail() from ./email.ts. Every function returns the same `Email` shape
+// that sendEmail() takes. scripts/render-email-previews.mjs renders them all.
 //
 // Rules used throughout:
 // - Money is always in kobo (integers) and shown with naira().
@@ -13,12 +14,44 @@
 // - Dates and times are passed in as ready-made labels (for example
 //   "Sun 18 Oct, 9am – 12pm"). lagosTime() below helps build them.
 
+import { env } from "../_generated/server";
+
 export type Email = { to: string; subject: string; html: string; text: string };
 
+/** The default website. Links use env WEBSITE_URL when it's set. */
 export const SITE_URL = "https://farmkeke.com";
-const WORDMARK_URL = `${SITE_URL}/brand/wordmark.png`;
-const HELP_URL = `${SITE_URL}/help`;
 const TAGLINE = "Farmkeke · from the farm directly to your home";
+
+const trimSlash = (s: string) => s.replace(/\/+$/, "");
+const envValue = (value: string | undefined) => (value && value.trim() ? trimSlash(value.trim()) : undefined);
+
+/** The website links point to: env WEBSITE_URL, or https://farmkeke.com. */
+export function siteUrl(): string {
+  return envValue(env.WEBSITE_URL) ?? SITE_URL;
+}
+
+/**
+ * The logo at the top of every email. env EMAIL_ASSETS_URL (a folder that
+ * holds wordmark.png) wins; otherwise this deployment's own
+ * GET /email/wordmark.png route (convex/http.ts).
+ */
+export function wordmarkUrl(): string {
+  const assets = envValue(env.EMAIL_ASSETS_URL);
+  if (assets) return `${assets}/wordmark.png`;
+  const convexSite = envValue(env.CONVEX_SITE_URL);
+  if (convexSite) return `${convexSite}/email/wordmark.png`;
+  return `${SITE_URL}/brand/wordmark.png`;
+}
+
+/** Farm emails' button: a page that opens the Farmkeke app (GET /open-app). */
+export function openAppUrl(): string {
+  const convexSite = envValue(env.CONVEX_SITE_URL);
+  return convexSite ? `${convexSite}/open-app` : `${siteUrl()}/get-the-app`;
+}
+
+const helpUrl = () => `${siteUrl()}/help`;
+/** "farmkeke.com/help", from the website URL. */
+const helpLabel = () => `${siteUrl().replace(/^https?:\/\//, "")}/help`;
 
 // Brand colours
 const FOREST = "#1E3B16";
@@ -80,17 +113,23 @@ export function lagosTime(ms: number, opts: { time?: boolean } = {}): string {
 // Website links
 const id = (s: string) => encodeURIComponent(s);
 export const links = {
-  shop: () => `${SITE_URL}/shop`,
-  account: () => `${SITE_URL}/account`,
-  help: () => HELP_URL,
-  findOrder: () => `${SITE_URL}/find-order`,
-  order: (orderId: string) => `${SITE_URL}/orders/${id(orderId)}`,
-  review: (orderId: string) => `${SITE_URL}/orders/${id(orderId)}/review`,
-  refund: (orderId: string) => `${SITE_URL}/orders/${id(orderId)}/refund`,
-  dispute: (orderId: string) => `${SITE_URL}/orders/${id(orderId)}/dispute`,
-  reportProblem: (orderId: string) => `${SITE_URL}/orders/${id(orderId)}/problem`,
+  shop: () => `${siteUrl()}/shop`,
+  account: () => `${siteUrl()}/account`,
+  notifications: () => `${siteUrl()}/account/notifications`,
+  signIn: () => `${siteUrl()}/signin`,
+  forgotPassword: () => `${siteUrl()}/forgot-password`,
+  help: () => helpUrl(),
+  contact: () => `${siteUrl()}/contact`,
+  findOrder: () => `${siteUrl()}/find-order`,
+  order: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}`,
+  chat: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/chat`,
+  review: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/review`,
+  refund: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/refund`,
+  dispute: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/dispute`,
+  reportProblem: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/problem`,
   resetPassword: (email: string, code: string) =>
-    `${SITE_URL}/reset-password?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`,
+    `${siteUrl()}/reset-password?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`,
+  openApp: () => openAppUrl(),
 };
 
 const firstName = (name?: string) => {
@@ -232,11 +271,11 @@ a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !importa
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
 <tr><td style="padding:0 4px 20px;">
-<a href="${SITE_URL}" target="_blank" style="text-decoration:none;color:${FOREST};"><img src="${WORDMARK_URL}" alt="Farmkeke" width="140" height="27" style="display:block;width:140px;height:27px;border:0;font-family:${HEAD_FONT};font-size:22px;line-height:27px;font-weight:800;color:${FOREST};"></a>
+<a href="${esc(siteUrl())}" target="_blank" style="text-decoration:none;color:${FOREST};"><img src="${esc(wordmarkUrl())}" alt="Farmkeke" width="140" height="27" style="display:block;width:140px;height:27px;border:0;font-family:${HEAD_FONT};font-size:22px;line-height:27px;font-weight:800;color:${FOREST};"></a>
 </td></tr>
 <tr><td class="fk-card" bgcolor="#FFFFFF" style="background:#FFFFFF;border-radius:16px;border:1px solid ${LINE};padding:32px 32px 12px;">
 ${body}
-${SMALL(`Need help? Reply to this email or visit ${LINK(HELP_URL, "farmkeke.com/help")}.`, "margin:0 0 20px;")}
+${SMALL(`Need help? Reply to this email or visit ${LINK(helpUrl(), helpLabel())}.`, "margin:0 0 20px;")}
 </td></tr>
 <tr><td style="padding:20px 4px 0;font-family:${BODY_FONT};font-size:12px;line-height:18px;color:${MUTED};">
 ${reason ? `<p style="margin:0 0 8px;">${esc(reason)}</p>` : ""}
@@ -260,7 +299,7 @@ function plain(opts: { lines: string[]; cta: { label: string; url: string }; ext
     `${opts.cta.label}: ${opts.cta.url}`,
     ...(opts.extra && opts.extra.length ? ["", ...opts.extra] : []),
     "",
-    `Need help? Reply to this email or visit ${HELP_URL}`,
+    `Need help? Reply to this email or visit ${helpUrl()}`,
     "",
     "--",
     ...(opts.reason ? [opts.reason] : []),
@@ -1054,4 +1093,978 @@ export function hoursLines(hours: { day: number; opens: string; closes: string }
   return [...hours]
     .sort((a, b) => ((a.day + 6) % 7) - ((b.day + 6) % 7))
     .map((h) => `${DAYS[h.day] ?? ""}, ${clockLabel(h.opens)} – ${clockLabel(h.closes)}`);
+}
+
+// ===========================================================================
+// Emails added in phase 9 (shopper updates, messages, account security and
+// the farm side). They share one composer so every email has the same parts:
+// a heading, blocks with a plain-text twin, one lime button, the help line and
+// a footer saying why it was sent.
+// ===========================================================================
+
+/** Rich text: plain strings, bold parts and links. Everything is escaped. */
+type Part = string | { b: string } | { link: string; label: string };
+const partHtml = (p: Part) =>
+  typeof p === "string" ? esc(p) : "b" in p ? `<strong>${esc(p.b)}</strong>` : LINK(p.link, p.label);
+const partText = (p: Part) => (typeof p === "string" ? p : "b" in p ? p.b : `${p.label} (${p.link})`);
+const richHtml = (parts: Part[]) => parts.map(partHtml).join("");
+const richText = (parts: Part[]) => parts.map(partText).join("");
+
+type Block = { html: string; text: string[] };
+
+const b = {
+  p: (...parts: Part[]): Block => ({ html: P(richHtml(parts)), text: [richText(parts)] }),
+  small: (...parts: Part[]): Block => ({ html: SMALL(richHtml(parts)), text: [richText(parts)] }),
+  note: (...parts: Part[]): Block => ({ html: NOTE(richHtml(parts)), text: [richText(parts)] }),
+  h2: (title: string): Block => ({ html: H2(esc(title)), text: [title] }),
+  rows: (rows: Row[]): Block => ({
+    html: ROWS(rows),
+    text: rows.map((r) => (r.label ? `${r.label}: ${r.value}` : `  ${r.value}`)),
+  }),
+  steps: (steps: { title: string; note?: string }[]): Block => ({ html: STEPS(steps), text: stepsText(steps) }),
+  code: (code: string): Block => ({
+    html:
+      CODE(code) +
+      SMALL("Show this code at the counter. Only share it when you are collecting your order.", "text-align:center;margin:-8px 0 20px;"),
+    text: [`YOUR PICKUP CODE: ${code}`, "Show this code at the counter. Only share it when you are collecting your order."],
+  }),
+  /** A message someone sent, shown as a quote. */
+  quote: (from: string, body: string): Block => ({
+    html: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+<tr><td bgcolor="${TINT}" style="border-left:4px solid ${LIME};background:${TINT};border-radius:0 12px 12px 0;padding:12px 16px;font-family:${BODY_FONT};">
+<p style="margin:0 0 4px;font-size:13px;line-height:18px;font-weight:600;color:${MUTED};">${esc(from)}</p>
+<p style="margin:0;font-size:15px;line-height:22px;color:${INK};white-space:pre-line;">${esc(body)}</p>
+</td></tr></table>`,
+    text: [`${from}:`, ...body.split("\n").map((l) => `> ${l}`)],
+  }),
+  /** Farm emails: where to find this in the app. */
+  inApp: (path: string[]): Block => ({
+    html: NOTE(`<strong>In the Farmkeke app:</strong> ${path.map((s) => esc(s)).join(" &rarr; ")}`),
+    text: [`In the Farmkeke app: ${path.join(" > ")}`],
+  }),
+};
+
+type Composed = {
+  to: string;
+  subject: string;
+  preheader: string;
+  title: string;
+  blocks: Block[];
+  cta: { label: string; url: string };
+  /** Blocks under the button (secondary links). */
+  after?: Block[];
+  reason: string;
+};
+
+function compose(p: Composed): Email {
+  const body = [
+    H1(esc(p.title)),
+    ...p.blocks.map((x) => x.html),
+    BUTTON(p.cta.url, p.cta.label),
+    ...(p.after ?? []).map((x) => x.html),
+  ].join("\n");
+  const lines = [p.title, ""];
+  p.blocks.forEach((x, i) => {
+    if (i > 0) lines.push("");
+    lines.push(...x.text);
+  });
+  const text = plain({ lines, cta: p.cta, extra: p.after?.flatMap((x) => x.text), reason: p.reason });
+  return {
+    to: p.to,
+    subject: oneLine(p.subject),
+    html: page({ preheader: p.preheader, body, reason: p.reason }),
+    text,
+  };
+}
+
+/** Order emails a shopper can turn off (messages, reminders). */
+const optionalOrderReason = (number: string, isGuest?: boolean) =>
+  orderReason(number) + (isGuest ? "" : " You can turn these emails off in Account, Notifications.");
+
+const SECURITY_REASON =
+  "This is a security email about your Farmkeke account. We always send these, even if you've turned other emails off.";
+
+// ---------------------------------------------------------------------------
+// 13. Order being prepared (the farm started preparing)
+// ---------------------------------------------------------------------------
+
+export function orderPreparingEmail(
+  p: OrderRef & { fulfilment: "delivery" | "pickup"; window?: string; pickupPointName?: string; isGuest?: boolean },
+): Email {
+  const next: Part[] =
+    p.fulfilment === "delivery"
+      ? ["When it's packed, a Farmkeke rider collects it and brings it to you", ...(p.window ? [" on ", { b: p.window }] : []), "."]
+      : ["When it's packed, a rider takes it to ", { b: p.pickupPointName ?? "your pickup point" }, ". We'll email your pickup code when it's ready."];
+  return compose({
+    to: p.to,
+    subject: `${p.farmName} is preparing order ${p.number}`,
+    preheader: "Your order is being packed at the farm.",
+    title: "Your order is being prepared",
+    blocks: [
+      b.p(hi(p.name), " ", { b: p.farmName }, " has started preparing order ", { b: p.number }, "."),
+      b.p(...next),
+      b.note("Your money is still held safely by Farmkeke."),
+    ],
+    cta: { label: "Track your order", url: links.order(p.orderId) },
+    reason: optionalOrderReason(p.number, p.isGuest),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 14. Order cancelled by Farmkeke (A-52): full refund, delivery fee included
+// ---------------------------------------------------------------------------
+
+export function orderCancelledEmail(
+  p: OrderRef & { refundKobo: number; deliveryFeeKobo?: number; paymentMethod?: string },
+): Email {
+  const back = p.paymentMethod ? `your ${p.paymentMethod}` : "the way you paid";
+  return compose({
+    to: p.to,
+    subject: `Order ${p.number} was cancelled. Full refund on the way`,
+    preheader: `Full refund of ${naira(p.refundKobo)} on the way.`,
+    title: "Your order was cancelled",
+    blocks: [
+      b.p(hi(p.name), " sorry. Farmkeke had to cancel order ", { b: p.number }, ` from ${p.farmName}.`),
+      b.note(
+        { b: `You'll get a full refund of ${naira(p.refundKobo)}` },
+        p.deliveryFeeKobo ? ", delivery fee included" : "",
+        `. It goes back to ${back}.`,
+      ),
+      b.p("Card and bank refunds can take a few working days to show. We'll email you when it's sent."),
+    ],
+    cta: { label: "See your refund", url: links.refund(p.orderId) },
+    after: [b.small("Other farms may have what you need. ", { link: links.shop(), label: "Shop again" }, ".")],
+    reason: orderReason(p.number),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 15. Pickup reminder (a day before collect-by)
+// ---------------------------------------------------------------------------
+
+export function pickupReminderEmail(
+  p: OrderRef & { pickupCode: string; pickupPoint: PickupPoint; collectBy: string },
+): Email {
+  const pt = p.pickupPoint;
+  return compose({
+    to: p.to,
+    subject: `Reminder: collect order ${p.number} by ${p.collectBy}`,
+    preheader: `Your order is waiting at ${pt.name}. Your code is inside.`,
+    title: "Your order is still waiting",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, ` from ${p.farmName} is waiting for you at `, { b: pt.name }, "."),
+      b.code(p.pickupCode),
+      b.rows([
+        { label: "Pickup point", value: pt.name },
+        { label: "Address", value: pt.address },
+        ...pt.hours.map((h, i) => ({ label: i === 0 ? "Open" : "", value: h })),
+        ...(pt.phone ? [{ label: "Phone", value: pt.phone }] : []),
+        { label: "Collect by", value: p.collectBy, strong: true },
+      ]),
+      b.note("Please collect it by ", { b: p.collectBy }, ". Can't make it? Reply to this email and we'll help."),
+    ],
+    cta: { label: "See pickup details", url: links.order(p.orderId) },
+    reason: orderReason(p.number),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 16. Pickup window ended (pickup_overdue)
+// ---------------------------------------------------------------------------
+
+export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKobo?: number }): Email {
+  return compose({
+    to: p.to,
+    subject: `Order ${p.number} is still at the pickup point`,
+    preheader: "Your collection time has passed. Here is what happens next.",
+    title: "Your collection time has passed",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, ` from ${p.farmName} is still at `, { b: p.pointName }, ", and the time to collect it has ended."),
+      b.h2("What happens next"),
+      b.steps([
+        { title: "Contact Farmkeke support", note: "Reply to this email, or use the help page, so we can sort it out." },
+        { title: "We agree what happens to your order", note: "A new time to collect, or what to do if the food can't wait." },
+        {
+          title: "Your money stays held",
+          note: p.heldKobo ? `${naira(p.heldKobo)} stays with Farmkeke until it's sorted.` : "Farmkeke keeps holding it until it's sorted.",
+        },
+      ]),
+    ],
+    cta: { label: "See your order", url: links.order(p.orderId) },
+    reason: orderReason(p.number),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 17. Confirm-receipt reminder (a day after delivery, still unconfirmed)
+// ---------------------------------------------------------------------------
+
+export function confirmReminderEmail(
+  p: OrderRef & { how: "delivered" | "collected"; heldKobo?: number; isGuest?: boolean },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `Did order ${p.number} arrive?`,
+    preheader: "Please confirm, or tell us about a problem. The farm is paid once you confirm.",
+    title: "Did your order arrive?",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, ` from ${p.farmName} was ${p.how}, but it isn't confirmed yet.`),
+      b.p("If everything was right, please confirm receipt. Then the farm is paid."),
+      b.note(
+        "Something wrong? ",
+        { link: links.reportProblem(p.orderId), label: "Report a problem" },
+        " before you confirm.",
+        p.heldKobo ? ` Until then, ${naira(p.heldKobo)} stays held by Farmkeke.` : "",
+      ),
+      ...(p.isGuest ? [b.small("You ordered as a guest, so please confirm on the phone or computer you ordered on.")] : []),
+    ],
+    cta: { label: "Check and confirm", url: links.order(p.orderId) },
+    reason: optionalOrderReason(p.number, p.isGuest),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 18. Review reminder (a day after confirming)
+// ---------------------------------------------------------------------------
+
+export function reviewReminderEmail(p: OrderRef & { isGuest?: boolean }): Email {
+  return compose({
+    to: p.to,
+    subject: `How was your order from ${p.farmName}?`,
+    preheader: "Rate the farm to help other shoppers.",
+    title: "How was your order?",
+    blocks: [
+      b.p(hi(p.name), " you confirmed order ", { b: p.number }, " from ", { b: p.farmName }, "."),
+      b.p("A quick rating helps other shoppers choose, and helps the farm grow. It takes less than a minute."),
+    ],
+    cta: { label: "Leave a review", url: links.review(p.orderId) },
+    reason: optionalOrderReason(p.number, p.isGuest),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 19. Messages: order chat, problem report and support replies
+//     (at most one email per thread every 30 minutes; notifications/store)
+// ---------------------------------------------------------------------------
+
+export function chatMessageEmail(p: OrderRef & { preview: string; isGuest?: boolean }): Email {
+  return compose({
+    to: p.to,
+    subject: `${p.farmName} sent you a message about order ${p.number}`,
+    preheader: p.preview,
+    title: `New message from ${p.farmName}`,
+    blocks: [
+      b.p(hi(p.name), " ", { b: p.farmName }, " wrote about order ", { b: p.number }, ":"),
+      b.quote(p.farmName, p.preview),
+      b.small("We send at most one email per conversation every 30 minutes. Open the chat to see every message."),
+    ],
+    cta: { label: "Reply in the chat", url: links.chat(p.orderId) },
+    reason: optionalOrderReason(p.number, p.isGuest),
+  });
+}
+
+export function disputeMessageEmail(
+  p: OrderRef & { caseNumber: string; from: string; preview: string; isGuest?: boolean },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `New message on case ${p.caseNumber}`,
+    preheader: `${p.from}: ${p.preview}`,
+    title: `New message on case ${p.caseNumber}`,
+    blocks: [
+      b.p(hi(p.name), " there's a new message about your problem report for order ", { b: p.number }, "."),
+      b.quote(p.from, p.preview),
+      b.small("We send at most one email per case every 30 minutes. Open the case to see every message."),
+    ],
+    cta: { label: "See the case", url: links.dispute(p.orderId) },
+    reason: optionalOrderReason(p.number, p.isGuest),
+  });
+}
+
+export function supportReplyEmail(p: {
+  to: string;
+  name?: string;
+  /** "SUP-1001" */
+  ticketNumber?: string;
+  preview: string;
+  /** The order the conversation is about, if any. */
+  order?: { orderId: string; number: string };
+  isGuest?: boolean;
+}): Email {
+  const ref = p.ticketNumber ? ` (${p.ticketNumber})` : "";
+  const cta = p.order
+    ? { label: "See your order", url: links.order(p.order.orderId) }
+    : { label: "Write back to support", url: links.contact() };
+  return compose({
+    to: p.to,
+    subject: `Farmkeke support replied${ref}`,
+    preheader: p.preview,
+    title: "Farmkeke support replied",
+    blocks: [
+      b.p(hi(p.name), ` we've replied to your message${ref}`, p.order ? ` about order ${p.order.number}` : "", ":"),
+      b.quote("Farmkeke support", p.preview),
+      b.small("Reply to this email to write back. We usually answer within a day."),
+    ],
+    cta,
+    reason:
+      `You're getting this email because you contacted Farmkeke support${ref}.` +
+      (p.isGuest ? "" : " You can turn these emails off in Account, Notifications."),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 20. Account security emails (always sent, whatever the preferences)
+// ---------------------------------------------------------------------------
+
+/** W-42d: after changing the password, or after a reset link was used. */
+export function passwordChangedEmail(p: { to: string; name?: string; how: "changed" | "reset"; at: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "Your Farmkeke password was changed",
+    preheader: "If this wasn't you, contact support straight away.",
+    title: "Your password is changed",
+    blocks: [
+      b.p(hi(p.name), " the password for ", { b: p.to }, p.how === "reset" ? " was reset with an email link on " : " was changed on ", { b: p.at }, "."),
+      b.p("Sign in with your new password on the website or in the Farmkeke app. Other phones and computers were signed out."),
+      b.note({ b: "Didn't change your password?" }, " Contact support straight away by replying to this email, then reset your password."),
+    ],
+    cta: { label: "Sign in", url: links.signIn() },
+    after: [b.small("Need to reset it? ", { link: links.forgotPassword(), label: "Forgot password" }, ".")],
+    reason: SECURITY_REASON,
+  });
+}
+
+/** Sent to the OLD address when the sign-in email changes. */
+export function emailChangedNoticeEmail(p: { to: string; name?: string; newEmail: string; at: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "Your Farmkeke email address was changed",
+    preheader: "If this wasn't you, contact support straight away.",
+    title: "Your email address was changed",
+    blocks: [
+      b.p(hi(p.name), " the email address for your Farmkeke account was changed on ", { b: p.at }, "."),
+      b.rows([
+        { label: "Old address", value: p.to },
+        { label: "New address", value: p.newEmail, strong: true },
+      ]),
+      b.p("From now on you sign in, and get Farmkeke emails, at the new address. This is the last email we'll send here."),
+      b.note({ b: "Didn't make this change?" }, " Reply to this email straight away so we can secure your account."),
+    ],
+    cta: { label: "Contact support", url: links.contact() },
+    reason: SECURITY_REASON,
+  });
+}
+
+/** Sent to the NEW address when the sign-in email changes. */
+export function emailChangedConfirmEmail(p: { to: string; name?: string; oldEmail: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "This is now your Farmkeke email address",
+    preheader: "Sign in with this address from now on.",
+    title: "Your new email address is set",
+    blocks: [
+      b.p(hi(p.name), " ", { b: p.to }, " is now the email address for your Farmkeke account."),
+      b.p("Use it to sign in on the website and in the app. Your password hasn't changed. Order updates and receipts now come here."),
+      b.small(`We've also told your old address (${p.oldEmail}) about this change.`),
+    ],
+    cta: { label: "Go to your account", url: links.account() },
+    reason: SECURITY_REASON,
+  });
+}
+
+/** M-95 / W-49: deleted now, or waiting for orders in progress to finish. */
+export function accountDeletionEmail(
+  p: { to: string; name?: string } & ({ status: "deleted" } | { status: "waiting"; orders: number }),
+): Email {
+  if (p.status === "waiting") {
+    const n = p.orders === 1 ? "1 order" : `${p.orders} orders`;
+    const isAre = p.orders === 1 ? "it's" : "they're";
+    return compose({
+      to: p.to,
+      subject: "Your Farmkeke account will be deleted soon",
+      preheader: `We'll delete it once your ${n} in progress ${p.orders === 1 ? "is" : "are"} finished.`,
+      title: "We'll delete your account soon",
+      blocks: [
+        b.p(hi(p.name), " you asked us to delete your Farmkeke account."),
+        b.note("You have ", { b: `${n} in progress` }, `. We'll delete your account automatically once ${isAre} finished, and email you when it's done.`),
+        b.p("Until then you can still sign in to confirm receipt or report a problem. Your money stays held safely until each order is finished."),
+        b.h2("What happens when we delete it"),
+        b.steps([
+          { title: "Your saved addresses, saved items and preferences are erased" },
+          { title: "You can no longer see past orders or receipts" },
+          { title: "We keep a record of past payments for accounting" },
+        ]),
+      ],
+      cta: { label: "See your orders", url: `${siteUrl()}/account/orders` },
+      after: [b.small("Changed your mind? Reply to this email before your orders finish.")],
+      reason: SECURITY_REASON,
+    });
+  }
+  return compose({
+    to: p.to,
+    subject: "Your Farmkeke account is deleted",
+    preheader: "Your account and saved details have been removed.",
+    title: "Your account is deleted",
+    blocks: [
+      b.p(hi(p.name), " your Farmkeke account has been deleted, on the website and in the app."),
+      b.steps([
+        { title: "Your saved addresses, saved items and preferences are erased" },
+        { title: "You can't sign in with this email any more" },
+        { title: "We keep a record of past payments for accounting" },
+      ]),
+      b.p("Thank you for buying from Nigerian farms with us. To shop again, you can create a new account any time."),
+      b.note({ b: "Didn't ask for this?" }, " Reply to this email straight away."),
+    ],
+    cta: { label: "Visit Farmkeke", url: siteUrl() },
+    reason: "This is the last email about your deleted Farmkeke account.",
+  });
+}
+
+/** After a guest's orders are added to their account (W-44). */
+export function guestOrdersAddedEmail(p: { to: string; name?: string; numbers: string[]; total: number }): Email {
+  const n = p.total === 1 ? "1 order" : `${p.total} orders`;
+  const shown = p.numbers.slice(0, 10);
+  return compose({
+    to: p.to,
+    subject: p.total === 1 ? "Your guest order is now in your account" : `${p.total} guest orders are now in your account`,
+    preheader: "Track them, confirm them and report problems from any device.",
+    title: "Your guest orders are in your account",
+    blocks: [
+      b.p(hi(p.name), " we've added ", { b: n }, " you placed as a guest to your Farmkeke account."),
+      b.rows(shown.map((number, i) => ({ label: i === 0 ? "Orders" : "", value: number }))),
+      ...(p.total > shown.length ? [b.small(`And ${p.total - shown.length} more.`)] : []),
+      b.p("You can now track them, confirm receipt and report problems from any phone or computer you sign in on."),
+      b.small("Didn't do this? Reply to this email straight away."),
+    ],
+    cta: { label: "See your orders", url: `${siteUrl()}/account/orders` },
+    reason: SECURITY_REASON,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 21. Farm emails. Farmers work in the app, so each one says where to look,
+//     and the button opens the app (GET /open-app on this deployment).
+// ---------------------------------------------------------------------------
+
+type FarmRef = { to: string; name?: string; farmName: string };
+
+const openApp = () => ({ label: "Open the Farmkeke app", url: links.openApp() });
+const farmReason = (farmName: string) =>
+  `You're getting this email because ${farmName} sells on Farmkeke. Choose which emails you get in the app: Farm, Notifications.`;
+const FARM_MONEY_REASON =
+  "You're getting this email because you sell on Farmkeke. Payment emails can't be turned off, so you never miss a change to your money.";
+const APPLICATION_REASON = "You're getting this email because you applied to sell on Farmkeke.";
+const APPLICATION_PATH = ["Account", "Selling", "Your application"];
+const farmOrderPath = (number: string, ...more: string[]) => ["Switch to farmer mode", "Orders", `Order ${number}`, ...more];
+
+export function applicationReceivedEmail(p: { to: string; name?: string; reference: string; decisionBy: string }): Email {
+  return compose({
+    to: p.to,
+    subject: `We received your application (${p.reference})`,
+    preheader: `Expect a decision by ${p.decisionBy}.`,
+    title: "We received your application",
+    blocks: [
+      b.p(hi(p.name), " thank you for applying to sell on Farmkeke."),
+      b.rows([
+        { label: "Reference", value: p.reference },
+        { label: "Expect a decision by", value: p.decisionBy, strong: true },
+      ]),
+      b.p("Our team checks your farm details and documents. We'll email you as soon as we decide, or if we need anything else."),
+      b.inApp(APPLICATION_PATH),
+    ],
+    cta: openApp(),
+    reason: APPLICATION_REASON,
+  });
+}
+
+export function applicationApprovedEmail(p: { to: string; name?: string; farmName: string }): Email {
+  return compose({
+    to: p.to,
+    subject: `You're approved: ${p.farmName} can now sell on Farmkeke`,
+    preheader: "Switch to farmer mode to finish setting up your farm.",
+    title: "You're approved",
+    blocks: [
+      b.p(hi(p.name), " welcome to Farmkeke. ", { b: p.farmName }, " is approved, and farmer mode is now open in your app."),
+      b.h2("Next steps in the app"),
+      b.steps([
+        { title: "Switch to farmer mode", note: "Account, Switch to farmer mode." },
+        { title: "Complete your farm profile" },
+        { title: "Confirm when riders can collect" },
+        { title: "Add your first listing", note: "Listings, Add. We check new listings before they go live." },
+      ]),
+      b.note("Shoppers pay Farmkeke first. We hold the money safely and pay you once they confirm they got their order."),
+    ],
+    cta: openApp(),
+    reason: APPLICATION_REASON,
+  });
+}
+
+export function applicationRejectedEmail(p: {
+  to: string;
+  name?: string;
+  reference?: string;
+  reason: string;
+  note?: string;
+  /** "Mon 2 Nov"; omit when they can apply again now. */
+  reapplyFrom?: string;
+}): Email {
+  return compose({
+    to: p.to,
+    subject: `Your Farmkeke application${p.reference ? ` (${p.reference})` : ""} wasn't approved`,
+    preheader: p.reapplyFrom ? `You can apply again from ${p.reapplyFrom}.` : "You can apply again.",
+    title: "Not approved this time",
+    blocks: [
+      b.p(hi(p.name), " thank you for applying to sell on Farmkeke. We're sorry, but we couldn't approve your application this time."),
+      b.h2("Why"),
+      b.p(p.reason),
+      ...(p.note ? [b.quote("Note from Farmkeke", p.note)] : []),
+      p.reapplyFrom
+        ? b.note("You can apply again from ", { b: p.reapplyFrom }, ". Your bank details are kept.")
+        : b.note("You can start a new application now. Your bank details are kept."),
+      b.inApp(APPLICATION_PATH),
+    ],
+    cta: openApp(),
+    reason: APPLICATION_REASON,
+  });
+}
+
+export function applicationMoreInfoEmail(p: {
+  to: string;
+  name?: string;
+  reference?: string;
+  sections: string[];
+  note: string;
+}): Email {
+  return compose({
+    to: p.to,
+    subject: `We need a bit more for your application${p.reference ? ` (${p.reference})` : ""}`,
+    preheader: "Update the sections below, then resubmit.",
+    title: "We need a bit more",
+    blocks: [
+      b.p(hi(p.name), " we've looked at your application to sell on Farmkeke. Please update a few things, then resubmit."),
+      b.quote("Note from Farmkeke", p.note),
+      b.h2("Sections to update"),
+      b.steps(p.sections.map((s) => ({ title: s }))),
+      b.inApp([...APPLICATION_PATH, "Review and resubmit"]),
+    ],
+    cta: openApp(),
+    reason: APPLICATION_REASON,
+  });
+}
+
+export function farmNewOrderEmail(
+  p: FarmRef & {
+    number: string;
+    items: OrderItem[];
+    itemsKobo: number;
+    fulfilment: "delivery" | "pickup";
+    /** "Mon 19 Oct, 14:30" */
+    acceptBy: string;
+    hours: number;
+  },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `New order ${p.number}: accept within ${p.hours} hours`,
+    preheader: `Accept or decline by ${p.acceptBy}.`,
+    title: "You have a new order",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, ` is paid and waiting for ${p.farmName}.`),
+      b.rows([
+        ...p.items.map((it) => ({ label: itemLabel(it), value: naira(it.totalKobo) })),
+        { label: "Order value", value: naira(p.itemsKobo), strong: true },
+        {
+          label: "How it goes",
+          value: p.fulfilment === "delivery" ? "A rider collects it and delivers to the shopper" : "A rider collects it for a pickup point",
+        },
+      ]),
+      b.note(
+        { b: `Accept or decline within ${p.hours} hours, by ${p.acceptBy}.` },
+        " If you don't answer in time, the order expires and the shopper is refunded.",
+      ),
+      b.p("The money is already held safely by Farmkeke. You're paid once the shopper confirms they got everything."),
+      b.inApp(farmOrderPath(p.number)),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmDeadlineEmail(p: FarmRef & { number: string; acceptBy: string; hoursLeft: number }): Email {
+  const left = `${p.hoursLeft} hour${p.hoursLeft === 1 ? "" : "s"}`;
+  return compose({
+    to: p.to,
+    subject: `About ${left} left to accept order ${p.number}`,
+    preheader: `Accept or decline by ${p.acceptBy}, or it expires.`,
+    title: "An order is waiting for you",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, ` is still waiting for an answer from ${p.farmName}.`),
+      b.note({ b: `About ${left} left, until ${p.acceptBy}.` }, " After that it expires and the shopper is refunded."),
+      b.inApp(farmOrderPath(p.number)),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmDeadlineExtendedEmail(p: FarmRef & { number: string; acceptBy: string; hours?: number }): Email {
+  return compose({
+    to: p.to,
+    subject: `More time to accept order ${p.number}`,
+    preheader: `You now have until ${p.acceptBy}.`,
+    title: "You have more time",
+    blocks: [
+      b.p(hi(p.name), " Farmkeke gave you ", { b: p.hours ? `${p.hours} more hours` : "more time" }, " to accept or decline order ", { b: p.number }, "."),
+      b.rows([{ label: "New deadline", value: p.acceptBy, strong: true }]),
+      b.inApp(farmOrderPath(p.number)),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmOrderEndedEmail(p: FarmRef & { number: string; why: "cancelled" | "expired"; reason?: string }): Email {
+  const cancelled = p.why === "cancelled";
+  return compose({
+    to: p.to,
+    subject: cancelled ? `Order ${p.number} was cancelled` : `Order ${p.number} expired`,
+    preheader: cancelled ? "Farmkeke cancelled this order. Please don't send it." : "It wasn't answered in time, so the shopper was refunded.",
+    title: cancelled ? `Order ${p.number} was cancelled` : `Order ${p.number} expired`,
+    blocks: cancelled
+      ? [
+          b.p(hi(p.name), " Farmkeke cancelled order ", { b: p.number }, ". The shopper gets a full refund."),
+          ...(p.reason ? [b.quote("Reason", p.reason)] : []),
+          b.note({ b: "Please don't prepare or hand over this order." }, " If a rider was booked, they won't come for it."),
+          b.inApp(farmOrderPath(p.number)),
+        ]
+      : [
+          b.p(hi(p.name), " order ", { b: p.number }, " wasn't accepted or declined in time, so it expired. The shopper was refunded in full."),
+          b.p("Answering quickly helps shoppers trust your farm. If you can't take orders for a while, turn on holiday mode."),
+          b.inApp(["Switch to farmer mode", "Farm", "Availability"]),
+        ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmRiderAssignedEmail(
+  p: FarmRef & { number: string; riderName: string; riderPhone: string; collectAt?: string; changed?: boolean },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `${p.changed ? "New rider" : "Rider"} for order ${p.number}`,
+    preheader: `${p.riderName} will collect it${p.collectAt ? ` on ${p.collectAt}` : ""}.`,
+    title: p.changed ? "A new rider is collecting" : "A rider is coming",
+    blocks: [
+      b.p(hi(p.name), " ", { b: p.riderName }, " will collect order ", { b: p.number }, ". Have it packed and ready."),
+      b.rows([
+        { label: "Rider", value: p.riderName },
+        { label: "Phone", value: p.riderPhone },
+        ...(p.collectAt ? [{ label: "Collecting", value: p.collectAt, strong: true }] : []),
+      ]),
+      b.p("When you hand it over, mark it as handed to the rider in the app."),
+      b.inApp(farmOrderPath(p.number)),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmProblemReportedEmail(
+  p: FarmRef & { number: string; caseNumber: string; problem: string; note?: string; replyBy: string; replyHours: number },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `Problem reported on order ${p.number}: reply within ${p.replyHours} hours`,
+    preheader: `Reply by ${p.replyBy}. The payment is held until Farmkeke decides.`,
+    title: "A shopper reported a problem",
+    blocks: [
+      b.p(hi(p.name), " the shopper reported a problem with order ", { b: p.number }, "."),
+      b.rows([
+        { label: "Case number", value: p.caseNumber },
+        { label: "Problem", value: p.problem },
+        { label: "Reply by", value: p.replyBy, strong: true },
+      ]),
+      ...(p.note ? [b.quote("The shopper wrote", p.note)] : []),
+      b.note(
+        { b: `Please reply within ${p.replyHours} hours.` },
+        " Tell your side and add photos if you can. Farmkeke then decides within about 1 day. The payment is held until then.",
+      ),
+      b.inApp(farmOrderPath(p.number, "Problem report")),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmReplyReminderEmail(
+  p: FarmRef & { number: string; caseNumber: string; replyBy: string; overdue: boolean; hoursLeft?: number },
+): Email {
+  const left = `${p.hoursLeft ?? 1} hour${(p.hoursLeft ?? 1) === 1 ? "" : "s"}`;
+  return compose({
+    to: p.to,
+    subject: p.overdue ? `Reply time ended: ${p.caseNumber}` : `Reply needed: ${p.caseNumber}`,
+    preheader: p.overdue ? "Farmkeke will now decide without your reply." : `About ${left} left to reply.`,
+    title: p.overdue ? "Your reply time has ended" : "Please reply to the problem report",
+    blocks: p.overdue
+      ? [
+          b.p(hi(p.name), " the time to reply to case ", { b: p.caseNumber }, " on order ", { b: p.number }, ` ended on ${p.replyBy}.`),
+          b.note("Farmkeke will now decide without your reply. You can still add a message on the case, and we'll read it."),
+          b.inApp(farmOrderPath(p.number, "Problem report")),
+        ]
+      : [
+          b.p(hi(p.name), " you haven't replied to case ", { b: p.caseNumber }, " on order ", { b: p.number }, " yet."),
+          b.note({ b: `About ${left} left, until ${p.replyBy}.` }, " After that, Farmkeke decides without your reply."),
+          b.inApp(farmOrderPath(p.number, "Problem report")),
+        ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmProblemDecisionEmail(
+  p: FarmRef & {
+    number: string;
+    caseNumber: string;
+    outcome: "full_refund" | "part_refund" | "no_refund";
+    reason: string;
+    refundKobo?: number;
+    releasedKobo?: number;
+  },
+): Email {
+  const headline =
+    p.outcome === "full_refund"
+      ? "The shopper gets a full refund. No payment is released for this order."
+      : p.outcome === "part_refund"
+        ? `Part refund to the shopper. ${naira(p.releasedKobo ?? 0)} of the order is released to you.`
+        : "No refund. The payment is released to you.";
+  return compose({
+    to: p.to,
+    subject: `Decision on case ${p.caseNumber}`,
+    preheader: headline,
+    title: `Decision on case ${p.caseNumber}`,
+    blocks: [
+      b.p(hi(p.name), " Farmkeke has decided on the problem report for order ", { b: p.number }, "."),
+      b.note({ b: headline }),
+      b.h2("Why"),
+      b.p(p.reason || "See the case in the app for details."),
+      b.rows([
+        { label: "Case number", value: p.caseNumber },
+        ...(p.refundKobo ? [{ label: "Refund to the shopper", value: naira(p.refundKobo) }] : []),
+        ...(p.releasedKobo ? [{ label: "Released to you", value: naira(p.releasedKobo), strong: true }] : []),
+      ]),
+      ...(p.releasedKobo ? [b.p("Released money goes to your payout account, less Farmkeke's commission. We'll email you when it's sent.")] : []),
+      b.inApp(farmOrderPath(p.number, "Problem report")),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmMessageEmail(
+  p: FarmRef & { kind: "chat" | "dispute" | "support"; from: string; preview: string; number?: string; caseNumber?: string },
+): Email {
+  const title =
+    p.kind === "support"
+      ? "Farmkeke support replied"
+      : p.kind === "dispute" && p.caseNumber
+        ? `New message on case ${p.caseNumber}`
+        : p.number
+          ? `New message about order ${p.number}`
+          : "You have a new message";
+  const path =
+    p.kind === "support"
+      ? ["Switch to farmer mode", "Farm", "Contact support"]
+      : p.number
+        ? farmOrderPath(p.number, p.kind === "dispute" ? "Problem report" : "Chat")
+        : ["Switch to farmer mode", "Orders"];
+  return compose({
+    to: p.to,
+    subject: title,
+    preheader: `${p.from}: ${p.preview}`,
+    title,
+    blocks: [
+      b.p(
+        hi(p.name),
+        p.kind === "support" ? " Farmkeke support replied to your message." : p.number ? ` you have a new message about order ${p.number}.` : " you have a new message.",
+      ),
+      b.quote(p.from, p.preview),
+      b.inApp(path),
+      b.small("We send at most one email per conversation every 30 minutes."),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmPaymentReleasedEmail(p: FarmRef & { number: string; amountKobo: number; bank?: string }): Email {
+  return compose({
+    to: p.to,
+    subject: `Payment released: ${naira(p.amountKobo)} for order ${p.number}`,
+    preheader: "It's on its way to your bank.",
+    title: "Payment released",
+    blocks: [
+      b.p(hi(p.name), " order ", { b: p.number }, " is complete, so Farmkeke released your payment."),
+      b.rows([
+        { label: "Order", value: p.number },
+        { label: "Paid to you", value: naira(p.amountKobo), strong: true },
+        ...(p.bank ? [{ label: "Going to", value: p.bank }] : []),
+      ]),
+      b.p("This is after Farmkeke's commission. We'll email you again when the bank transfer is sent."),
+      b.inApp(["Switch to farmer mode", "Earnings"]),
+    ],
+    cta: openApp(),
+    reason: FARM_MONEY_REASON,
+  });
+}
+
+export function farmPayoutSentEmail(p: FarmRef & { amountKobo: number; bank: string; reference: string }): Email {
+  return compose({
+    to: p.to,
+    subject: `Payout sent: ${naira(p.amountKobo)}`,
+    preheader: `Sent to ${p.bank}.`,
+    title: "Your payout is sent",
+    blocks: [
+      b.p(hi(p.name), " we've sent ", { b: naira(p.amountKobo) }, " to ", { b: p.bank }, "."),
+      b.rows([
+        { label: "Amount", value: naira(p.amountKobo), strong: true },
+        { label: "To", value: p.bank },
+        { label: "Reference", value: p.reference },
+      ]),
+      b.small("Most transfers arrive within minutes. Not there after a working day? Share the reference with your bank, or reply to this email."),
+      b.inApp(["Switch to farmer mode", "Earnings"]),
+    ],
+    cta: openApp(),
+    reason: FARM_MONEY_REASON,
+  });
+}
+
+export function farmPayoutFailedEmail(
+  p: FarmRef & { amountKobo: number; bank: string; reference: string; reason?: string },
+): Email {
+  return compose({
+    to: p.to,
+    subject: `We couldn't send your payout of ${naira(p.amountKobo)}`,
+    preheader: "Your money is safe. Please check your payout account.",
+    title: "Your payout didn't go through",
+    blocks: [
+      b.p(hi(p.name), " we tried to send ", { b: naira(p.amountKobo) }, " to ", { b: p.bank }, ", but the bank transfer failed."),
+      b.rows([
+        { label: "Amount", value: naira(p.amountKobo), strong: true },
+        { label: "To", value: p.bank },
+        { label: "Reference", value: p.reference },
+        ...(p.reason ? [{ label: "What the bank said", value: p.reason }] : []),
+      ]),
+      b.note({ b: "Your money is safe with Farmkeke." }, " Nothing is lost."),
+      b.h2("What to do"),
+      b.steps([
+        { title: "Check your payout account", note: "Make sure the bank and account number are right, and the account is open." },
+        { title: "Fix it in the app if needed", note: "Switch to farmer mode, Earnings, Payout account." },
+        { title: "Farmkeke sends it again", note: "Our team retries failed payouts. Reply to this email if you have questions." },
+      ]),
+    ],
+    cta: openApp(),
+    reason: FARM_MONEY_REASON,
+  });
+}
+
+export function farmPayoutAccountChangedEmail(p: FarmRef & { bank: string; accountName?: string; at: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "Your Farmkeke payout account was changed",
+    preheader: "If this wasn't you, contact Farmkeke support now.",
+    title: "Your payout account was changed",
+    blocks: [
+      b.p(hi(p.name), ` the bank account ${p.farmName} is paid into was changed on `, { b: p.at }, "."),
+      b.rows([
+        { label: "New payout account", value: p.bank, strong: true },
+        ...(p.accountName ? [{ label: "Account name", value: p.accountName }] : []),
+      ]),
+      b.p("From now on, released payments go to this account."),
+      b.note({ b: "Didn't make this change?" }, " Reply to this email or contact Farmkeke support now, and change your password."),
+      b.inApp(["Switch to farmer mode", "Earnings", "Payout account"]),
+    ],
+    cta: openApp(),
+    reason: `${SECURITY_REASON} It's about where ${p.farmName} is paid.`,
+  });
+}
+
+export function farmListingEmail(
+  p: FarmRef & { listingName: string; outcome: "approved" | "sent_back" | "unpublished"; reason?: string },
+): Email {
+  if (p.outcome === "approved") {
+    return compose({
+      to: p.to,
+      subject: `${p.listingName} is live on Farmkeke`,
+      preheader: "Shoppers can now find and buy it.",
+      title: "Your listing is live",
+      blocks: [
+        b.p(hi(p.name), " we've checked ", { b: p.listingName }, ". It's now live, so shoppers can find and buy it."),
+        b.p("Keep your stock up to date so shoppers only order what you have."),
+        b.inApp(["Switch to farmer mode", "Listings", p.listingName]),
+      ],
+      cta: openApp(),
+      reason: farmReason(p.farmName),
+    });
+  }
+  const unpublished = p.outcome === "unpublished";
+  return compose({
+    to: p.to,
+    subject: unpublished ? `${p.listingName} was taken down` : `${p.listingName} needs changes`,
+    preheader: "See what to fix, then send it for review again.",
+    title: unpublished ? "Your listing was taken down" : "Your listing needs changes",
+    blocks: [
+      b.p(
+        hi(p.name),
+        " ",
+        { b: p.listingName },
+        unpublished ? " is no longer shown to shoppers." : " isn't live yet.",
+        " Please fix the following, then send it for review again.",
+      ),
+      b.quote("What to fix", p.reason || "See the note on the listing in the app."),
+      b.inApp(["Switch to farmer mode", "Listings", p.listingName]),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmLowStockEmail(p: FarmRef & { listingName: string; unit: string; stock: number }): Email {
+  const left = p.stock <= 0 ? "Sold out" : `${p.stock} left`;
+  return compose({
+    to: p.to,
+    subject: `Running low: ${p.listingName} (${left})`,
+    preheader: "Add stock so shoppers can keep ordering.",
+    title: "Running low",
+    blocks: [
+      b.p(hi(p.name), " ", { b: p.listingName }, " is selling well."),
+      b.rows([
+        { label: "Unit", value: p.unit },
+        { label: "Stock", value: left, strong: true },
+      ]),
+      b.p(p.stock <= 0 ? "Shoppers can't order it until you add more." : "When it reaches 0, shoppers can't order it until you add more."),
+      b.inApp(["Switch to farmer mode", "Listings", p.listingName, "Quick update"]),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
+}
+
+export function farmReviewEmail(p: FarmRef & { number: string; rating: number; comment?: string; reviewer?: string }): Email {
+  const r = Math.max(0, Math.min(5, Math.round(p.rating)));
+  const stars = "★".repeat(r) + "☆".repeat(5 - r);
+  return compose({
+    to: p.to,
+    subject: `New ${r}-star review for ${p.farmName}`,
+    preheader: p.comment ? p.comment : `For order ${p.number}.`,
+    title: "You have a new review",
+    blocks: [
+      b.p(hi(p.name), " a shopper rated order ", { b: p.number }, "."),
+      b.rows([{ label: "Rating", value: `${stars} (${r} of 5)`, strong: true }]),
+      ...(p.comment ? [b.quote(p.reviewer ?? "The shopper", p.comment)] : []),
+      b.inApp(["Switch to farmer mode", "Farm", "Reviews"]),
+    ],
+    cta: openApp(),
+    reason: farmReason(p.farmName),
+  });
 }

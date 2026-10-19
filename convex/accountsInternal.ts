@@ -1,7 +1,8 @@
 // Internal lookups used by the password provider and account actions, which
 // run as actions and have no direct database access.
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { getViewer } from "./lib/auth";
 import { ENDED } from "./lib/orders";
@@ -84,15 +85,35 @@ export const replaceEmail = internalMutation({
   },
 });
 
-/** Orders still in progress (or money still held), which block deletion. */
-async function hasOrdersInProgress(ctx: MutationCtx, userId: Id<"users">) {
+/** How many orders are still in progress (or have money still held); these block deletion. */
+async function ordersInProgress(ctx: MutationCtx, userId: Id<"users">) {
   const orders = await ctx.db
     .query("orders")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
     .take(500);
-  return orders.some(
+  return orders.filter(
     (o) => (!ENDED.includes(o.status) && o.status !== "awaiting_payment") || o.escrow === "held",
-  );
+  ).length;
+}
+
+async function hasOrdersInProgress(ctx: MutationCtx, userId: Id<"users">) {
+  return (await ordersInProgress(ctx, userId)) > 0;
+}
+
+/** M-95 emails: "deleted", or "waiting for N orders". Read before the user row goes. */
+async function deletionEmail(
+  ctx: MutationCtx,
+  user: Doc<"users"> | null,
+  status: "deleted" | "waiting",
+  orders = 0,
+) {
+  if (user === null || user.isAnonymous || !user.email) return;
+  await ctx.scheduler.runAfter(0, internal.notifications.deliver.accountEmail, {
+    email:
+      status === "deleted"
+        ? { kind: "deletion_done", to: user.email, name: user.name }
+        : { kind: "deletion_waiting", to: user.email, name: user.name, orders },
+  });
 }
 
 /**
@@ -105,16 +126,20 @@ export const deleteUserData = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const { userId } = args;
-    if (await hasOrdersInProgress(ctx, userId)) {
+    const user = await ctx.db.get("users", userId);
+    const inProgress = await ordersInProgress(ctx, userId);
+    if (inProgress > 0) {
       const waiting = await ctx.db
         .query("accountDeletions")
         .withIndex("by_userId", (q) => q.eq("userId", userId))
         .take(10);
       if (!waiting.some((d) => d.status === "waiting_for_orders")) {
         await ctx.db.insert("accountDeletions", { userId, status: "waiting_for_orders" });
+        await deletionEmail(ctx, user, "waiting", inProgress);
       }
       return "waiting_for_orders" as const;
     }
+    await deletionEmail(ctx, user, "deleted");
     await eraseUser(ctx, userId);
     await ctx.db.insert("accountDeletions", { userId, status: "completed", completedAt: Date.now() });
     return "completed" as const;
@@ -135,6 +160,7 @@ export const finishWaitingDeletions = internalMutation({
       const user = userId ? await ctx.db.get("users", userId) : null;
       if (userId !== null && user !== null) {
         if (await hasOrdersInProgress(ctx, userId)) continue;
+        await deletionEmail(ctx, user, "deleted");
         await eraseUser(ctx, userId);
       }
       await ctx.db.patch("accountDeletions", row._id, { status: "completed", completedAt: Date.now() });

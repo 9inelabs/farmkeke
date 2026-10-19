@@ -7,7 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { actorKind, orderStatus } from "../schema";
 import { nextCounter } from "./counters";
-import { naira, notifyConsumer, notifyFarm } from "./notify";
+import { claimSlot, naira, notify, notifyConsumer, notifyFarm } from "./notify";
 import { paymentsLive } from "./paystack";
 import { commissionOn, DAY, getRules, HOUR } from "./settings";
 
@@ -115,6 +115,33 @@ export async function restoreStock(ctx: MutationCtx, order: Doc<"orders">) {
   }
 }
 
+// A unit is "running low" at this many or fewer (or below its minimum order).
+export const LOW_STOCK_AT = 3;
+
+/**
+ * F-28 "Running low": after a paid order, tells the farm about each ordered
+ * unit now low or sold out. At most once a day per listing unit.
+ */
+async function alertLowStock(ctx: MutationCtx, order: Doc<"orders">) {
+  const farm = await ctx.db.get("farms", order.farmId);
+  if (farm === null) return;
+  for (const item of order.items) {
+    const listing = await ctx.db.get("listings", item.listingId);
+    if (listing === null || listing.deletedAt !== undefined) continue;
+    const unit = listing.units.find((u) => u.unitId === item.unitId);
+    if (unit === undefined || unit.stock > Math.max(LOW_STOCK_AT, unit.minOrder - 1)) continue;
+    if (!(await claimSlot(ctx, `low_stock:${listing._id}:${unit.unitId}`, DAY))) continue;
+    await notify(ctx, {
+      userId: farm.userId,
+      side: "farm",
+      kind: "low_stock",
+      title: unit.stock <= 0 ? `${listing.name} is sold out` : `${listing.name} is running low`,
+      body: unit.stock <= 0 ? "Add stock so shoppers can order it again." : `${unit.stock} left. Add stock so shoppers can keep ordering.`,
+      href: `/listing/${listing._id}`,
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Payment success
 
@@ -166,6 +193,7 @@ export async function markCheckoutPaid(
       "New order",
       `Order ${order.number} is paid and waiting. Accept or decline within ${rules.farmerResponseHours} hours.`,
     );
+    await alertLowStock(ctx, paid);
     await notifyConsumer(
       ctx,
       paid,
@@ -350,6 +378,10 @@ export async function pickupDeadline(ctx: MutationCtx, order: Doc<"orders">, now
   const days = Math.max(rules.pickupHoldDays, point?.collectWithinDays ?? 0);
   const collectBy = now + days * DAY;
   await ctx.scheduler.runAt(collectBy, internal.orders.system.pickupWindowEnded, { orderId: order._id });
+  // A reminder a day before the window ends (only when the hold is longer than a day)
+  if (collectBy - DAY > now) {
+    await ctx.scheduler.runAt(collectBy - DAY, internal.orders.system.pickupReminder, { orderId: order._id });
+  }
   return collectBy;
 }
 

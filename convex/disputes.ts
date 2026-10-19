@@ -317,6 +317,16 @@ export const replyOverdue = internalMutation({
       href: `/admin/disputes/${dispute._id}`,
       orderId: dispute.orderId,
     });
+    // The farm hears its reply time is over (push + SMS + email per F-75)
+    if (order !== null) {
+      await notifyFarm(
+        ctx,
+        order,
+        "dispute_reply_overdue",
+        `Reply time ended: ${dispute.number}`,
+        `Farmkeke will now decide on order ${order.number} without your reply.`,
+      );
+    }
     return null;
   },
 });

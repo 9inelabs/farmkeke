@@ -7,6 +7,7 @@ import { mutation, query, type MutationCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { isOutOfStock, SEND_BACK_REASONS } from "../lib/listing";
+import { notify } from "../lib/notify";
 import { patchListing } from "../lib/listingCounts";
 import { listingStatus } from "../schema";
 
@@ -125,6 +126,19 @@ async function moderate(
     details: JSON.stringify({ reason, note: change.reviewNote ?? null }),
   });
   await writeAudit(ctx, { actorId: actor._id, action: `listing.${action}`, targetTable: "listings", targetId: listing._id, reason });
+  // F-20 / F-31: tell the farm (push, and email per F-75)
+  const farm = await ctx.db.get("farms", listing.farmId);
+  if (farm !== null) {
+    const approved = change.status === "live";
+    await notify(ctx, {
+      userId: farm.userId,
+      side: "farm",
+      kind: approved ? "listing_approved" : action === "unpublished" ? "listing_unpublished" : "listing_sent_back",
+      title: approved ? `${listing.name} is live` : action === "unpublished" ? `${listing.name} was taken down` : `${listing.name} needs changes`,
+      body: approved ? "Shoppers can now find and buy it." : (change.reviewNote ?? reason).slice(0, 140),
+      href: `/listing/${listing._id}`,
+    });
+  }
 }
 
 export const approve = mutation({

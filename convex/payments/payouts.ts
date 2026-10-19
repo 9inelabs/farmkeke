@@ -246,6 +246,20 @@ async function markPayout(
         smsTo: farm.phone,
       });
     }
+  } else {
+    // The money stays with Farmkeke; staff retry (A-64). Tell the farm what to check.
+    const farm = await ctx.db.get("farms", payout.farmId);
+    if (farm !== null) {
+      await notify(ctx, {
+        userId: farm.userId,
+        side: "farm",
+        kind: "payout_failed",
+        title: "Payout didn't go through",
+        body: `We couldn't send ${naira(payout.amountKobo)} to ${payout.bankName} ••${payout.accountLast4}. Your money is safe. Please check your payout account.`,
+        href: `/payouts/${payout._id}`,
+        smsTo: farm.phone,
+      });
+    }
   }
 }
 
