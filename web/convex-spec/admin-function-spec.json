@@ -971,6 +971,25 @@
       "returns": null
     },
     {
+      "identifier": "admin/consumers.js:find",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "query": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/consumers.js:get",
       "functionType": "Query",
       "visibility": {
@@ -1137,6 +1156,26 @@
       "returns": null
     },
     {
+      "identifier": "admin/consumers.js:sendPasswordReset",
+      "functionType": "Action",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "userId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "users"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/consumers.js:setBlocked",
       "functionType": "Mutation",
       "visibility": {
@@ -1155,6 +1194,32 @@
           "blocked": {
             "fieldType": {
               "type": "boolean"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/consumers.js:signOutEverywhere",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "userId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "users"
             },
             "optional": false
           },
@@ -1465,6 +1530,18 @@
             "optional": false
           }
         }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/disputes.js:openCount",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
       },
       "returns": null
     },
@@ -4007,6 +4084,25 @@
       "returns": null
     },
     {
+      "identifier": "admin/staff.js:assignable",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "permission": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/staff.js:changeRole",
       "functionType": "Mutation",
       "visibility": {
@@ -4652,6 +4748,18 @@
             "optional": false
           }
         }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/support.js:openCount",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
       },
       "returns": null
     },

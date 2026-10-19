@@ -110,3 +110,14 @@ export async function requireFarmer(ctx: Ctx): Promise<{ user: Doc<"users">; far
   if (farm === null) throw new ConvexError({ code: "NOT_FARMER" });
   return { user, farm };
 }
+
+/** Whether a user is approved staff whose role has the permission (for assigning work to them). */
+export async function isStaffWith(ctx: Ctx, userId: Doc<"users">["_id"], permission: Permission): Promise<boolean> {
+  const member = await ctx.db
+    .query("staffMembers")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .unique();
+  if (member === null || member.status !== "approved" || member.roleId === undefined) return false;
+  const role = await ctx.db.get("staffRoles", member.roleId);
+  return role !== null && role.permissions.includes(permission);
+}

@@ -17,6 +17,8 @@ export function DashboardView() {
   const alerts = useQuery(admin.staff.unreadAlerts, {}) as number | undefined;
   const farmerApps = useQuery(admin.farmerRequests.counts, me.can("farmers.view") ? {} : "skip") as { submitted: number } | undefined;
   const review = useQuery(admin.listings.queueCount, me.can("listings.view") ? {} : "skip") as number | undefined;
+  const disputes = useQuery(admin.disputes.openCount, me.can("disputes.view") ? {} : "skip") as number | undefined;
+  const support = useQuery(admin.support.openCount, me.can("support.view") ? {} : "skip") as number | undefined;
   const catalog = useQuery(admin.access.permissionCatalog, {}) as PermissionInfo[] | undefined;
   const first = me.name.split(/\s+/)[0];
   const links = visibleNav(me.can)
@@ -32,6 +34,8 @@ export function DashboardView() {
           <Waiting href={adminRoutes.applications} count={farmerApps?.submitted} label="Farmer applications waiting" />
         ) : null}
         {me.can("listings.view") ? <Waiting href={adminRoutes.review} count={review} label="Products waiting for review" /> : null}
+        {me.can("disputes.view") ? <Waiting href={adminRoutes.disputes} count={disputes} label="Problem reports open" /> : null}
+        {me.can("support.view") ? <Waiting href={adminRoutes.support} count={support} label="Support messages waiting" /> : null}
         {me.can("staff.view") ? (
           <Waiting href={adminRoutes.staff} count={pending} label="Staff applications waiting" />
         ) : null}

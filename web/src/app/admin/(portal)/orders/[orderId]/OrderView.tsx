@@ -230,12 +230,12 @@ export function OrderView({ orderId }: { orderId: string }) {
         <Panel title="Actions" className="self-start m:order-first">
           <div className="flex flex-col gap-2.5">
             {o.disputeId ? (
-              <Link href={`/admin/disputes/${o.disputeId}`} className="btn ghost w-full">
+              <Link href={adminRoutes.dispute(o.disputeId)} className="btn ghost w-full">
                 Open the problem report
               </Link>
             ) : null}
             {o.conversationId && me.can("chat.view") ? (
-              <Link href={`/admin/chats/${o.conversationId}`} className="btn ghost w-full">
+              <Link href={adminRoutes.orderChat(o._id)} className="btn ghost w-full">
                 Read the order chat
               </Link>
             ) : null}

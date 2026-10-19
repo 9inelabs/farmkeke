@@ -59,6 +59,25 @@ const ACTIONS: Record<string, string> = {
   "order.cancel": "Order cancelled",
   "order.extend_deadline": "Farm deadline extended",
   "order.reassign_rider": "Rider changed",
+  "consumer.block": "Account blocked",
+  "consumer.unblock": "Account unblocked",
+  "consumer.signOut": "Signed out everywhere",
+  "consumer.passwordReset": "Password reset link sent",
+  "dispute.assign": "Problem report assigned",
+  "dispute.resolve": "Problem report decided",
+  "support.assign": "Support message assigned",
+  "support.resolve": "Support message resolved",
+};
+
+export const DISPUTE_STATUS: Record<string, [string, string]> = {
+  open: ["b-pend", "Waiting for the farm"],
+  farmer_responded: ["b-pend", "Farm replied"],
+  resolved: ["b-ok", "Decided"],
+};
+export const OUTCOME: Record<string, string> = {
+  released: "No refund, paid to the farm",
+  refunded: "Full refund",
+  split: "Part refund",
 };
 
 export const ORDER_STATUS: Record<string, [string, string]> = {

@@ -6,7 +6,7 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
-import { requireStaff } from "../lib/auth";
+import { isStaffWith, requireStaff } from "../lib/auth";
 import { disputeRow, disputeView } from "../lib/disputes";
 import { naira, notify, notifyConsumer, notifyFarm } from "../lib/notify";
 import { orderCore, refundOrder, releaseOrder, transition } from "../lib/orders";
@@ -47,6 +47,17 @@ export const list = query({
         }),
       ),
     };
+  },
+});
+
+/** Sidebar badge: problem reports not yet decided (up to 99). */
+export const openCount = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, "disputes.view");
+    const open = await ctx.db.query("disputes").withIndex("by_status", (q) => q.eq("status", "open")).take(99);
+    const replied = await ctx.db.query("disputes").withIndex("by_status", (q) => q.eq("status", "farmer_responded")).take(99);
+    return Math.min(99, open.length + replied.length);
   },
 });
 
@@ -96,7 +107,7 @@ export const assign = mutation({
     let name = "nobody";
     if (args.assigneeId !== undefined) {
       const assignee = await ctx.db.get("users", args.assigneeId);
-      if (assignee === null || assignee.staffRole === undefined) throw new ConvexError({ code: "NOT_STAFF" });
+      if (assignee === null || !(await isStaffWith(ctx, assignee._id, "disputes.manage"))) throw new ConvexError({ code: "NOT_STAFF" });
       name = assignee.name ?? assignee.email ?? "staff";
     }
     await ctx.db.patch("disputes", dispute._id, { assigneeId: args.assigneeId });

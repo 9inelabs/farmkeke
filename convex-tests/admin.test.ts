@@ -518,3 +518,47 @@ test("areas, order rules, rider profiles and review, and finding orders", async 
   expect(await ops.query(api.admin.orders.findByNumber, { number: "10234" })).toBe(orderId);
   expect(await ops.query(api.admin.orders.findByNumber, { number: "fk-10234" })).toBe(orderId);
 });
+
+// ---------------------------------------------------------------------------
+// Phase 4: customers, assigning work, care counts
+
+test("customers: find, staff can't be blocked, sign out everywhere, reset link; assigning to portal staff", async () => {
+  const mail = mailbox();
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const founder = as(t, s.founder);
+  const ops = as(t, s.ops);
+
+  // Support staff for assigning
+  const sue = await t.run(async (ctx) => {
+    const id = await ctx.db.insert("users", { name: "Sue Support", email: "sue@farmkeke.com" });
+    const sessionId = await ctx.db.insert("authSessions", { userId: id, expirationTime: Date.now() + 1e10 });
+    await grantStaff(ctx, { id, sessionId }, "support");
+    return { id, sessionId };
+  });
+  const assignable = await founder.query(api.admin.staff.assignable, { permission: "support.manage" });
+  expect(assignable.map((a: any) => a.name)).toEqual(["Femi Founder", "Obi Ops", "Sue Support"]);
+  await expect(founder.query(api.admin.staff.assignable, { permission: "nope" })).rejects.toThrow(/UNKNOWN_PERMISSION/);
+
+  // Find by email or phone; staff accounts are marked and can't be blocked here
+  await t.run(async (ctx) => ctx.db.patch(s.shopper.id, { phone: "+2348031112222" }));
+  expect((await ops.query(api.admin.consumers.find, { query: "ADA@example.com" })).map((u: any) => u.name)).toEqual(["Ada Obi"]);
+  expect((await ops.query(api.admin.consumers.find, { query: "0803 111 2222" })).map((u: any) => u.name)).toEqual(["Ada Obi"]);
+  expect((await ops.query(api.admin.consumers.find, { query: "sue@farmkeke.com" }))[0].isStaff).toBe(true);
+  await expect(ops.mutation(api.admin.consumers.setBlocked, { userId: sue.id, blocked: true, reason: "x" })).rejects.toThrow(/staff account/i);
+
+  // Sign out everywhere ends the shopper's sessions
+  expect(await ops.mutation(api.admin.consumers.signOutEverywhere, { userId: s.shopper.id, reason: "Lost phone" })).toBe(1);
+  const detail = await ops.query(api.admin.consumers.get, { userId: s.shopper.id });
+  expect(detail!.signedInDevices).toBe(0);
+
+  // Support tickets can be assigned to portal staff with support.manage only
+  const ticketId = await t.run(async (ctx) =>
+    ctx.db.insert("supportTickets", { userId: s.shopper.id, side: "shop", status: "open", lastMessageAt: Date.now(), lastFrom: "user", preview: "Help" } as any),
+  );
+  await as(t, sue).mutation(api.admin.support.assign, { ticketId, assigneeId: sue.id });
+  await expect(as(t, sue).mutation(api.admin.support.assign, { ticketId, assigneeId: s.shopper.id })).rejects.toThrow(/NOT_STAFF/);
+  expect(await as(t, sue).query(api.admin.support.openCount, {})).toBe(1);
+  expect(await as(t, sue).query(api.admin.disputes.openCount, {})).toBe(0);
+  void mail;
+});

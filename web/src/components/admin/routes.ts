@@ -33,6 +33,13 @@ export const adminRoutes = {
   dispatch: "/admin/dispatch",
   orders: "/admin/orders",
   order: (id: string) => `/admin/orders/${id}`,
+  orderChat: (id: string) => `/admin/orders/${id}/chat`,
+  customers: "/admin/customers",
+  customer: (id: string) => `/admin/customers/${id}`,
+  disputes: "/admin/disputes",
+  dispute: (id: string) => `/admin/disputes/${id}`,
+  support: "/admin/support",
+  ticket: (id: string) => `/admin/support/${id}`,
 } as const;
 
 /** Only same-portal paths are followed after sign-in. */

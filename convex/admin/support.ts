@@ -4,7 +4,7 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
-import { requireStaff } from "../lib/auth";
+import { isStaffWith, requireStaff } from "../lib/auth";
 import { notify } from "../lib/notify";
 import { validateImageUpload } from "../lib/uploads";
 import { supportMessageView, ticketView } from "../support";
@@ -43,6 +43,20 @@ export const list = query({
         }),
       ),
     };
+  },
+});
+
+/** Sidebar badge: open support messages waiting on Farmkeke (up to 99). */
+export const openCount = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, "support.view");
+    const open = await ctx.db
+      .query("supportTickets")
+      .withIndex("by_status_and_lastMessageAt", (q) => q.eq("status", "open"))
+      .order("desc")
+      .take(200);
+    return Math.min(99, open.filter((t) => t.lastFrom !== "staff").length);
   },
 });
 
@@ -135,7 +149,7 @@ export const assign = mutation({
     let name = "nobody";
     if (args.assigneeId !== undefined) {
       const assignee = await ctx.db.get("users", args.assigneeId);
-      if (assignee === null || assignee.staffRole === undefined) throw new ConvexError({ code: "NOT_STAFF" });
+      if (assignee === null || !(await isStaffWith(ctx, assignee._id, "support.manage"))) throw new ConvexError({ code: "NOT_STAFF" });
       name = assignee.name ?? assignee.email ?? "staff";
     }
     await ctx.db.patch("supportTickets", ticket._id, { assigneeId: args.assigneeId });

@@ -8,6 +8,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff, requireStaffContext } from "../lib/auth";
+import { staffWithPermission } from "../lib/notify";
 import { isPermission } from "../lib/permissions";
 
 const memberStatus = v.union(
@@ -252,6 +253,17 @@ export const setActive = mutation({
       email: { kind: "access", memberId: member._id, removed: !args.active, reason },
     });
     return null;
+  },
+});
+
+/** Approved staff whose role has the permission: who work can be assigned to. */
+export const assignable = query({
+  args: { permission: v.string() },
+  handler: async (ctx, args) => {
+    await requireStaff(ctx, null);
+    if (!isPermission(args.permission)) throw new ConvexError({ code: "UNKNOWN_PERMISSION" });
+    const members = await staffWithPermission(ctx, args.permission);
+    return members.map((m) => ({ userId: m.userId, name: m.name })).sort((a, b) => a.name.localeCompare(b.name));
   },
 });
 

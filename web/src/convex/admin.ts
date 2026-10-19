@@ -42,10 +42,13 @@ export const admin = {
     messages: makeFunctionReference<"query", { "orderId": Id<"orders">; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/chat:messages"),
   },
   consumers: {
+    find: makeFunctionReference<"query", { "query": string }, any>("admin/consumers:find"),
     get: makeFunctionReference<"query", { "userId": Id<"users"> }, any>("admin/consumers:get"),
     list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/consumers:list"),
     listDeletions: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/consumers:listDeletions"),
+    sendPasswordReset: makeFunctionReference<"action", { "userId": Id<"users"> }, any>("admin/consumers:sendPasswordReset"),
     setBlocked: makeFunctionReference<"mutation", { "userId": Id<"users">; "blocked": boolean; "reason": string }, any>("admin/consumers:setBlocked"),
+    signOutEverywhere: makeFunctionReference<"mutation", { "userId": Id<"users">; "reason": string }, any>("admin/consumers:signOutEverywhere"),
   },
   dispatch: {
     assignRider: makeFunctionReference<"mutation", { "collectAt": number; "note"?: string; "orderId": Id<"orders">; "riderId": Id<"riders"> }, any>("admin/dispatch:assignRider"),
@@ -58,6 +61,7 @@ export const admin = {
     get: makeFunctionReference<"query", { "disputeId": Id<"disputes"> }, any>("admin/disputes:get"),
     list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "open" | "farmer_responded" | "resolved" }, any>("admin/disputes:list"),
     markRead: makeFunctionReference<"mutation", { "disputeId": Id<"disputes"> }, any>("admin/disputes:markRead"),
+    openCount: makeFunctionReference<"query", Record<string, never>, any>("admin/disputes:openCount"),
     resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "releaseKobo"?: number }, any>("admin/disputes:resolve"),
     sendMessage: makeFunctionReference<"mutation", { "audience": "consumer" | "farmer"; "body": string; "disputeId": Id<"disputes">; "photoIds": Array<Id<"_storage">> }, any>("admin/disputes:sendMessage"),
   },
@@ -137,6 +141,7 @@ export const admin = {
   staff: {
     alerts: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/staff:alerts"),
     approve: makeFunctionReference<"mutation", { "memberId": Id<"staffMembers">; "roleId": Id<"staffRoles">; "note"?: string }, any>("admin/staff:approve"),
+    assignable: makeFunctionReference<"query", { "permission": string }, any>("admin/staff:assignable"),
     changeRole: makeFunctionReference<"mutation", { "memberId": Id<"staffMembers">; "roleId": Id<"staffRoles">; "reason": string }, any>("admin/staff:changeRole"),
     createRole: makeFunctionReference<"mutation", { "name": string; "description": string; "permissions": Array<string> }, any>("admin/staff:createRole"),
     deleteRole: makeFunctionReference<"mutation", { "roleId": Id<"staffRoles"> }, any>("admin/staff:deleteRole"),
@@ -158,6 +163,7 @@ export const admin = {
     list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "open" | "resolved" }, any>("admin/support:list"),
     markRead: makeFunctionReference<"mutation", { "ticketId": Id<"supportTickets"> }, any>("admin/support:markRead"),
     messages: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "ticketId": Id<"supportTickets"> }, any>("admin/support:messages"),
+    openCount: makeFunctionReference<"query", Record<string, never>, any>("admin/support:openCount"),
     reply: makeFunctionReference<"mutation", { "body": string; "photoIds": Array<Id<"_storage">>; "ticketId": Id<"supportTickets"> }, any>("admin/support:reply"),
     resolve: makeFunctionReference<"mutation", { "reason": string; "ticketId": Id<"supportTickets"> }, any>("admin/support:resolve"),
   },

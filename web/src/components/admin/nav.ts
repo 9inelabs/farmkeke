@@ -8,6 +8,9 @@ import {
   GalleryHorizontalEnd,
   LayoutDashboard,
   Bike,
+  Headphones,
+  MessageSquareWarning,
+  Users,
   LayoutGrid,
   MapPin,
   Map as MapIcon,
@@ -23,7 +26,7 @@ import {
 } from "lucide-react";
 import { adminRoutes } from "./routes";
 
-export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview" | "ridersPending";
+export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview" | "ridersPending" | "disputes" | "support";
 export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
 
@@ -56,6 +59,14 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.areas, label: "Areas and delivery fees", icon: MapIcon, any: ["areas.manage", "fees.manage", "orders.view"] },
       { href: adminRoutes.pickupPoints, label: "Pickup points", icon: MapPin, any: ["areas.manage", "orders.view"] },
       { href: adminRoutes.rules, label: "Fees and rules", icon: SlidersHorizontal, any: ["fees.manage", "commission.manage", "money.view"] },
+    ],
+  },
+  {
+    label: "Customer care",
+    items: [
+      { href: adminRoutes.customers, label: "Customers", icon: Users, any: ["customers.view"] },
+      { href: adminRoutes.disputes, label: "Problem reports", icon: MessageSquareWarning, any: ["disputes.view"], badge: "disputes" },
+      { href: adminRoutes.support, label: "Support inbox", icon: Headphones, any: ["support.view"], badge: "support" },
     ],
   },
   {
