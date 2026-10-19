@@ -319,7 +319,8 @@ export function ReasonDialog({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           className="[&_textarea]:h-auto [&_textarea]:py-3"
-          data-autofocus
+          // Extra fields come first; otherwise start in the reason
+          data-autofocus={children ? undefined : true}
         />
         {error ? <Notice tone="err">{error}</Notice> : null}
       </div>
@@ -327,7 +328,10 @@ export function ReasonDialog({
   );
 }
 
-/** A yes/no confirmation for actions that need no reason. */
+/**
+ * A confirmation, or a small form (children) with one confirm button.
+ * Errors from onConfirm show inside the dialog.
+ */
 export function ConfirmDialog({
   open,
   onClose,
@@ -335,6 +339,8 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   variant = "dark",
+  width,
+  children,
   onConfirm,
 }: {
   open: boolean;
@@ -343,6 +349,8 @@ export function ConfirmDialog({
   description?: ReactNode;
   confirmLabel: string;
   variant?: ButtonVariant;
+  width?: number;
+  children?: ReactNode;
   onConfirm: () => Promise<unknown>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -353,6 +361,7 @@ export function ConfirmDialog({
       onClose={() => !busy && onClose()}
       title={title}
       description={description}
+      width={width}
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={onClose} disabled={busy}>
@@ -379,7 +388,53 @@ export function ConfirmDialog({
         </div>
       }
     >
-      {error ? <Notice tone="err">{error}</Notice> : null}
+      <div className="flex flex-col gap-4">
+        {children}
+        {error ? <Notice tone="err">{error}</Notice> : null}
+      </div>
     </Modal>
   );
+}
+
+export function StatusBadge({ map, status }: { map: Record<string, [string, string]>; status: string }) {
+  const [cls, label] = map[status] ?? ["b-grey", status];
+  return <span className={`badge ${cls}`}>{label}</span>;
+}
+
+/** Search box for a list; the page debounces or filters as it likes. */
+export function SearchField({ value, onChange, label, placeholder }: { value: string; onChange: (v: string) => void; label: string; placeholder?: string }) {
+  const id = useId();
+  return (
+    <div className="mb-4 max-w-[420px]">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="search"
+        className="fin"
+        placeholder={placeholder ?? label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+export function LoadMore({ status, onMore }: { status: string; onMore: () => void }) {
+  if (status !== "CanLoadMore" && status !== "LoadingMore") return null;
+  return (
+    <div className="mt-4 flex justify-center">
+      <Button variant="ghost" onClick={onMore} loading={status === "LoadingMore"}>
+        Show more
+      </Button>
+    </div>
+  );
+}
+
+/** A photo from Convex storage (or a grey tile when there isn't one). */
+export function Photo({ url, alt, className }: { url: string | null | undefined; alt: string; className?: string }) {
+  if (!url) return <span aria-hidden className={`block bg-sunk ${className ?? ""}`} />;
+  // eslint-disable-next-line @next/next/no-img-element -- storage URLs are signed and short-lived
+  return <img src={url} alt={alt} className={`block object-cover ${className ?? ""}`} loading="lazy" />;
 }

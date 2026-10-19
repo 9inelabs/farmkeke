@@ -20,6 +20,13 @@ export const admin = {
     updatePickupPoint: makeFunctionReference<"mutation", { "pointId": Id<"pickupPoints">; "name"?: string; "address"?: string; "state"?: string; "lga"?: string; "latitude"?: number; "longitude"?: number; "hours"?: Array<{ "day": number; "opens": string; "closes": string }>; "phone"?: string; "collectWithinDays"?: number; "active"?: boolean; "photoStorageId"?: Id<"_storage">; "reason": string }, any>("admin/areas:updatePickupPoint"),
     updateServiceArea: makeFunctionReference<"mutation", { "areaId": Id<"serviceAreas">; "deliveryFeeKobo"?: number; "active"?: boolean; "reason": string }, any>("admin/areas:updateServiceArea"),
   },
+  banners: {
+    create: makeFunctionReference<"mutation", { "tag": string; "title": string; "buttonLabel": string; "listingId": Id<"listings">; "active": boolean; "reason": string }, any>("admin/banners:create"),
+    list: makeFunctionReference<"query", Record<string, never>, any>("admin/banners:list"),
+    remove: makeFunctionReference<"mutation", { "bannerId": Id<"homeBanners">; "reason": string }, any>("admin/banners:remove"),
+    reorder: makeFunctionReference<"mutation", { "orderedIds": Array<Id<"homeBanners">>; "reason": string }, any>("admin/banners:reorder"),
+    update: makeFunctionReference<"mutation", { "bannerId": Id<"homeBanners">; "tag": string; "title": string; "buttonLabel": string; "listingId": Id<"listings">; "active": boolean; "reason": string }, any>("admin/banners:update"),
+  },
   catalog: {
     createCategory: makeFunctionReference<"mutation", { "slug": string; "name": string; "illustration": string; "reason": string }, any>("admin/catalog:createCategory"),
     createUnit: makeFunctionReference<"mutation", { "slug": string; "singular": string; "plural": string; "reason": string }, any>("admin/catalog:createUnit"),
@@ -56,6 +63,7 @@ export const admin = {
   },
   farmerRequests: {
     approve: makeFunctionReference<"mutation", { "applicationId": Id<"farmerApplications">; "reason": string }, any>("admin/farmerRequests:approve"),
+    counts: makeFunctionReference<"query", Record<string, never>, any>("admin/farmerRequests:counts"),
     get: makeFunctionReference<"query", { "applicationId": Id<"farmerApplications"> }, any>("admin/farmerRequests:get"),
     list: makeFunctionReference<"query", { "status"?: "draft" | "submitted" | "more_info" | "approved" | "rejected"; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/farmerRequests:list"),
     reject: makeFunctionReference<"mutation", { "applicationId": Id<"farmerApplications">; "reason": string; "note": string; "reapplyAfterDays": number }, any>("admin/farmerRequests:reject"),
@@ -63,7 +71,7 @@ export const admin = {
   },
   farmers: {
     get: makeFunctionReference<"query", { "farmId": Id<"farms"> }, any>("admin/farmers:get"),
-    list: makeFunctionReference<"query", { "status"?: "active" | "suspended"; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/farmers:list"),
+    list: makeFunctionReference<"query", { "status"?: "active" | "suspended"; "search"?: string; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/farmers:list"),
     reviewDocument: makeFunctionReference<"mutation", { "documentId": Id<"farmerDocuments">; "status": "approved" | "rejected" | "expired"; "note"?: string; "reason": string }, any>("admin/farmers:reviewDocument"),
     setSuspended: makeFunctionReference<"mutation", { "farmId": Id<"farms">; "suspended": boolean; "reason": string }, any>("admin/farmers:setSuspended"),
     setTrusted: makeFunctionReference<"mutation", { "farmId": Id<"farms">; "trusted": boolean; "reason": string }, any>("admin/farmers:setTrusted"),
@@ -84,8 +92,9 @@ export const admin = {
   listings: {
     approve: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string }, any>("admin/listings:approve"),
     get: makeFunctionReference<"query", { "listingId": Id<"listings"> }, any>("admin/listings:get"),
-    list: makeFunctionReference<"query", { "status"?: "draft" | "under_review" | "needs_changes" | "live" | "paused"; "categoryId"?: Id<"categories">; "farmId"?: Id<"farms">; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/listings:list"),
+    list: makeFunctionReference<"query", { "status"?: "draft" | "under_review" | "needs_changes" | "live" | "paused"; "categoryId"?: Id<"categories">; "farmId"?: Id<"farms">; "search"?: string; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/listings:list"),
     queue: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/listings:queue"),
+    queueCount: makeFunctionReference<"query", Record<string, never>, any>("admin/listings:queueCount"),
     sendBack: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string; "note"?: string }, any>("admin/listings:sendBack"),
     unpublish: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string; "note"?: string }, any>("admin/listings:unpublish"),
   },

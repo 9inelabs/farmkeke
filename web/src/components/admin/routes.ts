@@ -15,6 +15,16 @@ export const adminRoutes = {
   newRole: "/admin/roles/new",
   role: (id: string) => `/admin/roles/${id}`,
   audit: "/admin/audit",
+  applications: "/admin/farmers/applications",
+  application: (id: string) => `/admin/farmers/applications/${id}`,
+  farms: "/admin/farmers",
+  farm: (id: string) => `/admin/farmers/${id}`,
+  review: "/admin/products/review",
+  products: "/admin/products",
+  product: (id: string) => `/admin/products/${id}`,
+  categories: "/admin/catalog",
+  units: "/admin/catalog/units",
+  banners: "/admin/banners",
 } as const;
 
 /** Only same-portal paths are followed after sign-in. */

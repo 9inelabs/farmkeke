@@ -18,18 +18,30 @@ export const list = query({
     status: v.optional(listingStatus),
     categoryId: v.optional(v.id("categories")),
     farmId: v.optional(v.id("farms")),
+    // Name search (A-40). With it, farmId is ignored.
+    search: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
     await requireStaff(ctx, "listings.view");
     const status = args.status ?? "live";
-    const base =
-      args.farmId !== undefined
-        ? ctx.db.query("listings").withIndex("by_farmId_and_status", (q) => q.eq("farmId", args.farmId!).eq("status", status))
-        : args.categoryId !== undefined
-          ? ctx.db.query("listings").withIndex("by_categoryId_and_status", (q) => q.eq("categoryId", args.categoryId).eq("status", status))
-          : ctx.db.query("listings").withIndex("by_status_and_submittedAt", (q) => q.eq("status", status));
-    const page = await base.order("desc").paginate(args.paginationOpts);
+    const search = args.search?.trim();
+    const page = search
+      ? await ctx.db
+          .query("listings")
+          .withSearchIndex("search_name", (q) => {
+            const byStatus = q.search("name", search).eq("status", status);
+            return args.categoryId !== undefined ? byStatus.eq("categoryId", args.categoryId) : byStatus;
+          })
+          .paginate(args.paginationOpts)
+      : await (args.farmId !== undefined
+          ? ctx.db.query("listings").withIndex("by_farmId_and_status", (q) => q.eq("farmId", args.farmId!).eq("status", status))
+          : args.categoryId !== undefined
+            ? ctx.db.query("listings").withIndex("by_categoryId_and_status", (q) => q.eq("categoryId", args.categoryId).eq("status", status))
+            : ctx.db.query("listings").withIndex("by_status_and_submittedAt", (q) => q.eq("status", status))
+        )
+          .order("desc")
+          .paginate(args.paginationOpts);
     return {
       ...page,
       page: await Promise.all(
@@ -43,9 +55,24 @@ export const list = query({
             farmName: (await ctx.db.get("farms", l.farmId))?.name ?? null,
             outOfStock: isOutOfStock(l.units),
             submittedAt: l.submittedAt ?? null,
+            liveAt: l.liveAt ?? null,
+            coverUrl: l.photoIds[0] ? await ctx.storage.getUrl(l.photoIds[0]) : null,
           })),
       ),
     };
+  },
+});
+
+/** A-41 badge: listings waiting for review (up to 99). */
+export const queueCount = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, "listings.view");
+    const rows = await ctx.db
+      .query("listings")
+      .withIndex("by_status_and_submittedAt", (q) => q.eq("status", "under_review"))
+      .take(99);
+    return rows.length;
   },
 });
 

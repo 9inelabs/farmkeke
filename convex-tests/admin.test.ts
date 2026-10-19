@@ -378,3 +378,59 @@ test("sign-in flows: apply with a code, sign in with a code, Founder sets a pass
   expect(mail.sent.map((m) => m.subject)).toEqual(["Reset your Farmkeke admin password"]);
   await expect(t.action(api.admin.access.sendPasswordLink, {})).rejects.toThrow(/NOT_SIGNED_IN/);
 });
+
+// ---------------------------------------------------------------------------
+// Phase 2: queues, search and home banners
+
+test("farmer and product queues, farm search, and home banners", async () => {
+  mailbox();
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const hours = [{ day: 1, opens: "07:00", closes: "19:00" }];
+  const ids = await t.run(async (ctx) => {
+    const unitId = await ctx.db.insert("units", { slug: "basket", singular: "basket", plural: "baskets", sortOrder: 1, retired: false });
+    await ctx.db.insert("farmerApplications", { userId: s.shopper.id, status: "submitted", submittedAt: Date.now(), categoryIds: [], seasons: [], collectionHours: [] } as any);
+    const appId = await ctx.db.insert("farmerApplications", { userId: s.applicant.id, status: "approved", categoryIds: [], seasons: [], collectionHours: [] } as any);
+    const farm = (name: string) =>
+      ctx.db.insert("farms", {
+        userId: s.applicant.id, applicationId: appId, name, phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
+        farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: hours, leadTimeHours: 4,
+        openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
+        status: "active", trusted: false,
+      } as any);
+    const greens = await farm("Ada Greens");
+    await farm("Musa Poultry");
+    const live = await ctx.db.insert("listings", { farmId: greens, status: "live", name: "Tomatoes", photoIds: [], units: [{ unitId, priceKobo: 450000, stock: 5, minOrder: 1 }], delivery: true, pickup: true, liveAt: Date.now() });
+    const waiting = await ctx.db.insert("listings", { farmId: greens, status: "under_review", name: "Peppers", photoIds: [], units: [{ unitId, priceKobo: 200000, stock: 5, minOrder: 1 }], delivery: true, pickup: true, submittedAt: Date.now() });
+    return { greens, live, waiting };
+  });
+  const ops = as(t, s.ops);
+  expect(await ops.query(api.admin.farmerRequests.counts, {})).toEqual({ submitted: 1, more_info: 0 });
+  expect(await ops.query(api.admin.listings.queueCount, {})).toBe(1);
+  const found = await ops.query(api.admin.farmers.list, { search: "musa", paginationOpts: { numItems: 10, cursor: null } });
+  expect(found.page.map((f: any) => f.name)).toEqual(["Musa Poultry"]);
+  const products = await ops.query(api.admin.listings.list, { status: "live", search: "tomat", paginationOpts: { numItems: 10, cursor: null } });
+  expect(products.page.map((l: any) => l.name)).toEqual(["Tomatoes"]);
+
+  // Banners: only live products; the first one that's on and buyable is shown
+  const banner = { tag: "Harvest of the week", title: "Fresh tomatoes", buttonLabel: "Shop", active: true, reason: "Launch" };
+  await expect(ops.mutation(api.admin.banners.create, { ...banner, listingId: ids.waiting })).rejects.toThrow(/live listing/);
+  const first = await ops.mutation(api.admin.banners.create, { ...banner, listingId: ids.live });
+  const second = await ops.mutation(api.admin.banners.create, { ...banner, title: "Back-up", listingId: ids.live });
+  let rows = await ops.query(api.admin.banners.list, {});
+  expect(rows.map((b: any) => [b.title, b.shown])).toEqual([["Fresh tomatoes", true], ["Back-up", false]]);
+  await ops.mutation(api.admin.banners.reorder, { orderedIds: [second, first], reason: "Swap" });
+  await ops.mutation(api.admin.banners.update, { bannerId: first, ...banner, active: false, listingId: ids.live });
+  rows = await ops.query(api.admin.banners.list, {});
+  expect(rows.map((b: any) => [b.title, b.active, b.shown])).toEqual([["Back-up", true, true], ["Fresh tomatoes", false, false]]);
+  await ops.mutation(api.admin.banners.remove, { bannerId: first, reason: "Old" });
+  expect((await ops.query(api.admin.banners.list, {})).length).toBe(1);
+  // Finance can't manage banners
+  const fin = await t.run(async (ctx) => {
+    const id = await ctx.db.insert("users", { name: "Fin", email: "fin@farmkeke.com" });
+    const sessionId = await ctx.db.insert("authSessions", { userId: id, expirationTime: Date.now() + 1e10 });
+    await grantStaff(ctx, { id, sessionId }, "finance");
+    return { id, sessionId };
+  });
+  await expect(as(t, fin).mutation(api.admin.banners.remove, { bannerId: second, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+});

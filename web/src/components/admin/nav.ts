@@ -2,15 +2,23 @@
 // permissions (the server checks again on every call).
 import {
   Bell,
+  ClipboardCheck,
   ClipboardList,
+  FileCheck2,
+  GalleryHorizontalEnd,
   LayoutDashboard,
+  LayoutGrid,
+  Package,
+  Ruler,
   ShieldCheck,
+  Tractor,
   UserCog,
   type LucideIcon,
 } from "lucide-react";
 import { adminRoutes } from "./routes";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: "applications" | "alerts" };
+export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview";
+export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
 
 export const NAV: NavGroup[] = [
@@ -19,6 +27,18 @@ export const NAV: NavGroup[] = [
     items: [
       { href: adminRoutes.home, label: "Dashboard", icon: LayoutDashboard },
       { href: adminRoutes.alerts, label: "Alerts", icon: Bell, badge: "alerts" },
+    ],
+  },
+  {
+    label: "Farmers and products",
+    items: [
+      { href: adminRoutes.applications, label: "Farmer applications", icon: FileCheck2, any: ["farmers.view"], badge: "farmerApplications" },
+      { href: adminRoutes.farms, label: "Farms", icon: Tractor, any: ["farmers.view"] },
+      { href: adminRoutes.review, label: "Product review", icon: ClipboardCheck, any: ["listings.view"], badge: "productReview" },
+      { href: adminRoutes.products, label: "All products", icon: Package, any: ["listings.view"] },
+      { href: adminRoutes.categories, label: "Categories", icon: LayoutGrid, any: ["catalog.manage", "listings.view"] },
+      { href: adminRoutes.units, label: "Units", icon: Ruler, any: ["catalog.manage", "listings.view"] },
+      { href: adminRoutes.banners, label: "Home banners", icon: GalleryHorizontalEnd, any: ["content.manage"] },
     ],
   },
   {

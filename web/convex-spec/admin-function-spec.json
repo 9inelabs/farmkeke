@@ -385,6 +385,180 @@
       "returns": null
     },
     {
+      "identifier": "admin/banners.js:create",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "tag": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "buttonLabel": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "listingId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "listings"
+            },
+            "optional": false
+          },
+          "active": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/banners.js:list",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/banners.js:remove",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "bannerId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "homeBanners"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/banners.js:reorder",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "orderedIds": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "id",
+                "tableName": "homeBanners"
+              }
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/banners.js:update",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "bannerId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "homeBanners"
+            },
+            "optional": false
+          },
+          "tag": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "buttonLabel": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "listingId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "listings"
+            },
+            "optional": false
+          },
+          "active": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/catalog.js:createCategory",
       "functionType": "Mutation",
       "visibility": {
@@ -1389,6 +1563,18 @@
       "returns": null
     },
     {
+      "identifier": "admin/farmerRequests.js:counts",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/farmerRequests.js:get",
       "functionType": "Query",
       "visibility": {
@@ -1656,6 +1842,12 @@
                   "value": "suspended"
                 }
               ]
+            },
+            "optional": true
+          },
+          "search": {
+            "fieldType": {
+              "type": "string"
             },
             "optional": true
           },
@@ -2259,6 +2451,12 @@
             },
             "optional": true
           },
+          "search": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
           "paginationOpts": {
             "fieldType": {
               "type": "object",
@@ -2393,6 +2591,18 @@
             "optional": false
           }
         }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/listings.js:queueCount",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
       },
       "returns": null
     },

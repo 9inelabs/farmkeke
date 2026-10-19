@@ -40,6 +40,22 @@ export const list = query({
   },
 });
 
+/** A-20 tabs: applications per status (up to 99 each). */
+export const counts = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, "farmers.view");
+    const count = async (status: "submitted" | "more_info") =>
+      (
+        await ctx.db
+          .query("farmerApplications")
+          .withIndex("by_status_and_submittedAt", (q) => q.eq("status", status))
+          .take(99)
+      ).length;
+    return { submitted: await count("submitted"), more_info: await count("more_info") };
+  },
+});
+
 /** A-21 / A-22: everything about one application, with document photo URLs. */
 export const get = query({
   args: { applicationId: v.id("farmerApplications") },

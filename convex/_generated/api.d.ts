@@ -13,6 +13,7 @@ import type * as accountsInternal from "../accountsInternal.js";
 import type * as addresses from "../addresses.js";
 import type * as admin_access from "../admin/access.js";
 import type * as admin_areas from "../admin/areas.js";
+import type * as admin_banners from "../admin/banners.js";
 import type * as admin_catalog from "../admin/catalog.js";
 import type * as admin_chat from "../admin/chat.js";
 import type * as admin_consumers from "../admin/consumers.js";
@@ -103,6 +104,7 @@ declare const fullApi: ApiFromModules<{
   addresses: typeof addresses;
   "admin/access": typeof admin_access;
   "admin/areas": typeof admin_areas;
+  "admin/banners": typeof admin_banners;
   "admin/catalog": typeof admin_catalog;
   "admin/chat": typeof admin_chat;
   "admin/consumers": typeof admin_consumers;

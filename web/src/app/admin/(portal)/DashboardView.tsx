@@ -15,6 +15,8 @@ export function DashboardView() {
   const me = useStaff();
   const pending = useQuery(admin.staff.pendingCount, me.can("staff.view") ? {} : "skip") as number | undefined;
   const alerts = useQuery(admin.staff.unreadAlerts, {}) as number | undefined;
+  const farmerApps = useQuery(admin.farmerRequests.counts, me.can("farmers.view") ? {} : "skip") as { submitted: number } | undefined;
+  const review = useQuery(admin.listings.queueCount, me.can("listings.view") ? {} : "skip") as number | undefined;
   const catalog = useQuery(admin.access.permissionCatalog, {}) as PermissionInfo[] | undefined;
   const first = me.name.split(/\s+/)[0];
   const links = visibleNav(me.can)
@@ -25,7 +27,11 @@ export function DashboardView() {
   return (
     <>
       <PageHeader title={`Welcome, ${first}`} description={`You're signed in as ${me.role.name}.`} />
-      <div className="grid grid-cols-3 gap-4 m:grid-cols-1">
+      <div className="grid grid-cols-4 gap-4 m:grid-cols-2">
+        {me.can("farmers.view") ? (
+          <Waiting href={adminRoutes.applications} count={farmerApps?.submitted} label="Farmer applications waiting" />
+        ) : null}
+        {me.can("listings.view") ? <Waiting href={adminRoutes.review} count={review} label="Products waiting for review" /> : null}
         {me.can("staff.view") ? (
           <Waiting href={adminRoutes.staff} count={pending} label="Staff applications waiting" />
         ) : null}

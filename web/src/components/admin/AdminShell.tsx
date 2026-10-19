@@ -14,7 +14,7 @@ import { Drawer } from "@/components/ui/Dialog";
 import { admin } from "@/convex/admin";
 import { initials } from "@/lib/format";
 import { useStaff } from "./context";
-import { activeHref, visibleNav, type NavGroup } from "./nav";
+import { activeHref, visibleNav, type Badge, type NavGroup } from "./nav";
 import { adminRoutes } from "./routes";
 
 const IDLE_MS = 30 * 60 * 1000;
@@ -61,7 +61,7 @@ function useIdleSignOut() {
   }, [signOut, router]);
 }
 
-function NavList({ groups, active, counts, onNavigate }: { groups: NavGroup[]; active: string | null; counts: Record<string, number>; onNavigate?: () => void }) {
+function NavList({ groups, active, counts, onNavigate }: { groups: NavGroup[]; active: string | null; counts: Record<Badge, number>; onNavigate?: () => void }) {
   return (
     <nav aria-label="Admin portal">
       {groups.map((g) => (
@@ -70,7 +70,7 @@ function NavList({ groups, active, counts, onNavigate }: { groups: NavGroup[]; a
           <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
             {g.items.map((item) => {
               const on = active === item.href;
-              const count = item.badge ? counts[item.badge] ?? 0 : 0;
+              const count = item.badge ? counts[item.badge] : 0;
               const Icon = item.icon;
               return (
                 <li key={item.href}>
@@ -111,7 +111,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const alerts = useQuery(admin.staff.unreadAlerts, {}) as number | undefined;
   const applications = useQuery(admin.staff.pendingCount, me.can("staff.view") ? {} : "skip") as number | undefined;
-  const counts = { alerts: alerts ?? 0, applications: applications ?? 0 };
+  const farmerApps = useQuery(admin.farmerRequests.counts, me.can("farmers.view") ? {} : "skip") as
+    | { submitted: number }
+    | undefined;
+  const review = useQuery(admin.listings.queueCount, me.can("listings.view") ? {} : "skip") as number | undefined;
+  const counts: Record<Badge, number> = {
+    alerts: alerts ?? 0,
+    applications: applications ?? 0,
+    farmerApplications: farmerApps?.submitted ?? 0,
+    productReview: review ?? 0,
+  };
   const groups = visibleNav(me.can);
   const active = activeHref(pathname, groups);
 

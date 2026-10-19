@@ -10,14 +10,26 @@ import { normalizeNigerianPhone } from "../lib/phone";
 
 
 export const list = query({
-  args: { status: v.optional(v.union(v.literal("active"), v.literal("suspended"))), paginationOpts: paginationOptsValidator },
+  args: {
+    status: v.optional(v.union(v.literal("active"), v.literal("suspended"))),
+    // Farm name search (A-30)
+    search: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
+  },
   handler: async (ctx, args) => {
     await requireStaff(ctx, "farmers.view");
-    const page = await ctx.db
-      .query("farms")
-      .withIndex("by_status", (q) => q.eq("status", args.status ?? "active"))
-      .order("desc")
-      .paginate(args.paginationOpts);
+    const status = args.status ?? "active";
+    const search = args.search?.trim();
+    const page = search
+      ? await ctx.db
+          .query("farms")
+          .withSearchIndex("search_name", (q) => q.search("name", search).eq("status", status))
+          .paginate(args.paginationOpts)
+      : await ctx.db
+          .query("farms")
+          .withIndex("by_status", (q) => q.eq("status", status))
+          .order("desc")
+          .paginate(args.paginationOpts);
     return {
       ...page,
       page: page.page.map((f) => ({
@@ -27,6 +39,8 @@ export const list = query({
         lga: f.lga,
         status: f.status,
         trusted: f.trusted,
+        holidayMode: f.holidayMode,
+        createdAt: f._creationTime,
         // "Approved but not set up" (A-30)
         setUp: f.profileConfirmedAt !== undefined && f.collectionConfirmedAt !== undefined,
       })),
