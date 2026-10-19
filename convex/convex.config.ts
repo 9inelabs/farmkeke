@@ -23,6 +23,8 @@ const app = defineApp({
     // Optional folder for email images (holds wordmark.png). Unset: emails use
     // this deployment's GET /email/wordmark.png route.
     EMAIL_ASSETS_URL: v.optional(v.string()),
+    // Where replies to Farmkeke emails go, e.g. "Farmkeke Support <support@farmkeke.com>"
+    EMAIL_REPLY_TO: v.optional(v.string()),
   },
 });
 

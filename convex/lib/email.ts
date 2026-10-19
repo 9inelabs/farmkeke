@@ -20,6 +20,8 @@ export async function sendEmail(email: Email): Promise<void> {
     body: JSON.stringify({
       // Resend's shared test sender works until a farmkeke.com domain is verified
       from: env.AUTH_EMAIL_FROM ?? "Farmkeke <onboarding@resend.dev>",
+      // Every email says "reply to this email"; replies go to the support inbox when set.
+      ...(env.EMAIL_REPLY_TO ? { reply_to: env.EMAIL_REPLY_TO } : {}),
       to: [email.to],
       subject: email.subject,
       html: email.html,
