@@ -9,7 +9,8 @@
     "lint": "eslint",
     "gen:api": "node scripts/gen-convex-api.mjs",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "gen:admin": "node scripts/gen-admin-api.mjs"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",

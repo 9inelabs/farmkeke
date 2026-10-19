@@ -12,8 +12,6 @@ import { HOUR } from "../lib/settings";
 import { fulfilment, orderStatus } from "../schema";
 import { windowEnd } from "./dispatch";
 
-const READERS = ["operations", "support", "finance"] as const;
-const OPERATORS = ["operations"] as const;
 
 // Staff can cancel until the order reaches the shopper
 const CANCELLABLE: OrderStatus[] = [
@@ -53,7 +51,7 @@ export const list = query({
     to: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "orders.view");
     const { farmId, status, from, to } = args;
     const lo = from ?? 0;
     const hi = to ?? Number.MAX_SAFE_INTEGER;
@@ -89,7 +87,7 @@ export const list = query({
 export const get = query({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "orders.view");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) return null;
     const consumer = await ctx.db.get("users", order.userId);
@@ -159,7 +157,7 @@ export const get = query({
 export const addNote = mutation({
   args: { note: v.string(), orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...READERS]);
+    const staff = await requireStaff(ctx, "orders.view");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     const note = args.note.trim();
@@ -173,7 +171,7 @@ export const addNote = mutation({
 export const cancel = mutation({
   args: { orderId: v.id("orders"), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...OPERATORS]);
+    const staff = await requireStaff(ctx, "orders.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (!CANCELLABLE.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
@@ -208,7 +206,7 @@ export const cancel = mutation({
 export const extendDeadline = mutation({
   args: { hours: v.number(), orderId: v.id("orders"), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...OPERATORS]);
+    const staff = await requireStaff(ctx, "orders.manage");
     if (!Number.isInteger(args.hours) || args.hours < 1 || args.hours > 72) throw new ConvexError({ code: "INVALID_HOURS" });
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
@@ -240,7 +238,7 @@ export const extendDeadline = mutation({
 export const reassignRider = mutation({
   args: { collectAt: v.optional(v.number()), orderId: v.id("orders"), reason: v.string(), riderId: v.id("riders") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...OPERATORS]);
+    const staff = await requireStaff(ctx, "orders.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (!RIDER_STAGES.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
@@ -267,7 +265,7 @@ export const reassignRider = mutation({
 export const stuck = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "orders.view");
     const now = args.now;
     const out: { order: Doc<"orders">; reason: string }[] = [];
     const scan = async (status: OrderStatus, test: (o: Doc<"orders">) => string | null) => {

@@ -7,6 +7,7 @@ import { Providers } from "@/components/providers/Providers";
 import { ConnectionStatus } from "@/components/system/ConnectionStatus";
 import { CookieBanner } from "@/components/system/CookieBanner";
 import { MaintenanceGate } from "@/components/system/MaintenanceGate";
+import { SiteOnly } from "@/components/system/SiteOnly";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-inter", display: "swap" });
@@ -55,11 +56,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </a>
         <Providers>
           {children}
-          <MiniCart />
-          <AreaPicker />
-          <CookieBanner />
+          <SiteOnly>
+            <MiniCart />
+            <AreaPicker />
+            <CookieBanner />
+            <MaintenanceGate />
+          </SiteOnly>
           <ConnectionStatus />
-          <MaintenanceGate />
           <SessionKeeper />
         </Providers>
       </body>

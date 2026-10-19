@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
+import { grantStaff } from "./staff";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -20,6 +21,7 @@ async function seed(t: ReturnType<typeof convexTest>) {
     const user = async (fields: Record<string, unknown>) => {
       const id = await ctx.db.insert("users", fields as any);
       const sessionId = await ctx.db.insert("authSessions", { userId: id, expirationTime: Date.now() + 1e10 });
+      if (typeof fields.staffRole === "string") await grantStaff(ctx, { id, sessionId }, fields.staffRole);
       return { id, sessionId };
     };
     const guest = await user({ isAnonymous: true });

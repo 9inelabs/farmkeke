@@ -5,12 +5,11 @@ import { query } from "../_generated/server";
 import { requireStaff } from "../lib/auth";
 import { messageView } from "../chat";
 
-const READERS = ["support", "operations"] as const;
 
 export const get = query({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "chat.view");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) return null;
     const farm = await ctx.db.get("farms", order.farmId);
@@ -35,7 +34,7 @@ export const get = query({
 export const messages = query({
   args: { orderId: v.id("orders"), paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "chat.view");
     const c = await ctx.db
       .query("conversations")
       .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))

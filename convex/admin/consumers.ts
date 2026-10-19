@@ -6,13 +6,12 @@ import { mutation, query } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 
-const ROLES = ["operations" as const, "support" as const];
 
 /** Accounts, newest first. Guests appear here once they place orders (Phase 6). */
 export const list = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "customers.view");
     const page = await ctx.db.query("users").order("desc").paginate(args.paginationOpts);
     return {
       ...page,
@@ -33,7 +32,7 @@ export const list = query({
 export const get = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "customers.view");
     const user = await ctx.db.get("users", args.userId);
     if (user === null) return null;
     const addresses = await ctx.db
@@ -52,7 +51,7 @@ export const get = query({
 export const setBlocked = mutation({
   args: { userId: v.id("users"), blocked: v.boolean(), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "customers.manage");
     const user = await ctx.db.get("users", args.userId);
     if (user === null) throw new ConvexError("Account not found");
     if (user.staffRole !== undefined) throw new ConvexError("Staff accounts can't be blocked here");
@@ -80,7 +79,7 @@ export const setBlocked = mutation({
 export const listDeletions = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "customers.view");
     return await ctx.db.query("accountDeletions").order("desc").paginate(args.paginationOpts);
   },
 });

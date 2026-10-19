@@ -6,12 +6,11 @@ import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { requireSlug, requireText } from "../lib/validate";
 
-const CATALOG_ROLES = ["operations" as const];
 
 export const listAllCategories = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, CATALOG_ROLES);
+    await requireStaff(ctx, null);
     const categories = await ctx.db.query("categories").take(100);
     return categories.sort((a, b) => a.sortOrder - b.sortOrder);
   },
@@ -26,7 +25,7 @@ export const updateCategory = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     const category = await ctx.db.get("categories", args.categoryId);
     if (category === null) throw new ConvexError("Category not found");
     const changes = {
@@ -56,7 +55,7 @@ export const createCategory = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     const slug = requireSlug(args.slug);
     const existing = await ctx.db
       .query("categories")
@@ -95,7 +94,7 @@ export const setSubtypes = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     const category = await ctx.db.get("categories", args.categoryId);
     if (category === null) throw new ConvexError("Category not found");
     if (args.subtypes.length > 30) throw new ConvexError("A category can have at most 30 subtypes");
@@ -117,7 +116,7 @@ export const setSubtypes = mutation({
 export const reorderCategories = mutation({
   args: { orderedIds: v.array(v.id("categories")), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     for (const [index, categoryId] of args.orderedIds.entries()) {
       await ctx.db.patch("categories", categoryId, { sortOrder: index + 1 });
     }
@@ -135,7 +134,7 @@ export const reorderCategories = mutation({
 export const listAllUnits = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, CATALOG_ROLES);
+    await requireStaff(ctx, null);
     const units = await ctx.db.query("units").take(200);
     return units.sort((a, b) => a.sortOrder - b.sortOrder);
   },
@@ -145,7 +144,7 @@ export const listAllUnits = query({
 export const createUnit = mutation({
   args: { slug: v.string(), singular: v.string(), plural: v.string(), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     const slug = requireSlug(args.slug);
     const existing = await ctx.db
       .query("units")
@@ -181,7 +180,7 @@ export const updateUnit = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, CATALOG_ROLES);
+    const actor = await requireStaff(ctx, "catalog.manage");
     const unit = await ctx.db.get("units", args.unitId);
     if (unit === null) throw new ConvexError("Unit not found");
     const changes = {

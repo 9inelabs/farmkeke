@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
         routes.accountCreated,
         routes.sessionExpired,
         routes.maintenance,
+        "/admin",
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,

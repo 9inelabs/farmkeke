@@ -13,4 +13,6 @@ npm ci        # first time only
 npm test
 ```
 
+Admin Portal access and staff sign-in are in admin.test.ts.
+
 They run fully offline against an in-memory backend and never touch the live deployment. The repo root needs its `node_modules` (`npm ci` at the root).

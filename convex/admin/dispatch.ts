@@ -10,8 +10,6 @@ import { notifyConsumer, notifyFarm } from "../lib/notify";
 import { pickupDeadline, transition, type OrderStatus } from "../lib/orders";
 import { HOUR } from "../lib/settings";
 
-const READERS = ["operations", "support"] as const;
-const DISPATCH = ["operations"] as const;
 // Riders can be lined up as soon as the farm accepts
 const ASSIGNABLE: OrderStatus[] = ["accepted", "preparing", "ready_for_rider"];
 
@@ -63,7 +61,7 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
 export const board = query({
   args: { now: v.number() },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, ["dispatch.manage", "orders.view"]);
     const take = async (status: OrderStatus, n: number, order: "asc" | "desc" = "asc") =>
       await ctx.db
         .query("orders")
@@ -108,7 +106,7 @@ export const board = query({
 export const assignRider = mutation({
   args: { collectAt: v.number(), note: v.optional(v.string()), orderId: v.id("orders"), riderId: v.id("riders") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...DISPATCH]);
+    const staff = await requireStaff(ctx, "dispatch.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (!ASSIGNABLE.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
@@ -162,7 +160,7 @@ export const recordStep = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...DISPATCH]);
+    const staff = await requireStaff(ctx, "dispatch.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     const actor = { kind: "staff" as const, id: staff._id };

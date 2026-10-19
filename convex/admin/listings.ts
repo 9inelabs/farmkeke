@@ -11,7 +11,6 @@ import { notify } from "../lib/notify";
 import { patchListing } from "../lib/listingCounts";
 import { listingStatus } from "../schema";
 
-const ROLES = ["operations" as const];
 
 /** A-40: listings by status, optionally one category or one farm. */
 export const list = query({
@@ -22,7 +21,7 @@ export const list = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "listings.view");
     const status = args.status ?? "live";
     const base =
       args.farmId !== undefined
@@ -54,7 +53,7 @@ export const list = query({
 export const queue = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "listings.view");
     const page = await ctx.db
       .query("listings")
       .withIndex("by_status_and_submittedAt", (q) => q.eq("status", "under_review"))
@@ -79,7 +78,7 @@ export const queue = query({
 export const get = query({
   args: { listingId: v.id("listings") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "listings.view");
     const listing = await ctx.db.get("listings", args.listingId);
     if (listing === null) return null;
     const farm = await ctx.db.get("farms", listing.farmId);
@@ -110,7 +109,7 @@ async function moderate(
   action: string,
   reason: string,
 ) {
-  const actor = await requireStaff(ctx, ROLES);
+  const actor = await requireStaff(ctx, "listings.review");
   const listing = await ctx.db.get("listings", listingId);
   if (listing === null || listing.deletedAt !== undefined) throw new ConvexError("Listing not found");
   if (!(from as string[]).includes(listing.status)) throw new ConvexError(`This listing is ${listing.status}`);

@@ -13,9 +13,7 @@ import { orderCore, refundOrder, releaseOrder, transition } from "../lib/orders"
 import { validateImageUpload } from "../lib/uploads";
 import { disputeStatus } from "../schema";
 
-const READERS = ["support", "operations", "finance"] as const;
 // Deciding moves money
-const DECIDERS = ["support", "finance"] as const;
 
 async function getDispute(ctx: MutationCtx, disputeId: Id<"disputes">) {
   const dispute = await ctx.db.get("disputes", disputeId);
@@ -26,7 +24,7 @@ async function getDispute(ctx: MutationCtx, disputeId: Id<"disputes">) {
 export const list = query({
   args: { paginationOpts: paginationOptsValidator, status: v.optional(disputeStatus) },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "disputes.view");
     const status = args.status;
     const result =
       status === undefined
@@ -55,7 +53,7 @@ export const list = query({
 export const get = query({
   args: { disputeId: v.id("disputes") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...READERS]);
+    const staff = await requireStaff(ctx, "disputes.view");
     const dispute = await ctx.db.get("disputes", args.disputeId);
     if (dispute === null) return null;
     const order = await ctx.db.get("orders", dispute.orderId);
@@ -93,7 +91,7 @@ export const get = query({
 export const assign = mutation({
   args: { assigneeId: v.optional(v.id("users")), disputeId: v.id("disputes") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...READERS]);
+    const staff = await requireStaff(ctx, "disputes.manage");
     const dispute = await getDispute(ctx, args.disputeId);
     let name = "nobody";
     if (args.assigneeId !== undefined) {
@@ -116,7 +114,7 @@ export const assign = mutation({
 export const addNote = mutation({
   args: { body: v.string(), disputeId: v.id("disputes") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...READERS]);
+    const staff = await requireStaff(ctx, "disputes.manage");
     const dispute = await getDispute(ctx, args.disputeId);
     const body = args.body.trim();
     if (body.length === 0) throw new ConvexError({ code: "NOTE_REQUIRED" });
@@ -128,7 +126,7 @@ export const addNote = mutation({
 export const markRead = mutation({
   args: { disputeId: v.id("disputes") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "disputes.view");
     const dispute = await getDispute(ctx, args.disputeId);
     await ctx.db.patch("disputes", dispute._id, { staffReadAt: Date.now() });
   },
@@ -143,7 +141,7 @@ export const sendMessage = mutation({
     photoIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...READERS]);
+    const staff = await requireStaff(ctx, "disputes.manage");
     const dispute = await getDispute(ctx, args.disputeId);
     const body = args.body.trim();
     if (body.length === 0 && args.photoIds.length === 0) throw new ConvexError({ code: "EMPTY_MESSAGE" });
@@ -199,7 +197,7 @@ export const resolve = mutation({
     releaseKobo: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...DECIDERS]);
+    const staff = await requireStaff(ctx, "disputes.decide");
     const dispute = await getDispute(ctx, args.disputeId);
     if (dispute.status === "resolved") throw new ConvexError({ code: "ALREADY_RESOLVED" });
     const order = await ctx.db.get("orders", dispute.orderId);

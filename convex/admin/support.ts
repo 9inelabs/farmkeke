@@ -9,7 +9,6 @@ import { notify } from "../lib/notify";
 import { validateImageUpload } from "../lib/uploads";
 import { supportMessageView, ticketView } from "../support";
 
-const STAFF = ["support", "operations"] as const;
 
 async function getTicket(ctx: MutationCtx, ticketId: Id<"supportTickets">) {
   const ticket = await ctx.db.get("supportTickets", ticketId);
@@ -20,7 +19,7 @@ async function getTicket(ctx: MutationCtx, ticketId: Id<"supportTickets">) {
 export const list = query({
   args: { paginationOpts: paginationOptsValidator, status: v.optional(v.union(v.literal("open"), v.literal("resolved"))) },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...STAFF]);
+    await requireStaff(ctx, "support.view");
     const status = args.status;
     const result =
       status === undefined
@@ -50,7 +49,7 @@ export const list = query({
 export const get = query({
   args: { ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...STAFF]);
+    await requireStaff(ctx, "support.view");
     const t = await ctx.db.get("supportTickets", args.ticketId);
     if (t === null) return null;
     const user = await ctx.db.get("users", t.userId);
@@ -80,7 +79,7 @@ export const get = query({
 export const messages = query({
   args: { paginationOpts: paginationOptsValidator, ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...STAFF]);
+    await requireStaff(ctx, "support.view");
     const result = await ctx.db
       .query("supportMessages")
       .withIndex("by_ticketId", (q) => q.eq("ticketId", args.ticketId))
@@ -93,7 +92,7 @@ export const messages = query({
 export const reply = mutation({
   args: { body: v.string(), photoIds: v.array(v.id("_storage")), ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...STAFF]);
+    const staff = await requireStaff(ctx, "support.manage");
     const ticket = await getTicket(ctx, args.ticketId);
     const body = args.body.trim();
     if (body.length === 0 && args.photoIds.length === 0) throw new ConvexError({ code: "EMPTY_MESSAGE" });
@@ -131,7 +130,7 @@ export const reply = mutation({
 export const assign = mutation({
   args: { assigneeId: v.optional(v.id("users")), ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...STAFF]);
+    const staff = await requireStaff(ctx, "support.manage");
     const ticket = await getTicket(ctx, args.ticketId);
     let name = "nobody";
     if (args.assigneeId !== undefined) {
@@ -154,7 +153,7 @@ export const assign = mutation({
 export const markRead = mutation({
   args: { ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...STAFF]);
+    await requireStaff(ctx, "support.view");
     const ticket = await getTicket(ctx, args.ticketId);
     await ctx.db.patch("supportTickets", ticket._id, { staffReadAt: Date.now() });
   },
@@ -163,7 +162,7 @@ export const markRead = mutation({
 export const resolve = mutation({
   args: { reason: v.string(), ticketId: v.id("supportTickets") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...STAFF]);
+    const staff = await requireStaff(ctx, "support.manage");
     const ticket = await getTicket(ctx, args.ticketId);
     if (ticket.status === "resolved") return;
     await writeAudit(ctx, {

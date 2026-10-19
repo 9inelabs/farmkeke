@@ -9,7 +9,6 @@ import { requireStaff } from "../lib/auth";
 import { logOrderEvent, releaseOrder, transition } from "../lib/orders";
 import { escrowState } from "../schema";
 
-const READERS = ["finance", "operations", "support"] as const;
 
 async function ledgerRow(ctx: QueryCtx, order: Doc<"orders">) {
   const farm = await ctx.db.get("farms", order.farmId);
@@ -40,7 +39,7 @@ async function ledgerRow(ctx: QueryCtx, order: Doc<"orders">) {
 export const entries = query({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const rows = await ctx.db
       .query("ledgerEntries")
       .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
@@ -69,7 +68,7 @@ export const entries = query({
 export const list = query({
   args: { paginationOpts: paginationOptsValidator, state: v.optional(escrowState) },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const state = args.state;
     const result =
       state === undefined
@@ -90,7 +89,7 @@ export const list = query({
 export const releaseQueue = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const held = await ctx.db
       .query("orders")
       .withIndex("by_escrow", (q) => q.eq("escrow", "held"))
@@ -114,7 +113,7 @@ export const releaseQueue = query({
 export const release = mutation({
   args: { orderId: v.id("orders"), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, ["finance"]);
+    const staff = await requireStaff(ctx, "money.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.escrow !== "held") throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });
@@ -145,7 +144,7 @@ export const release = mutation({
 export const setHold = mutation({
   args: { orderId: v.id("orders"), hold: v.boolean(), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, ["finance"]);
+    const staff = await requireStaff(ctx, "money.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.escrow !== "held") throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });

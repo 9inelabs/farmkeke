@@ -13,8 +13,6 @@ import { paymentsLive, paystack } from "../lib/paystack";
 import { freshReference } from "../payments/payouts";
 import { payoutStatus, refundStatus } from "../schema";
 
-const READERS = ["finance", "operations", "support"] as const;
-const FINANCE = ["finance"] as const;
 
 async function payoutRow(ctx: QueryCtx, p: Doc<"payouts">) {
   const farm = await ctx.db.get("farms", p.farmId);
@@ -72,7 +70,7 @@ async function refundRow(ctx: QueryCtx, r: Doc<"refunds">) {
 export const payouts = query({
   args: { paginationOpts: paginationOptsValidator, status: payoutStatus },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const result = await ctx.db
       .query("payouts")
       .withIndex("by_status", (q) => q.eq("status", args.status))
@@ -85,7 +83,7 @@ export const payouts = query({
 export const payout = query({
   args: { payoutId: v.id("payouts") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const p = await ctx.db.get("payouts", args.payoutId);
     if (p === null) return null;
     const items = await ctx.db
@@ -116,7 +114,7 @@ export const payout = query({
 export const refunds = query({
   args: { paginationOpts: paginationOptsValidator, status: refundStatus },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const result = await ctx.db
       .query("refunds")
       .withIndex("by_status", (q) => q.eq("status", args.status))
@@ -130,7 +128,7 @@ export const refunds = query({
 export const refundsWaiting = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const out: Doc<"refunds">[] = [];
     for (const status of ["failed", "sending", "queued", "processing"] as const) {
       out.push(
@@ -149,7 +147,7 @@ export const refundsWaiting = query({
 export const reconciliation = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "money.view");
     const mismatches = (
       await ctx.db
         .query("paymentAttempts")
@@ -207,7 +205,7 @@ export const reconciliation = query({
 export const resolveMismatch = mutation({
   args: { attemptId: v.id("paymentAttempts"), decision: v.union(v.literal("refund"), v.literal("dismiss")), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...FINANCE]);
+    const staff = await requireStaff(ctx, "money.manage");
     const attempt = await ctx.db.get("paymentAttempts", args.attemptId);
     if (attempt === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (attempt.status !== "mismatch" || attempt.resolvedAt !== undefined) throw new ConvexError({ code: "ALREADY_RESOLVED" });
@@ -252,7 +250,7 @@ export const resolveMismatch = mutation({
 export const resolveUnmatched = mutation({
   args: { eventId: v.id("unmatchedPaymentEvents"), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...FINANCE]);
+    const staff = await requireStaff(ctx, "money.manage");
     const event = await ctx.db.get("unmatchedPaymentEvents", args.eventId);
     if (event === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (event.resolvedAt !== undefined) return;
@@ -276,7 +274,7 @@ export const resolveUnmatched = mutation({
 export const retryPayout = mutation({
   args: { payoutId: v.id("payouts"), reason: v.string() },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...FINANCE]);
+    const staff = await requireStaff(ctx, "money.manage");
     const payout = await ctx.db.get("payouts", args.payoutId);
     if (payout === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (payout.status !== "failed") throw new ConvexError({ code: "NOT_FAILED", status: payout.status });
@@ -301,7 +299,7 @@ export const retryPayout = mutation({
 export const retryRefund = mutation({
   args: { reason: v.string(), refundId: v.id("refunds") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, [...FINANCE]);
+    const staff = await requireStaff(ctx, "money.manage");
     const refund = await ctx.db.get("refunds", args.refundId);
     if (refund === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (refund.status !== "failed") throw new ConvexError({ code: "NOT_FAILED", status: refund.status });
@@ -323,11 +321,11 @@ export const retryRefund = mutation({
   },
 });
 
-/** For checkBankList: throws unless the caller is finance or operations staff. */
+/** For checkBankList: throws unless the caller is staff who can see money. */
 export const staffCheck = internalQuery({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, ["finance", "operations"]);
+    await requireStaff(ctx, "money.view");
     return true;
   },
 });

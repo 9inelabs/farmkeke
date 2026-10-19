@@ -2068,3 +2068,234 @@ export function farmReviewEmail(p: FarmRef & { number: string; rating: number; c
     reason: farmReason(p.farmName),
   });
 }
+
+// ===========================================================================
+// Admin Portal staff emails (A-01, A-02, A-89): sign-in codes, password
+// links, applications and role changes. Links go to farmkeke.com/admin.
+// ===========================================================================
+
+const adminUrl = (path = "") => `${siteUrl()}/admin${path}`;
+export const adminLinks = {
+  home: () => adminUrl(),
+  signIn: () => adminUrl("/signin"),
+  forgotPassword: () => adminUrl("/forgot-password"),
+  application: (memberId: string) => adminUrl(`/staff/${id(memberId)}`),
+  setPassword: (email: string, code: string) =>
+    adminUrl(`/set-password?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`),
+};
+const STAFF_REASON = "You're getting this email because this address is used for the Farmkeke admin portal.";
+const STAFF_MANAGER_REASON =
+  "You're getting this email because you can approve staff on the Farmkeke admin portal.";
+
+/** The big 6-digit code (same look as the pickup code). Plain text in. */
+const STAFF_CODE = (code: string) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+<tr><td align="center" bgcolor="${TINT}" style="background:${TINT};border:2px solid ${LIME};border-radius:16px;padding:20px 12px;">
+<p style="margin:0 0 6px;font-family:${BODY_FONT};font-size:13px;line-height:18px;font-weight:600;color:${MUTED};text-transform:uppercase;letter-spacing:1px;">Your code</p>
+<p style="margin:0;font-family:${HEAD_FONT};font-size:40px;line-height:48px;font-weight:800;color:${FOREST};letter-spacing:10px;">${esc(code)}</p>
+</td></tr>
+</table>`;
+
+export function staffCodeEmail(p: { to: string; name?: string; code: string; purpose: "confirm" | "signin"; minutes: number }): Email {
+  const confirm = p.purpose === "confirm";
+  const what = confirm
+    ? "confirm your email and send your application to the Farmkeke admin portal"
+    : "finish signing in to the Farmkeke admin portal";
+  return compose({
+    to: p.to,
+    subject: `${p.code} is your Farmkeke admin code`,
+    preheader: `It works for ${p.minutes} minutes, and only once.`,
+    title: confirm ? "Confirm your email" : "Your sign-in code",
+    blocks: [
+      b.p(hi(p.name), ` enter this code to ${what}.`),
+      { html: STAFF_CODE(p.code), text: [`YOUR CODE: ${p.code}`] },
+      b.note("The code works for ", { b: `${p.minutes} minutes` }, ", and only ", { b: "once" }, ". Never share it, not even with Farmkeke staff."),
+      b.small(
+        confirm
+          ? "Didn't apply? You can ignore this email. Nothing happens without the code."
+          : "Didn't try to sign in? Someone may know your password. ",
+        ...(confirm ? [] : [{ link: adminLinks.forgotPassword(), label: "Make a new password now" }, "."]),
+      ),
+    ],
+    cta: { label: "Open the admin portal", url: adminLinks.signIn() },
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffPasswordLinkEmail(p: { to: string; name?: string; link: string; invite: boolean; minutes: number }): Email {
+  return compose({
+    to: p.to,
+    subject: p.invite ? "Set up your Farmkeke admin account" : "Reset your Farmkeke admin password",
+    preheader: `The link works for ${p.minutes} minutes, and only once.`,
+    title: p.invite ? "Set up your admin account" : "Reset your password",
+    blocks: p.invite
+      ? [
+          b.p(hi(p.name), " your Farmkeke admin portal account is ready. You have the ", { b: "Founder" }, " role."),
+          b.p("Make a password for ", { b: p.to }, " to sign in. You'll approve staff and choose their roles from the portal."),
+          b.note("The link works for ", { b: `${p.minutes} minutes` }, ", and only once. If it runs out, use \"Forgot password\" on the sign-in page."),
+        ]
+      : [
+          b.p(hi(p.name), " tap the button to make a new password for ", { b: p.to }, " on the Farmkeke admin portal."),
+          b.note("The link works for ", { b: `${p.minutes} minutes` }, ", and only once."),
+          b.small("Didn't ask for this? You can ignore this email. Your password won't change."),
+        ],
+    cta: { label: p.invite ? "Make my password" : "Make a new password", url: p.link },
+    after: [b.small("Link not working? Copy this into your browser: ", p.link)],
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffApplicationReceivedEmail(p: { to: string; name?: string; jobTitle: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "We received your Farmkeke admin application",
+    preheader: "We'll email you when it's decided, with the role you've been given.",
+    title: "We received your application",
+    blocks: [
+      b.p(hi(p.name), " thank you for applying for access to the Farmkeke admin portal."),
+      b.rows([
+        { label: "Email", value: p.to },
+        { label: "Your job", value: p.jobTitle },
+        { label: "Status", value: "Waiting for review", strong: true },
+      ]),
+      b.p("The Founder reviews every application. We'll email you as soon as it's decided, and tell you which role you've been given."),
+    ],
+    cta: { label: "Check your application", url: adminLinks.home() },
+    reason: "You're getting this email because you applied for the Farmkeke admin portal with this address.",
+  });
+}
+
+export function staffNewApplicationEmail(p: {
+  to: string;
+  name?: string;
+  memberId: string;
+  applicant: string;
+  applicantEmail: string;
+  jobTitle: string;
+  note?: string;
+  updated?: boolean;
+}): Email {
+  return compose({
+    to: p.to,
+    subject: p.updated ? `${p.applicant} updated their staff application` : `New staff application: ${p.applicant}`,
+    preheader: `${p.jobTitle} · ${p.applicantEmail}`,
+    title: p.updated ? "An application was updated" : "New staff application",
+    blocks: [
+      b.p(
+        hi(p.name),
+        p.updated
+          ? " this applicant answered your request for more information."
+          : " someone applied for access to the Farmkeke admin portal.",
+      ),
+      b.rows([
+        { label: "Name", value: p.applicant, strong: true },
+        { label: "Email", value: p.applicantEmail },
+        { label: "Job", value: p.jobTitle },
+      ]),
+      ...(p.note ? [b.quote(`${p.applicant} wrote`, p.note)] : []),
+      b.p("Approve it with a role, ask for more information, or reject it."),
+    ],
+    cta: { label: "Review the application", url: adminLinks.application(p.memberId) },
+    reason: STAFF_MANAGER_REASON,
+  });
+}
+
+export function staffApprovedEmail(p: { to: string; name?: string; role: string; roleDescription: string; can: string[] }): Email {
+  return compose({
+    to: p.to,
+    subject: `You're approved: your Farmkeke admin role is ${p.role}`,
+    preheader: p.roleDescription,
+    title: "You're approved",
+    blocks: [
+      b.p(hi(p.name), " welcome to the Farmkeke team. Your application for the admin portal is approved."),
+      b.rows([{ label: "Your role", value: p.role, strong: true }]),
+      b.p(p.roleDescription),
+      b.h2("What you can do"),
+      b.steps(p.can.slice(0, 12).map((title) => ({ title }))),
+      b.note("Each time you sign in, we email you a 6-digit code to finish signing in."),
+    ],
+    cta: { label: "Sign in to the admin portal", url: adminLinks.signIn() },
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffRejectedEmail(p: { to: string; name?: string; reason: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "Your Farmkeke admin application wasn't approved",
+    preheader: "You can apply again if something changes.",
+    title: "Not approved",
+    blocks: [
+      b.p(hi(p.name), " thank you for applying for the Farmkeke admin portal. We couldn't approve your application."),
+      b.quote("Note from Farmkeke", p.reason),
+      b.p("If you think this is a mistake, reply to this email."),
+    ],
+    cta: { label: "Open the admin portal", url: adminLinks.home() },
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffMoreInfoEmail(p: { to: string; name?: string; message: string }): Email {
+  return compose({
+    to: p.to,
+    subject: "We need a bit more for your Farmkeke admin application",
+    preheader: p.message,
+    title: "We need a bit more",
+    blocks: [
+      b.p(hi(p.name), " we've looked at your application for the Farmkeke admin portal and have a question."),
+      b.quote("Note from Farmkeke", p.message),
+      b.p("Sign in to the portal to update your application. It goes back for review straight away."),
+    ],
+    cta: { label: "Update my application", url: adminLinks.home() },
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffRoleChangedEmail(p: {
+  to: string;
+  name?: string;
+  from: string;
+  role: string;
+  roleDescription: string;
+  reason: string;
+}): Email {
+  return compose({
+    to: p.to,
+    subject: `Your Farmkeke admin role is now ${p.role}`,
+    preheader: p.roleDescription,
+    title: "Your role changed",
+    blocks: [
+      b.p(hi(p.name), " your role on the Farmkeke admin portal has changed."),
+      b.rows([
+        { label: "Before", value: p.from },
+        { label: "Now", value: p.role, strong: true },
+      ]),
+      b.p(p.roleDescription),
+      b.quote("Note from Farmkeke", p.reason),
+    ],
+    cta: { label: "Open the admin portal", url: adminLinks.signIn() },
+    reason: STAFF_REASON,
+  });
+}
+
+export function staffAccessEmail(p: { to: string; name?: string; removed: boolean; reason: string; role?: string }): Email {
+  return compose({
+    to: p.to,
+    subject: p.removed ? "Your Farmkeke admin access was removed" : "Your Farmkeke admin access is back",
+    preheader: p.removed ? "You've been signed out of the admin portal." : `Your role is ${p.role ?? "unchanged"}.`,
+    title: p.removed ? "Your access was removed" : "Your access is back",
+    blocks: p.removed
+      ? [
+          b.p(hi(p.name), " your access to the Farmkeke admin portal has been removed, and you've been signed out."),
+          b.quote("Note from Farmkeke", p.reason),
+          b.p("Your Farmkeke shopping account still works. If you think this is a mistake, reply to this email."),
+        ]
+      : [
+          b.p(hi(p.name), " your access to the Farmkeke admin portal is back."),
+          ...(p.role ? [b.rows([{ label: "Your role", value: p.role, strong: true }])] : []),
+          b.quote("Note from Farmkeke", p.reason),
+        ],
+    cta: p.removed ? { label: "Go to Farmkeke", url: siteUrl() } : { label: "Sign in to the admin portal", url: adminLinks.signIn() },
+    reason: STAFF_REASON,
+  });
+}

@@ -4,7 +4,8 @@
 // only when the alert type and the person's preferences allow it.
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
-import type { MutationCtx } from "../_generated/server";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import type { Permission } from "./permissions";
 
 export type NotifyArgs = {
   userId: Id<"users">;
@@ -81,30 +82,45 @@ export async function notifyFarm(
   });
 }
 
-// Staff roles alerted about problem reports (A-12).
-const STAFF_ALERT_ROLES = ["support", "operations"] as const;
+/**
+ * Approved staff whose role has the permission (portal alerts and emails).
+ * Capped at 200 members.
+ */
+export async function staffWithPermission(ctx: QueryCtx | MutationCtx, permission: Permission) {
+  const members = await ctx.db
+    .query("staffMembers")
+    .withIndex("by_status", (q) => q.eq("status", "approved"))
+    .take(200);
+  const roles = new Map<Id<"staffRoles">, boolean>();
+  const found: Doc<"staffMembers">[] = [];
+  for (const member of members) {
+    if (member.roleId === undefined) continue;
+    let allowed = roles.get(member.roleId);
+    if (allowed === undefined) {
+      const role = await ctx.db.get("staffRoles", member.roleId);
+      allowed = role !== null && role.permissions.includes(permission);
+      roles.set(member.roleId, allowed);
+    }
+    if (allowed) found.push(member);
+  }
+  return found;
+}
 
 /**
  * In-app alert for Farmkeke staff (A-12 "Problem reported → admin alert"):
- * one notifications row with side "staff" per support and operations user.
- * Not pushed or texted; staff read them with admin/staff.alerts.
+ * one notifications row with side "staff" for each member whose role can
+ * handle problem reports. Not pushed or texted; staff read them in the portal.
  */
 export async function notifyStaff(
   ctx: MutationCtx,
   n: { kind: string; title: string; body: string; href: string; orderId?: Id<"orders"> },
+  permission: Permission = "disputes.manage",
 ) {
-  let sent = 0;
-  for (const role of STAFF_ALERT_ROLES) {
-    const staff = await ctx.db
-      .query("users")
-      .withIndex("by_staffRole", (q) => q.eq("staffRole", role))
-      .take(100);
-    for (const user of staff) {
-      await ctx.db.insert("notifications", { userId: user._id, side: "staff", ...n });
-      sent++;
-    }
+  const staff = await staffWithPermission(ctx, permission);
+  for (const member of staff) {
+    await ctx.db.insert("notifications", { userId: member.userId, side: "staff", ...n });
   }
-  return sent;
+  return staff.length;
 }
 
 /** "₦12,500" or "₦12,500.50" from kobo, without relying on Intl. */

@@ -20,7 +20,7 @@ export const setAppStatus = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, []);
+    const actor = await requireStaff(ctx, "platform.manage");
     const { reason, ...changes } = args;
     for (const version of [changes.minAppVersion, changes.latestAppVersion]) {
       if (version !== undefined && !VERSION.test(version)) throw new Error("Versions look like 1.2.3");

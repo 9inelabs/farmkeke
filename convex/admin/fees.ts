@@ -16,7 +16,7 @@ async function settingsRow(ctx: MutationCtx) {
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, ["operations", "finance", "support"]);
+    await requireStaff(ctx, null);
     const rules = await getRules(ctx);
     const row = await ctx.db
       .query("platformSettings")
@@ -41,7 +41,7 @@ export const get = query({
 export const setCommission = mutation({
   args: { commissionBps: v.union(v.number(), v.null()), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ["finance"]);
+    const actor = await requireStaff(ctx, "commission.manage");
     const bps = args.commissionBps;
     if (bps !== null && (!Number.isInteger(bps) || bps < 0 || bps > 5000)) {
       throw new ConvexError({ code: "INVALID_COMMISSION", message: "Use 0 to 50%, in whole basis points" });
@@ -72,7 +72,7 @@ export const setRules = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ["operations"]);
+    const actor = await requireStaff(ctx, "fees.manage");
     const check = (value: number | undefined, min: number, max: number, field: string) => {
       if (value !== undefined && (!Number.isInteger(value) || value < min || value > max)) {
         throw new ConvexError({ code: "INVALID_RULE", field, message: `${field} must be ${min} to ${max} hours` });

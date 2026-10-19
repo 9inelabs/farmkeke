@@ -152,3 +152,12 @@ Build in this order. Commit and push after each group.
 - **W-57, "Rate each item":** `reviews.submit` has no per-item ratings. The stars are on the page but aren't sent. Suggest `itemRatings: Array<{ index: number; rating: number }>`.
 - **W-58, "Usually replies within an hour":** `chat.thread` has no reply-time note. The page shows `replyNote` when present.
 - **W-51c, "Use +234 803 *** 4567 and this order will be added":** as in W-41, accounts don't pick up guest orders by phone number. Only the `startGuestClaim` token from the ordering browser moves them.
+
+## Admin Portal (branch `admin-portal`)
+
+The portal is at `/admin` (`src/app/admin/`, `src/components/admin/`). Reports: `docs/reports/10-admin-*.md`. It calls admin functions through `src/convex/admin.ts`, generated from the `convex/` code (`node scripts/local-spec.mjs --only admin/ > web/convex-spec/admin-function-spec.json`, then `npm --prefix web run gen:admin`).
+
+Shared-file changes:
+- `src/app/layout.tsx`: MiniCart, AreaPicker, CookieBanner and MaintenanceGate are wrapped in `SiteOnly` (new, `components/system/SiteOnly.tsx`), so they don't run under `/admin`.
+- `src/app/robots.ts`: disallows `/admin`.
+- `package.json`: `gen:admin` script.

@@ -7,7 +7,6 @@ import { requireStaff } from "../lib/auth";
 import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY } from "../lib/settings";
 
-const READERS = ["operations", "support"] as const;
 const ON_THE_ROAD = ["ready_for_rider", "out_for_delivery", "with_rider"];
 
 function cleanName(name: string) {
@@ -35,7 +34,7 @@ async function checkAreas(ctx: MutationCtx, ids: Id<"serviceAreas">[]) {
 export const list = query({
   args: { dayStart: v.number() },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, [...READERS]);
+    await requireStaff(ctx, "riders.view");
     const riders = await ctx.db.query("riders").take(200);
     const areaNames = new Map<string, string>();
     const rows = await Promise.all(
@@ -72,7 +71,7 @@ export const list = query({
 export const create = mutation({
   args: { name: v.string(), phone: v.string(), reason: v.string(), serviceAreaIds: v.array(v.id("serviceAreas")) },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, ["operations"]);
+    const staff = await requireStaff(ctx, "riders.manage");
     const name = cleanName(args.name);
     const phone = cleanPhone(args.phone);
     const serviceAreaIds = await checkAreas(ctx, args.serviceAreaIds);
@@ -98,7 +97,7 @@ export const update = mutation({
     serviceAreaIds: v.optional(v.array(v.id("serviceAreas"))),
   },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, ["operations"]);
+    const staff = await requireStaff(ctx, "riders.manage");
     const rider = await ctx.db.get("riders", args.riderId);
     if (rider === null) throw new ConvexError({ code: "NOT_FOUND" });
     const patch = {
@@ -121,7 +120,7 @@ export const update = mutation({
 export const setActive = mutation({
   args: { active: v.boolean(), reason: v.string(), riderId: v.id("riders") },
   handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, ["operations"]);
+    const staff = await requireStaff(ctx, "riders.manage");
     const rider = await ctx.db.get("riders", args.riderId);
     if (rider === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (rider.active === args.active) return;

@@ -8,12 +8,11 @@ import { requireStaff } from "../lib/auth";
 import { farmVisibilityChanged } from "../lib/listingCounts";
 import { normalizeNigerianPhone } from "../lib/phone";
 
-const ROLES = ["operations" as const];
 
 export const list = query({
   args: { status: v.optional(v.union(v.literal("active"), v.literal("suspended"))), paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "farmers.view");
     const page = await ctx.db
       .query("farms")
       .withIndex("by_status", (q) => q.eq("status", args.status ?? "active"))
@@ -38,7 +37,7 @@ export const list = query({
 export const get = query({
   args: { farmId: v.id("farms") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "farmers.view");
     const farm = await ctx.db.get("farms", args.farmId);
     if (farm === null) return null;
     const user = await ctx.db.get("users", farm.userId);
@@ -64,7 +63,7 @@ export const get = query({
 export const setSuspended = mutation({
   args: { farmId: v.id("farms"), suspended: v.boolean(), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.manage");
     const farm = await ctx.db.get("farms", args.farmId);
     if (farm === null) throw new ConvexError("Farm not found");
     const status = args.suspended ? ("suspended" as const) : ("active" as const);
@@ -87,7 +86,7 @@ export const setSuspended = mutation({
 export const setTrusted = mutation({
   args: { farmId: v.id("farms"), trusted: v.boolean(), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.manage");
     const farm = await ctx.db.get("farms", args.farmId);
     if (farm === null) throw new ConvexError("Farm not found");
     await ctx.db.patch("farms", farm._id, { trusted: args.trusted });
@@ -113,7 +112,7 @@ export const updateDetails = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.manage");
     const farm = await ctx.db.get("farms", args.farmId);
     if (farm === null) throw new ConvexError("Farm not found");
     const changes: Record<string, string> = {};
@@ -150,7 +149,7 @@ export const reviewDocument = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.manage");
     const doc = await ctx.db.get("farmerDocuments", args.documentId);
     if (doc === null) throw new ConvexError("Document not found");
     const note = args.note?.trim();

@@ -7,12 +7,11 @@ import { requireStaff } from "../lib/auth";
 import { requireKobo, requireOpeningHours, requireText } from "../lib/validate";
 import { openingHours } from "../schema";
 
-const AREA_ROLES = ["operations" as const];
 
 export const listAllServiceAreas = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, AREA_ROLES);
+    await requireStaff(ctx, null);
     return await ctx.db.query("serviceAreas").take(500);
   },
 });
@@ -26,7 +25,7 @@ export const createServiceArea = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, AREA_ROLES);
+    const actor = await requireStaff(ctx, "areas.manage");
     const state = requireText(args.state, "State");
     const name = requireText(args.name, "Area name");
     const existing = await ctx.db
@@ -65,7 +64,7 @@ export const updateServiceArea = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, AREA_ROLES);
+    const actor = await requireStaff(ctx, "areas.manage");
     const area = await ctx.db.get("serviceAreas", args.areaId);
     if (area === null) throw new ConvexError("Area not found");
     const changes = {
@@ -101,7 +100,7 @@ const pickupPointFields = {
 export const listAllPickupPoints = query({
   args: {},
   handler: async (ctx) => {
-    await requireStaff(ctx, AREA_ROLES);
+    await requireStaff(ctx, null);
     return await ctx.db.query("pickupPoints").take(500);
   },
 });
@@ -109,7 +108,7 @@ export const listAllPickupPoints = query({
 export const createPickupPoint = mutation({
   args: { ...pickupPointFields, reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, AREA_ROLES);
+    const actor = await requireStaff(ctx, "areas.manage");
     const { reason, ...fields } = args;
     requireOpeningHours(fields.hours);
     const pointId = await ctx.db.insert("pickupPoints", {
@@ -138,7 +137,7 @@ export const updatePickupPoint = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, AREA_ROLES);
+    const actor = await requireStaff(ctx, "areas.manage");
     const { pointId, reason, ...changes } = args;
     const point = await ctx.db.get("pickupPoints", pointId);
     if (point === null) throw new ConvexError("Pickup point not found");

@@ -13,13 +13,12 @@ import { applicationSection, applicationStatus } from "../schema";
 // F-09b / F-09c / F-09d: the applicant hears about the decision (push and email).
 const APPLICATION_HREF = "/sell/status";
 
-const ROLES = ["operations" as const];
 
 /** A-20: queue by status, oldest submission first (default: new requests). */
 export const list = query({
   args: { status: v.optional(applicationStatus), paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "farmers.view");
     const status = args.status ?? "submitted";
     const page = await ctx.db
       .query("farmerApplications")
@@ -45,7 +44,7 @@ export const list = query({
 export const get = query({
   args: { applicationId: v.id("farmerApplications") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, ROLES);
+    await requireStaff(ctx, "farmers.view");
     const app = await ctx.db.get("farmerApplications", args.applicationId);
     if (app === null) return null;
     const user = await ctx.db.get("users", app.userId);
@@ -81,7 +80,7 @@ async function loadSubmitted(ctx: MutationCtx, applicationId: Id<"farmerApplicat
 export const approve = mutation({
   args: { applicationId: v.id("farmerApplications"), reason: v.string() },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.approve");
     const app = await loadSubmitted(ctx, args.applicationId);
     const docs = await ctx.db
       .query("farmerDocuments")
@@ -157,7 +156,7 @@ export const requestMoreInfo = mutation({
     rejectDocumentIds: v.optional(v.array(v.id("farmerDocuments"))),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.approve");
     const app = await loadSubmitted(ctx, args.applicationId);
     const note = args.note.trim();
     if (args.sections.length === 0 || note.length === 0) throw new ConvexError("Choose what's missing and add a note");
@@ -197,7 +196,7 @@ export const reject = mutation({
     reapplyAfterDays: v.number(),
   },
   handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, ROLES);
+    const actor = await requireStaff(ctx, "farmers.approve");
     const app = await loadSubmitted(ctx, args.applicationId);
     const reason = args.reason.trim();
     if (reason.length === 0) throw new ConvexError("A reason is required");

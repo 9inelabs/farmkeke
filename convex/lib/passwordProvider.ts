@@ -23,6 +23,7 @@ import { sendEmail } from "./email";
 // The reset email in the shared design (same signature as email.ts's older one)
 import { passwordResetEmail } from "./emails";
 import { looksLikeEmail, normalizeNigerianPhone } from "./phone";
+import { STAFF_FLOWS, staffAuthorize, staffProviders } from "./staffAuth";
 
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
@@ -78,12 +79,14 @@ type FoundAccount = { accountId: Id<"authAccounts">; userId: Id<"users">; email?
 
 export const FarmkekePassword: ConvexCredentialsConfig = ConvexCredentials<DataModel>({
   id: PASSWORD_PROVIDER,
-  extraProviders: [passwordReset],
+  extraProviders: [passwordReset, ...staffProviders],
   crypto: {
     hashSecret: async (password) => await new Scrypt().hash(password),
     verifySecret: async (password, hash) => await new Scrypt().verify(hash, password),
   },
   authorize: async (params, ctx): Promise<Authorized> => {
+    // Admin Portal flows (lib/staffAuth.ts)
+    if (STAFF_FLOWS.has(String(params.flow))) return await staffAuthorize(params, ctx);
     switch (params.flow) {
       case "signUp": {
         const email = normalizeEmail(params.email);

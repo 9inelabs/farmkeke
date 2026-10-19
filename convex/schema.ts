@@ -196,7 +196,8 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-    // Farmkeke staff only (Admin Portal roles, A-89)
+    // Before the Admin Portal: the staff role set from the CLI. Replaced by
+    // staffMembers + staffRoles; admin/setup.migrateLegacyStaff copies it over.
     staffRole: v.optional(staffRole),
     // A-37: blocked consumers can't sign in or order
     blockedAt: v.optional(v.number()),
@@ -490,6 +491,68 @@ export default defineSchema({
   })
     .index("by_actorId", ["actorId"])
     .index("by_targetTable_and_targetId", ["targetTable", "targetId"]),
+
+  // ---------------------------------------------------------------------------
+  // Admin Portal staff (A-01, A-02, A-89)
+
+  // A role is a named set of permissions (lib/permissions.ts). Built-in roles
+  // are created by admin/setup.ensureRoles; the Founder can add more.
+  staffRoles: defineTable({
+    key: v.string(),
+    name: v.string(),
+    description: v.string(),
+    permissions: v.array(v.string()),
+    builtIn: v.boolean(),
+    sortOrder: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_sortOrder", ["sortOrder"]),
+
+  // One row per person who applied to (or was set up on) the portal. The
+  // application and the membership are the same row; status moves
+  // email_unconfirmed → pending (→ more_info) → approved | rejected, and an
+  // approved member can be deactivated and reactivated.
+  staffMembers: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    jobTitle: v.string(),
+    note: v.optional(v.string()),
+    status: v.union(
+      v.literal("email_unconfirmed"),
+      v.literal("pending"),
+      v.literal("more_info"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("deactivated"),
+    ),
+    roleId: v.optional(v.id("staffRoles")),
+    appliedAt: v.number(),
+    emailConfirmedAt: v.optional(v.number()),
+    decidedBy: v.optional(v.id("users")),
+    decidedAt: v.optional(v.number()),
+    // Rejection reason, the "more information" request, or why access was removed
+    decisionNote: v.optional(v.string()),
+    // The Founder's account is made by admin/setup.createFounder; they set
+    // their password from an emailed link.
+    invitePending: v.optional(v.boolean()),
+    lastSignInAt: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_email", ["email"])
+    .index("by_status", ["status"])
+    .index("by_roleId_and_status", ["roleId", "status"]),
+
+  // Sessions that passed the portal's emailed sign-in code. A staff function
+  // only runs for a session listed here; each row is removed after 12 hours.
+  staffSessions: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    verifiedAt: v.number(),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_userId", ["userId"]),
 
   // ---------------------------------------------------------------------------
   // Ordering, escrow and payments
