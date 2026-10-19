@@ -605,3 +605,70 @@ test("money summary: held money, holds, and what needs a person; Operations can 
   // Operations can see money but not move it
   await expect(ops.mutation(api.admin.ledger.setHold, { orderId: queue.unconfirmed[0].orderId, hold: true, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
 });
+
+test("dashboard, global search and exports, each limited by role", async () => {
+  mailbox();
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const finance = await t.run(async (ctx) => {
+    const id = await ctx.db.insert("users", { name: "Fola Finance", email: "fola@farmkeke.com" } as any);
+    const sessionId = await ctx.db.insert("authSessions", { userId: id, expirationTime: Date.now() + 1e10 });
+    await grantStaff(ctx, { id, sessionId }, "finance");
+    return { id, sessionId };
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.patch("users", s.shopper.id, { phone: "+2348031112222" } as any);
+    const contact = { name: "Ada Obi", phone: "+2348031112222" };
+    const appId = await ctx.db.insert("farmerApplications", { userId: s.applicant.id, status: "approved", categoryIds: [], seasons: [], collectionHours: [] } as any);
+    const farmId = await ctx.db.insert("farms", {
+      userId: s.applicant.id, applicationId: appId, name: "Sunrise Greens", phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
+      farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: [], leadTimeHours: 4,
+      openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
+      status: "active", trusted: false,
+    } as any);
+    const order = async (n: string, totalKobo: number, status: string, fulfilment: string) => {
+      const money = { itemsTotalKobo: totalKobo, deliveryFeeKobo: 0, totalKobo };
+      const checkoutId = await ctx.db.insert("checkouts", { userId: s.shopper.id, reference: `CK-${n}`, status: "paid", fulfilment, contact, ...money } as any);
+      await ctx.db.insert("orders", { number: `FK-${n}`, checkoutId, userId: s.shopper.id, farmId, fulfilment, items: [], contact, escrow: "held", paidAt: Date.now(), ...money, status } as any);
+    };
+    await order("10001", 500000, "paid", "delivery");
+    await order("10002", 300000, "out_for_delivery", "delivery");
+    await order("10003", 200000, "accepted", "pickup");
+  });
+
+  // Dashboard: today's orders, sales and the pipeline
+  const dayStart = Date.now() - 60_000;
+  const stats = await as(t, s.ops).query(api.admin.dashboard.stats, { dayStart });
+  expect(stats.today).toMatchObject({ orders: 3, salesKobo: 1000000, delivery: 2, pickup: 1 });
+  expect(stats.week).toHaveLength(7);
+  expect(stats.week[6].orders).toBe(3);
+  expect(stats.pipeline).toEqual({ waitingForFarms: 1, inProgress: 1, onTheRoad: 1 });
+  expect(stats.catalog.activeFarms).toBe(1);
+  await expect(t.withIdentity({ subject: `${s.shopper.id}|${s.shopper.sessionId}` }).query(api.admin.dashboard.stats, { dayStart })).rejects.toThrow(/NOT_STAFF/);
+
+  // Search: order number in any form, email, phone, farm name
+  const ops = as(t, s.ops);
+  for (const q of ["FK-10002", "fk10002", "10002"]) {
+    expect((await ops.query(api.admin.search.find, { query: q })).orders.map((o) => o.number)).toEqual(["FK-10002"]);
+  }
+  expect((await ops.query(api.admin.search.find, { query: "ADA@example.com" })).people.map((p) => p.name)).toEqual(["Ada Obi"]);
+  expect((await ops.query(api.admin.search.find, { query: "0803 111 2222" })).people.map((p) => p.name)).toEqual(["Ada Obi"]);
+  expect((await ops.query(api.admin.search.find, { query: "sunrise" })).farms.map((f) => f.name)).toEqual(["Sunrise Greens"]);
+  expect(await ops.query(api.admin.search.find, { query: "a" })).toEqual({ orders: [], people: [], farms: [], products: [] });
+  // Finance can't see customers, so people never show up for them
+  const fin = as(t, finance);
+  expect((await fin.query(api.admin.search.find, { query: "ada@example.com" })).people).toEqual([]);
+  expect((await fin.query(api.admin.search.find, { query: "10001" })).orders).toHaveLength(1);
+
+  // Exports: by date range, each needing its own permission
+  const range = { from: Date.now() - 86_400_000, to: Date.now() + 1 };
+  const orders = await ops.query(api.admin.exports.orders, range);
+  expect(orders.rows.map((r) => r.number).sort()).toEqual(["FK-10001", "FK-10002", "FK-10003"]);
+  expect(orders.rows[0].farm).toBe("Sunrise Greens");
+  const customers = await ops.query(api.admin.exports.customers, range);
+  expect(customers.rows.map((r) => r.email)).toContain("ada@example.com");
+  expect((await fin.query(api.admin.exports.payouts, range)).rows).toEqual([]);
+  await expect(fin.query(api.admin.exports.customers, range)).rejects.toThrow(/FORBIDDEN/);
+  await expect(ops.query(api.admin.exports.orders, { from: range.to, to: range.from })).rejects.toThrow(/INVALID_RANGE/);
+  await expect(ops.query(api.admin.exports.orders, { from: 0, to: Date.now() })).rejects.toThrow(/RANGE_TOO_LONG/);
+});

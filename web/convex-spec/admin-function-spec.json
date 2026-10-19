@@ -1234,6 +1234,25 @@
       "returns": null
     },
     {
+      "identifier": "admin/dashboard.js:stats",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "dayStart": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/dispatch.js:assignRider",
       "functionType": "Mutation",
       "visibility": {
@@ -1654,6 +1673,81 @@
                 "type": "id",
                 "tableName": "_storage"
               }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/exports.js:customers",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "from": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "to": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/exports.js:orders",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "from": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "to": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/exports.js:payouts",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "from": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "to": {
+            "fieldType": {
+              "type": "number"
             },
             "optional": false
           }
@@ -3984,6 +4078,25 @@
               }
             },
             "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/search.js:find",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "query": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
           }
         }
       },

@@ -155,7 +155,7 @@ Build in this order. Commit and push after each group.
 
 ## Admin Portal (branch `admin-portal`)
 
-The portal is at `/admin` (`src/app/admin/`, `src/components/admin/`). Reports: `docs/reports/10-admin-*.md`. It calls admin functions through `src/convex/admin.ts`, generated from the `convex/` code (`node scripts/local-spec.mjs --only admin/ > web/convex-spec/admin-function-spec.json`, then `npm --prefix web run gen:admin`).
+The portal is at `/admin` (`src/app/admin/`, `src/components/admin/`). Reports: `docs/reports/10-admin-foundations.md` to `15-admin-dashboard-search.md`. It calls admin functions through `src/convex/admin.ts`, generated from the `convex/` code (`node scripts/local-spec.mjs --only admin/ > web/convex-spec/admin-function-spec.json`, then `npm --prefix web run gen:admin`).
 
 Shared-file changes:
 - `src/app/layout.tsx`: MiniCart, AreaPicker, CookieBanner and MaintenanceGate are wrapped in `SiteOnly` (new, `components/system/SiteOnly.tsx`), so they don't run under `/admin`.

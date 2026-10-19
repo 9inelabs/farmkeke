@@ -2,6 +2,8 @@
 // permissions (the server checks again on every call).
 import {
   Bell,
+  Download,
+  Power,
   ClipboardCheck,
   ClipboardList,
   FileCheck2,
@@ -49,6 +51,8 @@ export const NAV: NavGroup[] = [
     items: [
       { href: adminRoutes.home, label: "Dashboard", icon: LayoutDashboard },
       { href: adminRoutes.alerts, label: "Alerts", icon: Bell, badge: "alerts" },
+      { href: adminRoutes.exports, label: "Exports", icon: Download, any: ["orders.view", "money.view", "customers.view"] },
+      { href: adminRoutes.platform, label: "Maintenance and app", icon: Power, any: ["platform.manage"] },
     ],
   },
   {

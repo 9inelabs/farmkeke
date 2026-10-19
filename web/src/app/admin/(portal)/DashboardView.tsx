@@ -1,82 +1,123 @@
 "use client";
 
-// Portal home: who you are, what your role lets you do, and what's waiting.
+// A-10 Dashboard: today's orders and sales, where orders are right now, the
+// last 7 days, and the queues waiting for staff (each only for roles that
+// can see it).
 import { useQuery } from "convex/react";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useStaff } from "@/components/admin/context";
-import { visibleNav } from "@/components/admin/nav";
 import { adminRoutes } from "@/components/admin/routes";
 import { PageHeader, Panel } from "@/components/admin/ui";
 import { admin } from "@/convex/admin";
-import type { PermissionInfo } from "@/convex/returns/admin";
+import { naira } from "@/lib/format";
+
+type Stats = {
+  today: { orders: number; salesKobo: number; delivery: number; pickup: number; newAccounts: number };
+  week: { dayStart: number; orders: number; salesKobo: number }[];
+  pipeline: { waitingForFarms: number; inProgress: number; onTheRoad: number };
+  catalog: { activeFarms: number; liveProducts: number };
+  capped: boolean;
+};
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function DashboardView() {
   const me = useStaff();
+  const [dayStart] = useState(() => new Date().setHours(0, 0, 0, 0));
+  const stats = useQuery(admin.dashboard.stats, me.can("dashboard.view") ? { dayStart } : "skip") as Stats | undefined;
   const pending = useQuery(admin.staff.pendingCount, me.can("staff.view") ? {} : "skip") as number | undefined;
   const alerts = useQuery(admin.staff.unreadAlerts, {}) as number | undefined;
   const farmerApps = useQuery(admin.farmerRequests.counts, me.can("farmers.view") ? {} : "skip") as { submitted: number } | undefined;
   const review = useQuery(admin.listings.queueCount, me.can("listings.view") ? {} : "skip") as number | undefined;
   const disputes = useQuery(admin.disputes.openCount, me.can("disputes.view") ? {} : "skip") as number | undefined;
   const support = useQuery(admin.support.openCount, me.can("support.view") ? {} : "skip") as number | undefined;
-  const catalog = useQuery(admin.access.permissionCatalog, {}) as PermissionInfo[] | undefined;
+  const riders = useQuery(admin.riders.pendingCount, me.can("riders.view") ? {} : "skip") as number | undefined;
   const first = me.name.split(/\s+/)[0];
-  const links = visibleNav(me.can)
-    .flatMap((g) => g.items)
-    .filter((i) => i.href !== adminRoutes.home);
-  const mine = (catalog ?? []).filter((p) => me.permissions.includes(p.key));
+  const max = Math.max(1, ...(stats?.week.map((d) => d.salesKobo) ?? [1]));
+
+  const queues = [
+    me.can("farmers.view") && { href: adminRoutes.applications, count: farmerApps?.submitted, label: "Farmer applications waiting" },
+    me.can("listings.view") && { href: adminRoutes.review, count: review, label: "Products waiting for review" },
+    me.can("disputes.view") && { href: adminRoutes.disputes, count: disputes, label: "Problem reports open" },
+    me.can("support.view") && { href: adminRoutes.support, count: support, label: "Support messages waiting" },
+    me.can("riders.view") && { href: adminRoutes.riders, count: riders, label: "Riders waiting for review" },
+    me.can("staff.view") && { href: adminRoutes.staff, count: pending, label: "Staff applications waiting" },
+    { href: adminRoutes.alerts, count: alerts, label: "Unread alerts" },
+  ].filter(Boolean) as { href: string; count: number | undefined; label: string }[];
 
   return (
     <>
       <PageHeader title={`Welcome, ${first}`} description={`You're signed in as ${me.role.name}.`} />
+      {stats ? (
+        <>
+          <h2 className="h3 mb-3">Today</h2>
+          <div className="grid grid-cols-4 gap-4 m:grid-cols-2">
+            <Tile value={String(stats.today.orders)} label={`Orders (${stats.today.delivery} delivery, ${stats.today.pickup} pickup)`} />
+            <Tile value={naira(stats.today.salesKobo)} label="Paid today" />
+            <Tile value={String(stats.today.newAccounts)} label="New accounts" />
+            <Tile value={`${stats.catalog.activeFarms} · ${stats.catalog.liveProducts}`} label="Active farms · live products" />
+          </div>
+          <h2 className="h3 mt-8 mb-3">Orders right now</h2>
+          <div className="grid grid-cols-3 gap-4 m:grid-cols-1">
+            <Tile href={me.can("orders.view") ? adminRoutes.orders : undefined} value={String(stats.pipeline.waitingForFarms)} label="Waiting for farms to accept" />
+            <Tile href={me.can("orders.view") ? adminRoutes.orders : undefined} value={String(stats.pipeline.inProgress)} label="Accepted, being prepared" />
+            <Tile href={me.can("dispatch.manage") || me.can("orders.view") ? adminRoutes.dispatch : undefined} value={String(stats.pipeline.onTheRoad)} label="On the road or at pickup points" />
+          </div>
+          <Panel title="Last 7 days" description={`Paid orders and sales per day${stats.capped ? " (first 5,000 orders)" : ""}.`} className="mt-8">
+            <div className="flex h-44 items-end gap-3" aria-hidden>
+              {stats.week.map((d) => (
+                <div key={d.dayStart} className="flex flex-1 flex-col items-center gap-1.5">
+                  <span className="text-xs font-semibold text-ink-3">{d.orders}</span>
+                  <span className="w-full rounded-t-lg bg-lime" style={{ height: `${Math.max(4, (d.salesKobo / max) * 120)}px` }} />
+                  <span className="text-xs text-subtle">{DAY_NAMES[new Date(d.dayStart).getDay()]}</span>
+                </div>
+              ))}
+            </div>
+            <table className="sr-only">
+              <caption>Paid orders and sales, last 7 days</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Day</th>
+                  <th scope="col">Orders</th>
+                  <th scope="col">Sales</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.week.map((d) => (
+                  <tr key={d.dayStart}>
+                    <th scope="row">{new Date(d.dayStart).toDateString()}</th>
+                    <td>{d.orders}</td>
+                    <td>{naira(d.salesKobo)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Panel>
+        </>
+      ) : null}
+      <h2 className="h3 mt-8 mb-3">Waiting for staff</h2>
       <div className="grid grid-cols-4 gap-4 m:grid-cols-2">
-        {me.can("farmers.view") ? (
-          <Waiting href={adminRoutes.applications} count={farmerApps?.submitted} label="Farmer applications waiting" />
-        ) : null}
-        {me.can("listings.view") ? <Waiting href={adminRoutes.review} count={review} label="Products waiting for review" /> : null}
-        {me.can("disputes.view") ? <Waiting href={adminRoutes.disputes} count={disputes} label="Problem reports open" /> : null}
-        {me.can("support.view") ? <Waiting href={adminRoutes.support} count={support} label="Support messages waiting" /> : null}
-        {me.can("staff.view") ? (
-          <Waiting href={adminRoutes.staff} count={pending} label="Staff applications waiting" />
-        ) : null}
-        <Waiting href={adminRoutes.alerts} count={alerts} label="Unread alerts" />
-      </div>
-      <div className="mt-6 grid grid-cols-[1fr_1fr] gap-6 m:grid-cols-1">
-        <Panel title="Go to">
-          <ul className="m-0 flex list-none flex-col p-0">
-            {links.map((l) => {
-              const Icon = l.icon;
-              return (
-                <li key={l.href} className="shadow-[inset_0_-1px_0_var(--color-line-soft)] last:shadow-none">
-                  <Link href={l.href} className="flex min-h-12 items-center gap-3 text-[15px] font-semibold text-ink hover:text-forest">
-                    <Icon aria-hidden className="size-[18px] text-forest" />
-                    <span className="flex-1">{l.label}</span>
-                    <ArrowRight aria-hidden className="size-4 text-subtle" />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </Panel>
-        <Panel title="What your role can do" description={me.role.name}>
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {mine.map((p) => (
-              <li key={p.key} className="text-sm leading-5 text-ink-2">
-                <span className="font-semibold text-ink">{p.label}.</span> {p.description}
-              </li>
-            ))}
-          </ul>
-        </Panel>
+        {queues.map((q) => (
+          <Tile key={q.href + q.label} href={q.href} value={q.count === undefined ? "–" : String(q.count)} label={q.label} />
+        ))}
       </div>
     </>
   );
 }
 
-function Waiting({ href, count, label }: { href: string; count: number | undefined; label: string }) {
-  return (
-    <Link href={href} className="card flex flex-col gap-1 p-5 text-ink hover:shadow-[inset_0_0_0_1px_var(--color-forest)]">
-      <span className="font-display text-[32px] leading-10 font-extrabold">{count ?? "–"}</span>
+function Tile({ value, label, href }: { value: string; label: string; href?: string }) {
+  const body = (
+    <>
+      <span className="font-display text-[26px] leading-9 font-extrabold text-ink">{value}</span>
       <span className="text-sm font-medium text-muted">{label}</span>
+    </>
+  );
+  return href ? (
+    <Link href={href} className="card flex flex-col gap-1 p-5 hover:shadow-[inset_0_0_0_1px_var(--color-forest)]">
+      {body}
     </Link>
+  ) : (
+    <div className="card flex flex-col gap-1 p-5">{body}</div>
   );
 }

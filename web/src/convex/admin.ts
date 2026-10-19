@@ -50,6 +50,9 @@ export const admin = {
     setBlocked: makeFunctionReference<"mutation", { "userId": Id<"users">; "blocked": boolean; "reason": string }, any>("admin/consumers:setBlocked"),
     signOutEverywhere: makeFunctionReference<"mutation", { "userId": Id<"users">; "reason": string }, any>("admin/consumers:signOutEverywhere"),
   },
+  dashboard: {
+    stats: makeFunctionReference<"query", { "dayStart": number }, any>("admin/dashboard:stats"),
+  },
   dispatch: {
     assignRider: makeFunctionReference<"mutation", { "collectAt": number; "note"?: string; "orderId": Id<"orders">; "riderId": Id<"riders"> }, any>("admin/dispatch:assignRider"),
     board: makeFunctionReference<"query", { "now": number }, any>("admin/dispatch:board"),
@@ -64,6 +67,11 @@ export const admin = {
     openCount: makeFunctionReference<"query", Record<string, never>, any>("admin/disputes:openCount"),
     resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "releaseKobo"?: number }, any>("admin/disputes:resolve"),
     sendMessage: makeFunctionReference<"mutation", { "audience": "consumer" | "farmer"; "body": string; "disputeId": Id<"disputes">; "photoIds": Array<Id<"_storage">> }, any>("admin/disputes:sendMessage"),
+  },
+  exports: {
+    customers: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:customers"),
+    orders: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:orders"),
+    payouts: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:payouts"),
   },
   farmerRequests: {
     approve: makeFunctionReference<"mutation", { "applicationId": Id<"farmerApplications">; "reason": string }, any>("admin/farmerRequests:approve"),
@@ -138,6 +146,9 @@ export const admin = {
     saveProfile: makeFunctionReference<"mutation", { "riderId": Id<"riders">; "photoStorageId"?: Id<"_storage">; "homeAddress"?: string; "idType"?: "nin" | "drivers_licence" | "voters_card" | "passport"; "idNumber"?: string; "idPhotoStorageId"?: Id<"_storage">; "vehicleType"?: "motorbike" | "tricycle" | "car" | "van" | "bicycle"; "plateNumber"?: string; "guarantor"?: { "name": string; "phone": string; "address": string; "relationship": string }; "bankCode"?: string; "accountNumber"?: string; "accountName"?: string; "reason": string }, any>("admin/riders:saveProfile"),
     setActive: makeFunctionReference<"mutation", { "active": boolean; "reason": string; "riderId": Id<"riders"> }, any>("admin/riders:setActive"),
     update: makeFunctionReference<"mutation", { "name"?: string; "phone"?: string; "reason": string; "riderId": Id<"riders">; "serviceAreaIds"?: Array<Id<"serviceAreas">> }, any>("admin/riders:update"),
+  },
+  search: {
+    find: makeFunctionReference<"query", { "query": string }, any>("admin/search:find"),
   },
   staff: {
     alerts: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/staff:alerts"),

@@ -46,6 +46,9 @@ export const adminRoutes = {
   payout: (id: string) => `/admin/money/payouts/${id}`,
   refunds: "/admin/money/refunds",
   reconciliation: "/admin/money/reconciliation",
+  search: (q?: string) => `/admin/search${q ? `?q=${encodeURIComponent(q)}` : ""}`,
+  exports: "/admin/exports",
+  platform: "/admin/platform",
 } as const;
 
 /** Only same-portal paths are followed after sign-in. */

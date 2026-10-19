@@ -5,7 +5,7 @@
 // activity in any portal tab).
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import { Bell, LogOut, Menu } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -161,13 +161,36 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <Menu aria-hidden className="size-[18px]" />
             Menu
           </button>
-          <div className="flex-1" />
+          <form
+            role="search"
+            className="flex flex-1 justify-end m:justify-start"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const q = new FormData(e.currentTarget).get("q");
+              router.push(adminRoutes.search(typeof q === "string" ? q.trim() : ""));
+            }}
+          >
+            <label htmlFor="admin-search" className="sr-only">
+              Search orders, people, farms and products
+            </label>
+            <input
+              id="admin-search"
+              name="q"
+              type="search"
+              placeholder="Search orders, people, farms, products"
+              className="fin h-11 w-[380px] text-sm m:hidden"
+            />
+            <Link href={adminRoutes.search()} className="hidden min-h-11 min-w-11 items-center justify-center rounded-xl text-ink hover:bg-soft m:inline-flex">
+              <Search aria-hidden className="size-[18px]" />
+              <span className="sr-only">Search</span>
+            </Link>
+          </form>
           <Link
             href={adminRoutes.alerts}
             className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-ink hover:bg-soft m:px-2"
           >
             <Bell aria-hidden className="size-[18px]" />
-            <span>Alerts</span>
+            <span className="m:sr-only">Alerts</span>
             {counts.alerts > 0 ? (
               <span className="rounded-full bg-error px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
                 {counts.alerts > 98 ? "99+" : counts.alerts}
