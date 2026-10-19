@@ -5,7 +5,7 @@
 // "@convex-dev/auth/react" with the "password" provider:
 //   signIn("password", { flow: "signIn", identifier, password })
 //   signIn("password", { flow: "signUp", email, password, name })
-//   signIn("password", { flow: "reset", email })
+//   signIn("password", { flow: "reset", email, returnTo: "web" })  (the link opens the website)
 //   signIn("password", { flow: "reset-verification", email, code, newPassword })
 //   signIn("anonymous")  // guest checkout identity
 // Errors arrive as ConvexError data { code: "INVALID_CREDENTIALS" | "TOO_MANY_ATTEMPTS"

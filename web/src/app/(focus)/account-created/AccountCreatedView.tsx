@@ -2,13 +2,16 @@
 
 // W-42 Account created. If the shopper ordered as a guest on this browser,
 // the orders found before sign-up are listed with "Add them to my account"
-// (orders.consumer.claimGuestOrders).
+// (orders.consumer.claimGuestOrders). Otherwise, guest orders placed elsewhere
+// with this email are offered (GuestOrdersByEmail).
 import { useMutation } from "convex/react";
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { afterSignup } from "@/components/account/afterSignup";
 import { AuthCard } from "@/components/account/AuthLayouts";
+import { GuestOrdersByEmail } from "@/components/account/GuestOrdersByEmail";
+import { QuietBoundary } from "@/components/system/QuietBoundary";
 import {
   claimPendingGuestOrders,
   claimSnapshot,
@@ -133,7 +136,11 @@ function Welcome({
             Once added, you can confirm delivery from any device you&apos;re signed in on.
           </p>
         </div>
-      ) : null}
+      ) : (
+        <QuietBoundary>
+          <GuestOrdersByEmail className="mt-[26px]" />
+        </QuietBoundary>
+      )}
 
       <ButtonLink href={next ?? routes.shop} variant="ghost" fullWidth className="mt-3.5 min-h-11">
         {next ? "Continue" : "Continue shopping"}

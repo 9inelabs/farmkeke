@@ -7,11 +7,13 @@ import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "../_generated/server";
 import { alertOfKind, channelOn, type Channel } from "../lib/alerts";
+import { affectedItems, REASON_LABELS } from "../lib/disputes";
 import {
   applicationApprovedEmail,
   applicationMoreInfoEmail,
   applicationReceivedEmail,
   applicationRejectedEmail,
+  backInStockEmail,
   chatMessageEmail,
   confirmReminderEmail,
   disputeMessageEmail,
@@ -190,7 +192,29 @@ export const pruneThrottles = internalMutation({
 async function emailFor(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
   if (n.side === "farm") return await farmEmail(ctx, n, user);
   if (n.kind === "support_reply") return await supportEmail(ctx, n, user);
+  if (n.kind === "back_in_stock") return await backInStock(ctx, n, user);
   return await orderEmail(ctx, n, user);
+}
+
+/** W-47 "Notify me": the saved item can be bought again (href "/product/<listingId>"). */
+async function backInStock(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
+  if (user.isAnonymous || !user.email) return null;
+  const raw = hrefId(n.href, "/product/");
+  const listingId = raw ? ctx.db.normalizeId("listings", raw) : null;
+  const listing = listingId ? await ctx.db.get("listings", listingId) : null;
+  if (listing === null) return null;
+  const farm = await ctx.db.get("farms", listing.farmId);
+  const offer = listing.units.find((u) => u.stock > 0) ?? listing.units[0];
+  const unit = offer ? await ctx.db.get("units", offer.unitId) : null;
+  return backInStockEmail({
+    to: user.email,
+    name: user.name,
+    listingId: listing._id,
+    listingName: listing.name,
+    farmName: farm?.name ?? "The farm",
+    priceKobo: offer?.priceKobo,
+    unit: unit?.singular,
+  });
 }
 
 /** "/support/<id>" -> "<id>" (the id part of an in-app href). */
@@ -218,15 +242,8 @@ async function supportEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"u
 
 // ---------------------------------------------------------------------------
 // Order emails (shopping side). Shop kinds with no email: order_packed (push
-// only, right after "being prepared"), back_in_stock and offer (nothing sends
-// them yet).
-
-const REASON_LABELS: Record<Doc<"disputes">["reason"], string> = {
-  missing: "Missing items",
-  damaged: "Damaged or spoiled",
-  wrong_item: "Wrong item",
-  not_received: "Order not received",
-};
+// only, right after "being prepared") and offer (nothing sends it yet).
+// back_in_stock has its own email above.
 
 const unitOf = (i: Doc<"orders">["items"][number]) => (i.quantity === 1 ? i.unitSingular : i.unitPlural);
 
@@ -347,10 +364,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       const dispute = order.disputeId ? await ctx.db.get("disputes", order.disputeId) : null;
       if (dispute === null) return null;
       if (n.kind === "dispute_opened") {
-        const affected = dispute.itemIndexes
-          .map((i) => order.items[i])
-          .filter((i) => i !== undefined)
-          .map((i) => `${i.name} × ${i.quantity}`);
+        const affected = affectedItems(dispute, order);
         return problemReportReceivedEmail({
           ...ref,
           caseNumber: dispute.number,
@@ -637,10 +651,7 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
   const caseRef = { ...ref, caseNumber: dispute.number };
   switch (n.kind) {
     case "dispute_opened": {
-      const affected = dispute.itemIndexes
-        .map((i) => order.items[i])
-        .filter((i) => i !== undefined)
-        .map((i) => `${i.name} × ${i.quantity}`);
+      const affected = affectedItems(dispute, order);
       return farmProblemReportedEmail({
         ...caseRef,
         problem: [REASON_LABELS[dispute.reason], ...affected].join(" · "),

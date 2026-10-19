@@ -85,6 +85,8 @@ export type OrderDetail = {
   canConfirm: boolean;
   canReport: boolean;
   viewOnly: boolean;
+  /** Phase 5 (W-51c, view only): the order's email, masked ("a***@gmail.com"); null without one */
+  linkEmailHint?: string | null;
 };
 
 type Raw = Record<string, unknown>;
@@ -424,7 +426,7 @@ export function statusBadge(o: Pick<OrderView, "stage" | "fulfilment">): { label
 // ---------------------------------------------------------------------------
 // Disputes
 
-export type DisputeReason = "missing" | "damaged" | "wrong_item" | "not_received";
+export type DisputeReason = "missing" | "damaged" | "wrong_item" | "not_received" | "short" | "other";
 
 export type DisputeMessage = {
   key: string;
@@ -641,7 +643,17 @@ export type DisputeDetail = {
   consumerFirstName: string;
   reason: DisputeReason;
   reasonLabel: string;
-  items: Array<{ index: number; name: string; quantity: number; unitLabel: string; lineTotalKobo: number }>;
+  items: Array<{
+    index: number;
+    name: string;
+    quantity: number;
+    unitLabel: string;
+    lineTotalKobo: number;
+    /** Phase 5: units affected ("1 of 2 baskets") and their value */
+    affectedQuantity?: number;
+    affectedUnitLabel?: string;
+    affectedKobo?: number;
+  }>;
   note: string;
   photos: string[];
   amountKobo: number;
@@ -649,7 +661,14 @@ export type DisputeDetail = {
   reportedAt: number;
   farmReplyBy: number;
   decideBy: number;
-  farmResponse: { at: number; note: string; photos: string[] } | null;
+  farmResponse: {
+    at: number;
+    note: string;
+    photos: string[];
+    /** Phase 5 (W-54): "Agrees to refund"; null for replies without a stance */
+    stance?: "agrees" | "disagrees" | "partly" | null;
+    stanceLabel?: string | null;
+  } | null;
   decision: { outcome: "released" | "refunded" | "split"; refundKobo: number; releaseKobo: number; note: string; at: number | null } | null;
   heldKobo: number;
   deliveryFeeKobo: number;

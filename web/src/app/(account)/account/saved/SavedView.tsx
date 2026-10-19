@@ -1,12 +1,14 @@
 "use client";
 
 // W-47 Saved items and W-47b Saved empty (favorites.list / .toggle).
-// Sold-out items offer "Notify me", which turns on back-in-stock emails.
+// "Back in stock" comes from the server (stock returned since the last visit;
+// favorites.markSeen after showing it). Sold-out items offer "Notify me", a
+// per-item switch (favorites.setNotify): one email when it's back.
 import { useMutation, useQuery } from "convex/react";
-import { Heart, Sprout } from "lucide-react";
+import { Check, Heart, Sprout } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AccountShell, AccountTitle } from "@/components/account/AccountShell";
 import { AddListing } from "@/components/account/AddListing";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -24,10 +26,10 @@ export function SavedView() {
   );
 }
 
-function tagFor(item: FavoriteItem, today: string, yesterday: string): { text: string; tone: "ok" | "err" } | null {
+function tagFor(item: FavoriteItem, today: string, yesterday: string, back: boolean): { text: string; tone: "ok" | "err" } | null {
   if (item.unavailableReason === "sold_out") return { text: "Sold out", tone: "err" };
   if (item.unavailableReason === "unavailable") return { text: "Not available now", tone: "err" };
-  if (item.backInStock) return { text: "Back in stock", tone: "ok" };
+  if (back) return { text: "Back in stock", tone: "ok" };
   if (item.harvestedOn === today) return { text: "Harvested today", tone: "ok" };
   if (item.harvestedOn === yesterday) return { text: "Harvested yesterday", tone: "ok" };
   return null;
@@ -38,6 +40,17 @@ function Saved() {
   const [now] = useState(() => Date.now());
   const today = todayInLagos(new Date(now));
   const yesterday = todayInLagos(new Date(now - 86_400_000));
+  // The tags shown on this visit stay while the page is open, then reset
+  // (markSeen) so the next visit only shows what came back since.
+  const markSeen = useMutation(api.favorites.markSeen);
+  const [back, setBack] = useState<Set<string> | null>(null);
+  const seen = useRef(false);
+  if (items !== undefined && back === null) setBack(new Set(items.filter((i) => i.backInStock).map((i) => i.id)));
+  useEffect(() => {
+    if (items === undefined || seen.current) return;
+    seen.current = true;
+    markSeen({}).catch(() => {});
+  }, [items, markSeen]);
 
   if (items === undefined)
     return (
@@ -75,7 +88,7 @@ function Saved() {
       <AccountTitle title="Saved items" sub={`${plural(items.length, "item")} · We'll let you know when sold-out items are back.`} />
       <ul className="m-0 grid list-none grid-cols-3 gap-[18px] p-0 m:grid-cols-2 m:gap-3">
         {items.map((it) => (
-          <SavedCard key={it.id} item={it} tag={tagFor(it, today, yesterday)} />
+          <SavedCard key={it.id} item={it} tag={tagFor(it, today, yesterday, !!it.backInStock || !!back?.has(it.id))} />
         ))}
       </ul>
     </>
@@ -84,10 +97,10 @@ function Saved() {
 
 function SavedCard({ item, tag }: { item: FavoriteItem; tag: { text: string; tone: "ok" | "err" } | null }) {
   const toggle = useMutation(api.favorites.toggle);
-  const notify = useMutation(api.notifications.setPreference);
+  const setNotify = useMutation(api.favorites.setNotify);
   const [removing, setRemoving] = useState(false);
-  const [notified, setNotified] = useState(false);
   const [notifying, setNotifying] = useState(false);
+  const on = item.notify === true;
   const soldOut = !item.available;
 
   const remove = async () => {
@@ -102,8 +115,9 @@ function SavedCard({ item, tag }: { item: FavoriteItem; tag: { text: string; ton
   const notifyMe = async () => {
     setNotifying(true);
     try {
-      await notify({ side: "shop", alert: "back_in_stock", channel: "email", on: true });
-      setNotified(true);
+      await setNotify({ listingId: item.id as Id<"listings">, on: !on });
+    } catch {
+      // The switch shows the saved state, so a failed tap simply doesn't change it.
     } finally {
       setNotifying(false);
     }
@@ -150,15 +164,16 @@ function SavedCard({ item, tag }: { item: FavoriteItem; tag: { text: string; ton
             {naira(item.priceKobo)} <span className="font-sans text-xs font-medium text-subtle">/ {item.unit}</span>
           </div>
           {soldOut ? (
-            notified ? (
-              <span role="status" className="text-[13px] font-semibold text-forest">
-                We&apos;ll email you
-              </span>
-            ) : (
-              <Button variant="ghost" className="text-sm" loading={notifying} onClick={notifyMe}>
-                Notify me
-              </Button>
-            )
+            <Button
+              variant="ghost"
+              className={`text-sm ${on ? "shadow-[inset_0_0_0_2px_var(--color-forest)]" : ""}`}
+              loading={notifying}
+              aria-pressed={on}
+              onClick={notifyMe}
+            >
+              {on ? <Check aria-hidden className="size-4" strokeWidth={2.25} /> : null}
+              Notify me<span className="sr-only">{on ? " (on)" : " (off)"}</span>
+            </Button>
           ) : (
             <AddListing listingId={item.id} name={item.name} label="Add to cart" variant="lime" size="md" />
           )}

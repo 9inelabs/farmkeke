@@ -117,6 +117,7 @@ const shopperEmails = [
   ["review-reminder", "Review reminder", e.reviewReminderEmail(order)],
   ["chat-message", "Chat message from the farm", e.chatMessageEmail({ ...order, preview: "Good morning! The tomatoes were picked today. Would you like the riper ones for stew?" })],
   ["support-reply", "Support reply (no order)", e.supportReplyEmail({ ...shopper, ticketNumber: "SUP-1042", preview: "Hi Adaeze, yes, we deliver to Ikeja from next month. We'll let you know when it starts." })],
+  ["back-in-stock", "Back in stock (Notify me)", e.backInStockEmail({ ...shopper, listingId: "k57tomatoes", listingName: "Fresh tomatoes", farmName: "Okafor Farms", priceKobo: 450000, unit: "basket" })],
 ];
 
 const accountEmails = [
@@ -128,6 +129,7 @@ const accountEmails = [
   ["account-deletion-waiting", "Deletion waiting for orders", e.accountDeletionEmail({ ...shopper, status: "waiting", orders: 2 })],
   ["account-deleted", "Account deleted", e.accountDeletionEmail({ ...shopper, status: "deleted" })],
   ["guest-orders-added", "Guest orders added to the account", e.guestOrdersAddedEmail({ ...shopper, numbers: ["FK-10235", "FK-10236"], total: 2 })],
+  ["guest-orders-confirm", "Confirm adding guest orders found by email", e.guestOrdersConfirmEmail({ ...shopper, total: 2, link: "https://farmkeke.com/account/orders?link=3f9a" })],
 ];
 
 const farmOrder = { ...farmer, number: "FK-10234" };

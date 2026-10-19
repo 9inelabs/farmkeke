@@ -42,9 +42,11 @@ export type SavedAddress = {
   landmark: string;
   serviceAreaId: string;
   isDefault: boolean;
-  /** Set when the address was saved from checkout with a pin */
+  /** The map pin (W-46b "Set pin"), when one was set */
   latitude?: number;
   longitude?: number;
+  /** Phase 5 (W-46b): "Directions for the rider" */
+  directions?: string;
   area: { name: string; state: string; lga?: string } | null;
 };
 
@@ -262,8 +264,27 @@ export type FavoriteItem = {
   available: boolean;
   unavailableReason: "unavailable" | "sold_out" | null;
   savedAt: number;
-  /** Not sent yet ("Back in stock" tag, W-47); see BUILD-STATUS backend gaps. */
+  /** Phase 5 (W-47): stock came back since the last visit to Saved items. */
   backInStock?: boolean;
+  /** Phase 5 (W-47): the item's "Notify me" switch. */
+  notify?: boolean;
+  farmId?: string;
+  unitId?: string;
+};
+
+/** orders/consumer.recentItems (W-43 "Buy again"), Phase 5 */
+export type RecentItem = {
+  listingId: string;
+  unitId: string;
+  name: string;
+  imageUrl: string | null;
+  priceKobo: number;
+  unitSingular: string;
+  unitPlural: string;
+  farmId: string;
+  farmName: string;
+  lastOrderedAt: number;
+  lastQuantity: number;
 };
 
 /** notifications.preferences (convex/notifications.ts, lib/alerts.ts) */

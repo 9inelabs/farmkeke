@@ -1,13 +1,14 @@
 "use client";
 
 // W-46 Addresses and W-46b Add / edit address (addresses.list, .create,
-// .update, .remove). Rider directions and the map pin are kept on this device
-// until the backend stores them (see addressExtras).
+// .update, .remove), with the rider directions and the map pin stored on the
+// address. Values an earlier version kept in this browser are moved to the
+// account once (useMigrateLocalExtras), then forgotten.
 import { useMutation, useQuery } from "convex/react";
 import { Briefcase, House, MapPin, Plus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AccountShell, AccountTitle } from "@/components/account/AccountShell";
-import { addressExtras } from "@/components/account/addressExtras";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Dialog";
 import { SelectField, TextField } from "@/components/ui/Field";
@@ -31,10 +32,65 @@ const LABELS = { home: "Home", work: "Work", other: "Other" } as const;
 type Label = keyof typeof LABELS;
 const ICONS = { home: House, work: Briefcase, other: MapPin };
 
+// OpenStreetMap pin (W-46b "Set pin"), browser only
+const PinMap = dynamic(() => import("@/components/maps/PinMap"), {
+  ssr: false,
+  loading: () => <Skeleton className="size-full" rounded={12} />,
+});
+const OWERRI = { latitude: 5.4836, longitude: 7.0333 };
+
+// Where an earlier version kept directions and pins, per address id.
+const OLD_EXTRAS_KEY = "fk.addressExtras.v1";
+type OldExtra = { directions?: string; latitude?: number; longitude?: number };
+
+/** Moves directions and pins saved in this browser onto the addresses, once. */
+function useMigrateLocalExtras(list: SavedAddress[] | undefined) {
+  const update = useMutation(api.addresses.update);
+  const done = useRef(false);
+  useEffect(() => {
+    if (!list || done.current) return;
+    done.current = true;
+    let old: Record<string, OldExtra> = {};
+    try {
+      old = JSON.parse(window.localStorage.getItem(OLD_EXTRAS_KEY) ?? "{}") as Record<string, OldExtra>;
+    } catch {
+      return;
+    }
+    const work = list.filter((a) => old[a._id]);
+    if (Object.keys(old).length === 0) return;
+    void (async () => {
+      try {
+        for (const a of work) {
+          const x = old[a._id]!;
+          const pin =
+            a.latitude === undefined && x.latitude !== undefined && x.longitude !== undefined
+              ? { latitude: x.latitude, longitude: x.longitude }
+              : {};
+          const directions = !a.directions && x.directions ? { directions: x.directions } : {};
+          if (!("latitude" in pin) && !("directions" in directions)) continue;
+          await update({
+            addressId: a._id as Id<"addresses">,
+            label: a.label,
+            street: a.street,
+            landmark: a.landmark,
+            serviceAreaId: a.serviceAreaId as Id<"serviceAreas">,
+            isDefault: a.isDefault,
+            ...pin,
+            ...directions,
+          });
+        }
+        window.localStorage.removeItem(OLD_EXTRAS_KEY);
+      } catch {
+        // Try again next visit.
+      }
+    })();
+  }, [list, update]);
+}
+
 function Addresses() {
   const list = useQuery(api.addresses.list, {}) as SavedAddress[] | undefined;
   const { viewer } = useViewer();
-  const extras = addressExtras.use();
+  useMigrateLocalExtras(list);
   const update = useMutation(api.addresses.update);
   const [editing, setEditing] = useState<SavedAddress | "new" | null>(null);
   const [deleting, setDeleting] = useState<SavedAddress | null>(null);
@@ -91,7 +147,6 @@ function Addresses() {
         <ul className="m-0 grid list-none grid-cols-2 gap-4 p-0 m:grid-cols-1">
           {list.map((a) => {
             const Icon = ICONS[a.label] ?? MapPin;
-            const extra = extras[a._id];
             return (
               <li
                 key={a._id}
@@ -110,7 +165,7 @@ function Addresses() {
                 <div className="text-sm leading-[21px] text-ink-2">
                   {[a.street, a.area?.name, a.area?.state].filter(Boolean).join(", ")}
                   <br />
-                  <span className="text-muted-2">{[a.landmark, extra?.directions].filter(Boolean).join(" · ")}</span>
+                  <span className="text-muted-2">{[a.landmark, a.directions].filter(Boolean).join(" · ")}</span>
                 </div>
                 {viewer?.name || viewer?.phone ? (
                   <div className="sm">
@@ -179,36 +234,43 @@ function AddressModal({ address, first, onClose }: { address: SavedAddress | nul
   const create = useMutation(api.addresses.create);
   const update = useMutation(api.addresses.update);
   const states = useQuery(api.areas.listServedStates, {}) as string[] | undefined;
-  const extra = address ? addressExtras.get(address._id) : undefined;
   const [label, setLabel] = useState<Label>(address?.label ?? "home");
   const [street, setStreet] = useState(address?.street ?? "");
   const [landmark, setLandmark] = useState(address?.landmark ?? "");
-  const [directions, setDirections] = useState(extra?.directions ?? "");
+  const [directions, setDirections] = useState(address?.directions ?? "");
   const [state, setState] = useState<string | null>(address?.area?.state ?? chosenArea.get()?.state ?? null);
   const [areaId, setAreaId] = useState<string>(address?.serviceAreaId ?? chosenArea.get()?.id ?? "");
   const [isDefault, setIsDefault] = useState(address?.isDefault ?? first);
   const [pin, setPin] = useState<{ latitude: number; longitude: number } | null>(
-    extra?.latitude !== undefined && extra.longitude !== undefined
-      ? { latitude: extra.latitude, longitude: extra.longitude }
-      : address?.latitude !== undefined && address.longitude !== undefined
-        ? { latitude: address.latitude, longitude: address.longitude }
-        : null,
+    address?.latitude !== undefined && address.longitude !== undefined
+      ? { latitude: address.latitude, longitude: address.longitude }
+      : null,
   );
   const [pinNote, setPinNote] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const shownState = state ?? states?.[0] ?? null;
   const areas = useQuery(api.areas.listServiceAreas, shownState ? { state: shownState } : "skip") as ServiceArea[] | undefined;
 
+  // "Set pin": open the map at the saved pin, your location, or the area, then drag the pin.
   const setPinHere = () => {
-    if (!("geolocation" in navigator)) return setPinNote("Your browser can't share your location.");
+    setShowMap(true);
+    const start = () => {
+      const a = chosenArea.get();
+      setPin((p) =>
+        p ?? (a?.latitude !== undefined && a.longitude !== undefined ? { latitude: a.latitude, longitude: a.longitude } : OWERRI),
+      );
+      setPinNote("Drag the pin, or tap the map, to mark your gate.");
+    };
+    if (pin || !("geolocation" in navigator)) return start();
     setPinNote("Finding you…");
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setPin({ latitude: p.coords.latitude, longitude: p.coords.longitude });
-        setPinNote("Pin set to your current location.");
+        setPinNote("Pin set to your current location. Drag it to the exact spot.");
       },
-      () => setPinNote("We couldn't get your location. The rider will use your address and landmark."),
+      start,
       { enableHighAccuracy: true, timeout: 10_000 },
     );
   };
@@ -228,12 +290,12 @@ function AddressModal({ address, first, onClose }: { address: SavedAddress | nul
       landmark: landmark.trim(),
       serviceAreaId: areaId as Id<"serviceAreas">,
       isDefault,
+      directions: directions.trim(),
+      ...(pin ?? {}),
     };
     try {
-      let id = address?._id;
       if (address) await update({ addressId: address._id as Id<"addresses">, ...fields });
-      else id = (await create(fields)) as string;
-      if (id) addressExtras.set(id, { directions: directions.trim() || undefined, ...(pin ?? {}) });
+      else await create(fields);
       onClose();
     } catch (err) {
       setBusy(false);
@@ -247,7 +309,9 @@ function AddressModal({ address, first, onClose }: { address: SavedAddress | nul
               ? { street: "Enter the building number and street." }
               : code === "LANDMARK_REQUIRED"
                 ? { landmark: "Add a landmark near you." }
-                : { form: "We couldn't save this address. Check your connection and try again." },
+                : code === "DIRECTIONS_TOO_LONG"
+                  ? { form: "Keep the directions for the rider to 200 characters." }
+                  : { form: "We couldn't save this address. Check your connection and try again." },
       );
     }
   };
@@ -352,12 +416,24 @@ function AddressModal({ address, first, onClose }: { address: SavedAddress | nul
           <div className="flex flex-wrap items-center gap-3 rounded-xl bg-soft px-3.5 py-3">
             <MapPin aria-hidden className="size-5 text-forest" strokeWidth={1.75} />
             <span className="flex-1 text-sm">
-              {pin ? "Your pin is set on this device" : "Pin your exact location so riders find you faster"}
+              {pin ? "Your pin is set" : "Pin your exact location so riders find you faster"}
             </span>
             <Button variant="ghost" size="sm" onClick={setPinHere}>
               {pin ? "Update pin" : "Set pin"}
             </Button>
           </div>
+          {showMap && pin ? (
+            <div className="relative isolate mt-2.5 h-[200px] overflow-hidden rounded-xl shadow-[inset_0_0_0_1px_#DCE0D6]">
+              <PinMap
+                at={pin}
+                label="Your address pin"
+                onMove={(p) => {
+                  setPin(p);
+                  setPinNote("Pin moved. Save the address to keep it.");
+                }}
+              />
+            </div>
+          ) : null}
           {pinNote ? (
             <span role="status" className="hint">
               {pinNote}
@@ -370,6 +446,7 @@ function AddressModal({ address, first, onClose }: { address: SavedAddress | nul
           placeholder="Ask for Adaeze at reception"
           value={directions}
           onChange={(e) => setDirections(e.target.value)}
+          maxLength={200}
           className="[&_input]:h-12"
         />
         <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm">
@@ -402,7 +479,6 @@ function DeleteModal({ address, onClose }: { address: SavedAddress | null; onClo
     setError(null);
     try {
       await remove({ addressId: address._id as Id<"addresses"> });
-      addressExtras.remove(address._id);
       onClose();
     } catch {
       setError("We couldn't delete this address. Try again.");

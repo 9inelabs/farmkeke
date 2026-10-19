@@ -2395,6 +2395,52 @@
       "returns": null
     },
     {
+      "identifier": "admin/fees.js:setSlotCapacity",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "capacity": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "serviceAreaId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "serviceAreas"
+            },
+            "optional": true
+          },
+          "from": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/ledger.js:entries",
       "functionType": "Query",
       "visibility": {

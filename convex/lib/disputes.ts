@@ -9,6 +9,37 @@ export const REASON_LABELS: Record<Doc<"disputes">["reason"], string> = {
   damaged: "Damaged or spoiled",
   wrong_item: "Wrong item",
   not_received: "Order not received",
+  // Phase 5 (W-53)
+  short: "Less than I ordered",
+  other: "Something else",
+};
+
+/** Affected units of the item at position `i` of itemIndexes (the whole line when not given). */
+export const affectedQuantity = (dispute: Pick<Doc<"disputes">, "itemQuantities">, i: number, lineQuantity: number) => {
+  const q = dispute.itemQuantities?.[i];
+  return q === undefined ? lineQuantity : Math.min(lineQuantity, q);
+};
+
+/** "Fresh tomatoes × 2", or "Fresh tomatoes: 1 of 2 baskets" when only part of the line is affected. */
+export function affectedItems(dispute: Pick<Doc<"disputes">, "itemIndexes" | "itemQuantities">, order: Doc<"orders">) {
+  const out: string[] = [];
+  dispute.itemIndexes.forEach((index, i) => {
+    const item = order.items[index];
+    if (item === undefined) return;
+    const affected = affectedQuantity(dispute, i, item.quantity);
+    out.push(
+      affected < item.quantity
+        ? `${item.name}: ${affected} of ${item.quantity} ${item.quantity === 1 ? item.unitSingular : item.unitPlural}`
+        : `${item.name} × ${item.quantity}`,
+    );
+  });
+  return out;
+}
+
+export const STANCE_LABELS: Record<NonNullable<Doc<"disputes">["farmStance"]>, string> = {
+  agrees: "Agrees to refund",
+  disagrees: "Disagrees",
+  partly: "Partly agrees",
 };
 
 async function urls(ctx: QueryCtx, ids: Id<"_storage">[] | undefined) {
@@ -61,14 +92,19 @@ export async function disputeView(ctx: QueryCtx, dispute: Doc<"disputes">, viewe
     consumerFirstName: order?.contact.name.split(/\s+/)[0] ?? "",
     reason: dispute.reason,
     reasonLabel: REASON_LABELS[dispute.reason],
-    items: dispute.itemIndexes.map((index) => {
+    items: dispute.itemIndexes.map((index, i) => {
       const item = order?.items[index];
+      const affected = item ? affectedQuantity(dispute, i, item.quantity) : 0;
       return {
         index,
         name: item?.name ?? "",
         quantity: item?.quantity ?? 0,
         unitLabel: item ? (item.quantity === 1 ? item.unitSingular : item.unitPlural) : "",
         lineTotalKobo: item ? item.priceKobo * item.quantity : 0,
+        // Phase 5 (W-53 "1 of 2 baskets"): affected units and their value
+        affectedQuantity: affected,
+        affectedUnitLabel: item ? (affected === 1 ? item.unitSingular : item.unitPlural) : "",
+        affectedKobo: item ? item.priceKobo * affected : 0,
       };
     }),
     note: dispute.note,
@@ -86,6 +122,9 @@ export async function disputeView(ctx: QueryCtx, dispute: Doc<"disputes">, viewe
             at: dispute.farmRespondedAt,
             note: dispute.farmResponseNote ?? "",
             photos: await urls(ctx, dispute.farmResponsePhotoIds),
+            // Phase 5 (W-54 "Farm's response: Agrees to refund"); null for older replies
+            stance: dispute.farmStance ?? null,
+            stanceLabel: dispute.farmStance ? STANCE_LABELS[dispute.farmStance] : null,
           },
     decision:
       dispute.outcome === undefined
@@ -130,6 +169,8 @@ export async function disputeRow(ctx: QueryCtx, dispute: Doc<"disputes">, viewer
     farmReplyBy: dispute.farmReplyBy,
     farmReplyOverdue: dispute.farmReplyOverdueAt !== undefined,
     decideBy: dispute.decideBy,
+    // Phase 5: the farm's stance once it replied (F-48 list, A-70 queue)
+    farmStance: dispute.farmStance ?? null,
     lastMessageAt: dispute.lastMessageAt ?? dispute._creationTime,
     unread: dispute.lastMessageAt !== undefined && (readAt === undefined || dispute.lastMessageAt > readAt),
   };

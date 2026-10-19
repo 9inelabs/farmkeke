@@ -121,6 +121,8 @@ export const links = {
   help: () => helpUrl(),
   contact: () => `${siteUrl()}/contact`,
   findOrder: () => `${siteUrl()}/find-order`,
+  product: (listingId: string) => `${siteUrl()}/shop/product/${id(listingId)}`,
+  linkGuestOrders: (token: string) => `${siteUrl()}/account/orders?link=${encodeURIComponent(token)}`,
   order: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}`,
   chat: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/chat`,
   review: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/review`,
@@ -1538,6 +1540,58 @@ export function guestOrdersAddedEmail(p: { to: string; name?: string; numbers: s
     ],
     cta: { label: "See your orders", url: `${siteUrl()}/account/orders` },
     reason: SECURITY_REASON,
+  });
+}
+
+/**
+ * W-42 / W-44: guest orders placed with this email on another device. The
+ * link proves the address is the shopper's before the orders are added.
+ */
+export function guestOrdersConfirmEmail(p: { to: string; name?: string; total: number; link: string }): Email {
+  const n = p.total === 1 ? "1 order" : `${p.total} orders`;
+  return compose({
+    to: p.to,
+    subject: p.total === 1 ? "Add your guest order to your account" : `Add your ${p.total} guest orders to your account`,
+    preheader: "Confirm it's your email, and we'll add them.",
+    title: "Add your guest orders",
+    blocks: [
+      b.p(hi(p.name), " we found ", { b: n }, " placed as a guest with ", { b: p.to }, "."),
+      b.p("Confirm this is your email and we'll add them to your Farmkeke account. You can then track them, confirm receipt and report problems from any device."),
+      b.small("The link works once, for 24 hours, while you're signed in to your account. Didn't ask for this? You can ignore this email."),
+    ],
+    cta: { label: "Add them to my account", url: p.link },
+    reason: SECURITY_REASON,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 20b. Back in stock (W-47 "Notify me")
+// ---------------------------------------------------------------------------
+
+export function backInStockEmail(p: {
+  to: string;
+  name?: string;
+  listingId: string;
+  listingName: string;
+  farmName: string;
+  priceKobo?: number;
+  unit?: string;
+}): Email {
+  return compose({
+    to: p.to,
+    subject: `${p.listingName} is back in stock`,
+    preheader: `${p.farmName} has ${p.listingName} again.`,
+    title: `${p.listingName} is back`,
+    blocks: [
+      b.p(hi(p.name), " you asked us to tell you when ", { b: p.listingName }, " from ", { b: p.farmName }, " was back. It is."),
+      ...(p.priceKobo !== undefined
+        ? [b.rows([{ label: p.listingName, value: `${naira(p.priceKobo)}${p.unit ? ` / ${p.unit}` : ""}` }])]
+        : []),
+      b.p("Fresh produce sells out quickly, so order soon if you'd like some."),
+    ],
+    cta: { label: "See it in the shop", url: links.product(p.listingId) },
+    reason:
+      "You're getting this email because you tapped Notify me on a saved item. We only send it once. You can turn these emails off in Account, Notifications.",
   });
 }
 

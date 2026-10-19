@@ -1663,6 +1663,12 @@
        "type": "string"
       },
       "optional": false
+     },
+     "phone": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
@@ -1732,6 +1738,12 @@
        "type": "string"
       },
       "optional": false
+     },
+     "reason": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
@@ -1932,6 +1944,12 @@
    "args": {
     "type": "object",
     "value": {
+     "directions": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
      "isDefault": {
       "fieldType": {
        "type": "boolean"
@@ -1963,6 +1981,18 @@
        "type": "string"
       },
       "optional": false
+     },
+     "latitude": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "longitude": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
      },
      "serviceAreaId": {
       "fieldType": {
@@ -1997,6 +2027,12 @@
       },
       "optional": false
      },
+     "directions": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
      "isDefault": {
       "fieldType": {
        "type": "boolean"
@@ -2028,6 +2064,18 @@
        "type": "string"
       },
       "optional": false
+     },
+     "latitude": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "longitude": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
      },
      "serviceAreaId": {
       "fieldType": {
@@ -4345,6 +4393,15 @@
       },
       "optional": true
      },
+     "subtypes": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "string"
+       }
+      },
+      "optional": true
+     },
      "today": {
       "fieldType": {
        "type": "string"
@@ -4471,6 +4528,15 @@
          "value": "top_rated"
         }
        ]
+      },
+      "optional": true
+     },
+     "subtypes": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "string"
+       }
       },
       "optional": true
      },
@@ -7127,6 +7193,12 @@
        "type": "number"
       },
       "optional": false
+     },
+     "serviceAreaId": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
      }
     }
    },
@@ -7141,6 +7213,15 @@
    "args": {
     "type": "object",
     "value": {
+     "farmIds": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "string"
+       }
+      },
+      "optional": true
+     },
      "latitude": {
       "fieldType": {
        "type": "number"
@@ -7148,6 +7229,12 @@
       "optional": true
      },
      "longitude": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     },
+     "now": {
       "fieldType": {
        "type": "number"
       },
@@ -7215,6 +7302,12 @@
         "longitude": {
          "fieldType": {
           "type": "number"
+         },
+         "optional": true
+        },
+        "note": {
+         "fieldType": {
+          "type": "string"
          },
          "optional": true
         },
@@ -7416,6 +7509,15 @@
       },
       "optional": false
      },
+     "itemQuantities": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "number"
+       }
+      },
+      "optional": true
+     },
      "note": {
       "fieldType": {
        "type": "string"
@@ -7458,6 +7560,14 @@
         {
          "type": "literal",
          "value": "not_received"
+        },
+        {
+         "type": "literal",
+         "value": "short"
+        },
+        {
+         "type": "literal",
+         "value": "other"
         }
        ]
       },
@@ -7498,6 +7608,26 @@
        }
       },
       "optional": false
+     },
+     "stance": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "literal",
+         "value": "agrees"
+        },
+        {
+         "type": "literal",
+         "value": "disagrees"
+        },
+        {
+         "type": "literal",
+         "value": "partly"
+        }
+       ]
+      },
+      "optional": true
      }
     }
    },
@@ -10192,6 +10322,29 @@
       },
       "optional": true
      },
+     "itemRatings": {
+      "fieldType": {
+       "type": "array",
+       "value": {
+        "type": "object",
+        "value": {
+         "index": {
+          "fieldType": {
+           "type": "number"
+          },
+          "optional": false
+         },
+         "rating": {
+          "fieldType": {
+           "type": "number"
+          },
+          "optional": false
+         }
+        }
+       }
+      },
+      "optional": true
+     },
      "orderId": {
       "fieldType": {
        "tableName": "orders",
@@ -10573,6 +10726,18 @@
       },
       "optional": false
      },
+     "farmId": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "listingId": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
      "orderId": {
       "fieldType": {
        "tableName": "orders",
@@ -10774,6 +10939,164 @@
    "returns": null,
    "visibility": {
     "kind": "internal"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Query",
+   "identifier": "orders/consumer.js:linkableGuestOrders",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Mutation",
+   "identifier": "orders/consumer.js:linkGuestOrdersByEmail",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "token": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "orders/consumer.js:confirmGuestOrdersLink",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "limit": {
+      "fieldType": {
+       "type": "number"
+      },
+      "optional": true
+     }
+    }
+   },
+   "functionType": "Query",
+   "identifier": "orders/consumer.js:recentItems",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "listingId": {
+      "fieldType": {
+       "tableName": "listings",
+       "type": "id"
+      },
+      "optional": false
+     },
+     "on": {
+      "fieldType": {
+       "type": "boolean"
+      },
+      "optional": false
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "favorites.js:setNotify",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Mutation",
+   "identifier": "favorites.js:markSeen",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {}
+   },
+   "functionType": "Mutation",
+   "identifier": "disputes.js:generateUploadUrl",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
+   }
+  },
+  {
+   "args": {
+    "type": "object",
+    "value": {
+     "capacity": {
+      "fieldType": {
+       "type": "union",
+       "value": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "optional": false
+     },
+     "from": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": true
+     },
+     "reason": {
+      "fieldType": {
+       "type": "string"
+      },
+      "optional": false
+     },
+     "serviceAreaId": {
+      "fieldType": {
+       "tableName": "serviceAreas",
+       "type": "id"
+      },
+      "optional": true
+     }
+    }
+   },
+   "functionType": "Mutation",
+   "identifier": "admin/fees.js:setSlotCapacity",
+   "returns": null,
+   "visibility": {
+    "kind": "public"
    }
   }
  ]

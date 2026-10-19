@@ -85,7 +85,12 @@ The six phases of the Admin Portal plan are done. Before it's live:
 
 1. Deploy `convex/` from `admin-portal` (`npx convex dev --once`, then production), run `admin/setup:migrateLegacyStaff` if anyone had the old staff role, and create the Founder with `admin/setup:createFounder` (report 10, section 6).
 2. Set `WEBSITE_URL` so the emailed links open the portal, and deploy the website.
-3. Merge with `main` once main's own `convex/disputes.ts` typechecks, and change `admin/fees.ts:setSlotCapacity` to `requireStaff(ctx, "fees.manage")` (report 10, section 7).
+3. Merge the pull request into `main`. `main` (0ef3976, which finishes its Phase 5 work) is already merged into this branch. Resolving that merge took three changes:
+   - `web/BUILD-STATUS.md`: main's shorter "Backend gaps" list, plus this branch's Admin Portal section;
+   - `admin/fees.ts:setSlotCapacity` (new on main) now needs `fees.manage`;
+   - `convex-tests/phase5.test.ts` (new on main) makes its admin with `grantStaff`.
+   After the merge: convex typecheck passes, tests are 44 passed and 1 failed (the same storefront Windows-path test), and the website typechecks, lints and builds.
+   The portal doesn't have a screen for setting slot capacity yet.
 
 Later, from the plan:
 - two-person approval for large refunds and payouts;

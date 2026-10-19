@@ -50,6 +50,26 @@ export const rebuild = internalMutation({
       samples.set(o.farmId, list);
     }
 
+    // Phase 5 reply times (W-58): shopper's first unanswered message to the farm's answer
+    const replies = new Map<Id<"farms">, { at: number; minutes: number }[]>();
+    const conversations = await ctx.db.query("conversations").order("desc").take(MAX_ROWS);
+    for (const c of conversations) {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_conversationId", (q) => q.eq("conversationId", c._id))
+        .take(500);
+      let since: number | undefined;
+      for (const m of messages) {
+        if (m.side === "shop" && since === undefined) since = m._creationTime;
+        else if (m.side === "farm" && since !== undefined) {
+          const list = replies.get(c.farmId) ?? [];
+          list.push({ at: m._creationTime, minutes: Math.round(((m._creationTime - since) / 60_000) * 10) / 10 });
+          replies.set(c.farmId, list);
+          since = undefined;
+        }
+      }
+    }
+
     if (args.dryRun !== true) {
       for (const row of await ctx.db.query("listingCounts").take(MAX_ROWS)) await ctx.db.delete("listingCounts", row._id);
       for (const [scopedKey, count] of counts) {
@@ -57,14 +77,24 @@ export const rebuild = internalMutation({
         await ctx.db.insert("listingCounts", { scope, key, count });
       }
       for (const row of await ctx.db.query("farmStats").take(MAX_ROWS)) await ctx.db.delete("farmStats", row._id);
-      for (const [farmId, list] of samples) {
-        const responseHours = list
+      for (const farmId of new Set([...samples.keys(), ...replies.keys()])) {
+        const responseHours = (samples.get(farmId) ?? [])
           .sort((a, b) => a.at - b.at)
           .slice(-RESPONSE_SAMPLES)
           .map((s) => s.hours);
-        await ctx.db.insert("farmStats", { farmId, responseHours });
+        const replyList = replies.get(farmId);
+        const replyMinutes = replyList
+          ?.sort((a, b) => a.at - b.at)
+          .slice(-RESPONSE_SAMPLES)
+          .map((s) => s.minutes);
+        await ctx.db.insert("farmStats", { farmId, responseHours, replyMinutes });
       }
     }
-    return { counters: counts.size, liveListings: live.length, farmsWithResponseTimes: samples.size };
+    return {
+      counters: counts.size,
+      liveListings: live.length,
+      farmsWithResponseTimes: samples.size,
+      farmsWithReplyTimes: replies.size,
+    };
   },
 });

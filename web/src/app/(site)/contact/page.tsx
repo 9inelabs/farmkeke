@@ -3,7 +3,8 @@
 import { ArrowRight, CircleHelp, Clock, Mail, MapPin, MessageCircle, Phone, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ContactForm, SUPPORT_EMAIL } from "@/components/site/ContactForm";
+import { Suspense } from "react";
+import { ContactForm, ContactFormFromLink, SUPPORT_EMAIL } from "@/components/site/ContactForm";
 import { Eyebrow, S, Tile, h3b } from "@/components/site/ui";
 import { FadeUp } from "@/lib/motion";
 import { routes } from "@/lib/routes";
@@ -75,7 +76,9 @@ export default function ContactPage() {
       </FadeUp>
 
       <FadeUp className="mt-6 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
-        <ContactForm />
+        <Suspense fallback={<ContactForm />}>
+          <ContactFormFromLink />
+        </Suspense>
         <aside className="flex flex-col gap-4">
           <div className={`${S.card} p-[26px]`}>
             <h2 className={`${h3b} text-[17px] leading-[25px]`}>Office</h2>

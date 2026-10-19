@@ -5,9 +5,9 @@
 // (days every farm in the cart can make); pickup points from checkout.pickupPoints.
 import { useQuery } from "convex/react";
 import { MapPin } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { addressExtras } from "@/components/account/addressExtras";
 import { groupByFarm, useQuote } from "@/components/cart/parts";
 import { draft, type CheckoutDraft } from "@/components/checkout/draft";
 import {
@@ -25,11 +25,23 @@ import { TextArea, TextField } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
 import type { SavedAddress } from "@/convex/returns/account";
-import type { CheckoutPickupPoint, DeliveryWindows } from "@/convex/returns/checkout";
+import type { CheckoutPickupPoint, DeliveryWindows, SlotState } from "@/convex/returns/checkout";
 import { areaPicker } from "@/lib/area";
 import { useViewer } from "@/lib/auth";
 import { clock, todayInLagos } from "@/lib/format";
 import { routes } from "@/lib/routes";
+
+// Real OpenStreetMap maps, loaded in the browser only (Leaflet needs window).
+const PinMap = dynamic(() => import("@/components/maps/PinMap"), {
+  ssr: false,
+  loading: () => <Skeleton className="size-full" rounded={14} />,
+});
+const LetteredPointsMap = dynamic(() => import("@/components/maps/LetteredPointsMap"), {
+  ssr: false,
+  loading: () => <Skeleton className="size-full" rounded={16} />,
+});
+/** Owerri, until the area or the shopper gives a better place for the pin. */
+const OWERRI = { latitude: 5.4836, longitude: 7.0333 };
 
 export function DetailsStep() {
   const ready = useCheckoutGuard(3);
@@ -54,9 +66,10 @@ export function dayHeading(day: string, now: number) {
 }
 
 /** The farms' delivery days, asked once with the time the page opened. */
-function useWindows(farmIds: string[]) {
+function useWindows(farmIds: string[], serviceAreaId?: string) {
   const [now] = useState(() => Date.now());
-  const windows = useQuery(api.checkout.deliveryWindows, farmIds.length ? { farmIds, now } : "skip") as
+  // With the area, slots that are full there say so (W-23 "Full")
+  const windows = useQuery(api.checkout.deliveryWindows, farmIds.length ? { farmIds, now, serviceAreaId } : "skip") as
     | DeliveryWindows
     | undefined;
   return { windows, now };
@@ -71,7 +84,7 @@ function DeliveryDetails() {
   const router = useRouter();
   const { quote, lines, area } = useQuote("delivery");
   const farmIds = groupByFarm(lines).map((g) => g.farmId);
-  const { windows, now } = useWindows(farmIds);
+  const { windows, now } = useWindows(farmIds, area?.id);
   const { status } = useViewer();
   const saved = useQuery(api.addresses.list, status === "signed-in" ? {} : "skip") as SavedAddress[] | undefined;
 
@@ -93,20 +106,31 @@ function DeliveryDetails() {
     setPrefilled(true);
     const match = saved.find((a) => a.serviceAreaId === area.id && a.isDefault) ?? saved.find((a) => a.serviceAreaId === area.id);
     if (match && !addr.street) {
-      const extra = addressExtras.get(match._id);
-      const latitude = match.latitude ?? extra?.latitude;
-      const longitude = match.longitude ?? extra?.longitude;
-      setAddr({ ...addr, street: match.street, landmark: match.landmark, note: addr.note || extra?.directions || "", latitude, longitude });
+      const { latitude, longitude } = match;
+      setAddr({ ...addr, street: match.street, landmark: match.landmark, note: addr.note || match.directions || "", latitude, longitude });
       if (latitude !== undefined) setPinNote("Pin set from your saved address.");
     }
   }
 
-  // A chosen window that's no longer offered doesn't count.
-  const days = windows?.days ?? [];
+  // Every day the farms can make, with each slot open, full or too soon. A
+  // backend without allDays sends open slots only; the rest show as unavailable.
+  const days: Array<{ day: string; slots: SlotState[] }> =
+    windows?.allDays ??
+    (windows?.days ?? []).map((d) => ({
+      day: d.day,
+      slots: SLOTS.map((s) => ({ ...s, open: d.slots.some((x) => x.from === s.from && x.to === s.to) })),
+    }));
+  // A chosen window that's no longer open doesn't count.
   const chosen =
-    win && (!windows || days.some((d) => d.day === win.day && d.slots.some((s) => s.from === win.from && s.to === win.to)))
+    win && (!windows || days.some((d) => d.day === win.day && d.slots.some((s) => s.open && s.from === win.from && s.to === win.to)))
       ? win
       : null;
+  const pinAt =
+    addr.latitude !== undefined && addr.longitude !== undefined
+      ? { latitude: addr.latitude, longitude: addr.longitude }
+      : quote?.area?.latitude !== undefined && quote.area.longitude !== undefined
+        ? { latitude: quote.area.latitude, longitude: quote.area.longitude }
+        : OWERRI;
 
   const set = (k: "street" | "landmark" | "note") => (e: { target: { value: string } }) => {
     setAddr((a) => ({ ...a, [k]: e.target.value }));
@@ -200,20 +224,21 @@ function DeliveryDetails() {
               </span>
               <div className="relative">
                 <div
-                  role="img"
+                  role="group"
                   aria-labelledby="pin-label"
                   aria-describedby={pinNote ? "pin-note" : undefined}
-                  className="relative h-[180px] overflow-hidden rounded-[14px] bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
+                  className="relative isolate h-[180px] overflow-hidden rounded-[14px] bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
                 >
-                  <MapTexture roads={[{ top: "46%" }, { left: "38%", width: 12 }]} />
-                  <span className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-full text-forest">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="#A9D654" stroke="#1E3B16" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-                      <circle cx="12" cy="10" r="3" fill="#FFFFFF" />
-                    </svg>
-                  </span>
+                  <PinMap
+                    at={pinAt}
+                    label="Your drop-off point"
+                    onMove={(p) => {
+                      setAddr((a) => ({ ...a, ...p }));
+                      setPinNote("Pin moved. The rider will come to this spot.");
+                    }}
+                  />
                 </div>
-                <Button variant="ghost" size="sm" loading={locating} onClick={adjustPin} className="absolute right-3 bottom-3">
+                <Button variant="ghost" size="sm" loading={locating} onClick={adjustPin} className="absolute right-3 bottom-3 z-[500]">
                   Adjust pin
                 </Button>
               </div>
@@ -229,6 +254,7 @@ function DeliveryDetails() {
               rows={2}
               placeholder="Blue gate. Call when you arrive."
               value={addr.note}
+              maxLength={200}
               onChange={set("note")}
               className="[&_textarea]:h-20 [&_textarea]:min-h-20 [&_textarea]:resize-none"
             />
@@ -260,8 +286,9 @@ function DeliveryDetails() {
                 <fieldset key={d.day} className="m-0 border-0 p-0">
                   <legend className={`cap mb-2 font-semibold text-ink-3 ${i > 0 ? "mt-4" : ""}`}>{dayHeading(d.day, now)}</legend>
                   <div className="grid grid-cols-3 gap-2.5 m:grid-cols-1">
-                    {SLOTS.map((s) => {
-                      const open = d.slots.some((x) => x.from === s.from && x.to === s.to);
+                    {/* Slots already too soon aren't shown, as in the design's "Today" row */}
+                    {d.slots.filter((s) => s.reason !== "too_soon").map((s) => {
+                      const open = s.open;
                       const on = chosen?.day === d.day && chosen.from === s.from && chosen.to === s.to;
                       return (
                         <button
@@ -284,7 +311,7 @@ function DeliveryDetails() {
                         >
                           <span className="text-sm font-semibold">{slotLabel(s)}</span>
                           <span className={`cap ${on ? "text-forest" : ""}`}>
-                            {!open ? "Not available" : on ? "Selected" : "Available"}
+                            {!open ? (s.reason === "full" ? "Full" : "Not available") : on ? "Selected" : "Available"}
                           </span>
                         </button>
                       );
@@ -315,29 +342,6 @@ function DeliveryDetails() {
   );
 }
 
-/** The designs' drawn map: a faint grid and a few white roads. */
-function MapTexture({ roads }: { roads: Array<{ top?: string; left?: string; width?: number }> }) {
-  return (
-    <>
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background:
-            "repeating-linear-gradient(0deg, rgba(30,59,22,0.05) 0 1px, transparent 1px 32px), repeating-linear-gradient(90deg, rgba(30,59,22,0.05) 0 1px, transparent 1px 32px)",
-        }}
-      />
-      {roads.map((r, i) =>
-        r.top ? (
-          <div key={i} aria-hidden className="absolute right-0 left-0 h-3.5 bg-white" style={{ top: r.top }} />
-        ) : (
-          <div key={i} aria-hidden className="absolute top-0 bottom-0 bg-white" style={{ left: r.left, width: r.width }} />
-        ),
-      )}
-    </>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // W-24 Pickup point
 
@@ -347,17 +351,22 @@ function PickupDetails() {
   const router = useRouter();
   const { quote, lines, area } = useQuote("pickup");
   const farmIds = groupByFarm(lines).map((g) => g.farmId);
-  const { windows } = useWindows(farmIds);
+  const { windows, now } = useWindows(farmIds);
   const lat = quote?.area?.latitude;
   const lng = quote?.area?.longitude;
+  // farmIds and now give each point its own "Ready from" day
   const points = useQuery(
     api.checkout.pickupPoints,
-    area ? { serviceAreaId: area.id, latitude: lat, longitude: lng } : {},
+    area ? { serviceAreaId: area.id, latitude: lat, longitude: lng, farmIds, now } : { farmIds, now },
   ) as CheckoutPickupPoint[] | undefined;
   const [chosen, setChosen] = useState<string | null>(() => draft.get().pickupPointId);
   const [error, setError] = useState<string | null>(null);
   const list = (points ?? []).slice(0, 8);
-  const ready = windows?.readyDay ? `Ready from ${isoDayLabel(windows.readyDay)}` : "";
+  // A backend without per-point days: the first day the farms can make.
+  const readyFor = (p: CheckoutPickupPoint) => {
+    const day = p.readyDay === undefined ? windows?.readyDay : p.readyDay;
+    return day ? `Ready from ${isoDayLabel(day)}` : "";
+  };
 
   const onKey = (e: KeyboardEvent) => {
     const i = list.findIndex((p) => p._id === chosen);
@@ -378,15 +387,10 @@ function PickupDetails() {
     router.push(routes.checkoutReview);
   };
 
-  // Place the pins inside the drawn map from their real positions.
-  const located = list.filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude));
-  const lats = located.map((p) => p.latitude);
-  const lngs = located.map((p) => p.longitude);
-  const [minLat, maxLat, minLng, maxLng] = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
-  const pos = (p: CheckoutPickupPoint) => ({
-    left: `${maxLng === minLng ? 50 : 14 + ((p.longitude - minLng) / (maxLng - minLng)) * 72}%`,
-    top: `${maxLat === minLat ? 50 : 24 + ((maxLat - p.latitude) / (maxLat - minLat)) * 60}%`,
-  });
+  // Pins labelled like the list: A, B, C…
+  const located = list
+    .map((p, i) => ({ id: p._id, letter: LETTERS[i]!, name: p.name, latitude: p.latitude, longitude: p.longitude }))
+    .filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude));
 
   return (
     <CheckoutShell step={3} pickup aside={<FarmsSummary lines={lines} quote={quote} fulfilment="pickup" />}>
@@ -397,33 +401,22 @@ function PickupDetails() {
           pickup code, which we&apos;ll send when {farmIds.length > 1 ? "they're" : "it's"} ready.
         </p>
         <div
-          role="img"
+          role="group"
           aria-label={`Map of pickup points near ${area?.name ?? "you"}`}
-          className="relative mt-[22px] h-[220px] overflow-hidden rounded-2xl bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
+          className="relative isolate mt-[22px] h-[220px] overflow-hidden rounded-2xl bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
         >
-          <MapTexture roads={[{ top: "52%" }, { left: "30%", width: 12 }, { left: "72%", width: 10 }]} />
-          {located.map((p) => {
-            const on = p._id === chosen;
-            const letter = LETTERS[list.indexOf(p)];
-            return (
-              <div
-                key={p._id}
-                aria-hidden
-                className="absolute flex -translate-x-1/2 -translate-y-full flex-col items-center"
-                style={{ ...pos(p), zIndex: on ? 2 : 1 }}
-              >
-                <span
-                  className="rounded-full px-2 py-[3px] text-[11px] font-bold whitespace-nowrap shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
-                  style={{ background: on ? "#1E3B16" : "#FFFFFF", color: on ? "#FFFFFF" : "#1A1A1A" }}
-                >
-                  {letter}
-                </span>
-                <svg width={on ? 30 : 26} height={on ? 30 : 26} viewBox="0 0 24 24" fill={on ? "#A9D654" : "#FFFFFF"} stroke="#1E3B16" strokeWidth="1.5">
-                  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-                </svg>
-              </div>
-            );
-          })}
+          {points === undefined ? (
+            <Skeleton className="size-full" rounded={16} />
+          ) : (
+            <LetteredPointsMap
+              points={located}
+              selectedId={chosen}
+              onSelect={(id) => {
+                setChosen(id);
+                setError(null);
+              }}
+            />
+          )}
         </div>
         {points === undefined ? (
           <div className="mt-4 flex flex-col gap-2.5">
@@ -440,6 +433,7 @@ function PickupDetails() {
             {list.map((p, i) => {
               const on = p._id === chosen;
               const hours = hoursSummary(p.hours)?.replace(/, /g, " ");
+              const ready = readyFor(p);
               return (
                 <button
                   key={p._id}

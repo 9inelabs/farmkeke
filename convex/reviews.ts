@@ -60,6 +60,8 @@ const publicReview = (r: Doc<"reviews">) => ({
   comment: r.comment ?? null,
   reviewerName: r.reviewerName ?? null,
   createdAt: r._creationTime,
+  // Phase 5 (W-57): per-item stars, [] when none were given
+  itemRatings: r.itemRatings ?? [],
 });
 
 async function viewerFarm(ctx: QueryCtx) {
@@ -106,7 +108,14 @@ export const forOrder = query({
 
 /** Posts the one review for an order: 1 to 5 stars, tags, an optional comment. */
 export const submit = mutation({
-  args: { comment: v.optional(v.string()), orderId: v.id("orders"), rating: v.number(), tags: v.array(v.string()) },
+  args: {
+    comment: v.optional(v.string()),
+    orderId: v.id("orders"),
+    rating: v.number(),
+    tags: v.array(v.string()),
+    // Phase 5 (W-57 "Rate each item"): 1 to 5 stars for some of the order's lines
+    itemRatings: v.optional(v.array(v.object({ index: v.number(), rating: v.number() }))),
+  },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const order = await ctx.db.get("orders", args.orderId);
@@ -127,7 +136,18 @@ export const submit = mutation({
       throw new ConvexError({ code: "COMMENT_TOO_LONG", max: MAX_COMMENT });
     }
 
+    const itemRatings = new Map<number, number>();
+    for (const r of args.itemRatings ?? []) {
+      if (!Number.isInteger(r.index) || r.index < 0 || r.index >= order.items.length) throw new ConvexError({ code: "INVALID_ITEM" });
+      if (!Number.isInteger(r.rating) || r.rating < 1 || r.rating > 5) throw new ConvexError({ code: "INVALID_RATING" });
+      itemRatings.set(r.index, r.rating);
+    }
+
     const reviewId = await ctx.db.insert("reviews", {
+      itemRatings:
+        itemRatings.size === 0
+          ? undefined
+          : [...itemRatings.entries()].sort((a, b) => a[0] - b[0]).map(([index, rating]) => ({ index, rating })),
       orderId: order._id,
       userId: user._id,
       farmId: order.farmId,

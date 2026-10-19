@@ -41,6 +41,16 @@ function problemFor(e: unknown): Problem {
       return {
         message: `The total changed to ${naira(errorData<{ totalKobo: number }>(e)?.totalKobo)} while you were checking out. Check the new total, then pay.`,
       };
+    case "NOTE_TOO_LONG":
+      return {
+        message: "Your note for the rider is too long. Keep it to 200 characters.",
+        fix: { href: routes.checkoutDetails, label: "Edit your note" },
+      };
+    case "WINDOW_FULL":
+      return {
+        message: "Someone just took the last place in that delivery time. Choose another time to continue.",
+        fix: { href: routes.checkoutDetails, label: "Choose another time" },
+      };
     case "WINDOW_UNAVAILABLE":
     case "WINDOW_REQUIRED":
       return {
@@ -138,6 +148,7 @@ function Review() {
                 serviceAreaId: area?.id,
                 latitude: d.address.latitude,
                 longitude: d.address.longitude,
+                note: d.address.note.trim() || undefined,
               }
             : undefined,
         pickupPointId: fulfilment === "pickup" ? (d.pickupPointId ?? undefined) : undefined,

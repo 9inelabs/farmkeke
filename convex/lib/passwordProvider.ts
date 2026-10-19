@@ -57,6 +57,24 @@ const normalizeEmail = (value: unknown) => String(value ?? "").trim().toLowerCas
 
 const RESET_LINK_MINUTES = 30;
 
+// The reset flow's `returnTo: "web"` travels to sendVerificationRequest inside
+// Convex Auth's redirect URL (`?returnTo=web`, resolved against SITE_URL).
+const WEB_MARKER = "returnTo=web";
+
+/**
+ * Where the reset email's button goes. Asked from the website: the website's
+ * W-42c page. Otherwise (the app): the Convex-hosted bridge page, which opens
+ * the app and falls back to the website (http.ts /reset-password).
+ */
+export function resetLink(email: string, token: string, returnTo: "web" | "app") {
+  const query = `email=${encodeURIComponent(email)}&code=${encodeURIComponent(token)}`;
+  if (returnTo === "web") {
+    const website = (env.WEBSITE_URL?.trim() || "https://farmkeke.com").replace(/\/+$/, "");
+    return `${website}/reset-password?${query}`;
+  }
+  return `${env.CONVEX_SITE_URL}/reset-password?${query}`;
+}
+
 /** Emails the reset link. Single use; expires after 30 minutes (M-54, M-57). */
 const passwordReset = Email<DataModel>({
   id: "password-reset",
@@ -66,11 +84,10 @@ const passwordReset = Email<DataModel>({
     crypto.getRandomValues(bytes);
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   },
-  async sendVerificationRequest({ identifier: email, token }) {
-    // The link opens a small Convex-hosted page that hands off to the app, so
-    // it works in every mail client (many strip custom-scheme links).
-    const link = `${env.CONVEX_SITE_URL}/reset-password?email=${encodeURIComponent(email)}&code=${token}`;
-    await sendEmail(passwordResetEmail(email, link));
+  async sendVerificationRequest({ identifier: email, token, url }) {
+    // https links work in every mail client (many strip custom-scheme links).
+    const returnTo = typeof url === "string" && url.includes(WEB_MARKER) ? "web" : "app";
+    await sendEmail(passwordResetEmail(email, resetLink(email, token, returnTo)));
   },
 });
 
@@ -152,9 +169,11 @@ export const FarmkekePassword: ConvexCredentialsConfig = ConvexCredentials<DataM
         // Unknown emails get the same "check your email" result, so the form
         // can't be used to find out who has an account.
         if (found === null) return null;
+        // Phase 5: `returnTo: "web"` (W-42a) sends the link to the website
+        const fromWeb = params.returnTo === "web";
         await signInViaProvider(ctx, passwordReset, {
           accountId: found.accountId,
-          params: { email },
+          params: fromWeb ? { email, redirectTo: `?${WEB_MARKER}` } : { email },
         });
         return null;
       }

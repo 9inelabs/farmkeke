@@ -2,9 +2,9 @@
 
 // W-53 Report a problem (disputes.open). Only for a delivered or collected
 // order, from the account or device that placed it. Photos upload through
-// chat.generateUploadUrl. The backend takes four reasons; the two extra
-// choices in the design, and how many units were affected, are added to the
-// note so staff see them (see BUILD-STATUS backend gaps).
+// disputes.generateUploadUrl. Each choice is its own reason, and the units
+// affected per item go as itemQuantities, so the amount at stake is the value
+// of those units (never the delivery fee).
 import { useMutation } from "convex/react";
 import { Camera, ChevronLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -23,12 +23,12 @@ import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 import { OrderSkeleton } from "../OrderView";
 
-const REASONS: Array<{ id: string; label: string; reason: DisputeReason; noteTag?: string }> = [
+const REASONS: Array<{ id: string; label: string; reason: DisputeReason }> = [
   { id: "missing", label: "Items missing", reason: "missing" },
   { id: "damaged", label: "Damaged or spoiled", reason: "damaged" },
   { id: "wrong", label: "Wrong item sent", reason: "wrong_item" },
-  { id: "short", label: "Less than I ordered", reason: "missing", noteTag: "Less than I ordered" },
-  { id: "other", label: "Something else", reason: "damaged", noteTag: "Something else" },
+  { id: "short", label: "Less than I ordered", reason: "short" },
+  { id: "other", label: "Something else", reason: "other" },
 ];
 const MAX_PHOTOS = 5;
 
@@ -79,7 +79,7 @@ type Errors = Partial<Record<"reason" | "items" | "note" | "photos" | "form", st
 function Form({ order: o }: { order: OrderDetail }) {
   const router = useRouter();
   const open = useMutation(api.disputes.open);
-  const getUrl = useMutation(api.chat.generateUploadUrl);
+  const getUrl = useMutation(api.disputes.generateUploadUrl);
   const [choice, setChoice] = useState<string | null>(null);
   const [picked, setPicked] = useState<Record<number, number>>({}); // item index → units affected
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -129,23 +129,14 @@ function Form({ order: o }: { order: OrderDetail }) {
     if (n.reason) return document.getElementById(`reason-${REASONS[0]!.id}`)?.focus();
     if (n.items) return document.getElementById(`item-${o.items[0]?.index}`)?.focus();
     if (n.note) return noteRef.current?.focus();
-    const counts = indexes
-      .map((i) => {
-        const it = o.items[i]!;
-        const units = picked[i]!;
-        return it.quantity > 1 ? `${it.name}: ${units} of ${it.quantity} ${it.unitPlural}` : "";
-      })
-      .filter(Boolean);
-    const fullNote = [reason!.noteTag ? `[${reason!.noteTag}]` : "", counts.length ? `(${counts.join("; ")})` : "", note.trim()]
-      .filter(Boolean)
-      .join(" ");
     setBusy(true);
     try {
       await open({
         orderId: o._id as Id<"orders">,
         reason: reason!.reason,
         itemIndexes: indexes,
-        note: fullNote,
+        itemQuantities: indexes.map((i) => picked[i]!),
+        note: note.trim(),
         photoIds: photos.map((p) => p.id as Id<"_storage">),
       });
       router.push(routes.problemReported(o._id));

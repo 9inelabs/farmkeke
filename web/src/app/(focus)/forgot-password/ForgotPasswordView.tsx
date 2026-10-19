@@ -39,7 +39,7 @@ export function ForgotPasswordView() {
     setBusy(true);
     setError(null);
     try {
-      await signIn("password", { flow: "reset", email: value.trim() });
+      await signIn("password", { flow: "reset", email: value.trim(), returnTo: "web" });
       setResetEmail(value.trim());
       router.push(routes.checkEmail);
     } catch {

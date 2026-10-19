@@ -1,6 +1,6 @@
 "use client";
 
-// W-45 Profile and login details: name (account.updateProfile), email
+// W-45 Profile and login details: name and phone (account.updateProfile), email
 // (account.changeEmail, in a dialog) and password (account.changePassword).
 // Email and password changes ask for the current password.
 import { useAction, useMutation } from "convex/react";
@@ -15,6 +15,7 @@ import { Modal } from "@/components/ui/Dialog";
 import { PasswordField, TextField } from "@/components/ui/Field";
 import { api } from "@/convex/api";
 import { errorCode, useViewer } from "@/lib/auth";
+import { validPhone } from "@/components/checkout/draft";
 import { displayPhone } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
@@ -88,9 +89,11 @@ function Profile() {
   );
 }
 
-function PersonalDetails({ name: initial, phone }: { name: string; phone: string }) {
+function PersonalDetails({ name: initial, phone: initialPhone }: { name: string; phone: string }) {
   const update = useMutation(api.account.updateProfile);
   const [name, setName] = useState(initial);
+  const [phone, setPhone] = useState(initialPhone ? displayPhone(initialPhone) : "");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -98,16 +101,24 @@ function PersonalDetails({ name: initial, phone }: { name: string; phone: string
   const save = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return setError("Enter your full name.");
+    const local = phone.trim() ? validPhone(phone) : "";
+    if (local === null) return setPhoneError("Enter a Nigerian mobile number, e.g. 0803 123 4567.");
     setBusy(true);
     setError(null);
+    setPhoneError(null);
     setSaved(false);
     try {
-      await update({ name: name.trim() });
+      // "" removes the number; unchanged numbers aren't sent again
+      const changed = (local ? `+234${local}` : "") !== (initialPhone || "");
+      await update({ name: name.trim(), ...(changed ? { phone: local ? `+234${local}` : "" } : {}) });
+      if (local) setPhone(displayPhone(`+234${local}`));
       setSaved(true);
     } catch (err) {
-      setError(
-        errorCode(err) === "NAME_TOO_LONG" ? "That name is too long. Use up to 80 characters." : "We couldn't save that. Try again.",
-      );
+      const code = errorCode(err);
+      if (code === "INVALID_PHONE") setPhoneError("Enter a Nigerian mobile number, e.g. 0803 123 4567.");
+      else if (code === "PHONE_TAKEN") setPhoneError("This number is already used to sign in to a farm account. Use another number.");
+      else if (code === "PHONE_REQUIRED") setPhoneError("Farmers sign in with their phone number, so it can't be removed.");
+      else setError(code === "NAME_TOO_LONG" ? "That name is too long. Use up to 80 characters." : "We couldn't save that. Try again.");
     } finally {
       setBusy(false);
     }
@@ -138,11 +149,17 @@ function PersonalDetails({ name: initial, phone }: { name: string; phone: string
           <TextField
             label="Phone number"
             type="tel"
-            value={phone ? displayPhone(phone) : ""}
-            placeholder="Added with your next order"
-            readOnly
-            hint="To change your phone number, contact support."
-            className={`${fin} [&_input]:bg-soft`}
+            autoComplete="tel"
+            inputMode="tel"
+            value={phone}
+            placeholder="+234 803 123 4567"
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setSaved(false);
+              setPhoneError(null);
+            }}
+            error={phoneError}
+            className={fin}
           />
         </div>
         <div className="mt-[18px] flex items-center justify-end gap-3">

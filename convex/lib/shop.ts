@@ -123,6 +123,47 @@ export async function recordResponseTime(ctx: MutationCtx, farmId: Id<"farms">, 
   }
 }
 
+const median = (values: number[]) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+};
+
+/** W-58: median minutes the farm took to answer a shopper's message; null with no history. */
+export async function replyTimeMinutes(ctx: QueryCtx, farmId: Id<"farms">): Promise<number | null> {
+  const row = await ctx.db
+    .query("farmStats")
+    .withIndex("by_farmId", (q) => q.eq("farmId", farmId))
+    .unique();
+  const samples = row?.replyMinutes ?? [];
+  return samples.length === 0 ? null : Math.round(median(samples));
+}
+
+/** "Usually replies within an hour" / "within 3 hours" / "within 2 days". */
+export function replyNoteFor(minutes: number | null): string | null {
+  if (minutes === null) return null;
+  if (minutes <= 60) return "Usually replies within an hour";
+  const hours = Math.ceil(minutes / 60);
+  if (hours < 24) return `Usually replies within ${hours} hours`;
+  const days = Math.ceil(hours / 24);
+  return days === 1 ? "Usually replies within a day" : `Usually replies within ${days} days`;
+}
+
+/** Called when a farm answers a shopper's message: keeps the last few reply times. */
+export async function recordReplyMinutes(ctx: MutationCtx, farmId: Id<"farms">, minutes: number) {
+  if (!Number.isFinite(minutes) || minutes < 0) return;
+  const sample = Math.round(minutes * 10) / 10;
+  const row = await ctx.db
+    .query("farmStats")
+    .withIndex("by_farmId", (q) => q.eq("farmId", farmId))
+    .unique();
+  if (row === null) {
+    await ctx.db.insert("farmStats", { farmId, responseHours: [], replyMinutes: [sample] });
+  } else {
+    await ctx.db.patch("farmStats", row._id, { replyMinutes: [...(row.replyMinutes ?? []), sample].slice(-RESPONSE_SAMPLES) });
+  }
+}
+
 /** A candidate listing with what filters and sorts need. */
 export type Entry = {
   listing: Doc<"listings">;

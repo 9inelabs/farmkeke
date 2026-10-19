@@ -38,7 +38,14 @@ async function checkPhotos(ctx: MutationCtx, photoIds: Id<"_storage">[]) {
 
 export async function ticketView(ctx: QueryCtx, t: Doc<"supportTickets">, readAt: number | undefined, from: "user" | "staff") {
   const order = t.orderId ? await ctx.db.get("orders", t.orderId) : null;
+  const listing = t.listingId ? await ctx.db.get("listings", t.listingId) : null;
+  const farm = t.farmId ? await ctx.db.get("farms", t.farmId) : null;
   return {
+    // Phase 5 (W-06): "About: Fresh tomatoes from Okafor Farms"
+    about:
+      listing === null && farm === null
+        ? null
+        : { listingId: t.listingId ?? null, listingName: listing?.name ?? null, farmId: t.farmId ?? null, farmName: farm?.name ?? null },
     _id: t._id,
     number: t.number ?? null,
     side: t.side,
@@ -77,7 +84,16 @@ async function ownTicket(ctx: QueryCtx, ticketId: Id<"supportTickets">) {
 
 /** Opens a ticket with its first message. Linked to one of the caller's orders if given. */
 export const open = mutation({
-  args: { body: v.string(), orderId: v.optional(v.id("orders")), photoIds: v.array(v.id("_storage")), side: notificationSide },
+  args: {
+    body: v.string(),
+    orderId: v.optional(v.id("orders")),
+    photoIds: v.array(v.id("_storage")),
+    side: notificationSide,
+    // Phase 5 (W-06 "Ask a question"): the product and farm it's about. Strings,
+    // so an id from an old link can't fail the form; unknown ids are dropped.
+    listingId: v.optional(v.string()),
+    farmId: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     if (user.blockedAt !== undefined) throw new ConvexError({ code: "BLOCKED" });
@@ -93,10 +109,16 @@ export const open = mutation({
     await checkPhotos(ctx, args.photoIds);
     const now = Date.now();
     const number = `SUP-${await nextCounter(ctx, "support", 1001)}`;
+    const listingId = args.listingId ? ctx.db.normalizeId("listings", args.listingId) : null;
+    const listing = listingId ? await ctx.db.get("listings", listingId) : null;
+    const farmRaw = args.farmId ? ctx.db.normalizeId("farms", args.farmId) : null;
+    const farmId = listing?.farmId ?? (farmRaw && (await ctx.db.get("farms", farmRaw)) ? farmRaw : null);
     const ticketId = await ctx.db.insert("supportTickets", {
       userId: user._id,
       side: args.side,
       orderId: args.orderId,
+      listingId: listing?._id,
+      farmId: farmId ?? undefined,
       number,
       status: "open",
       lastMessageAt: now,

@@ -132,6 +132,8 @@ export const orderAddress = v.object({
   state: v.string(),
   latitude: v.optional(v.number()),
   longitude: v.optional(v.number()),
+  // W-23 "Note for the rider" (up to 200 characters), shown to the rider and the farm
+  note: v.optional(v.string()),
 });
 
 // A line as sold: names and price copied so later edits don't change the order.
@@ -198,6 +200,19 @@ export const payoutStatus = v.union(v.literal("pending"), v.literal("sent"), v.l
 
 export const disputeStatus = v.union(v.literal("open"), v.literal("farmer_responded"), v.literal("resolved"));
 
+// W-53 problem types. "short" = less than ordered, "other" = something else (Phase 5).
+export const disputeReason = v.union(
+  v.literal("missing"),
+  v.literal("damaged"),
+  v.literal("wrong_item"),
+  v.literal("not_received"),
+  v.literal("short"),
+  v.literal("other"),
+);
+
+// W-54 the farm's answer to a problem report (Phase 5)
+export const disputeStance = v.union(v.literal("agrees"), v.literal("disagrees"), v.literal("partly"));
+
 export default defineSchema({
   ...authTables,
 
@@ -220,11 +235,16 @@ export default defineSchema({
     // M-49 / W-44: a guest's one-time token for linking their orders to an account
     guestClaimToken: v.optional(v.string()),
     guestClaimExpiresAt: v.optional(v.number()),
+    // W-42 / W-44: a one-time link emailed to the account's own address, to add
+    // the guest orders placed with that email (proves the shopper owns it)
+    guestLinkToken: v.optional(v.string()),
+    guestLinkExpiresAt: v.optional(v.number()),
   })
     .index("email", ["email"])
     .index("phone", ["phone"])
     .index("by_staffRole", ["staffRole"])
-    .index("by_guestClaimToken", ["guestClaimToken"]),
+    .index("by_guestClaimToken", ["guestClaimToken"])
+    .index("by_guestLinkToken", ["guestLinkToken"]),
 
   // A-80. Fixed set of 8 at launch; staff can rename, reorder, hide.
   categories: defineTable({
@@ -296,6 +316,8 @@ export default defineSchema({
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
     isDefault: v.boolean(),
+    // W-46b "Directions for the rider" (up to 200 characters)
+    directions: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   // M-S4 / M-S5. One row (key "app") read by every app on launch.
@@ -330,6 +352,8 @@ export default defineSchema({
     userId: v.string(),
     status: v.union(v.literal("completed"), v.literal("waiting_for_orders")),
     completedAt: v.optional(v.number()),
+    // W-49 "Why are you leaving?" (the shopper's own words, up to 500 characters)
+    reason: v.optional(v.string()),
   })
     .index("by_status", ["status"])
     .index("by_userId", ["userId"]),
@@ -450,6 +474,9 @@ export default defineSchema({
     submittedAt: v.optional(v.number()),
     liveAt: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
+    // W-47 "Back in stock": when every unit last ran out, and when stock came back
+    soldOutAt: v.optional(v.number()),
+    restockedAt: v.optional(v.number()),
   })
     .index("by_farmId_and_status", ["farmId", "status"])
     .index("by_status_and_submittedAt", ["status", "submittedAt"])
@@ -474,6 +501,9 @@ export default defineSchema({
   farmStats: defineTable({
     farmId: v.id("farms"),
     responseHours: v.array(v.number()),
+    // W-58 "Usually replies within an hour": minutes from a shopper's message to
+    // the farm's reply, for the farm's most recent replies
+    replyMinutes: v.optional(v.array(v.number())),
   }).index("by_farmId", ["farmId"]),
 
   // A-86. Featured banners on Home ("Harvest of the week"). Each points at a
@@ -664,7 +694,11 @@ export default defineSchema({
     .index("by_status_and_collectBy", ["status", "collectBy"])
     .index("by_escrow", ["escrow"])
     .index("by_status", ["status"])
-    .index("by_riderId", ["riderId"]),
+    .index("by_riderId", ["riderId"])
+    // W-23 slot capacity: delivery orders per day and area
+    .index("by_window_day_and_address_serviceAreaId", ["window.day", "address.serviceAreaId"])
+    // W-42 / W-44: guest orders placed with an email
+    .index("by_contact_email", ["contact.email"]),
 
   // A-51 timeline: every status change, with who did it.
   orderEvents: defineTable({
@@ -744,6 +778,19 @@ export default defineSchema({
     unconfirmedAfterHours: v.optional(v.number()),
     pickupHoldDays: v.optional(v.number()),
     disputeReplyHours: v.optional(v.number()),
+    // W-23 "Full": delivery orders one area can take in one time slot. Unset or
+    // null = no limit. Per-area (and per-slot) rows override the default.
+    slotCapacity: v.optional(v.union(v.number(), v.null())),
+    slotCapacities: v.optional(
+      v.array(
+        v.object({
+          serviceAreaId: v.id("serviceAreas"),
+          // Slot start, e.g. "09:00"; unset = every slot in the area
+          from: v.optional(v.string()),
+          capacity: v.number(),
+        }),
+      ),
+    ),
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),
 
@@ -771,6 +818,8 @@ export default defineSchema({
     savedCardId: v.optional(v.id("savedCards")),
     accessCode: v.optional(v.string()),
     authorizationUrl: v.optional(v.string()),
+    // W-29 "Transfer started 10:41"
+    startedAt: v.optional(v.number()),
     paidAmountKobo: v.optional(v.number()),
     paidAt: v.optional(v.number()),
     cardBrand: v.optional(v.string()),
@@ -945,8 +994,10 @@ export default defineSchema({
     userId: v.id("users"),
     farmId: v.id("farms"),
     number: v.string(),
-    reason: v.union(v.literal("missing"), v.literal("damaged"), v.literal("wrong_item"), v.literal("not_received")),
+    reason: disputeReason,
     itemIndexes: v.array(v.number()),
+    // W-53 "1 of 2 baskets": affected units per item, in itemIndexes order
+    itemQuantities: v.optional(v.array(v.number())),
     note: v.string(),
     photoIds: v.array(v.id("_storage")),
     amountKobo: v.number(),
@@ -960,6 +1011,8 @@ export default defineSchema({
     farmRespondedAt: v.optional(v.number()),
     farmResponseNote: v.optional(v.string()),
     farmResponsePhotoIds: v.optional(v.array(v.id("_storage"))),
+    // W-54 "Farm's response: Agrees to refund"
+    farmStance: v.optional(disputeStance),
     outcome: v.optional(v.union(v.literal("released"), v.literal("refunded"), v.literal("split"))),
     refundKobo: v.optional(v.number()),
     releaseKobo: v.optional(v.number()),
@@ -1006,6 +1059,8 @@ export default defineSchema({
     nudgedFarmerAt: v.optional(v.number()),
     consumerReadAt: v.optional(v.number()),
     farmerReadAt: v.optional(v.number()),
+    // When the shopper's oldest unanswered message was sent (W-58 reply times)
+    awaitingFarmSince: v.optional(v.number()),
   })
     .index("by_orderId", ["orderId"])
     .index("by_userId_and_lastMessageAt", ["userId", "lastMessageAt"])
@@ -1044,6 +1099,8 @@ export default defineSchema({
     comment: v.optional(v.string()),
     reviewerName: v.optional(v.string()),
     hidden: v.optional(v.boolean()),
+    // W-57 "Rate each item": 1 to 5 stars per order line (index into order.items)
+    itemRatings: v.optional(v.array(v.object({ index: v.number(), rating: v.number() }))),
   })
     .index("by_orderId", ["orderId"])
     .index("by_farmId", ["farmId"])
@@ -1061,9 +1118,15 @@ export default defineSchema({
   favorites: defineTable({
     userId: v.id("users"),
     listingId: v.id("listings"),
+    // W-47 "Notify me": one email when this sold-out item is back
+    notify: v.optional(v.boolean()),
+    notifiedAt: v.optional(v.number()),
+    // W-47 "Back in stock": when the shopper last looked at their saved items
+    lastSeenAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
-    .index("by_userId_and_listingId", ["userId", "listingId"]),
+    .index("by_userId_and_listingId", ["userId", "listingId"])
+    .index("by_listingId_and_notify", ["listingId", "notify"]),
 
   supportTickets: defineTable({
     userId: v.id("users"),
@@ -1079,6 +1142,9 @@ export default defineSchema({
     // Who wrote last, and a short preview, for lists and unread markers
     lastFrom: v.optional(v.union(v.literal("user"), v.literal("staff"))),
     preview: v.optional(v.string()),
+    // W-06 "Ask a question": the product and farm the question is about
+    listingId: v.optional(v.id("listings")),
+    farmId: v.optional(v.id("farms")),
   })
     .index("by_userId_and_side", ["userId", "side"])
     .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"])

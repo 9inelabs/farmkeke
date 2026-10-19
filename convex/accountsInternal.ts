@@ -80,7 +80,14 @@ export const replaceEmail = internalMutation({
       .unique();
     if (account === null) return "NO_ACCOUNT" as const;
     await ctx.db.patch("authAccounts", account._id, { providerAccountId: args.newEmail });
-    await ctx.db.patch("users", args.userId, { email: args.newEmail });
+    // The new address isn't verified, and a guest-orders link sent to the old
+    // one must not add orders placed with the new one (orders/consumer.ts).
+    await ctx.db.patch("users", args.userId, {
+      email: args.newEmail,
+      emailVerificationTime: undefined,
+      guestLinkToken: undefined,
+      guestLinkExpiresAt: undefined,
+    });
     return "OK" as const;
   },
 });
@@ -123,9 +130,10 @@ async function deletionEmail(
  * finishWaitingDeletions job deletes them once those orders have ended.
  */
 export const deleteUserData = internalMutation({
-  args: { userId: v.id("users") },
+  // reason (Phase 5, W-49): the shopper's "Why are you leaving?", kept on the record
+  args: { userId: v.id("users"), reason: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { userId } = args;
+    const { userId, reason } = args;
     const user = await ctx.db.get("users", userId);
     const inProgress = await ordersInProgress(ctx, userId);
     if (inProgress > 0) {
@@ -133,15 +141,18 @@ export const deleteUserData = internalMutation({
         .query("accountDeletions")
         .withIndex("by_userId", (q) => q.eq("userId", userId))
         .take(10);
-      if (!waiting.some((d) => d.status === "waiting_for_orders")) {
-        await ctx.db.insert("accountDeletions", { userId, status: "waiting_for_orders" });
+      const open = waiting.find((d) => d.status === "waiting_for_orders");
+      if (open === undefined) {
+        await ctx.db.insert("accountDeletions", { userId, status: "waiting_for_orders", reason });
         await deletionEmail(ctx, user, "waiting", inProgress);
+      } else if (reason !== undefined) {
+        await ctx.db.patch("accountDeletions", open._id, { reason });
       }
       return "waiting_for_orders" as const;
     }
     await deletionEmail(ctx, user, "deleted");
     await eraseUser(ctx, userId);
-    await ctx.db.insert("accountDeletions", { userId, status: "completed", completedAt: Date.now() });
+    await ctx.db.insert("accountDeletions", { userId, status: "completed", completedAt: Date.now(), reason });
     return "completed" as const;
   },
 });

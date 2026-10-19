@@ -208,12 +208,26 @@ function Case({ d }: { d: DisputeDetail }) {
               <Kv label="Problem" value={d.reasonLabel} />
               <Kv
                 label="Affected"
-                value={d.items.map((it) => `${it.name} · ${plural(it.quantity, it.unitLabel, it.unitLabel)}`).join(", ")}
+                value={d.items
+                  .map((it) => {
+                    // W-54 "Fresh tomatoes · 1 of 2 baskets" when only some units were affected
+                    const some = it.affectedQuantity ?? it.quantity;
+                    return some < it.quantity
+                      ? `${it.name} · ${some} of ${it.quantity} ${it.unitLabel}`
+                      : `${it.name} · ${plural(it.quantity, it.unitLabel, it.unitLabel)}`;
+                  })
+                  .join(", ")}
               />
               <Kv label="Amount in question" value={naira(d.amountKobo)} />
               <Kv
                 label="Farm's response"
-                value={d.farmResponse ? "Replied" : now > d.farmReplyBy ? "No reply in time" : "Waiting for a reply"}
+                value={
+                  d.farmResponse
+                    ? (d.farmResponse.stanceLabel ?? "Replied")
+                    : now > d.farmReplyBy
+                      ? "No reply in time"
+                      : "Waiting for a reply"
+                }
               />
               {d.decision ? <Kv label="Decision" value={outcomeText(d)!} /> : null}
             </dl>

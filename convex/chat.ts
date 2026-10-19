@@ -8,6 +8,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireUser } from "./lib/auth";
 import { notify } from "./lib/notify";
+import { recordReplyMinutes, replyNoteFor, replyTimeMinutes } from "./lib/shop";
 import { validateImageUpload } from "./lib/uploads";
 
 type Side = "shop" | "farm";
@@ -123,6 +124,9 @@ export const thread = query({
         totalKobo: order.totalKobo,
         imageUrl: first?.photoId ? await ctx.storage.getUrl(first.photoId) : null,
       },
+      // Phase 5 (W-58): the farm's usual reply time, from its recent replies; null with no history
+      replyTimeMinutes: side === "shop" ? await replyTimeMinutes(ctx, order.farmId) : null,
+      replyNote: side === "shop" ? replyNoteFor(await replyTimeMinutes(ctx, order.farmId)) : null,
       counterpart:
         side === "shop"
           ? {
@@ -212,7 +216,15 @@ export const send = mutation({
       photoIds: args.photoIds,
     });
     const otherUnread = side === "shop" ? c.farmerUnread : c.consumerUnread;
+    // W-58 reply times: from the shopper's first unanswered message to the farm's answer
+    let awaiting: { awaitingFarmSince?: number } = {};
+    if (side === "shop" && c.awaitingFarmSince === undefined) awaiting = { awaitingFarmSince: now };
+    if (side === "farm" && c.awaitingFarmSince !== undefined) {
+      await recordReplyMinutes(ctx, order.farmId, (now - c.awaitingFarmSince) / 60_000);
+      awaiting = { awaitingFarmSince: undefined };
+    }
     await ctx.db.patch("conversations", c._id, {
+      ...awaiting,
       lastMessageAt: now,
       lastMessagePreview: preview,
       // Writing means you've read the thread

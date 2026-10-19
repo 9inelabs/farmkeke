@@ -9,6 +9,7 @@ import type { actorKind, orderStatus } from "../schema";
 import { nextCounter } from "./counters";
 import { claimSlot, naira, notify, notifyConsumer, notifyFarm } from "./notify";
 import { paymentsLive } from "./paystack";
+import { noteStockChange } from "./restock";
 import { commissionOn, DAY, getRules, HOUR } from "./settings";
 
 export type OrderStatus = Infer<typeof orderStatus>;
@@ -97,9 +98,9 @@ export async function takeStock(ctx: MutationCtx, items: Doc<"orders">["items"])
     if (listing === null || unit === undefined || unit.stock < item.quantity) {
       throw new ConvexError({ code: "OUT_OF_STOCK", listingId: item.listingId });
     }
-    await ctx.db.patch("listings", listing._id, {
-      units: listing.units.map((u) => (u.unitId === item.unitId ? { ...u, stock: u.stock - item.quantity } : u)),
-    });
+    const units = listing.units.map((u) => (u.unitId === item.unitId ? { ...u, stock: u.stock - item.quantity } : u));
+    await ctx.db.patch("listings", listing._id, { units });
+    await noteStockChange(ctx, listing, listing, { ...listing, units });
   }
 }
 
@@ -109,9 +110,10 @@ export async function restoreStock(ctx: MutationCtx, order: Doc<"orders">) {
     const listing = await ctx.db.get("listings", item.listingId);
     if (listing === null || listing.deletedAt !== undefined) continue;
     if (!listing.units.some((u) => u.unitId === item.unitId)) continue;
-    await ctx.db.patch("listings", listing._id, {
-      units: listing.units.map((u) => (u.unitId === item.unitId ? { ...u, stock: u.stock + item.quantity } : u)),
-    });
+    const units = listing.units.map((u) => (u.unitId === item.unitId ? { ...u, stock: u.stock + item.quantity } : u));
+    await ctx.db.patch("listings", listing._id, { units });
+    // W-47: an unpaid or cancelled order can bring a sold-out item back
+    await noteStockChange(ctx, listing, listing, { ...listing, units });
   }
 }
 
@@ -479,7 +481,15 @@ export async function orderCore(ctx: QueryCtx, order: Doc<"orders">) {
     cancelReason: order.cancelReason ?? null,
     window: order.window ?? null,
     address: order.address
-      ? { street: order.address.street, landmark: order.address.landmark, areaName: order.address.areaName, lga: order.address.lga, state: order.address.state }
+      ? {
+          street: order.address.street,
+          landmark: order.address.landmark,
+          areaName: order.address.areaName,
+          lga: order.address.lga,
+          state: order.address.state,
+          // Phase 5 (W-23): the shopper's note for the rider
+          note: order.address.note ?? null,
+        }
       : null,
     pickupPoint: await pickupPointView(ctx, order.pickupPointId),
     rider:

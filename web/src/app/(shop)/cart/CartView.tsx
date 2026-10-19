@@ -7,6 +7,7 @@ import { ChevronLeft, Info, ShieldCheck, ShoppingBasket, Trash, TriangleAlert } 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { capitalise, groupByFarm, QtyStepper, Thumb, useHydrated, useQuote } from "@/components/cart/parts";
+import { cartAcceptsText } from "@/components/shop/bits";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import type { CartChange, Quote } from "@/convex/returns/checkout";
@@ -140,12 +141,9 @@ export function CartView() {
                     <div id={`farm-${g.farmId}`} className="text-[15px] font-semibold">
                       {g.farmName}
                     </div>
-                    {info?.farmArea || info?.acceptsWithinHours ? (
+                    {info ? (
                       <div className="cap">
-                        {[
-                          info.farmArea,
-                          info.acceptsWithinHours ? `Usually accepts within ${plural(info.acceptsWithinHours, "hour")}` : "",
-                        ]
+                        {[info.farmArea, cartAcceptsText(info.responseTimeHours, info.acceptsWithinHours)]
                           .filter(Boolean)
                           .join(" · ")}
                       </div>
