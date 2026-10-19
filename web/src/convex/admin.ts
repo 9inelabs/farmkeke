@@ -14,11 +14,11 @@ export const admin = {
   },
   areas: {
     createPickupPoint: makeFunctionReference<"mutation", { "name": string; "address": string; "state": string; "lga": string; "latitude": number; "longitude": number; "hours": Array<{ "day": number; "opens": string; "closes": string }>; "phone": string; "collectWithinDays": number; "reason": string }, any>("admin/areas:createPickupPoint"),
-    createServiceArea: makeFunctionReference<"mutation", { "state": string; "name": string; "lga": string; "deliveryFeeKobo": number; "reason": string }, any>("admin/areas:createServiceArea"),
+    createServiceArea: makeFunctionReference<"mutation", { "state": string; "name": string; "lga": string; "deliveryFeeKobo": number; "latitude"?: number; "longitude"?: number; "radiusKm"?: number; "reason": string }, any>("admin/areas:createServiceArea"),
     listAllPickupPoints: makeFunctionReference<"query", Record<string, never>, any>("admin/areas:listAllPickupPoints"),
     listAllServiceAreas: makeFunctionReference<"query", Record<string, never>, any>("admin/areas:listAllServiceAreas"),
     updatePickupPoint: makeFunctionReference<"mutation", { "pointId": Id<"pickupPoints">; "name"?: string; "address"?: string; "state"?: string; "lga"?: string; "latitude"?: number; "longitude"?: number; "hours"?: Array<{ "day": number; "opens": string; "closes": string }>; "phone"?: string; "collectWithinDays"?: number; "active"?: boolean; "photoStorageId"?: Id<"_storage">; "reason": string }, any>("admin/areas:updatePickupPoint"),
-    updateServiceArea: makeFunctionReference<"mutation", { "areaId": Id<"serviceAreas">; "deliveryFeeKobo"?: number; "active"?: boolean; "reason": string }, any>("admin/areas:updateServiceArea"),
+    updateServiceArea: makeFunctionReference<"mutation", { "areaId": Id<"serviceAreas">; "name"?: string; "lga"?: string; "deliveryFeeKobo"?: number; "active"?: boolean; "latitude"?: number; "longitude"?: number; "radiusKm"?: number; "reason": string }, any>("admin/areas:updateServiceArea"),
   },
   banners: {
     create: makeFunctionReference<"mutation", { "tag": string; "title": string; "buttonLabel": string; "listingId": Id<"listings">; "active": boolean; "reason": string }, any>("admin/banners:create"),
@@ -80,7 +80,7 @@ export const admin = {
   fees: {
     get: makeFunctionReference<"query", Record<string, never>, any>("admin/fees:get"),
     setCommission: makeFunctionReference<"mutation", { "commissionBps": number | null; "reason": string }, any>("admin/fees:setCommission"),
-    setRules: makeFunctionReference<"mutation", { "farmerResponseHours"?: number; "unconfirmedAfterHours"?: number; "reason": string }, any>("admin/fees:setRules"),
+    setRules: makeFunctionReference<"mutation", { "farmerResponseHours"?: number; "unconfirmedAfterHours"?: number; "pickupHoldDays"?: number; "disputeReplyHours"?: number; "reason": string }, any>("admin/fees:setRules"),
   },
   ledger: {
     entries: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("admin/ledger:entries"),
@@ -102,6 +102,7 @@ export const admin = {
     addNote: makeFunctionReference<"mutation", { "note": string; "orderId": Id<"orders"> }, any>("admin/orders:addNote"),
     cancel: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string }, any>("admin/orders:cancel"),
     extendDeadline: makeFunctionReference<"mutation", { "hours": number; "orderId": Id<"orders">; "reason": string }, any>("admin/orders:extendDeadline"),
+    findByNumber: makeFunctionReference<"query", { "number": string }, any>("admin/orders:findByNumber"),
     get: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("admin/orders:get"),
     list: makeFunctionReference<"query", { "farmId"?: Id<"farms">; "from"?: number; "fulfilment"?: "delivery" | "pickup"; "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "awaiting_payment" | "paid" | "accepted" | "preparing" | "ready_for_rider" | "out_for_delivery" | "with_rider" | "at_pickup_point" | "delivered" | "collected" | "completed" | "declined" | "expired" | "cancelled" | "disputed"; "to"?: number }, any>("admin/orders:list"),
     reassignRider: makeFunctionReference<"mutation", { "collectAt"?: number; "orderId": Id<"orders">; "reason": string; "riderId": Id<"riders"> }, any>("admin/orders:reassignRider"),
@@ -123,8 +124,13 @@ export const admin = {
     setAppStatus: makeFunctionReference<"mutation", { "minAppVersion"?: string; "latestAppVersion"?: string; "androidStoreUrl"?: string; "iosStoreUrl"?: string; "maintenanceActive"?: boolean; "maintenanceMessage"?: string; "maintenanceUntil"?: number; "reason": string }, any>("admin/platform:setAppStatus"),
   },
   riders: {
-    create: makeFunctionReference<"mutation", { "name": string; "phone": string; "reason": string; "serviceAreaIds": Array<Id<"serviceAreas">> }, any>("admin/riders:create"),
+    banks: makeFunctionReference<"query", Record<string, never>, any>("admin/riders:banks"),
+    create: makeFunctionReference<"mutation", { "name": string; "phone": string; "reason": string; "serviceAreaIds": Array<Id<"serviceAreas">>; "pendingReview"?: boolean }, any>("admin/riders:create"),
+    get: makeFunctionReference<"query", { "riderId": Id<"riders"> }, any>("admin/riders:get"),
     list: makeFunctionReference<"query", { "dayStart": number }, any>("admin/riders:list"),
+    pendingCount: makeFunctionReference<"query", Record<string, never>, any>("admin/riders:pendingCount"),
+    review: makeFunctionReference<"mutation", { "riderId": Id<"riders">; "approve": boolean; "note": string }, any>("admin/riders:review"),
+    saveProfile: makeFunctionReference<"mutation", { "riderId": Id<"riders">; "photoStorageId"?: Id<"_storage">; "homeAddress"?: string; "idType"?: "nin" | "drivers_licence" | "voters_card" | "passport"; "idNumber"?: string; "idPhotoStorageId"?: Id<"_storage">; "vehicleType"?: "motorbike" | "tricycle" | "car" | "van" | "bicycle"; "plateNumber"?: string; "guarantor"?: { "name": string; "phone": string; "address": string; "relationship": string }; "bankCode"?: string; "accountNumber"?: string; "accountName"?: string; "reason": string }, any>("admin/riders:saveProfile"),
     setActive: makeFunctionReference<"mutation", { "active": boolean; "reason": string; "riderId": Id<"riders"> }, any>("admin/riders:setActive"),
     update: makeFunctionReference<"mutation", { "name"?: string; "phone"?: string; "reason": string; "riderId": Id<"riders">; "serviceAreaIds"?: Array<Id<"serviceAreas">> }, any>("admin/riders:update"),
   },
@@ -154,5 +160,8 @@ export const admin = {
     messages: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "ticketId": Id<"supportTickets"> }, any>("admin/support:messages"),
     reply: makeFunctionReference<"mutation", { "body": string; "photoIds": Array<Id<"_storage">>; "ticketId": Id<"supportTickets"> }, any>("admin/support:reply"),
     resolve: makeFunctionReference<"mutation", { "reason": string; "ticketId": Id<"supportTickets"> }, any>("admin/support:resolve"),
+  },
+  uploads: {
+    generateUploadUrl: makeFunctionReference<"mutation", Record<string, never>, any>("admin/uploads:generateUploadUrl"),
   },
 } as const;

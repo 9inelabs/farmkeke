@@ -83,6 +83,24 @@ export const list = query({
   },
 });
 
+/** A-50 search: an order by its number ("FK-20311", "20311" or "fk20311"). */
+export const findByNumber = query({
+  args: { number: v.string() },
+  handler: async (ctx, args) => {
+    await requireStaff(ctx, "orders.view");
+    const digits = args.number.replace(/\D/g, "");
+    if (digits.length === 0) return null;
+    for (const number of [args.number.trim().toUpperCase(), `FK-${digits}`]) {
+      const order = await ctx.db
+        .query("orders")
+        .withIndex("by_number", (q) => q.eq("number", number))
+        .first();
+      if (order !== null) return order._id;
+    }
+    return null;
+  },
+});
+
 /** A-51: everything about one order. */
 export const get = query({
   args: { orderId: v.id("orders") },

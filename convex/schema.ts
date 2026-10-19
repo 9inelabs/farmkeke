@@ -179,6 +179,21 @@ export const refundStatus = v.union(
   v.literal("failed"),
 );
 
+// A-55 rider profiles
+export const riderIdType = v.union(
+  v.literal("nin"),
+  v.literal("drivers_licence"),
+  v.literal("voters_card"),
+  v.literal("passport"),
+);
+export const riderVehicle = v.union(
+  v.literal("motorbike"),
+  v.literal("tricycle"),
+  v.literal("car"),
+  v.literal("van"),
+  v.literal("bicycle"),
+);
+
 export const payoutStatus = v.union(v.literal("pending"), v.literal("sent"), v.literal("failed"));
 
 export const disputeStatus = v.union(v.literal("open"), v.literal("farmer_responded"), v.literal("resolved"));
@@ -666,6 +681,27 @@ export default defineSchema({
     phone: v.string(),
     serviceAreaIds: v.array(v.id("serviceAreas")),
     active: v.boolean(),
+    // A-55 rider profile, added by staff and reviewed before the rider can
+    // be dispatched. Riders added before profiles existed have no
+    // reviewStatus and count as approved.
+    photoStorageId: v.optional(v.id("_storage")),
+    homeAddress: v.optional(v.string()),
+    idType: v.optional(riderIdType),
+    idNumber: v.optional(v.string()),
+    idPhotoStorageId: v.optional(v.id("_storage")),
+    vehicleType: v.optional(riderVehicle),
+    plateNumber: v.optional(v.string()),
+    guarantor: v.optional(
+      v.object({ name: v.string(), phone: v.string(), address: v.string(), relationship: v.string() }),
+    ),
+    bankCode: v.optional(v.string()),
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
+    accountName: v.optional(v.string()),
+    reviewStatus: v.optional(v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"))),
+    reviewNote: v.optional(v.string()),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
   }).index("by_active", ["active"]),
 
   // A-60 escrow ledger: one row per money movement on an order.

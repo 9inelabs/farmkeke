@@ -196,6 +196,24 @@
             },
             "optional": false
           },
+          "latitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "longitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "radiusKm": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
           "reason": {
             "fieldType": {
               "type": "string"
@@ -362,6 +380,18 @@
             },
             "optional": false
           },
+          "name": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "lga": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
           "deliveryFeeKobo": {
             "fieldType": {
               "type": "number"
@@ -371,6 +401,24 @@
           "active": {
             "fieldType": {
               "type": "boolean"
+            },
+            "optional": true
+          },
+          "latitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "longitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "radiusKm": {
+            "fieldType": {
+              "type": "number"
             },
             "optional": true
           },
@@ -2153,6 +2201,18 @@
             },
             "optional": true
           },
+          "pickupHoldDays": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "disputeReplyHours": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
           "reason": {
             "fieldType": {
               "type": "string"
@@ -2745,6 +2805,25 @@
             "optional": false
           },
           "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/orders.js:findByNumber",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "number": {
             "fieldType": {
               "type": "string"
             },
@@ -3440,6 +3519,18 @@
       "returns": null
     },
     {
+      "identifier": "admin/riders.js:banks",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/riders.js:create",
       "functionType": "Mutation",
       "visibility": {
@@ -3475,6 +3566,32 @@
               }
             },
             "optional": false
+          },
+          "pendingReview": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/riders.js:get",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "riderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "riders"
+            },
+            "optional": false
           }
         }
       },
@@ -3492,6 +3609,210 @@
           "dayStart": {
             "fieldType": {
               "type": "number"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/riders.js:pendingCount",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/riders.js:review",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "riderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "riders"
+            },
+            "optional": false
+          },
+          "approve": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": false
+          },
+          "note": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/riders.js:saveProfile",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "riderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "riders"
+            },
+            "optional": false
+          },
+          "photoStorageId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "_storage"
+            },
+            "optional": true
+          },
+          "homeAddress": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "idType": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "nin"
+                },
+                {
+                  "type": "literal",
+                  "value": "drivers_licence"
+                },
+                {
+                  "type": "literal",
+                  "value": "voters_card"
+                },
+                {
+                  "type": "literal",
+                  "value": "passport"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "idNumber": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "idPhotoStorageId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "_storage"
+            },
+            "optional": true
+          },
+          "vehicleType": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "motorbike"
+                },
+                {
+                  "type": "literal",
+                  "value": "tricycle"
+                },
+                {
+                  "type": "literal",
+                  "value": "car"
+                },
+                {
+                  "type": "literal",
+                  "value": "van"
+                },
+                {
+                  "type": "literal",
+                  "value": "bicycle"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "plateNumber": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "guarantor": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "name": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": false
+                },
+                "phone": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": false
+                },
+                "address": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": false
+                },
+                "relationship": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": false
+                }
+              }
+            },
+            "optional": true
+          },
+          "bankCode": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "accountNumber": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "accountName": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
             },
             "optional": false
           }
@@ -4393,6 +4714,18 @@
             "optional": false
           }
         }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/uploads.js:generateUploadUrl",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
       },
       "returns": null
     }

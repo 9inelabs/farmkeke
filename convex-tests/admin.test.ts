@@ -434,3 +434,87 @@ test("farmer and product queues, farm search, and home banners", async () => {
   });
   await expect(as(t, fin).mutation(api.admin.banners.remove, { bannerId: second, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
 });
+
+// ---------------------------------------------------------------------------
+// Phase 3: areas, rules, rider profiles and review, order search
+
+test("areas, order rules, rider profiles and review, and finding orders", async () => {
+  mailbox();
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const ops = as(t, s.ops);
+
+  // Service areas: rename, map position (must be in Nigeria), no duplicates
+  const areaId = await ops.mutation(api.admin.areas.createServiceArea, {
+    state: "Imo", name: "New Owerri", lga: "Owerri North", deliveryFeeKobo: 100000, latitude: 5.48, longitude: 7.03, radiusKm: 5, reason: "Launch",
+  });
+  await ops.mutation(api.admin.areas.createServiceArea, { state: "Imo", name: "Ikenegbu", lga: "Owerri Municipal", deliveryFeeKobo: 80000, reason: "Launch" });
+  await expect(ops.mutation(api.admin.areas.updateServiceArea, { areaId, name: "Ikenegbu", reason: "x" })).rejects.toThrow(/already exists/);
+  await expect(ops.mutation(api.admin.areas.updateServiceArea, { areaId, latitude: 51.5, reason: "x" })).rejects.toThrow(/Nigeria/);
+  await ops.mutation(api.admin.areas.updateServiceArea, { areaId, name: "Owerri North", deliveryFeeKobo: 120000, reason: "Fuel" });
+  const areas = await ops.query(api.admin.areas.listAllServiceAreas, {});
+  expect(areas.find((a: any) => a._id === areaId)).toMatchObject({ name: "Owerri North", deliveryFeeKobo: 120000, radiusKm: 5 });
+
+  // Order rules, including the two new ones
+  await ops.mutation(api.admin.fees.setRules, { pickupHoldDays: 4, disputeReplyHours: 8, reason: "Owner's decision" });
+  await expect(ops.mutation(api.admin.fees.setRules, { pickupHoldDays: 30, reason: "x" })).rejects.toThrow(/INVALID_RULE/);
+  const rules = await ops.query(api.admin.fees.get, {});
+  expect(rules).toMatchObject({ pickupHoldDays: 4, disputeReplyHours: 8, farmerResponseHours: 24 });
+  // The commission needs commission.manage, which Operations doesn't have
+  await expect(ops.mutation(api.admin.fees.setCommission, { commissionBps: 500, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+
+  // Rider: added for review, can't be switched on or approved until complete
+  const riderId = await ops.mutation(api.admin.riders.create, {
+    name: "Emeka Eze", phone: "08035550000", serviceAreaIds: [areaId], pendingReview: true, reason: "New rider",
+  });
+  expect(await ops.query(api.admin.riders.pendingCount, {})).toBe(1);
+  await expect(ops.mutation(api.admin.riders.setActive, { riderId, active: true, reason: "x" })).rejects.toThrow(/RIDER_NOT_APPROVED/);
+  await expect(ops.mutation(api.admin.riders.review, { riderId, approve: true, note: "" })).rejects.toThrow(/Still missing/);
+  const photo = await t.run(async (ctx) => ctx.storage.store(new Blob(["x"], { type: "image/png" })));
+  await expect(
+    ops.mutation(api.admin.riders.saveProfile, { riderId, bankCode: "058", accountNumber: "123", accountName: "Emeka", reason: "x" }),
+  ).rejects.toThrow(/INVALID_ACCOUNT_NUMBER/);
+  await ops.mutation(api.admin.riders.saveProfile, {
+    riderId,
+    photoStorageId: photo,
+    idType: "nin",
+    idNumber: "12345678901",
+    idPhotoStorageId: photo,
+    vehicleType: "motorbike",
+    plateNumber: "abc-123-xy",
+    guarantor: { name: "Ngozi Eze", phone: "08031112222", address: "Owerri", relationship: "Aunt" },
+    bankCode: "058",
+    accountNumber: "0123456789",
+    accountName: "EMEKA EZE",
+    reason: "Profile",
+  });
+  let rider = await ops.query(api.admin.riders.get, { riderId });
+  expect(rider).toMatchObject({ missing: [], plateNumber: "ABC-123-XY", bankName: "Guaranty Trust Bank (GTBank)", reviewStatus: "pending", active: false });
+  await ops.mutation(api.admin.riders.review, { riderId, approve: true, note: "Checked in person" });
+  rider = await ops.query(api.admin.riders.get, { riderId });
+  expect(rider).toMatchObject({ reviewStatus: "approved", active: true, reviewedBy: "Obi Ops" });
+  expect(await ops.query(api.admin.riders.pendingCount, {})).toBe(0);
+  // Riders added the old way are approved straight away
+  const quick = await ops.mutation(api.admin.riders.create, { name: "Tunde", phone: "08035550001", serviceAreaIds: [], reason: "x" });
+  expect((await ops.query(api.admin.riders.get, { riderId: quick }))!.reviewStatus).toBe("approved");
+
+  // Finding an order by number, with or without the prefix
+  await expect(ops.query(api.admin.orders.findByNumber, { number: "FK-99999" })).resolves.toBeNull();
+  const orderId = await t.run(async (ctx) => {
+    const contact = { name: "Ada Obi", phone: "+2348031112222" };
+    const money = { itemsTotalKobo: 100000, deliveryFeeKobo: 0, totalKobo: 100000 };
+    const appId = await ctx.db.insert("farmerApplications", { userId: s.applicant.id, status: "approved", categoryIds: [], seasons: [], collectionHours: [] } as any);
+    const farmId = await ctx.db.insert("farms", {
+      userId: s.applicant.id, applicationId: appId, name: "Ada Greens", phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
+      farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: [], leadTimeHours: 4,
+      openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
+      status: "active", trusted: false,
+    } as any);
+    const checkoutId = await ctx.db.insert("checkouts", { userId: s.shopper.id, reference: "CK-1", status: "paid", fulfilment: "pickup", contact, ...money });
+    return await ctx.db.insert("orders", {
+      number: "FK-10234", checkoutId, userId: s.shopper.id, farmId, status: "paid", escrow: "held", fulfilment: "pickup", items: [], contact, ...money,
+    });
+  });
+  expect(await ops.query(api.admin.orders.findByNumber, { number: "10234" })).toBe(orderId);
+  expect(await ops.query(api.admin.orders.findByNumber, { number: "fk-10234" })).toBe(orderId);
+});

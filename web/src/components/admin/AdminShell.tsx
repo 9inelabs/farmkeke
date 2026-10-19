@@ -115,11 +115,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
     | { submitted: number }
     | undefined;
   const review = useQuery(admin.listings.queueCount, me.can("listings.view") ? {} : "skip") as number | undefined;
+  const ridersPending = useQuery(admin.riders.pendingCount, me.can("riders.view") ? {} : "skip") as number | undefined;
   const counts: Record<Badge, number> = {
     alerts: alerts ?? 0,
     applications: applications ?? 0,
     farmerApplications: farmerApps?.submitted ?? 0,
     productReview: review ?? 0,
+    ridersPending: ridersPending ?? 0,
   };
   const groups = visibleNav(me.can);
   const active = activeHref(pathname, groups);

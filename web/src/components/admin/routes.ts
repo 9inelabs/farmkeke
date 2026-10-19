@@ -25,6 +25,14 @@ export const adminRoutes = {
   categories: "/admin/catalog",
   units: "/admin/catalog/units",
   banners: "/admin/banners",
+  areas: "/admin/areas",
+  pickupPoints: "/admin/pickup-points",
+  rules: "/admin/rules",
+  riders: "/admin/riders",
+  rider: (id: string) => `/admin/riders/${id}`,
+  dispatch: "/admin/dispatch",
+  orders: "/admin/orders",
+  order: (id: string) => `/admin/orders/${id}`,
 } as const;
 
 /** Only same-portal paths are followed after sign-in. */

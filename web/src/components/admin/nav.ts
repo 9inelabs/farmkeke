@@ -7,8 +7,14 @@ import {
   FileCheck2,
   GalleryHorizontalEnd,
   LayoutDashboard,
+  Bike,
   LayoutGrid,
+  MapPin,
+  Map as MapIcon,
   Package,
+  Receipt,
+  SlidersHorizontal,
+  Truck,
   Ruler,
   ShieldCheck,
   Tractor,
@@ -17,7 +23,7 @@ import {
 } from "lucide-react";
 import { adminRoutes } from "./routes";
 
-export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview";
+export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview" | "ridersPending";
 export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
 
@@ -39,6 +45,17 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.categories, label: "Categories", icon: LayoutGrid, any: ["catalog.manage", "listings.view"] },
       { href: adminRoutes.units, label: "Units", icon: Ruler, any: ["catalog.manage", "listings.view"] },
       { href: adminRoutes.banners, label: "Home banners", icon: GalleryHorizontalEnd, any: ["content.manage"] },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: adminRoutes.orders, label: "Orders", icon: Receipt, any: ["orders.view"] },
+      { href: adminRoutes.dispatch, label: "Dispatch", icon: Truck, any: ["dispatch.manage", "orders.view"] },
+      { href: adminRoutes.riders, label: "Riders", icon: Bike, any: ["riders.view"], badge: "ridersPending" },
+      { href: adminRoutes.areas, label: "Areas and delivery fees", icon: MapIcon, any: ["areas.manage", "fees.manage", "orders.view"] },
+      { href: adminRoutes.pickupPoints, label: "Pickup points", icon: MapPin, any: ["areas.manage", "orders.view"] },
+      { href: adminRoutes.rules, label: "Fees and rules", icon: SlidersHorizontal, any: ["fees.manage", "commission.manage", "money.view"] },
     ],
   },
   {

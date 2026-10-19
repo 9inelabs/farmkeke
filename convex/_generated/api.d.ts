@@ -31,6 +31,7 @@ import type * as admin_riders from "../admin/riders.js";
 import type * as admin_setup from "../admin/setup.js";
 import type * as admin_staff from "../admin/staff.js";
 import type * as admin_support from "../admin/support.js";
+import type * as admin_uploads from "../admin/uploads.js";
 import type * as appConfig from "../appConfig.js";
 import type * as areas from "../areas.js";
 import type * as auth from "../auth.js";
@@ -122,6 +123,7 @@ declare const fullApi: ApiFromModules<{
   "admin/setup": typeof admin_setup;
   "admin/staff": typeof admin_staff;
   "admin/support": typeof admin_support;
+  "admin/uploads": typeof admin_uploads;
   appConfig: typeof appConfig;
   areas: typeof areas;
   auth: typeof auth;
