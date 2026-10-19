@@ -92,6 +92,7 @@ export const admin = {
     release: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string }, any>("admin/ledger:release"),
     releaseQueue: makeFunctionReference<"query", Record<string, never>, any>("admin/ledger:releaseQueue"),
     setHold: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "hold": boolean; "reason": string }, any>("admin/ledger:setHold"),
+    summary: makeFunctionReference<"query", Record<string, never>, any>("admin/ledger:summary"),
   },
   listings: {
     approve: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string }, any>("admin/listings:approve"),

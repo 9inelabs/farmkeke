@@ -562,3 +562,46 @@ test("customers: find, staff can't be blocked, sign out everywhere, reset link; 
   expect(await as(t, sue).query(api.admin.disputes.openCount, {})).toBe(0);
   void mail;
 });
+
+// ---------------------------------------------------------------------------
+// Phase 5: money summary
+
+test("money summary: held money, holds, and what needs a person; Operations can see but not move money", async () => {
+  mailbox();
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  await t.run(async (ctx) => {
+    const contact = { name: "Ada Obi", phone: "+2348031112222" };
+    const appId = await ctx.db.insert("farmerApplications", { userId: s.applicant.id, status: "approved", categoryIds: [], seasons: [], collectionHours: [] } as any);
+    const farmId = await ctx.db.insert("farms", {
+      userId: s.applicant.id, applicationId: appId, name: "Ada Greens", phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
+      farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: [], leadTimeHours: 4,
+      openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
+      status: "active", trusted: false,
+    } as any);
+    const order = async (n: string, totalKobo: number, extra: Record<string, unknown>) => {
+      const money = { itemsTotalKobo: totalKobo, deliveryFeeKobo: 0, totalKobo };
+      const checkoutId = await ctx.db.insert("checkouts", { userId: s.shopper.id, reference: `CK-${n}`, status: "paid", fulfilment: "pickup", contact, ...money });
+      await ctx.db.insert("orders", { number: `FK-${n}`, checkoutId, userId: s.shopper.id, farmId, fulfilment: "pickup", items: [], contact, ...money, ...extra } as any);
+    };
+    await order("1", 500000, { status: "paid", escrow: "held" });
+    await order("2", 300000, { status: "completed", escrow: "held", escrowHold: true, holdReason: "Checking" });
+    await order("3", 200000, { status: "delivered", escrow: "held", unconfirmedFlaggedAt: Date.now() });
+    await order("4", 900000, { status: "completed", escrow: "released" });
+  });
+  const ops = as(t, s.ops);
+  expect(await ops.query(api.admin.ledger.summary, {})).toMatchObject({
+    heldKobo: 1000000,
+    heldOrders: 3,
+    onHold: 1,
+    toRelease: 1,
+    unconfirmed: 1,
+    failedPayouts: 0,
+    failedRefunds: 0,
+  });
+  const queue = await ops.query(api.admin.ledger.releaseQueue, {});
+  expect(queue.confirmed.map((r: any) => r.number)).toEqual(["FK-2"]);
+  expect(queue.unconfirmed.map((r: any) => r.number)).toEqual(["FK-3"]);
+  // Operations can see money but not move it
+  await expect(ops.mutation(api.admin.ledger.setHold, { orderId: queue.unconfirmed[0].orderId, hold: true, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+});

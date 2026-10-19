@@ -40,6 +40,12 @@ export const adminRoutes = {
   dispute: (id: string) => `/admin/disputes/${id}`,
   support: "/admin/support",
   ticket: (id: string) => `/admin/support/${id}`,
+  money: "/admin/money",
+  escrow: "/admin/money/escrow",
+  payouts: "/admin/money/payouts",
+  payout: (id: string) => `/admin/money/payouts/${id}`,
+  refunds: "/admin/money/refunds",
+  reconciliation: "/admin/money/reconciliation",
 } as const;
 
 /** Only same-portal paths are followed after sign-in. */

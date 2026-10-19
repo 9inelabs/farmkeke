@@ -7,7 +7,12 @@ import {
   FileCheck2,
   GalleryHorizontalEnd,
   LayoutDashboard,
+  ArrowLeftRight,
+  Banknote,
   Bike,
+  RotateCcw,
+  Scale,
+  Wallet,
   Headphones,
   MessageSquareWarning,
   Users,
@@ -26,7 +31,15 @@ import {
 } from "lucide-react";
 import { adminRoutes } from "./routes";
 
-export type Badge = "applications" | "alerts" | "farmerApplications" | "productReview" | "ridersPending" | "disputes" | "support";
+export type Badge =
+  | "applications"
+  | "alerts"
+  | "farmerApplications"
+  | "productReview"
+  | "ridersPending"
+  | "disputes"
+  | "support"
+  | "moneyProblems";
 export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
 
@@ -67,6 +80,16 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.customers, label: "Customers", icon: Users, any: ["customers.view"] },
       { href: adminRoutes.disputes, label: "Problem reports", icon: MessageSquareWarning, any: ["disputes.view"], badge: "disputes" },
       { href: adminRoutes.support, label: "Support inbox", icon: Headphones, any: ["support.view"], badge: "support" },
+    ],
+  },
+  {
+    label: "Money",
+    items: [
+      { href: adminRoutes.money, label: "Release queue", icon: Wallet, any: ["money.view"] },
+      { href: adminRoutes.escrow, label: "Escrow ledger", icon: ArrowLeftRight, any: ["money.view"] },
+      { href: adminRoutes.payouts, label: "Payouts to farms", icon: Banknote, any: ["money.view"] },
+      { href: adminRoutes.refunds, label: "Refunds", icon: RotateCcw, any: ["money.view"] },
+      { href: adminRoutes.reconciliation, label: "Reconciliation", icon: Scale, any: ["money.view"], badge: "moneyProblems" },
     ],
   },
   {

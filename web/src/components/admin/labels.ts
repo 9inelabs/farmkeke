@@ -67,6 +67,35 @@ const ACTIONS: Record<string, string> = {
   "dispute.resolve": "Problem report decided",
   "support.assign": "Support message assigned",
   "support.resolve": "Support message resolved",
+  "ledger.release": "Money released to the farm",
+  "ledger.hold": "Money put on hold",
+  "ledger.unhold": "Hold lifted",
+  "payments.retry_payout": "Payout sent again",
+  "payments.retry_refund": "Refund sent again",
+  "payments.mismatch_refund": "Mismatched payment refunded",
+  "payments.mismatch_dismiss": "Mismatched payment dismissed",
+  "payments.resolve_unmatched": "Unmatched payment cleared",
+};
+
+export const LEDGER_KIND: Record<string, string> = {
+  hold: "Paid and held",
+  release: "Released to the farm",
+  commission: "Farmkeke commission",
+  delivery_fee: "Delivery fee (Farmkeke)",
+  refund: "Refund to the shopper",
+  payout: "Paid out to the farm's bank",
+};
+export const PAYOUT_STATUS: Record<string, [string, string]> = {
+  pending: ["b-pend", "Waiting to send"],
+  sent: ["b-ok", "Sent"],
+  failed: ["b-err", "Failed"],
+};
+export const REFUND_STATUS: Record<string, [string, string]> = {
+  queued: ["b-pend", "Queued"],
+  sending: ["b-pend", "Sending"],
+  processing: ["b-held", "With the bank"],
+  processed: ["b-ok", "Refunded"],
+  failed: ["b-err", "Failed"],
 };
 
 export const DISPUTE_STATUS: Record<string, [string, string]> = {
@@ -247,4 +276,6 @@ export const TARGETS: Record<string, string> = {
   supportTickets: "Support message",
   farmerDocuments: "Farm document",
   homeBanners: "Home banner",
+  paymentAttempts: "Payment",
+  unmatchedPaymentEvents: "Paystack event",
 };

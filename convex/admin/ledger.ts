@@ -169,3 +169,29 @@ export const setHold = mutation({
     }
   },
 });
+
+/** A-60 header: money Farmkeke holds now, and what needs a person (first 1,000 held orders). */
+export const summary = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, "money.view");
+    const held = await ctx.db
+      .query("orders")
+      .withIndex("by_escrow", (q) => q.eq("escrow", "held"))
+      .take(1000);
+    const failedPayouts = await ctx.db.query("payouts").withIndex("by_status", (q) => q.eq("status", "failed")).take(100);
+    const failedRefunds = await ctx.db.query("refunds").withIndex("by_status", (q) => q.eq("status", "failed")).take(100);
+    const pendingPayouts = await ctx.db.query("payouts").withIndex("by_status", (q) => q.eq("status", "pending")).take(500);
+    return {
+      heldKobo: held.reduce((sum, o) => sum + o.totalKobo, 0),
+      heldOrders: held.length,
+      onHold: held.filter((o) => o.escrowHold === true).length,
+      toRelease: held.filter((o) => o.status === "completed").length,
+      unconfirmed: held.filter((o) => (o.status === "delivered" || o.status === "collected") && o.unconfirmedFlaggedAt !== undefined).length,
+      pendingPayoutKobo: pendingPayouts.reduce((sum, p) => sum + p.amountKobo, 0),
+      failedPayouts: failedPayouts.length,
+      failedRefunds: failedRefunds.length,
+      capped: held.length === 1000,
+    };
+  },
+});

@@ -118,6 +118,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const ridersPending = useQuery(admin.riders.pendingCount, me.can("riders.view") ? {} : "skip") as number | undefined;
   const disputes = useQuery(admin.disputes.openCount, me.can("disputes.view") ? {} : "skip") as number | undefined;
   const support = useQuery(admin.support.openCount, me.can("support.view") ? {} : "skip") as number | undefined;
+  const money = useQuery(admin.ledger.summary, me.can("money.view") ? {} : "skip") as { failedPayouts: number; failedRefunds: number } | undefined;
   const counts: Record<Badge, number> = {
     alerts: alerts ?? 0,
     applications: applications ?? 0,
@@ -126,6 +127,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     ridersPending: ridersPending ?? 0,
     disputes: disputes ?? 0,
     support: support ?? 0,
+    moneyProblems: money ? money.failedPayouts + money.failedRefunds : 0,
   };
   const groups = visibleNav(me.can);
   const active = activeHref(pathname, groups);

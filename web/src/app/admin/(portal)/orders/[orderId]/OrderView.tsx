@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useStaff } from "@/components/admin/context";
 import { FormError } from "@/components/admin/errors";
-import { ESCROW, eventLabel, ORDER_STATUS } from "@/components/admin/labels";
+import { ESCROW, eventLabel, LEDGER_KIND, ORDER_STATUS } from "@/components/admin/labels";
+import { MoneyActions } from "@/components/admin/MoneyActions";
 import { adminRoutes } from "@/components/admin/routes";
 import { Facts, Notice, PageHeader, Panel, ReasonDialog, StatusBadge, TableSkeleton } from "@/components/admin/ui";
 import { isoDayLabel } from "@/components/orders/format";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { SelectField, TextArea } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
 import type { Id } from "@/convex/api";
+import type { LedgerEntry } from "@/convex/returns/adminMoney";
 import type { OrderDetail, RiderRow } from "@/convex/returns/adminOps";
 import { clock, dateTime, displayPhone, naira } from "@/lib/format";
 
@@ -30,6 +32,7 @@ export function OrderView({ orderId }: { orderId: string }) {
   const canManage = me.can("orders.manage");
   const [dayStart] = useState(() => new Date().setHours(0, 0, 0, 0));
   const riders = useQuery(admin.riders.list, canManage && me.can("riders.view") ? { dayStart } : "skip") as RiderRow[] | undefined;
+  const ledger = useQuery(admin.ledger.entries, me.can("money.view") ? { orderId: id } : "skip") as LedgerEntry[] | undefined;
   const addNote = useMutation(admin.orders.addNote);
   const cancel = useMutation(admin.orders.cancel);
   const extend = useMutation(admin.orders.extendDeadline);
@@ -165,6 +168,30 @@ export function OrderView({ orderId }: { orderId: string }) {
                 { label: "Paid to the farm", value: o.releasedAt ? dateTime(o.releasedAt) : "Not yet" },
               ]}
             />
+            {ledger && ledger.length > 0 ? (
+              <ul className="m-0 mt-4 flex list-none flex-col gap-1.5 border-t border-line-soft p-0 pt-4 text-sm">
+                {ledger.map((e) => (
+                  <li key={e._id} className="flex flex-wrap justify-between gap-2">
+                    <span>
+                      {LEDGER_KIND[e.kind] ?? e.kind}
+                      {e.status !== "done" ? ` (${e.status})` : ""}
+                      {e.simulated ? " · test" : ""}
+                    </span>
+                    <span className="text-muted">
+                      {naira(e.amountKobo)} · {dateTime(e.at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {o.escrow === "held" ? (
+              <div className="mt-4">
+                <MoneyActions
+                  order={{ orderId: o._id, number: o.number, status: o.status, escrow: o.escrow, escrowHold: o.escrowHold, amountKobo: o.totalKobo }}
+                  onDone={setDone}
+                />
+              </div>
+            ) : null}
             {o.refunds.length > 0 ? (
               <ul className="m-0 mt-4 list-none p-0">
                 {o.refunds.map((r) => (

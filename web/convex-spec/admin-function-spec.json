@@ -2492,6 +2492,18 @@
       "returns": null
     },
     {
+      "identifier": "admin/ledger.js:summary",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/listings.js:approve",
       "functionType": "Mutation",
       "visibility": {
