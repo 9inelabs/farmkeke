@@ -47,7 +47,7 @@ const FLOW: Array<{ icon: LucideIcon; title: string; body: string; box: string; 
   {
     icon: Package,
     title: "You receive it",
-    body: "Check every item at your door or the pickup point.",
+    body: "Check every item at your door or at the farm.",
     box: "bg-surface",
     bodyColor: "text-muted",
   },

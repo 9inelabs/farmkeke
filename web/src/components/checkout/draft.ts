@@ -2,7 +2,8 @@
 
 // What the shopper has filled in across the checkout steps (W-21 to W-25),
 // kept in this browser so Back / Edit / reloads keep it. Sent to
-// checkout.place on W-25.
+// checkout.place on W-25. Pickup is at each farm and delivery times are agreed
+// with the rider, so there's no pickup point or time slot to remember.
 import { createLocalStore } from "@/lib/local-store";
 
 export type CheckoutDraft = {
@@ -16,20 +17,16 @@ export type CheckoutDraft = {
     latitude?: number;
     longitude?: number;
   };
-  window: { day: string; from: string; to: string } | null;
-  pickupPointId: string | null;
-  /** The last checkout placed from this draft and still unpaid; sent as `replaces`. */
+  /** The last pickup checkout placed from this draft and still unpaid; sent as `replaces`. */
   checkoutId: string | null;
-  /** Where the last paid checkout goes, for W-30's "What happens next". */
-  placed: { checkoutId: string; street?: string; pointName?: string } | null;
+  /** Where the last placed checkout goes, for W-30's "What happens next". */
+  placed: { checkoutId: string; street?: string } | null;
 };
 
 const EMPTY: CheckoutDraft = {
   contact: { name: "", phone: "", email: "" },
   fulfilment: null,
   address: { street: "", landmark: "", note: "" },
-  window: null,
-  pickupPointId: null,
   checkoutId: null,
   placed: null,
 };
@@ -40,9 +37,8 @@ export const draft = {
   get: store.get,
   use: store.use,
   patch: (p: Partial<CheckoutDraft>) => store.set((d) => ({ ...d, ...p })),
-  /** After payment: keep contact and address for next time, forget the rest. */
-  finish: (placed: CheckoutDraft["placed"]) =>
-    store.set((d) => ({ ...d, window: null, checkoutId: null, placed })),
+  /** After placing (delivery) or paying (pickup): keep contact and address for next time, forget the rest. */
+  finish: (placed: CheckoutDraft["placed"]) => store.set((d) => ({ ...d, checkoutId: null, placed })),
 };
 
 /** Nigerian mobile number as 10 local digits, or null if it can't be one. */

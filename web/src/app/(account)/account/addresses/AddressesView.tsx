@@ -190,7 +190,7 @@ function Addresses() {
           })}
         </ul>
       )}
-      <p className="sm m-0">Pickup points aren&apos;t saved here. You choose one at checkout.</p>
+      <p className="sm m-0">Pickup orders are collected at the farm, so they don&apos;t need an address.</p>
 
       {editing ? (
         <AddressModal

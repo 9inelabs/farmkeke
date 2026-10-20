@@ -29,6 +29,8 @@ export const routes = {
   checkoutDetails: "/checkout/details",
   checkoutReview: "/checkout/review",
   pay: (checkoutId: string) => `/checkout/pay/${checkoutId}`,
+  /** A delivery bill's pay link: works on any device for whoever has it */
+  payBill: (token: string) => `/pay/${token}`,
   orderPlaced: (checkoutId: string) => `/order-placed/${checkoutId}`,
 
   // Sign in and accounts (W-40 to W-49)

@@ -15,11 +15,10 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Dialog";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
-import type { LocationMatch, PickupPointLite } from "@/convex/returns/area";
+import type { LocationMatch } from "@/convex/returns/area";
 import type { ServiceArea } from "@/convex/returns/common";
 import { area, areaPicker, type ChosenArea } from "@/lib/area";
 import { errorCode } from "@/lib/auth";
-import { naira, plural } from "@/lib/format";
 
 type View = "choose" | "primer" | "outside";
 
@@ -96,7 +95,6 @@ export function AreaPicker() {
   const states = useQuery(api.areas.listServedStates, open ? {} : "skip") as string[] | undefined;
   const state = stateSel ?? chosen?.state ?? states?.[0];
   const areas = useQuery(api.areas.listServiceAreas, open && state ? { state } : "skip") as ServiceArea[] | undefined;
-  const points = useQuery(api.areas.listPickupPoints, open && state ? { state } : "skip") as PickupPointLite[] | undefined;
 
   const close = () => {
     areaPicker.close();
@@ -180,7 +178,7 @@ export function AreaPicker() {
           Find farms near you
         </p>
         <p className="mt-2 text-[15px] leading-[23px] text-muted">
-          Your browser will ask to share your location. We use it to set your delivery area and show the closest farms and pickup points.
+          Your browser will ask to share your location. We use it to set your delivery area and show the closest farms.
         </p>
         <ul className="m-0 mt-5 flex list-none flex-col gap-3 p-0">
           {["Used only to choose your area. We don't track you.", "You can change your area at any time."].map((t) => (
@@ -281,7 +279,6 @@ export function AreaPicker() {
         <div role="radiogroup" aria-label="Areas" className="-mx-1 flex max-h-[210px] flex-col gap-1 overflow-y-auto px-1 py-0.5">
           {matches.map((a) => {
             const on = a._id === pick;
-            const pts = (points ?? []).filter((p) => p.active && p.lga === a.lga).length;
             return (
               <button
                 key={a._id}
@@ -301,10 +298,7 @@ export function AreaPicker() {
                 <MapPin aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={1.75} />
                 <span className="flex-1">
                   <span className="block text-sm font-semibold">{a.name}</span>
-                  <span className="block text-xs text-muted-2">
-                    Delivery from {naira(a.deliveryFeeKobo)}
-                    {points ? ` · ${plural(pts, "pickup point")}` : ""}
-                  </span>
+                  <span className="block text-xs text-muted-2">{a.lga}</span>
                 </span>
                 {on ? <Check aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={2.25} /> : null}
               </button>

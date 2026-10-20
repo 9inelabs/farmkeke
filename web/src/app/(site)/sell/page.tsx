@@ -39,14 +39,14 @@ const WHY: Array<[LucideIcon, string, string]> = [
   [Users, "More buyers", "Reach households across your city, not just the people who visit your market stall."],
   [Tag, "Your prices", "You decide what to charge for every item and pack size. Change prices any time."],
   [ShieldCheck, "Guaranteed payment", "Buyers pay before you pack. The money is released once they confirm delivery."],
-  [Truck, "Delivery handled", "Our riders collect from your farm and deliver to the customer, or to a pickup point."],
+  [Truck, "Delivery handled", "Our riders collect from your farm and deliver to the customer. Pickup buyers collect from you with a code."],
 ];
 
 const FLOW: Array<[string, string]> = [
   ["Receive an order", "You get an alert by push notification and SMS. The buyer has already paid."],
   ["Accept within 24 hours", "If you don't accept in time, the buyer gets a full refund."],
   ["Pack the order", "Mark it as packed and a Farmkeke rider is sent to collect it."],
-  ["Rider delivers", "The buyer receives it at home, or collects it from a pickup point."],
+  ["Rider delivers", "The buyer receives it at home, or collects it from your farm."],
   ["Get paid", "Once the buyer confirms, the money goes to your bank account, minus the Farmkeke commission."],
 ];
 

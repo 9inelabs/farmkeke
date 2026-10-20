@@ -54,7 +54,7 @@ const FAQS = [
   },
   {
     q: "Can I pick up my order instead?",
-    a: "Yes. Choose pickup at checkout and collect your order from a Farmkeke pickup point using your pickup code.",
+    a: "Yes. Choose pickup at checkout and collect your order from the farm. When it's ready, we send you the farm's address and a 4-digit pickup code, and you have 3 days to collect.",
   },
   {
     q: "What if something is wrong with my order?",
@@ -70,7 +70,7 @@ const TRUST: Array<[LucideIcon, string, string]> = [
   [BadgeCheck, "Verified farmers", "Every farm checked by our team"],
   [ShieldCheck, "Protected payments", "Held until you confirm delivery"],
   [Truck, "Farmkeke riders", "Our own team delivers"],
-  [MapPin, "Pickup points", "Collect when it suits you"],
+  [MapPin, "Pickup at the farm", "Collect within 3 days, no fee"],
 ];
 
 const WHAT: Array<[LucideIcon, string, string]> = [
@@ -90,7 +90,7 @@ const WHAT: Array<[LucideIcon, string, string]> = [
 const SHOPPERS: Array<[LucideIcon, string, string]> = [
   [LayoutGrid, "Shop eight categories", "Vegetables, fruits, grains and tubers, poultry and eggs, meat and fish, and more."],
   [User, "Buy as a guest", "Check out with your name and phone number. Save an account later if you like."],
-  [Truck, "Delivery or pickup", "Our riders bring it to you, or collect it from a Farmkeke pickup point."],
+  [Truck, "Delivery or pickup", "Our riders bring it to you, or collect it from the farm yourself."],
   [Package, "Track every order", "See when the farm accepts, packs and sends out your order."],
   [MessageCircle, "Chat with the farmer", "Ask about your order and get answers straight from the farm."],
   [Star, "Rate and review", "Share how it went and help other shoppers choose good farms."],
@@ -99,7 +99,7 @@ const SHOPPERS: Array<[LucideIcon, string, string]> = [
 const STEPS: Array<[string, string]> = [
   ["Choose your produce", "Browse farms near you and add items to your cart."],
   ["Pay securely", "Pay with Paystack. Farmkeke holds the money safely."],
-  ["Receive your order", "At your door, or at a pickup point near you."],
+  ["Receive your order", "At your door, or collected from the farm."],
   ["Confirm and release", "Confirm it all arrived, and the farmer gets paid."],
 ];
 
@@ -223,7 +223,7 @@ export default function Landing() {
               </ul>
               <div className="mt-[18px] pt-4 shadow-[inset_0_1px_0_var(--color-line-soft)]">
                 <div className={cap}>Step 3</div>
-                <div className="mt-[3px] text-sm font-semibold">Delivered to your door, or collect at a pickup point</div>
+                <div className="mt-[3px] text-sm font-semibold">Delivered to your door, or collect at the farm</div>
               </div>
             </div>
           </div>

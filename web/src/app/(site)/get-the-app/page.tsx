@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const FEATURES: Array<[LucideIcon, string, string]> = [
   [Clock, "Instant order alerts", "Know the moment your order is accepted, packed and on the way."],
   [MessageCircle, "Chat with farmers", "Ask questions and share photos with the farm."],
-  [MapPin, "Use your location", "Find farms and pickup points near you in one tap."],
+  [MapPin, "Use your location", "Find farms that deliver near you in one tap."],
   [RefreshCw, "Reorder in seconds", "Buy your regular items again from your order history."],
   [Star, "Rate your order", "Leave a review right after you confirm it's arrived."],
   [Sprout, "Sell on Farmkeke", "Farmers apply, list produce and manage orders in the app."],

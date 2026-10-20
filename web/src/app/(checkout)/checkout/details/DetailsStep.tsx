@@ -1,15 +1,17 @@
 "use client";
 
-// W-23 Address and time (home delivery) or W-24 Pickup point, depending on
-// the choice made in W-22. Delivery windows come from checkout.deliveryWindows
-// (days every farm in the cart can make); pickup points from checkout.pickupPoints.
+// W-23 Address (home delivery) or W-24 Pickup at the farm, depending on the
+// choice made in W-22. Delivery has no time slot: the shopper can say when
+// suits them in the note, and staff agree the time with the rider when they
+// price the delivery. The bill comes by email and text, so guests give an
+// email here if they didn't at the contact step.
 import { useQuery } from "convex/react";
-import { MapPin } from "lucide-react";
+import { Mail, MapPin, Receipt, Truck } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { groupByFarm, useQuote } from "@/components/cart/parts";
-import { draft, type CheckoutDraft } from "@/components/checkout/draft";
+import { draft, looksLikeEmail, type CheckoutDraft } from "@/components/checkout/draft";
 import {
   CheckoutShell,
   CheckoutSkeleton,
@@ -19,26 +21,21 @@ import {
   StepActions,
   useCheckoutGuard,
 } from "@/components/checkout/Shell";
-import { hoursSummary, isoDayLabel } from "@/components/orders/format";
+import { hoursSummary } from "@/components/orders/format";
 import { Button } from "@/components/ui/Button";
 import { TextArea, TextField } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
 import type { SavedAddress } from "@/convex/returns/account";
-import type { CheckoutPickupPoint, DeliveryWindows, SlotState } from "@/convex/returns/checkout";
 import { areaPicker } from "@/lib/area";
 import { useViewer } from "@/lib/auth";
-import { clock, todayInLagos } from "@/lib/format";
+import { naira } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
 // Real OpenStreetMap maps, loaded in the browser only (Leaflet needs window).
 const PinMap = dynamic(() => import("@/components/maps/PinMap"), {
   ssr: false,
   loading: () => <Skeleton className="size-full" rounded={14} />,
-});
-const LetteredPointsMap = dynamic(() => import("@/components/maps/LetteredPointsMap"), {
-  ssr: false,
-  loading: () => <Skeleton className="size-full" rounded={16} />,
 });
 /** Owerri, until the area or the shopper gives a better place for the pin. */
 const OWERRI = { latitude: 5.4836, longitude: 7.0333 };
@@ -50,54 +47,35 @@ export function DetailsStep() {
   return d.fulfilment === "pickup" ? <PickupDetails /> : <DeliveryDetails />;
 }
 
-/** The three windows the backend offers each day (convex/checkout.ts SLOTS). */
-const SLOTS = [
-  { from: "09:00", to: "12:00" },
-  { from: "12:00", to: "15:00" },
-  { from: "15:00", to: "18:00" },
-];
-const slotLabel = (s: { from: string; to: string }) => `${clock(s.from)} – ${clock(s.to)}`;
-
-/** "Today, Sat 17 Oct" / "Tomorrow, Sun 18 Oct" / "Mon 19 Oct" */
-export function dayHeading(day: string, now: number) {
-  const today = todayInLagos(new Date(now));
-  const tomorrow = todayInLagos(new Date(now + 86_400_000));
-  return day === today ? `Today, ${isoDayLabel(day)}` : day === tomorrow ? `Tomorrow, ${isoDayLabel(day)}` : isoDayLabel(day);
-}
-
-/** The farms' delivery days, asked once with the time the page opened. */
-function useWindows(farmIds: string[], serviceAreaId?: string) {
-  const [now] = useState(() => Date.now());
-  // With the area, slots that are full there say so (W-23 "Full")
-  const windows = useQuery(api.checkout.deliveryWindows, farmIds.length ? { farmIds, now, serviceAreaId } : "skip") as
-    | DeliveryWindows
-    | undefined;
-  return { windows, now };
-}
-
 // ---------------------------------------------------------------------------
-// W-23 Address and time
+// W-23 Address
 
-type AddressErrors = Partial<Record<"street" | "landmark" | "window", string>>;
+type AddressErrors = Partial<Record<"street" | "landmark" | "email", string>>;
+
+const BILL_STEPS = [
+  { icon: Truck, title: "The farm accepts", body: "Farms have up to 24 hours. They start packing straight away." },
+  { icon: Receipt, title: "We send your bill", body: "Products plus delivery, once a rider is arranged. By email, text and in the app." },
+  { icon: Mail, title: "You pay within 12 hours", body: "Then the rider brings your order. Your money is held until you confirm." },
+];
 
 function DeliveryDetails() {
   const router = useRouter();
   const { quote, lines, area } = useQuote("delivery");
-  const farmIds = groupByFarm(lines).map((g) => g.farmId);
-  const { windows, now } = useWindows(farmIds, area?.id);
   const { status } = useViewer();
   const saved = useQuery(api.addresses.list, status === "signed-in" ? {} : "skip") as SavedAddress[] | undefined;
 
   const [addr, setAddr] = useState<CheckoutDraft["address"]>(() => draft.get().address);
-  const [win, setWin] = useState<CheckoutDraft["window"]>(() => draft.get().window);
+  // Signed-in shoppers get the bill at their account email; guests need to give one
+  const [email, setEmail] = useState(() => draft.get().contact.email);
+  const needsEmail = status !== "signed-in" && !draft.get().contact.email.trim();
   const [errors, setErrors] = useState<AddressErrors>({});
-  const [showAll, setShowAll] = useState(false);
   const [pinNote, setPinNote] = useState<string | null>(
     addr.latitude !== undefined ? "Pin set to where you were when you tapped Adjust pin." : null,
   );
   const [locating, setLocating] = useState(false);
   const streetRef = useRef<HTMLInputElement>(null);
   const landmarkRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   // Signed in with a default address in this area and nothing typed yet: use it
   // (adjusted during render, once, when the saved addresses arrive).
@@ -112,19 +90,6 @@ function DeliveryDetails() {
     }
   }
 
-  // Every day the farms can make, with each slot open, full or too soon. A
-  // backend without allDays sends open slots only; the rest show as unavailable.
-  const days: Array<{ day: string; slots: SlotState[] }> =
-    windows?.allDays ??
-    (windows?.days ?? []).map((d) => ({
-      day: d.day,
-      slots: SLOTS.map((s) => ({ ...s, open: d.slots.some((x) => x.from === s.from && x.to === s.to) })),
-    }));
-  // A chosen window that's no longer open doesn't count.
-  const chosen =
-    win && (!windows || days.some((d) => d.day === win.day && d.slots.some((s) => s.open && s.from === win.from && s.to === win.to)))
-      ? win
-      : null;
   const pinAt =
     addr.latitude !== undefined && addr.longitude !== undefined
       ? { latitude: addr.latitude, longitude: addr.longitude }
@@ -162,17 +127,19 @@ function DeliveryDetails() {
     const next: AddressErrors = {};
     if (!addr.street.trim()) next.street = "Enter your street address, e.g. 12 Wetheral Road.";
     if (!addr.landmark.trim()) next.landmark = "Add a landmark near you, so the rider finds you first time.";
-    if (!chosen) next.window = "Choose when you'd like your order delivered.";
+    if (needsEmail && !looksLikeEmail(email)) next.email = "Add your email so we can send your bill, e.g. ada@example.com.";
     setErrors(next);
     if (next.street) return streetRef.current?.focus();
     if (next.landmark) return landmarkRef.current?.focus();
-    if (next.window) return document.getElementById("windows")?.focus();
+    if (next.email) return emailRef.current?.focus();
     if (!area) return areaPicker.open();
-    draft.patch({ address: { ...addr, street: addr.street.trim(), landmark: addr.landmark.trim() }, window: chosen });
+    const d = draft.get();
+    draft.patch({
+      address: { ...addr, street: addr.street.trim(), landmark: addr.landmark.trim() },
+      ...(needsEmail ? { contact: { ...d.contact, email: email.trim() } } : {}),
+    });
     router.push(routes.checkoutReview);
   };
-
-  const shown = showAll ? days : days.slice(0, 2);
 
   return (
     <CheckoutShell step={3} aside={<FarmsSummary lines={lines} quote={quote} fulfilment="delivery" />}>
@@ -252,7 +219,7 @@ function DeliveryDetails() {
               label="Note for the rider"
               labelNote="(optional)"
               rows={2}
-              placeholder="Blue gate. Call when you arrive."
+              placeholder="Blue gate. Call when you arrive. Best after 4pm."
               value={addr.note}
               maxLength={200}
               onChange={set("note")}
@@ -261,76 +228,42 @@ function DeliveryDetails() {
           </form>
         </section>
 
-        <section aria-labelledby="when-title" className={`${checkoutCard} p-8 m:p-5`}>
-          <h2 id="when-title" className="h3 text-lg leading-[26px]">
-            When should we deliver?
+        <section aria-labelledby="bill-title" className={`${checkoutCard} p-8 m:p-5`}>
+          <h2 id="bill-title" className="h3 text-lg leading-[26px]">
+            How you&apos;ll pay
           </h2>
           <p className="p mt-1 text-sm">
-            {groupByFarm(lines).length > 1
-              ? "Both orders arrive in the window you choose, once the farms accept."
-              : "Your order arrives in the window you choose, once the farm accepts."}
+            Nothing to pay now. Products come to <strong className="text-ink">{naira(quote?.itemsTotalKobo ?? 0)}</strong>; delivery is
+            priced for your address once a rider is arranged.
           </p>
-          <div id="windows" tabIndex={-1} className="mt-[18px] outline-none" aria-describedby={errors.window ? "window-error" : undefined}>
-            {windows === undefined ? (
-              <div className="grid grid-cols-3 gap-2.5">
-                {[0, 1, 2].map((i) => (
-                  <Skeleton key={i} className="h-[62px]" rounded={12} />
-                ))}
-              </div>
-            ) : days.length === 0 ? (
-              <p className="sm">
-                The farms in your cart can&apos;t deliver in the next two weeks. Try pickup instead, or come back later.
-              </p>
-            ) : (
-              shown.map((d, i) => (
-                <fieldset key={d.day} className="m-0 border-0 p-0">
-                  <legend className={`cap mb-2 font-semibold text-ink-3 ${i > 0 ? "mt-4" : ""}`}>{dayHeading(d.day, now)}</legend>
-                  <div className="grid grid-cols-3 gap-2.5 m:grid-cols-1">
-                    {/* Slots already too soon aren't shown, as in the design's "Today" row */}
-                    {d.slots.filter((s) => s.reason !== "too_soon").map((s) => {
-                      const open = s.open;
-                      const on = chosen?.day === d.day && chosen.from === s.from && chosen.to === s.to;
-                      return (
-                        <button
-                          key={s.from}
-                          type="button"
-                          aria-pressed={on}
-                          aria-disabled={!open || undefined}
-                          onClick={() => {
-                            if (!open) return;
-                            setWin({ day: d.day, from: s.from, to: s.to });
-                            setErrors((x) => ({ ...x, window: undefined }));
-                          }}
-                          className={`flex min-h-11 flex-col gap-0.5 rounded-xl border-0 px-3.5 py-3 text-left text-ink ${
-                            !open
-                              ? "cursor-not-allowed bg-surface opacity-45 shadow-[inset_0_0_0_1px_#DCE0D6]"
-                              : on
-                                ? "cursor-pointer bg-[#F7FAF1] shadow-[inset_0_0_0_2px_var(--color-forest)]"
-                                : "cursor-pointer bg-surface shadow-[inset_0_0_0_1px_#DCE0D6]"
-                          }`}
-                        >
-                          <span className="text-sm font-semibold">{slotLabel(s)}</span>
-                          <span className={`cap ${on ? "text-forest" : ""}`}>
-                            {!open ? (s.reason === "full" ? "Full" : "Not available") : on ? "Selected" : "Available"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              ))
-            )}
-            {days.length > 2 && !showAll ? (
-              <Button variant="link" size="sm" className="mt-2" onClick={() => setShowAll(true)}>
-                Show later days
-              </Button>
-            ) : null}
-            {errors.window ? (
-              <span id="window-error" role="alert" className="field-error">
-                {errors.window}
-              </span>
-            ) : null}
-          </div>
+          <ol className="m-0 mt-[18px] grid list-none grid-cols-3 gap-3 p-0 m:grid-cols-1">
+            {BILL_STEPS.map(({ icon: Icon, title, body }) => (
+              <li key={title} className="rounded-[14px] bg-soft p-3.5">
+                <Icon aria-hidden className="size-5 text-forest" strokeWidth={1.75} />
+                <div className="mt-1.5 text-sm font-semibold">{title}</div>
+                <div className="cap mt-0.5">{body}</div>
+              </li>
+            ))}
+          </ol>
+          {needsEmail ? (
+            <div className="mt-[18px]">
+              <TextField
+                ref={emailRef}
+                form="address-form"
+                label="Email for your bill"
+                type="email"
+                autoComplete="email"
+                placeholder="ada@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((x) => ({ ...x, email: undefined }));
+                }}
+                error={errors.email}
+                hint="We'll also text it to your phone."
+              />
+            </div>
+          ) : null}
           <StepActions back={routes.checkoutDelivery}>
             <Button type="submit" form="address-form" variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0">
               Continue to review
@@ -343,148 +276,46 @@ function DeliveryDetails() {
 }
 
 // ---------------------------------------------------------------------------
-// W-24 Pickup point
-
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// W-24 Pickup at the farm
 
 function PickupDetails() {
   const router = useRouter();
-  const { quote, lines, area } = useQuote("pickup");
-  const farmIds = groupByFarm(lines).map((g) => g.farmId);
-  const { windows, now } = useWindows(farmIds);
-  const lat = quote?.area?.latitude;
-  const lng = quote?.area?.longitude;
-  // farmIds and now give each point its own "Ready from" day
-  const points = useQuery(
-    api.checkout.pickupPoints,
-    area ? { serviceAreaId: area.id, latitude: lat, longitude: lng, farmIds, now } : { farmIds, now },
-  ) as CheckoutPickupPoint[] | undefined;
-  const [chosen, setChosen] = useState<string | null>(() => draft.get().pickupPointId);
-  const [error, setError] = useState<string | null>(null);
-  const list = (points ?? []).slice(0, 8);
-  // A backend without per-point days: the first day the farms can make.
-  const readyFor = (p: CheckoutPickupPoint) => {
-    const day = p.readyDay === undefined ? windows?.readyDay : p.readyDay;
-    return day ? `Ready from ${isoDayLabel(day)}` : "";
-  };
-
-  const onKey = (e: KeyboardEvent) => {
-    const i = list.findIndex((p) => p._id === chosen);
-    const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
-    if (!step || list.length === 0) return;
-    e.preventDefault();
-    const next = list[(Math.max(i, 0) + step + list.length) % list.length]!;
-    setChosen(next._id);
-    document.getElementById(`pp-${next._id}`)?.focus();
-  };
-
-  const proceed = () => {
-    if (!chosen) {
-      setError("Choose a pickup point to continue.");
-      return;
-    }
-    draft.patch({ pickupPointId: chosen });
-    router.push(routes.checkoutReview);
-  };
-
-  // Pins labelled like the list: A, B, C…
-  const located = list
-    .map((p, i) => ({ id: p._id, letter: LETTERS[i]!, name: p.name, latitude: p.latitude, longitude: p.longitude }))
-    .filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude));
+  const { quote, lines } = useQuote("pickup");
+  const farms = groupByFarm(lines);
+  const quoted = new Map((quote?.farms ?? []).map((f) => [f.farmId, f]));
 
   return (
     <CheckoutShell step={3} pickup aside={<FarmsSummary lines={lines} quote={quote} fulfilment="pickup" />}>
       <section className={`${checkoutCard} p-8 m:p-5`}>
-        <h1 className={checkoutH1}>Choose a pickup point</h1>
+        <h1 className={checkoutH1}>Collect from the {farms.length > 1 ? "farms" : "farm"}</h1>
         <p className="p mt-1.5">
-          {farmIds.length > 1 ? "Both orders will wait for you here." : "Your order will wait for you here."} Bring your
-          pickup code, which we&apos;ll send when {farmIds.length > 1 ? "they're" : "it's"} ready.
+          You pay now. When {farms.length > 1 ? "each order is" : "your order is"} ready, we send the farm&apos;s address and your
+          4-digit pickup code. Show the code at the farm. You have 3 days to collect.
         </p>
-        <div
-          role="group"
-          aria-label={`Map of pickup points near ${area?.name ?? "you"}`}
-          className="relative isolate mt-[22px] h-[220px] overflow-hidden rounded-2xl bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
-        >
-          {points === undefined ? (
-            <Skeleton className="size-full" rounded={16} />
-          ) : (
-            <LetteredPointsMap
-              points={located}
-              selectedId={chosen}
-              onSelect={(id) => {
-                setChosen(id);
-                setError(null);
-              }}
-            />
-          )}
-        </div>
-        {points === undefined ? (
-          <div className="mt-4 flex flex-col gap-2.5">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="h-[92px]" rounded={16} />
-            ))}
-          </div>
-        ) : list.length === 0 ? (
-          <p className="sm mt-4">
-            There are no pickup points open near you yet. Go back and choose home delivery instead.
-          </p>
-        ) : (
-          <div role="radiogroup" aria-label="Pickup points" onKeyDown={onKey} className="mt-4 flex flex-col gap-2.5">
-            {list.map((p, i) => {
-              const on = p._id === chosen;
-              const hours = hoursSummary(p.hours)?.replace(/, /g, " ");
-              const ready = readyFor(p);
-              return (
-                <button
-                  key={p._id}
-                  id={`pp-${p._id}`}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  tabIndex={on || (!chosen && i === 0) ? 0 : -1}
-                  onClick={() => {
-                    setChosen(p._id);
-                    setError(null);
-                  }}
-                  className={`flex w-full cursor-pointer items-start gap-3.5 rounded-2xl border-0 p-4 text-left text-ink ${
-                    on ? "bg-[#F7FAF1] shadow-[inset_0_0_0_2px_var(--color-forest)]" : "bg-surface shadow-[inset_0_0_0_1px_#DCE0D6]"
-                  }`}
-                >
-                  <span
-                    aria-hidden
-                    className={`mt-px flex size-[22px] flex-none items-center justify-center rounded-full ${
-                      on ? "shadow-[inset_0_0_0_1.5px_var(--color-forest)]" : "shadow-[inset_0_0_0_1.5px_var(--color-radio)]"
-                    }`}
-                  >
-                    {on ? <span className="size-3 rounded-full bg-forest" /> : null}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex justify-between gap-3">
-                      <span className="text-[15px] font-bold">
-                        {LETTERS[i]} · {p.name}
-                      </span>
-                      {p.distanceKm !== null ? <span className="cap flex-none">{p.distanceKm} km</span> : null}
-                    </span>
-                    <span className="mt-[3px] block text-[13px] text-muted">
-                      {[p.address, p.lga].filter(Boolean).join(", ")}
-                    </span>
-                    {hours || ready ? (
-                      <span className="mt-1.5 block text-xs text-subtle">{[hours, ready].filter(Boolean).join(" · ")}</span>
-                    ) : null}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {error ? (
-          <p role="alert" className="field-error mt-4">
-            <MapPin aria-hidden className="mr-1 inline size-3.5" />
-            {error}
-          </p>
-        ) : null}
+        <ul className="m-0 mt-[22px] flex list-none flex-col gap-2.5 p-0">
+          {farms.map((g) => {
+            const f = quoted.get(g.farmId);
+            const hours = f?.collectionHours ? hoursSummary(f.collectionHours) : undefined;
+            return (
+              <li key={g.farmId} className="flex items-start gap-3.5 rounded-2xl bg-surface p-4 shadow-[inset_0_0_0_1px_#DCE0D6]">
+                <span aria-hidden className="tile size-10 flex-none rounded-xl">
+                  <MapPin className="size-5" strokeWidth={1.75} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold">{g.farmName}</span>
+                  {quote === undefined ? (
+                    <Skeleton className="mt-1.5 h-4 w-48" />
+                  ) : (
+                    <span className="mt-[3px] block text-[13px] text-muted">{f?.collectionArea ?? ""}</span>
+                  )}
+                  {hours ? <span className="mt-1 block text-xs text-subtle">Hands over orders: {hours}</span> : null}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
         <StepActions back={routes.checkoutDelivery}>
-          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0" onClick={proceed}>
+          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0" onClick={() => router.push(routes.checkoutReview)}>
             Continue to review
           </Button>
         </StepActions>

@@ -96,7 +96,7 @@ const DOCS: Record<LegalDoc, Doc> = {
             </P>
             <P>
               You can confirm receipt only once your order is marked delivered or collected. Pickup orders wait at the
-              pickup point for 3 days.
+              farm for 3 days once they are ready.
             </P>
           </>
         ),
@@ -107,7 +107,9 @@ const DOCS: Record<LegalDoc, Doc> = {
         body: (
           <P>
             Each farm has 24 hours to accept your order. If the farm declines or does not respond in time, the order is
-            cancelled and you receive a full refund, including any delivery fee.
+            cancelled and anything you paid for it is refunded in full. Home delivery orders are paid only after the farm
+            accepts and the delivery is priced, so you pay nothing for a delivery order the farm declines. If you do not
+            pay your delivery bill within 12 hours, the order is cancelled.
           </P>
         ),
       },

@@ -39,6 +39,29 @@ export type OrderPickupPoint = {
   photoUrl: string | null;
 };
 
+/** Pickup at the farm: where and when to collect. */
+export type OrderCollectFrom = {
+  farmName: string;
+  address: string;
+  lga: string;
+  state: string;
+  hours: Array<{ day: number; opens: string; closes: string }>;
+  phone: string;
+  collectWithinDays: number;
+};
+
+/** A delivery order's bill: waiting for the price, ready to pay, paid, or lapsed. */
+export type OrderBill = {
+  state: "waiting_for_price" | "ready_to_pay" | "paid" | "not_paid";
+  checkoutId: string;
+  totalKobo: number;
+  deliveryFeeKobo: number;
+  billedAt: number | null;
+  payBy: number | null;
+  /** The pay link token (the owner's device only) */
+  payToken: string | null;
+};
+
 export type OrderDetail = {
   _id: string;
   number: string;
@@ -73,6 +96,12 @@ export type OrderDetail = {
   /** street and landmark are null on a view-only order (W-51c) */
   address: { street: string | null; landmark: string | null; areaName?: string; lga?: string; state?: string } | null;
   pickupPoint: OrderPickupPoint | null;
+  /** Pickup at the farm (orders without a pickup point) */
+  collectFrom?: OrderCollectFrom | null;
+  /** Delivery: priced once the farm accepts; paid by bill */
+  deliveryPricedAt?: number | null;
+  paid?: boolean;
+  bill?: OrderBill | null;
   rider: { name: string; phone?: string } | null;
   riderCollectAt: number | null;
   disputeId: string | null;
@@ -171,7 +200,7 @@ const STAGE_WORDS: Array<[RegExp, OrderStage]> = [
   [/^collected$|collected_by|collected_at_point/, "collected"],
   [/delivered/, "delivered"],
   [/out_for|with_rider|in_transit|on_the_way|dispatch|collected_from_farm|picked_up/, "out_for_delivery"],
-  [/pickup_point|at_point|ready_for_pickup|awaiting_collection|at_pickup/, "at_pickup_point"],
+  [/pickup_point|at_point|ready_for_pickup|ready_for_collection|awaiting_collection|at_pickup/, "at_pickup_point"],
   [/ready|packed|handover|handed/, "ready"],
   [/prepar|to_prepare/, "preparing"],
   [/accept/, "accepted"],

@@ -8,7 +8,7 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/
 import { getViewer, requireAccount, requireUser } from "../lib/auth";
 import { isOutOfStock } from "../lib/listing";
 import { farmIsOpen, isShopListing } from "../lib/listingCounts";
-import { collectFromView, orderCore, orderRow, pickupPointView, releaseOrder, transition } from "../lib/orders";
+import { collectFromView, isActive, orderCore, orderRow, pickupPointView, releaseOrder, transition } from "../lib/orders";
 import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY, HOUR } from "../lib/settings";
 
@@ -86,7 +86,15 @@ export const list = query({
       .withIndex("by_userId", (q) => q.eq("userId", user._id))
       .order("desc")
       .take(100);
-    return await Promise.all(orders.filter(visible).map((o) => orderRow(ctx, o)));
+    return await Promise.all(
+      orders.filter(visible).map(async (o) => {
+        const row = await orderRow(ctx, o);
+        if (o.fulfilment !== "delivery" || o.escrow !== "none" || !isActive(o)) return row;
+        // Unpaid delivery: "Bill ready" once the bill is out
+        const checkout = await ctx.db.get("checkouts", o.checkoutId);
+        return { ...row, billReady: checkout?.status === "awaiting_payment" };
+      }),
+    );
   },
 });
 

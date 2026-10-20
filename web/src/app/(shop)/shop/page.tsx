@@ -97,13 +97,13 @@ export default async function ShopHome() {
               <div>
                 <h2 className="h3">Delivery or pickup</h2>
                 <p className="sm mt-1.5">
-                  Farmkeke riders deliver to your door, or collect from a pickup point near you.
+                  Farmkeke riders deliver to your door, or collect from the farm yourself.
                 </p>
                 <Link
-                  href={routes.pickupLocations}
+                  href={routes.howItWorks}
                   className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
                 >
-                  See pickup points
+                  How delivery works
                 </Link>
               </div>
             </div>

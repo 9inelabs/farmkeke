@@ -45,6 +45,9 @@ export type QuoteFarm = {
   itemsTotalKobo: number;
   deliveryFeeKobo: number;
   totalKobo: number;
+  /** Pickup at the farm: "Owerri North, Imo", and when the farm hands over orders */
+  collectionArea?: string;
+  collectionHours?: Array<{ day: number; opens: string; closes: string }>;
 };
 
 export type QuoteBlocker = { listingId: string; name: string; farmName: string };
@@ -67,6 +70,8 @@ export type Quote = {
   itemsTotalKobo: number;
   deliveryFeeKobo: number;
   totalKobo: number;
+  /** Delivery: the fee is added to the bill once staff have priced it */
+  deliveryFeeLater?: boolean;
 };
 
 /** A W-23 time slot: open, or closed because it's full or too soon (Phase 5). */
@@ -107,6 +112,8 @@ export type PlaceResult = {
   reference: string;
   totalKobo: number;
   orders: Array<{ orderId: string; number: string; farmName: string; totalKobo: number }>;
+  /** Pickup is paid now; delivery is paid when the bill comes */
+  payNow?: boolean;
 };
 
 /** orderRow() in convex/lib/orders.ts, used by payments/checkout.get and placedSummary. */
@@ -131,9 +138,27 @@ export type OrderRow = {
   window: { day: string; from: string; to: string } | null;
   isActive: boolean;
   pickupCode?: string | null;
+  checkoutId?: string;
+  deliveryPricedAt?: number | null;
+  paid?: boolean;
+  /** Pickup at the farm (placedSummary) */
+  collectFrom?: CollectFrom | null;
+  /** Unpaid delivery (orders.consumer.list): the bill is out and can be paid */
+  billReady?: boolean;
 };
 
-export type CheckoutStatus = "awaiting_payment" | "paid" | "abandoned" | string;
+/** Pickup at the farm: where and when to collect. */
+export type CollectFrom = {
+  farmName: string;
+  address: string;
+  lga: string;
+  state: string;
+  hours: Array<{ day: number; opens: string; closes: string }>;
+  phone: string;
+  collectWithinDays: number;
+};
+
+export type CheckoutStatus = "awaiting_bill" | "awaiting_payment" | "paid" | "abandoned" | string;
 
 /** payments/checkout.get */
 export type CheckoutForPay = {
@@ -160,6 +185,13 @@ export type CheckoutForPay = {
   } | null;
   orders: OrderRow[];
   payments?: { live: boolean; testStep: boolean };
+  /** False when paying someone else's bill through its pay link */
+  isOwner?: boolean;
+  billedAt?: number | null;
+  payBy?: number | null;
+  /** The bill's pay link token (owner only) */
+  payToken?: string | null;
+  abandonReason?: string | null;
 };
 
 /** orders/consumer.placedSummary */
@@ -179,6 +211,9 @@ export type PlacedSummary = {
   address?: { street: string; landmark?: string; areaName?: string; lga?: string; state?: string; note?: string | null } | null;
   pickupPoint?: { name: string; address?: string; lga?: string } | null;
   window?: { day: string; from: string; to: string } | null;
+  /** Delivery: the bill's pay-by time and pay link token, once the bill is out */
+  payBy?: number | null;
+  payToken?: string | null;
 };
 
 /** payments/checkout.start (live mode) */
