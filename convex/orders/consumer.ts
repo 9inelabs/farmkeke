@@ -8,7 +8,7 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/
 import { getViewer, requireAccount, requireUser } from "../lib/auth";
 import { isOutOfStock } from "../lib/listing";
 import { farmIsOpen, isShopListing } from "../lib/listingCounts";
-import { orderCore, orderRow, pickupPointView, releaseOrder, transition } from "../lib/orders";
+import { collectFromView, orderCore, orderRow, pickupPointView, releaseOrder, transition } from "../lib/orders";
 import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY, HOUR } from "../lib/settings";
 
@@ -25,14 +25,43 @@ function maskEmail(email: string | undefined) {
   return `${name[0]}***@${domain}`;
 }
 
-/** Orders a shopper sees: paid ones, and ones still awaiting payment. */
-const visible = (o: Doc<"orders">) => o.paidAt !== undefined || o.status === "awaiting_payment";
+/**
+ * Orders a shopper sees: paid ones, ones still awaiting payment, and every
+ * delivery order (placed unpaid, then billed, or cancelled unpaid).
+ */
+const visible = (o: Doc<"orders">) => o.paidAt !== undefined || o.status === "awaiting_payment" || o.fulfilment === "delivery";
+
+/** Delivery: where the order's bill stands, for the order page's "Pay now". */
+async function billView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) {
+  if (order.fulfilment !== "delivery") return null;
+  const checkout = await ctx.db.get("checkouts", order.checkoutId);
+  if (checkout === null) return null;
+  const state =
+    checkout.status === "paid" || order.escrow !== "none"
+      ? ("paid" as const)
+      : checkout.status === "awaiting_bill"
+        ? ("waiting_for_price" as const)
+        : checkout.status === "awaiting_payment"
+          ? ("ready_to_pay" as const)
+          : ("not_paid" as const);
+  return {
+    state,
+    checkoutId: checkout._id,
+    totalKobo: checkout.totalKobo,
+    deliveryFeeKobo: checkout.deliveryFeeKobo,
+    billedAt: checkout.billedAt ?? null,
+    payBy: checkout.payBy ?? null,
+    // The pay link is the owner's to use or share
+    payToken: viewOnly ? null : (checkout.payToken ?? null),
+  };
+}
 
 async function consumerView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) {
   const core = await orderCore(ctx, order);
   const canConfirm = !viewOnly && (order.status === "delivered" || order.status === "collected");
   return {
     ...core,
+    bill: await billView(ctx, order, viewOnly),
     // The pickup code proves who you are at the point: owner's device only
     pickupCode: viewOnly ? null : (order.pickupCode ?? null),
     contact: viewOnly ? { name: order.contact.name.split(/\s+/)[0] ?? "", phone: null } : order.contact,
@@ -84,7 +113,7 @@ export const find = query({
       .query("orders")
       .withIndex("by_number", (q) => q.eq("number", number))
       .unique();
-    if (order === null || order.contact.phone !== phone || order.paidAt === undefined) return null;
+    if (order === null || order.contact.phone !== phone || !visible(order) || order.status === "awaiting_payment") return null;
     const viewer = await getViewer(ctx);
     // The owner looking from their own device gets the full view.
     return await consumerView(ctx, order, viewer === null || viewer._id !== order.userId);
@@ -109,6 +138,9 @@ export const placedSummary = query({
       status: checkout.status,
       paidAt: checkout.paidAt ?? null,
       fulfilment: checkout.fulfilment,
+      // Delivery: nothing to pay until the bill comes
+      payBy: checkout.payBy ?? null,
+      payToken: checkout.payToken ?? null,
       itemsTotalKobo: checkout.itemsTotalKobo,
       deliveryFeeKobo: checkout.deliveryFeeKobo,
       totalKobo: checkout.totalKobo,
@@ -132,6 +164,7 @@ export const placedSummary = query({
         orders.map(async (o) => ({
           ...(await orderRow(ctx, o)),
           pickupCode: o.pickupCode ?? null,
+          collectFrom: await collectFromView(ctx, o),
         })),
       ),
     };

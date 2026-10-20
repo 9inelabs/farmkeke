@@ -53,6 +53,7 @@ import type * as lib_application from "../lib/application.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_banks from "../lib/banks.js";
+import type * as lib_bill from "../lib/bill.js";
 import type * as lib_counters from "../lib/counters.js";
 import type * as lib_disputes from "../lib/disputes.js";
 import type * as lib_email from "../lib/email.js";
@@ -149,6 +150,7 @@ declare const fullApi: ApiFromModules<{
   "lib/audit": typeof lib_audit;
   "lib/auth": typeof lib_auth;
   "lib/banks": typeof lib_banks;
+  "lib/bill": typeof lib_bill;
   "lib/counters": typeof lib_counters;
   "lib/disputes": typeof lib_disputes;
   "lib/email": typeof lib_email;

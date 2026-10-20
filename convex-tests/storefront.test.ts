@@ -210,7 +210,7 @@ test("counters follow listing and farm changes; subtypes admin; farm and product
   for (const wait of [2, 4]) {
     const placed = await buyer.mutation(api.checkout.place, {
       items: [{ listingId: s.L.freshTomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
-      fulfilment: "pickup", expectedTotalKobo: 450000, pickupPointId: s.pointId, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
+      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
     });
     await buyer.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
     vi.advanceTimersByTime(wait * 3_600_000);
@@ -233,7 +233,8 @@ test("counters follow listing and farm changes; subtypes admin; farm and product
   // Product page
   const p: any = await t.query(api.storefront.product, { id: s.L.freshTomatoes, today: TODAY, ...OWERRI, serviceAreaId: s.areaId });
   expect(p).toMatchObject({
-    available: true, inStock: true, freshness: "Harvested today", subtype: "tomatoes", deliveryFeeKobo: 120000,
+    // Delivery is priced per order after the farm accepts, so the page shows no fee
+    available: true, inStock: true, freshness: "Harvested today", subtype: "tomatoes", deliveryFeeKobo: null,
     deliveryArea: { name: "New Owerri", lga: "Owerri North" }, category: { slug: "vegetables" },
     farm: { id: s.okafor, rating: 5, ratingCount: 2, responseTimeHours: 3, acceptsWithinHours: 24, verified: true },
   });
@@ -276,21 +277,17 @@ test("problem report: staff alert, farm reminder 2h before the 12h deadline, ove
   const farmer = as(t, s.farmerA);
   const page = { cursor: null, numItems: 20 };
 
-  let riderId: any = null;
   const report = async () => {
     const placed = await guest.mutation(api.checkout.place, {
       items: [{ listingId: s.L.freshTomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
-      fulfilment: "pickup", expectedTotalKobo: 450000, pickupPointId: s.pointId, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
+      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
     });
     await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
     const orderId = placed.orders[0].orderId;
     await farmer.mutation(api.orders.farmer.accept, { orderId });
     await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
     await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-    riderId ??= await admin.mutation(api.admin.riders.create, { name: "Emeka", phone: "08035550000", reason: "New rider", serviceAreaIds: [s.areaId] });
-    await admin.mutation(api.admin.dispatch.assignRider, { orderId, riderId, collectAt: Date.now() + 3600_000 });
-    await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_from_farm" });
-    await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "dropped_at_pickup_point" });
+    // Pickup at the farm: staff can record the collection too, with the shopper's code
     const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
     await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_by_consumer", pickupCode: order.pickupCode });
     return await guest.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "Soft", photoIds: [], reason: "damaged" });
@@ -341,7 +338,9 @@ test("problem report: staff alert, farm reminder 2h before the 12h deadline, ove
 
 test("every field in the live samples is still returned", async () => {
   const fs = await import("node:fs");
-  const sample = (name: string) => JSON.parse(fs.readFileSync(`C:/Users/Guesttt/Documents/farmkeke/web/convex-spec/samples/storefront.${name}.json`, "utf8"));
+  // The live samples kept in the repo, next to this folder
+  const samples = new URL("../web/convex-spec/samples/", import.meta.url);
+  const sample = (name: string) => JSON.parse(fs.readFileSync(new URL(`storefront.${name}.json`, samples), "utf8"));
   // Every key path in `want` exists in `got` (arrays compared by their first element)
   const missing = (want: any, got: any, path = ""): string[] => {
     if (Array.isArray(want)) return want.length && Array.isArray(got) && got.length ? missing(want[0], got[0], `${path}[0]`) : [];

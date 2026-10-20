@@ -33,7 +33,8 @@ export const createServiceArea = mutation({
     state: v.string(),
     name: v.string(),
     lga: v.string(),
-    deliveryFeeKobo: v.number(),
+    // Not used any more: delivery is priced per order. Accepted for older callers.
+    deliveryFeeKobo: v.optional(v.number()),
     ...areaPosition,
     reason: v.string(),
   },
@@ -55,7 +56,7 @@ export const createServiceArea = mutation({
       state,
       name,
       lga: requireText(args.lga, "LGA"),
-      deliveryFeeKobo: requireKobo(args.deliveryFeeKobo, "Delivery fee"),
+      ...(args.deliveryFeeKobo !== undefined && { deliveryFeeKobo: requireKobo(args.deliveryFeeKobo, "Delivery fee") }),
       latitude: args.latitude,
       longitude: args.longitude,
       radiusKm: args.radiusKm,

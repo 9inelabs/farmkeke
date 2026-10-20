@@ -43,10 +43,22 @@ const SHOP: Alert[] = [
   {
     alert: "payments",
     title: "Payments and refunds",
-    description: "Payment confirmed, money released, refunds",
+    description: "Bills, payment confirmed, money released, refunds",
     locked: true,
     defaults: on,
-    kinds: ["order_placed", "order_completed", "order_declined", "order_expired", "refund_issued", "dispute_resolved"],
+    kinds: [
+      "order_placed",
+      "order_completed",
+      "order_declined",
+      "order_expired",
+      "refund_issued",
+      "dispute_resolved",
+      // Delivery orders: received unpaid, then the bill (always sent; bills also text)
+      "order_received",
+      "bill_ready",
+      "bill_reminder",
+      "bill_expired",
+    ],
   },
   {
     alert: "messages",
@@ -84,7 +96,7 @@ const FARM: Alert[] = [
     title: "New orders and deadlines",
     description: "New orders, deadline near, expired or cancelled orders, rider collection",
     defaults: { push: true, sms: true, email: true },
-    kinds: ["order_new", "order_deadline", "order_expired", "order_cancelled", "rider_assigned", "deadline_extended"],
+    kinds: ["order_new", "order_deadline", "order_expired", "order_cancelled", "rider_assigned", "deadline_extended", "order_paid"],
   },
   {
     alert: "problems",

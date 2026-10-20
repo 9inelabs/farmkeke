@@ -19,13 +19,18 @@ export const SYSTEM: Actor = { kind: "system" };
 /** Allowed moves. Anything else is a WRONG_STATUS error. */
 const NEXT: Record<OrderStatus, OrderStatus[]> = {
   awaiting_payment: ["paid", "cancelled"],
+  // Delivery: unpaid until the bill (lib/bill.ts); the farm answers first
+  placed: ["accepted", "declined", "expired", "cancelled"],
   paid: ["accepted", "declined", "expired", "cancelled"],
   accepted: ["preparing", "cancelled"],
-  preparing: ["ready_for_rider", "cancelled"],
+  preparing: ["ready_for_rider", "ready_for_collection", "cancelled"],
   ready_for_rider: ["out_for_delivery", "with_rider", "cancelled"],
   out_for_delivery: ["delivered", "cancelled"],
+  // Pickup through a Farmkeke pickup point (orders from before pickup moved to the farm)
   with_rider: ["at_pickup_point", "cancelled"],
   at_pickup_point: ["collected", "cancelled"],
+  // Pickup at the farm: the shopper collects with their code
+  ready_for_collection: ["collected", "cancelled"],
   delivered: ["completed", "disputed"],
   collected: ["completed", "disputed"],
   // Resolved by staff (Phase 3b): released or split → completed, refunded → cancelled
@@ -84,8 +89,8 @@ export async function ledger(
 export const orderNumber = async (ctx: MutationCtx) => `FK-${await nextCounter(ctx, "order", 10001)}`;
 export const checkoutReference = async (ctx: MutationCtx) => `CK-${await nextCounter(ctx, "checkout", 10001)}`;
 
-/** Six digits shown at the pickup point (M-64). */
-export const newPickupCode = () => String(Math.floor(100000 + Math.random() * 900000));
+/** Four digits the shopper shows at the farm; the farmer enters them to hand over the order. */
+export const newPickupCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
 // ---------------------------------------------------------------------------
 // Stock
@@ -148,8 +153,10 @@ async function alertLowStock(ctx: MutationCtx, order: Doc<"orders">) {
 // Payment success
 
 /**
- * Marks a checkout paid: each order waits for its farm (24h, scheduled
- * expiry), and its money moves into escrow. Returns false if already handled.
+ * Marks a checkout paid and moves its money into escrow. Pickup orders then
+ * wait for their farm (24h, scheduled expiry). Delivery orders were accepted
+ * before the bill, so their farms just hear it's paid and the rider can
+ * collect. Returns false if already handled.
  */
 export async function markCheckoutPaid(
   ctx: MutationCtx,
@@ -171,6 +178,34 @@ export async function markCheckoutPaid(
     .withIndex("by_checkoutId", (q) => q.eq("checkoutId", checkoutId))
     .take(50);
   for (const order of orders) {
+    if (order.fulfilment === "delivery" && order.status !== "awaiting_payment") {
+      // A bill: accepted, packed or ready, priced, and now paid
+      if (ENDED.includes(order.status) || order.escrow !== "none") continue;
+      await ctx.db.patch("orders", order._id, { escrow: "held", paidAt: payment.paidAt });
+      const paid = { ...order, escrow: "held" as const, paidAt: payment.paidAt };
+      await logOrderEvent(ctx, order._id, "paid", SYSTEM);
+      await ledger(ctx, paid, {
+        kind: "hold",
+        amountKobo: order.totalKobo,
+        status: "done",
+        simulated: payment.provider === "simulated" ? true : undefined,
+      });
+      await notifyFarm(
+        ctx,
+        paid,
+        "order_paid",
+        `Order ${order.number} is paid`,
+        "The shopper has paid. Hand it to the Farmkeke rider when they arrive.",
+      );
+      await notifyConsumer(
+        ctx,
+        paid,
+        "order_placed",
+        `Order ${order.number} is paid`,
+        "Thank you. Your money is held safely until you confirm you received it.",
+      );
+      continue;
+    }
     if (order.status !== "awaiting_payment") continue;
     const respondBy = now + rules.farmerResponseHours * HOUR;
     const expiryJobId = await ctx.scheduler.runAt(respondBy, internal.orders.system.expireOne, {
@@ -373,7 +408,7 @@ export async function releaseOrder(
   }
 }
 
-/** Starts the pickup clock when an order reaches the pickup point (A-54, Phase 3b dispatch). */
+/** Starts the pickup clock when an order is ready at the farm (or, before the change, at a pickup point). */
 export async function pickupDeadline(ctx: MutationCtx, order: Doc<"orders">, now: number) {
   const rules = await getRules(ctx);
   const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
@@ -430,6 +465,23 @@ export async function pickupPointView(ctx: QueryCtx, pointId: Id<"pickupPoints">
     phone: p.phone,
     collectWithinDays: Math.max(rules.pickupHoldDays, p.collectWithinDays),
     photoUrl: p.photoStorageId ? await ctx.storage.getUrl(p.photoStorageId) : null,
+  };
+}
+
+/** Pickup at the farm: where and when to collect (the farm's collection details). */
+export async function collectFromView(ctx: QueryCtx, order: Doc<"orders">) {
+  if (order.fulfilment !== "pickup" || order.pickupPointId !== undefined) return null;
+  const farm = await ctx.db.get("farms", order.farmId);
+  if (farm === null) return null;
+  const rules = await getRules(ctx);
+  return {
+    farmName: farm.name,
+    address: farm.collectionAddress,
+    lga: farm.lga,
+    state: farm.state,
+    hours: farm.collectionHours,
+    phone: farm.phone,
+    collectWithinDays: rules.pickupHoldDays,
   };
 }
 
@@ -492,6 +544,10 @@ export async function orderCore(ctx: QueryCtx, order: Doc<"orders">) {
         }
       : null,
     pickupPoint: await pickupPointView(ctx, order.pickupPointId),
+    collectFrom: await collectFromView(ctx, order),
+    // Delivery: staff price the delivery after the farm accepts; the shopper pays after
+    deliveryPricedAt: order.deliveryPricedAt ?? null,
+    paid: order.escrow !== "none",
     rider:
       rider === null || !["out_for_delivery", "with_rider", "ready_for_rider"].includes(order.status)
         ? null
@@ -529,5 +585,8 @@ export async function orderRow(ctx: QueryCtx, order: Doc<"orders">) {
     totalKobo: order.totalKobo,
     window: order.window ?? null,
     isActive: isActive(order),
+    checkoutId: order.checkoutId,
+    deliveryPricedAt: order.deliveryPricedAt ?? null,
+    paid: order.escrow !== "none",
   };
 }

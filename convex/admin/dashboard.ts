@@ -4,9 +4,9 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireStaff } from "../lib/auth";
+import type { OrderStatus } from "../lib/orders";
 import { DAY } from "../lib/settings";
 
-const PAID = new Set(["paid", "accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider", "at_pickup_point", "delivered", "collected", "completed", "disputed"]);
 
 export const stats = query({
   args: { dayStart: v.number() },
@@ -23,7 +23,8 @@ export const stats = query({
     let todayDelivery = 0;
     let todayPickup = 0;
     for (const o of orders) {
-      if (!PAID.has(o.status) && o.paidAt === undefined) continue;
+      // Paid orders only (unpaid delivery orders count once their bill is paid)
+      if (o.paidAt === undefined) continue;
       const i = Math.floor((o._creationTime - weekStart) / DAY);
       if (i < 0 || i > 6) continue;
       days[i].orders++;
@@ -39,12 +40,17 @@ export const stats = query({
       .query("users")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", args.dayStart))
       .take(1000);
-    const active = async (status: "paid" | "accepted" | "preparing" | "ready_for_rider" | "out_for_delivery" | "with_rider" | "at_pickup_point") =>
+    const active = async (status: OrderStatus) =>
       (await ctx.db.query("orders").withIndex("by_status", (q) => q.eq("status", status)).take(500)).length;
-    const waitingForFarms = await active("paid");
+    // Paid pickup orders and unpaid delivery orders both wait for the farm
+    const waitingForFarms = (await active("paid")) + (await active("placed"));
     const inProgress =
       (await active("accepted")) + (await active("preparing")) + (await active("ready_for_rider"));
-    const onTheRoad = (await active("out_for_delivery")) + (await active("with_rider")) + (await active("at_pickup_point"));
+    const onTheRoad =
+      (await active("out_for_delivery")) +
+      (await active("with_rider")) +
+      (await active("at_pickup_point")) +
+      (await active("ready_for_collection"));
     const farms = await ctx.db.query("farms").withIndex("by_status", (q) => q.eq("status", "active")).take(1000);
     const live = await ctx.db.query("listings").withIndex("by_status_and_submittedAt", (q) => q.eq("status", "live")).take(2000);
     return {

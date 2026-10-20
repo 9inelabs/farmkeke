@@ -1,4 +1,4 @@
-// Phase 5 gaps: slot capacity ("Full"), the rider note, partial-quantity
+// Phase 5 gaps: the rider note, partial-quantity
 // problem amounts and the farm's stance, guest orders linked by email only,
 // back in stock + Notify me, per-item ratings, the reset link's returnTo, and
 // the smaller read additions. Resend is mocked (fetch).
@@ -8,6 +8,7 @@ import { api } from "../convex/_generated/api";
 import { resetLink } from "../convex/lib/passwordProvider";
 import schema from "../convex/schema";
 import { modules } from "./modules";
+import { billDelivery, deliver, payTest, placeDelivery, type DeliveryOpts } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -79,76 +80,17 @@ async function seed(t: T) {
 }
 type S = Awaited<ReturnType<typeof seed>>;
 
-async function place(t: T, s: S, who: U, opts: { slot?: { day: string; from: string; to: string }; email?: string; phone?: string; note?: string; quantity?: number } = {}) {
-  const buyer = as(t, who);
-  const quantity = opts.quantity ?? 2;
-  let window = opts.slot;
-  if (!window) {
-    const w = await buyer.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now: Date.now() });
-    window = { day: w.days[0]!.day, ...w.days[0]!.slots[0]! };
-  }
-  return await buyer.mutation(api.checkout.place, {
-    items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity, priceKobo: 450000 }],
-    fulfilment: "delivery",
-    expectedTotalKobo: quantity * 450000 + 100000,
-    address: { street: "53b Nob Oluwa", landmark: "Church", serviceAreaId: s.areaId, note: opts.note },
-    window,
-    contact: { name: "Chidi Okeke", phone: opts.phone ?? "0803 111 2222", ...(opts.email ? { email: opts.email } : {}) },
-  });
-}
+/** A delivery order (unpaid until its bill), or one already billed and paid. */
+const place = (t: T, s: S, who: U, opts: DeliveryOpts = {}) => placeDelivery(t, s, who, opts);
 
-async function paid(t: T, s: S, who: U, opts: Parameters<typeof place>[3] = {}) {
-  const placed = await place(t, s, who, opts);
-  await as(t, who).mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
+async function paid(t: T, s: S, who: U, opts: DeliveryOpts = {}) {
+  const placed = await placeDelivery(t, s, who, opts);
+  for (const o of placed.orders) await billDelivery(t, s, o.orderId);
+  await payTest(t, who, placed.checkoutId);
   return placed;
 }
 
-async function delivered(t: T, s: S, orderId: any) {
-  const farmer = as(t, s.farmerA);
-  const admin = as(t, s.admin);
-  await farmer.mutation(api.orders.farmer.accept, { orderId });
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.markPacked, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-  const riderId = await admin.mutation(api.admin.riders.create, { name: "Emeka Eze", phone: "08035550000", reason: "New rider", serviceAreaIds: [s.areaId] });
-  await admin.mutation(api.admin.dispatch.assignRider, { orderId, riderId, collectAt: Date.now() + 3600_000 });
-  await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_from_farm" });
-  await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" });
-}
-
-test("slot capacity: a slot at its limit is Full, and placing into it fails", async () => {
-  process.env.PAYMENTS_TEST_STEP = "true";
-  const t = convexTest(schema, modules);
-  const s = await seed(t);
-  mailbox();
-  const shopper = as(t, s.guest);
-  const now = Date.now();
-  const before = await shopper.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now, serviceAreaId: s.areaId });
-  // Unlimited by default: every slot in time is open
-  expect(before.allDays[0]!.slots.filter((x: any) => x.reason === "full")).toEqual([]);
-  const slot = { day: before.days[0]!.day, ...before.days[0]!.slots[0]! };
-
-  await as(t, s.admin).mutation(api.admin.fees.setSlotCapacity, { capacity: 1, serviceAreaId: s.areaId, from: slot.from, reason: "Two riders" });
-  await place(t, s, s.guest, { slot, note: "Blue gate. Call when you arrive." });
-
-  const after = await shopper.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now, serviceAreaId: s.areaId });
-  const day = after.allDays.find((d: any) => d.day === slot.day)!;
-  expect(day.slots.find((x: any) => x.from === slot.from)).toMatchObject({ open: false, reason: "full" });
-  // Other slots of that day stay open; old shape (`days[].slots`) lists open slots only
-  expect(after.days.find((d: any) => d.day === slot.day)?.slots.some((x: any) => x.from === slot.from) ?? false).toBe(false);
-  // Without an area, no capacity is applied (the app's current call)
-  const noArea = await shopper.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now });
-  expect(noArea.days[0]!.slots.some((x: any) => x.from === slot.from)).toBe(true);
-
-  await expect(place(t, s, s.guest2, { slot })).rejects.toThrow(/WINDOW_FULL/);
-
-  // A cancelled order frees its place
-  await t.run(async (ctx) => {
-    for (const o of await ctx.db.query("orders").collect()) await ctx.db.patch("orders", o._id, { status: "cancelled" });
-  });
-  await expect(place(t, s, s.guest2, { slot })).resolves.toBeTruthy();
-  delete process.env.PAYMENTS_TEST_STEP;
-});
+const delivered = (t: T, s: S, orderId: any) => deliver(t, s, orderId, { packed: true });
 
 test("the rider note reaches the farm, dispatch and the confirmation page", async () => {
   process.env.PAYMENTS_TEST_STEP = "true";
@@ -160,7 +102,6 @@ test("the rider note reaches the farm, dispatch and the confirmation page", asyn
   const farm = await as(t, s.farmerA).query(api.orders.farmer.get, { orderId });
   expect(farm.address.note).toBe("Blue gate. Call when you arrive.");
   const farmer = as(t, s.farmerA);
-  await farmer.mutation(api.orders.farmer.accept, { orderId });
   await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
   await farmer.mutation(api.orders.farmer.markPacked, { orderId });
   await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
@@ -321,10 +262,6 @@ test("reads: quote response times, per-point ready day, card and start time, rec
   const items = [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1 }];
   const quote = await shopper.query(api.checkout.quote, { items });
   expect(quote.farms[0]).toMatchObject({ responseTimeHours: null, acceptsWithinHours: 24 });
-
-  const points = await shopper.query(api.checkout.pickupPoints, { farmIds: [s.farmA], now: Date.now() });
-  expect(points[0].readyDay).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  expect(new Date(`${points[0].readyDay}T12:00:00Z`).getUTCDay()).not.toBe(0);
 
   const placed = await paid(t, s, s.guest);
   const pay = await shopper.query(api.payments.checkout.get, { checkoutId: placed.checkoutId });

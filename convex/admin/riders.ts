@@ -16,16 +16,19 @@ const ON_THE_ROAD = ["ready_for_rider", "out_for_delivery", "with_rider"];
 /** Riders added before profiles existed count as approved. */
 const reviewStatus = (r: Doc<"riders">) => r.reviewStatus ?? "approved";
 
-/** What a profile still needs before it can be approved. */
+const MOTOR: Doc<"riders">["vehicleType"][] = ["motorbike", "tricycle"];
+
+/**
+ * What a profile still needs before it can be approved: the vehicle, its
+ * plate and model, and where the rider works. Photo, ID, guarantor and bank
+ * details are kept when staff add them, but aren't required.
+ */
 function missing(r: Doc<"riders">): string[] {
   const out: string[] = [];
-  if (!r.photoStorageId) out.push("photo");
-  if (!r.idType || !r.idNumber) out.push("ID number");
-  if (!r.idPhotoStorageId) out.push("ID photo");
   if (!r.vehicleType) out.push("vehicle");
   if (r.vehicleType && r.vehicleType !== "bicycle" && !r.plateNumber) out.push("plate number");
-  if (!r.guarantor) out.push("guarantor");
-  if (!r.bankCode || !r.accountNumber || !r.accountName) out.push("bank account");
+  if (MOTOR.includes(r.vehicleType) && !r.bikeModel) out.push("bike model");
+  if (r.serviceAreaIds.length === 0) out.push("area of operation");
   return out;
 }
 
@@ -76,6 +79,8 @@ export const list = query({
           active: r.active,
           reviewStatus: reviewStatus(r),
           vehicleType: r.vehicleType ?? null,
+          plateNumber: r.plateNumber ?? null,
+          bikeModel: r.bikeModel ?? null,
           photoUrl: r.photoStorageId ? await ctx.storage.getUrl(r.photoStorageId) : null,
           serviceAreas: areas,
           activeJobs: orders.filter((o) => ON_THE_ROAD.includes(o.status)).length,
@@ -99,17 +104,26 @@ export const create = mutation({
     serviceAreaIds: v.array(v.id("serviceAreas")),
     // The portal adds riders for review: not dispatchable until approved
     pendingReview: v.optional(v.boolean()),
+    // The details staff take when adding a rider
+    vehicleType: v.optional(riderVehicle),
+    plateNumber: v.optional(v.string()),
+    bikeModel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const staff = await requireStaff(ctx, "riders.manage");
     const name = cleanName(args.name);
     const phone = cleanPhone(args.phone);
     const serviceAreaIds = await checkAreas(ctx, args.serviceAreaIds);
+    const vehicle = {
+      vehicleType: args.vehicleType,
+      plateNumber: optionalText(args.plateNumber, 20)?.toUpperCase(),
+      bikeModel: optionalText(args.bikeModel, 60),
+    };
     const riderId = await ctx.db.insert(
       "riders",
       args.pendingReview
-        ? { name, phone, serviceAreaIds, active: false, reviewStatus: "pending" }
-        : { name, phone, serviceAreaIds, active: true },
+        ? { name, phone, serviceAreaIds, active: false, reviewStatus: "pending", ...vehicle }
+        : { name, phone, serviceAreaIds, active: true, ...vehicle },
     );
     await writeAudit(ctx, {
       actorId: staff._id,
@@ -205,6 +219,7 @@ export const get = query({
       idPhotoUrl: r.idPhotoStorageId ? await ctx.storage.getUrl(r.idPhotoStorageId) : null,
       vehicleType: r.vehicleType ?? null,
       plateNumber: r.plateNumber ?? null,
+      bikeModel: r.bikeModel ?? null,
       guarantor: r.guarantor ?? null,
       bankCode: r.bankCode ?? null,
       bankName: r.bankName ?? null,
@@ -248,6 +263,7 @@ export const saveProfile = mutation({
     idPhotoStorageId: v.optional(v.id("_storage")),
     vehicleType: v.optional(riderVehicle),
     plateNumber: v.optional(v.string()),
+    bikeModel: v.optional(v.string()),
     guarantor: v.optional(v.object({ name: v.string(), phone: v.string(), address: v.string(), relationship: v.string() })),
     bankCode: v.optional(v.string()),
     accountNumber: v.optional(v.string()),
@@ -266,6 +282,7 @@ export const saveProfile = mutation({
     if (args.idNumber !== undefined) patch.idNumber = optionalText(args.idNumber, 40);
     if (args.vehicleType !== undefined) patch.vehicleType = args.vehicleType;
     if (args.plateNumber !== undefined) patch.plateNumber = optionalText(args.plateNumber, 20)?.toUpperCase();
+    if (args.bikeModel !== undefined) patch.bikeModel = optionalText(args.bikeModel, 60);
     if (args.guarantor !== undefined) {
       const g = args.guarantor;
       const phone = normalizeNigerianPhone(g.phone);
