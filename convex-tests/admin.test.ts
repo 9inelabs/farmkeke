@@ -494,6 +494,10 @@ test("areas, order rules, rider profiles and review, and finding orders", async 
   expect(await ops.query(api.admin.riders.pendingCount, {})).toBe(1);
   await expect(ops.mutation(api.admin.riders.setActive, { riderId, active: true, reason: "x" })).rejects.toThrow(/RIDER_NOT_APPROVED/);
   await expect(ops.mutation(api.admin.riders.review, { riderId, approve: true, note: "" })).rejects.toThrow(/Still missing/);
+  // Only the vehicle, its plate and model, and the areas are required
+  expect((await ops.query(api.admin.riders.get, { riderId }))!.missing).toEqual(["vehicle"]);
+  await ops.mutation(api.admin.riders.saveProfile, { riderId, vehicleType: "motorbike", plateNumber: "abc-123-xy", reason: "x" });
+  expect((await ops.query(api.admin.riders.get, { riderId }))!.missing).toEqual(["bike model"]);
   const photo = await t.run(async (ctx) => ctx.storage.store(new Blob(["x"], { type: "image/png" })));
   await expect(
     ops.mutation(api.admin.riders.saveProfile, { riderId, bankCode: "058", accountNumber: "123", accountName: "Emeka", reason: "x" }),
@@ -506,6 +510,7 @@ test("areas, order rules, rider profiles and review, and finding orders", async 
     idPhotoStorageId: photo,
     vehicleType: "motorbike",
     plateNumber: "abc-123-xy",
+    bikeModel: "Bajaj Boxer 150",
     guarantor: { name: "Ngozi Eze", phone: "08031112222", address: "Owerri", relationship: "Aunt" },
     bankCode: "058",
     accountNumber: "0123456789",
@@ -513,7 +518,7 @@ test("areas, order rules, rider profiles and review, and finding orders", async 
     reason: "Profile",
   });
   let rider = await ops.query(api.admin.riders.get, { riderId });
-  expect(rider).toMatchObject({ missing: [], plateNumber: "ABC-123-XY", bankName: "Guaranty Trust Bank (GTBank)", reviewStatus: "pending", active: false });
+  expect(rider).toMatchObject({ missing: [], plateNumber: "ABC-123-XY", bikeModel: "Bajaj Boxer 150", bankName: "Guaranty Trust Bank (GTBank)", reviewStatus: "pending", active: false });
   await ops.mutation(api.admin.riders.review, { riderId, approve: true, note: "Checked in person" });
   rider = await ops.query(api.admin.riders.get, { riderId });
   expect(rider).toMatchObject({ reviewStatus: "approved", active: true, reviewedBy: "Obi Ops" });

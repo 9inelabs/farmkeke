@@ -1,12 +1,15 @@
 // Paying for a checkout with Paystack (M-43 to M-46, W-24). One checkout =
 // one Paystack transaction. Success arrives by webhook, by the return page,
 // or by `verify`; `settleCharge` handles all three and is idempotent.
+// Delivery bills can also be paid by anyone holding the bill's pay link
+// (`payToken`), e.g. a guest paying from another phone.
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
-import { action, env, internalMutation, mutation, query } from "../_generated/server";
+import type { Doc, Id } from "../_generated/dataModel";
+import { action, env, internalMutation, mutation, query, type QueryCtx } from "../_generated/server";
 import { getViewer, requireUser } from "../lib/auth";
-import { markCheckoutPaid, orderRow } from "../lib/orders";
+import { assertPayable, canPay } from "../lib/bill";
+import { ENDED, markCheckoutPaid, orderRow } from "../lib/orders";
 import {
   chargeArgs,
   paymentEmail,
@@ -32,14 +35,8 @@ const cardArgs = v.object({
   signature: v.optional(v.string()),
 });
 
-/** W-24 pay page: the checkout's state and its orders. Owner only. */
-export const get = query({
-  args: { checkoutId: v.string() },
-  handler: async (ctx, args) => {
-    const user = await getViewer(ctx);
-    const id = ctx.db.normalizeId("checkouts", args.checkoutId);
-    const checkout = id ? await ctx.db.get("checkouts", id) : null;
-    if (user === null || checkout === null || checkout.userId !== user._id) return null;
+/** The pay page's view of a checkout (owner, or a pay-link holder for a bill). */
+async function payView(ctx: QueryCtx, checkout: Doc<"checkouts">, isOwner: boolean, isGuest: boolean) {
     const orders = await ctx.db
       .query("orders")
       .withIndex("by_checkoutId", (q) => q.eq("checkoutId", checkout._id))
@@ -58,8 +55,17 @@ export const get = query({
       deliveryFeeKobo: checkout.deliveryFeeKobo,
       totalKobo: checkout.totalKobo,
       paidAt: checkout.paidAt ?? null,
-      contact: checkout.contact,
-      canSaveCard: user.isAnonymous !== true,
+      // Someone else's bill: first name only, and no phone or email
+      contact: isOwner ? checkout.contact : { name: checkout.contact.name.split(/\s+/)[0] ?? "", phone: "", email: undefined },
+      // Cards are saved to the owner's account, never a pay-link holder's
+      canSaveCard: isOwner && !isGuest,
+      isOwner,
+      // Delivery bill: when it was sent and when it must be paid by
+      billedAt: checkout.billedAt ?? null,
+      payBy: checkout.payBy ?? null,
+      // The owner can share the pay link; others already have it
+      payToken: isOwner ? (checkout.payToken ?? null) : null,
+      abandonReason: checkout.abandonReason ?? null,
       lastAttempt:
         last === null
           ? null
@@ -74,9 +80,41 @@ export const get = query({
               cardLast4: last.cardLast4 ?? null,
               startedAt: last.startedAt ?? last._creationTime,
             },
-      orders: await Promise.all(orders.map((o) => orderRow(ctx, o))),
+      // A bill only covers the orders farms accepted
+      orders: await Promise.all(
+        orders
+          .filter((o) => checkout.fulfilment !== "delivery" || checkout.status === "awaiting_bill" || !ENDED.includes(o.status) || o.escrow !== "none")
+          .map((o) => orderRow(ctx, o)),
+      ),
       payments: { live: paymentsLive(), testStep: testStepOn() },
     };
+}
+
+/** W-24 pay page: the checkout's state and its orders. Owner only. */
+export const get = query({
+  args: { checkoutId: v.string() },
+  handler: async (ctx, args) => {
+    const user = await getViewer(ctx);
+    const id = ctx.db.normalizeId("checkouts", args.checkoutId);
+    const checkout = id ? await ctx.db.get("checkouts", id) : null;
+    if (user === null || checkout === null || checkout.userId !== user._id) return null;
+    return await payView(ctx, checkout, true, user.isAnonymous === true);
+  },
+});
+
+/** The delivery bill behind a pay link (farmkeke.com/pay/…), for whoever has the link. */
+export const bill = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    if (args.token.length < 32) return null;
+    const checkout = await ctx.db
+      .query("checkouts")
+      .withIndex("by_payToken", (q) => q.eq("payToken", args.token))
+      .unique();
+    if (checkout === null) return null;
+    const user = await getViewer(ctx);
+    const isOwner = user !== null && user._id === checkout.userId;
+    return await payView(ctx, checkout, isOwner, user?.isAnonymous === true);
   },
 });
 
@@ -87,13 +125,14 @@ export const beginAttempt = internalMutation({
     method: paymentMethod,
     saveCard: v.optional(v.boolean()),
     savedCardId: v.optional(v.id("savedCards")),
+    payToken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const checkout = await ctx.db.get("checkouts", args.checkoutId);
-    if (checkout === null || checkout.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
-    if (checkout.status === "paid") throw new ConvexError({ code: "ALREADY_PAID" });
-    if (checkout.status !== "awaiting_payment") throw new ConvexError({ code: "CHECKOUT_EXPIRED" });
+    canPay(checkout, user._id, args.payToken);
+    assertPayable(checkout);
+    const isOwner = checkout.userId === user._id;
     await hitLimit(ctx, `pay:${user._id}`, START_LIMIT.max, START_LIMIT.windowMs);
     let authorizationCode: string | undefined;
     let savedCard: { brand: string; last4: string } | undefined;
@@ -119,8 +158,8 @@ export const beginAttempt = internalMutation({
       amountKobo: checkout.totalKobo,
       currency: "NGN",
       email,
-      // Guests can't keep cards (no account to keep them on)
-      saveCard: args.saveCard === true && !user.isAnonymous ? true : undefined,
+      // Guests can't keep cards (no account to keep them on); nor can someone paying another person's bill
+      saveCard: args.saveCard === true && !user.isAnonymous && isOwner ? true : undefined,
       savedCardId: args.savedCardId,
       startedAt: Date.now(),
       // A saved card is known before Paystack answers (W-27 "Card ending 4081")
@@ -153,6 +192,8 @@ export const start = action({
     savedCardId: v.optional(v.id("savedCards")),
     // Where Paystack sends the shopper back; the website by default
     returnTo: v.optional(v.union(v.literal("web"), v.literal("app"))),
+    // Paying a delivery bill through its pay link
+    payToken: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ accessCode: string; authorizationUrl: string; reference: string }> => {
     if (!paymentsLive()) throw new ConvexError({ code: "PAYMENTS_NOT_LIVE" });
@@ -184,7 +225,9 @@ export const start = action({
     const callbackUrl =
       returnTo === "app"
         ? `${env.CONVEX_SITE_URL}/paystack/return?checkoutId=${args.checkoutId}`
-        : `${websiteUrl()}/checkout/pay/${args.checkoutId}`;
+        : args.payToken
+          ? `${websiteUrl()}/pay/${encodeURIComponent(args.payToken)}`
+          : `${websiteUrl()}/checkout/pay/${args.checkoutId}`;
     const channels = args.method === "card" ? ["card"] : args.method === "bank_transfer" ? ["bank_transfer"] : ["ussd"];
     const opened = await paystack<{ authorization_url: string; access_code: string; reference: string }>(
       "/transaction/initialize",
@@ -222,11 +265,11 @@ export const start = action({
 
 /** The caller's checkout state and its attempts still waiting for an answer. */
 export const openAttempts = internalMutation({
-  args: { checkoutId: v.id("checkouts") },
+  args: { checkoutId: v.id("checkouts"), payToken: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const checkout = await ctx.db.get("checkouts", args.checkoutId);
-    if (checkout === null || checkout.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
+    canPay(checkout, user._id, args.payToken);
     const attempts = await ctx.db
       .query("paymentAttempts")
       .withIndex("by_checkoutId", (q) => q.eq("checkoutId", checkout._id))
@@ -243,11 +286,11 @@ export const openAttempts = internalMutation({
 
 /** M-46 "Check again": asks Paystack about open attempts. */
 export const verify = action({
-  args: { checkoutId: v.id("checkouts") },
+  args: { checkoutId: v.id("checkouts"), payToken: v.optional(v.string()) },
   handler: async (ctx, args): Promise<{ status: string; paid: boolean }> => {
     const open: { status: string; references: string[] } = await ctx.runMutation(
       internal.payments.checkout.openAttempts,
-      { checkoutId: args.checkoutId },
+      { checkoutId: args.checkoutId, payToken: args.payToken },
     );
     let status = open.status;
     if (status === "awaiting_payment" && paymentsLive()) {
@@ -373,14 +416,13 @@ export const settleCharge = internalMutation({
 
 /** "Pay (test)": marks a checkout paid without Paystack. Only while the test step is on. */
 export const markPaidTest = mutation({
-  args: { checkoutId: v.id("checkouts") },
+  args: { checkoutId: v.id("checkouts"), payToken: v.optional(v.string()) },
   handler: async (ctx, args): Promise<{ checkoutId: Id<"checkouts">; reference: string }> => {
     if (!testStepOn()) throw new ConvexError({ code: "TEST_STEP_OFF" });
     const user = await requireUser(ctx);
     const checkout = await ctx.db.get("checkouts", args.checkoutId);
-    if (checkout === null || checkout.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
-    if (checkout.status === "paid") throw new ConvexError({ code: "ALREADY_PAID" });
-    if (checkout.status !== "awaiting_payment") throw new ConvexError({ code: "CHECKOUT_EXPIRED" });
+    canPay(checkout, user._id, args.payToken);
+    assertPayable(checkout);
     const reference = `TEST-${checkout.reference}`;
     const paidAt = Date.now();
     await ctx.db.insert("paymentAttempts", {

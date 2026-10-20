@@ -6,6 +6,7 @@ import type { Doc } from "../_generated/dataModel";
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
+import { checkBill } from "../lib/bill";
 import { notifyConsumer, notifyFarm } from "../lib/notify";
 import { endWithFullRefund, logOrderEvent, orderCore, orderRow, restoreStock, transition, type OrderStatus } from "../lib/orders";
 import { HOUR } from "../lib/settings";
@@ -16,6 +17,7 @@ import { windowEnd } from "./dispatch";
 // Staff can cancel until the order reaches the shopper
 const CANCELLABLE: OrderStatus[] = [
   "awaiting_payment",
+  "placed",
   "paid",
   "accepted",
   "preparing",
@@ -23,9 +25,18 @@ const CANCELLABLE: OrderStatus[] = [
   "out_for_delivery",
   "with_rider",
   "at_pickup_point",
+  "ready_for_collection",
 ];
 // Still at the farm: the stock can go back
-const AT_FARM: OrderStatus[] = ["awaiting_payment", "paid", "accepted", "preparing", "ready_for_rider"];
+const AT_FARM: OrderStatus[] = [
+  "awaiting_payment",
+  "placed",
+  "paid",
+  "accepted",
+  "preparing",
+  "ready_for_rider",
+  "ready_for_collection",
+];
 const RIDER_STAGES: OrderStatus[] = ["accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider"];
 
 async function adminRow(ctx: QueryCtx, o: Doc<"orders">) {
@@ -153,7 +164,22 @@ export const get = query({
       },
       farmDetail: farm === null ? null : { _id: farm._id, name: farm.name, phone: farm.phone, collectionAddress: farm.collectionAddress },
       payment: checkout === null ? null : { checkoutReference: checkout.reference, reference: checkout.paymentReference ?? null, provider: checkout.paymentProvider ?? null },
-      riderDetail: rider === null ? null : { _id: rider._id, name: rider.name, phone: rider.phone },
+      riderDetail:
+        rider === null
+          ? null
+          : { _id: rider._id, name: rider.name, phone: rider.phone, plateNumber: rider.plateNumber ?? null, bikeModel: rider.bikeModel ?? null },
+      // Delivery: the shopper's bill (all of the checkout's accepted orders)
+      bill:
+        order.fulfilment !== "delivery" || checkout === null
+          ? null
+          : {
+              status: checkout.status,
+              billedAt: checkout.billedAt ?? null,
+              payBy: checkout.payBy ?? null,
+              totalKobo: checkout.totalKobo,
+              abandonReason: checkout.abandonReason ?? null,
+              canPrice: checkout.status === "awaiting_bill" && ["accepted", "preparing", "ready_for_rider"].includes(order.status),
+            },
       unconfirmedFlaggedAt: order.unconfirmedFlaggedAt ?? null,
       refunds: refunds.map((r) => ({ _id: r._id, amountKobo: r.amountKobo, kind: r.kind, status: r.status, reason: r.reason, at: r._creationTime })),
       payoutIds: payoutItems.map((p) => p.payoutId),
@@ -216,9 +242,13 @@ export const cancel = mutation({
       ended,
       "order_cancelled",
       `Order ${order.number} was cancelled`,
-      "Farmkeke cancelled this order. You'll get a full refund to your original payment method.",
+      order.escrow === "held"
+        ? "Farmkeke cancelled this order. You'll get a full refund to your original payment method."
+        : "Farmkeke cancelled this order. You weren't charged.",
     );
     await notifyFarm(ctx, ended, "order_cancelled", `Order ${order.number} was cancelled`, `Farmkeke cancelled this order: ${reason}`);
+    // An unpaid delivery checkout may now be ready to bill (or have nothing left)
+    await checkBill(ctx, order.checkoutId);
   },
 });
 
@@ -230,7 +260,7 @@ export const extendDeadline = mutation({
     if (!Number.isInteger(args.hours) || args.hours < 1 || args.hours > 72) throw new ConvexError({ code: "INVALID_HOURS" });
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
-    if (order.status !== "paid") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    if (order.status !== "paid" && order.status !== "placed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     const now = Date.now();
     const respondBy = Math.max(now, order.respondBy ?? now) + args.hours * HOUR;
     await writeAudit(ctx, {
@@ -299,10 +329,20 @@ export const stuck = query({
       }
     };
     await scan("paid", (o) => (o.respondBy !== undefined && o.respondBy < now ? "deadline_passed" : null));
-    await scan("accepted", (o) => ((o.acceptedAt ?? o._creationTime) < now - 48 * HOUR ? "not_preparing" : null));
-    await scan("preparing", (o) => ((o.preparingAt ?? o._creationTime) < now - 48 * HOUR ? "not_ready" : null));
+    await scan("placed", (o) => (o.respondBy !== undefined && o.respondBy < now ? "deadline_passed" : null));
+    // Delivery accepted two hours ago and still no price: the shopper is waiting for their bill
+    const unpriced = (o: Doc<"orders">) =>
+      o.fulfilment === "delivery" && o.escrow === "none" && o.deliveryPricedAt === undefined && (o.acceptedAt ?? o._creationTime) < now - 2 * HOUR;
+    await scan("accepted", (o) =>
+      unpriced(o) ? "needs_delivery_price" : (o.acceptedAt ?? o._creationTime) < now - 48 * HOUR ? "not_preparing" : null,
+    );
+    await scan("preparing", (o) =>
+      unpriced(o) ? "needs_delivery_price" : (o.preparingAt ?? o._creationTime) < now - 48 * HOUR ? "not_ready" : null,
+    );
     await scan("ready_for_rider", (o) =>
-      o.riderId === undefined
+      unpriced(o)
+        ? "needs_delivery_price"
+        : o.riderId === undefined
         ? "no_rider"
         : o.riderCollectAt !== undefined && o.riderCollectAt < now - 2 * HOUR
           ? "not_collected_from_farm"
@@ -314,6 +354,7 @@ export const stuck = query({
     });
     await scan("with_rider", (o) => ((o.handedOverAt ?? o._creationTime) < now - 24 * HOUR ? "not_at_pickup_point" : null));
     await scan("at_pickup_point", (o) => (o.collectBy !== undefined && o.collectBy < now ? "not_collected" : null));
+    await scan("ready_for_collection", (o) => (o.collectBy !== undefined && o.collectBy < now ? "not_collected" : null));
     await scan("delivered", (o) => (o.unconfirmedFlaggedAt !== undefined ? "unconfirmed" : null));
     await scan("collected", (o) => (o.unconfirmedFlaggedAt !== undefined ? "unconfirmed" : null));
     return await Promise.all(out.map(async ({ order, reason }) => ({ ...(await adminRow(ctx, order)), reason })));

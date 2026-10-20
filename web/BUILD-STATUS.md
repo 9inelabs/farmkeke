@@ -167,3 +167,12 @@ Shared-file changes:
 - `src/app/layout.tsx`: MiniCart, AreaPicker, CookieBanner and MaintenanceGate are wrapped in `SiteOnly` (new, `components/system/SiteOnly.tsx`), so they don't run under `/admin`.
 - `src/app/robots.ts`: disallows `/admin`.
 - `package.json`: `gen:admin` script.
+
+## Delivery billing and farm pickup (Phase 16)
+
+Report: `docs/reports/16-delivery-billing.md`.
+
+- **Home delivery.** The checkout total is the produce only, and orders start unpaid (`placed`). Once the farms accept and staff price each delivery, the shopper gets one bill at `/pay/<token>`, by email, text and in the app. They have 12 hours to pay, and the rider collects only after payment.
+- **Pickup.** It is at the farm, paid at checkout. The shopper gets the farm's address and a 4-digit code when the order is ready (`ready_for_collection`). The farmer enters the code to hand it over.
+- **No time slots and no pickup points** on the website any more. `/pickup-locations` redirects to `/how-it-works`. The old finder, map and helpers are deleted.
+- **Still to do:** connect the SMS provider. Until then, email is required for delivery orders. The mobile app also needs moving to this flow.

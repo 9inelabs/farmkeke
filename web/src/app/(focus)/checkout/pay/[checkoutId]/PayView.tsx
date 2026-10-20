@@ -9,6 +9,8 @@
 // - Test: "Pay now (test)" calls payments/checkout.markPaidTest.
 // The checkout query is live, so a webhook marking it paid moves the page on by
 // itself; `verify` asks Paystack directly while we wait.
+// With `payToken` this is a delivery bill's pay link (/pay/…): it works on
+// any device, for whoever has the link, and shows the bill first.
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Building2, Clock, CreditCard, Lock, RotateCw, ShieldCheck, Smartphone, X } from "lucide-react";
 import Link from "next/link";
@@ -22,8 +24,8 @@ import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
 import { api, type Id } from "@/convex/api";
 import type { CheckoutForPay, PaymentStart } from "@/convex/returns/checkout";
 import type { PaymentsConfig } from "@/convex/returns/common";
-import { errorCode } from "@/lib/auth";
-import { naira } from "@/lib/format";
+import { errorCode, useEnsureIdentity } from "@/lib/auth";
+import { dateTime, naira } from "@/lib/format";
 import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
@@ -81,17 +83,25 @@ const PANEL: Record<Method, { title: string; body: string }> = {
   },
 };
 
-export function PayView({ checkoutId }: { checkoutId: string }) {
+export function PayView({ checkoutId: fromPath, payToken }: { checkoutId?: string; payToken?: string }) {
   const router = useRouter();
   const search = useSearchParams();
   const returned = !!(search.get("reference") || search.get("trxref"));
   // Wait for the saved session (guest or account) before asking: the checkout
-  // is only shown to the identity that placed it.
+  // is only shown to the identity that placed it (or to a pay-link holder).
   const { isLoading: authLoading } = useConvexAuth();
-  const checkout = useQuery(api.payments.checkout.get, authLoading ? "skip" : { checkoutId }) as
+  const owned = useQuery(api.payments.checkout.get, authLoading || payToken || !fromPath ? "skip" : { checkoutId: fromPath }) as
     | CheckoutForPay
     | null
     | undefined;
+  const billed = useQuery(api.payments.checkout.bill, authLoading || !payToken ? "skip" : { token: payToken }) as
+    | CheckoutForPay
+    | null
+    | undefined;
+  const checkout = payToken ? billed : owned;
+  const checkoutId = checkout?._id ?? fromPath ?? "";
+  const isBill = !!payToken;
+  const ensureIdentity = useEnsureIdentity();
   const configQ = useQuery(api.payments.config.get, {}) as PaymentsConfig | undefined;
   const config = checkout?.payments ?? configQ;
   const start = useAction(api.payments.checkout.start);
@@ -107,17 +117,25 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
   const id = checkoutId as Id<"checkouts">;
 
   const paid = checkout?.status === "paid";
+  // Someone else's bill: stay here and say thank you (their orders aren't ours to show)
+  const paidElsewhere = paid && isBill && checkout?.isOwner === false;
+  // Paid: the owner sees their orders; delivery bills go to the order page
+  const afterPaid = useCallback(() => {
+    if (!isBill || checkout?.isOwner === false) return null;
+    return checkout?.orders[0] ? routes.order(checkout.orders[0]._id) : routes.myOrders;
+  }, [isBill, checkout]);
   useEffect(() => {
-    if (paid) router.replace(routes.orderPlaced(checkoutId));
-  }, [paid, router, checkoutId]);
+    if (!paid || paidElsewhere) return;
+    router.replace(afterPaid() ?? routes.orderPlaced(checkoutId));
+  }, [paid, paidElsewhere, router, checkoutId, afterPaid]);
 
   const check = useCallback(async () => {
     try {
-      await verify({ checkoutId: id });
+      await verify({ checkoutId: id, payToken });
     } catch {
       // Offline or Paystack slow: the live query still updates on its own.
     }
-  }, [verify, id]);
+  }, [verify, id, payToken]);
 
   // W-27: ask Paystack every few seconds; after 30s show W-29 instead.
   useEffect(() => {
@@ -162,7 +180,9 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
     setError(null);
     setMethod(m);
     try {
-      const r = (await start({ checkoutId: id, method: m, returnTo: "web" })) as PaymentStart;
+      // Paying from a link on another phone: a guest session to pay with
+      if (isBill) await ensureIdentity();
+      const r = (await start({ checkoutId: id, method: m, returnTo: "web", payToken })) as PaymentStart;
       try {
         await loadPaystack();
         new window.PaystackPop!().resumeTransaction(r.accessCode, {
@@ -179,11 +199,13 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
     } catch (e) {
       setOpening(false);
       const code = errorCode(e);
-      if (code === "ALREADY_PAID") return router.replace(routes.orderPlaced(checkoutId));
+      if (code === "ALREADY_PAID") return router.replace(afterPaid() ?? routes.orderPlaced(checkoutId));
       setPhase("choose");
       setError(
         code === "CHECKOUT_EXPIRED"
-          ? "This payment has timed out. Go back to your cart to check out again."
+          ? isBill
+            ? "This bill has expired, so the order was cancelled. You haven't been charged."
+            : "This payment has timed out. Go back to your cart to check out again."
           : code === "RATE_LIMITED"
             ? "You've tried to pay several times in a few minutes. Wait a little, then try again."
             : code === "PAYMENTS_NOT_LIVE"
@@ -197,12 +219,15 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
     setTesting(true);
     setError(null);
     try {
-      await markPaidTest({ checkoutId: id });
-      router.replace(routes.orderPlaced(checkoutId));
+      if (isBill) await ensureIdentity();
+      await markPaidTest({ checkoutId: id, payToken });
+      const next = afterPaid();
+      if (next !== null || !isBill) router.replace(next ?? routes.orderPlaced(checkoutId));
+      else setTesting(false);
     } catch (e) {
       setTesting(false);
       const code = errorCode(e);
-      if (code === "ALREADY_PAID") return router.replace(routes.orderPlaced(checkoutId));
+      if (code === "ALREADY_PAID") return router.replace(afterPaid() ?? routes.orderPlaced(checkoutId));
       setError(
         code === "CHECKOUT_EXPIRED"
           ? "This payment has timed out. Go back to your cart to check out again."
@@ -213,7 +238,9 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
 
   if (checkout === undefined) return <PaySkeleton />;
   if (checkout === null) return <NotFound />;
-  if (expired) return <Expired />;
+  if (checkout.status === "awaiting_bill") return <BillNotReady />;
+  if (expired) return isBill || checkout.payBy ? <BillExpired /> : <Expired />;
+  if (paidElsewhere) return <PaidThanks checkout={checkout} />;
   if (paid) return <Confirming checkout={checkout} />;
 
   if (view === "confirming") return <Confirming checkout={checkout} />;
@@ -242,9 +269,17 @@ export function PayView({ checkoutId }: { checkoutId: string }) {
       />
     );
 
+  // Bills have no review step to go back to
+  const cancelHref = isBill || checkout.payBy
+    ? checkout.isOwner !== false && checkout.orders[0]
+      ? routes.order(checkout.orders[0]._id)
+      : routes.home
+    : routes.checkoutReview;
+
   return (
     <Choose
       checkout={checkout}
+      cancelHref={cancelHref}
       method={method}
       setMethod={setMethod}
       live={config?.live ?? false}
@@ -308,6 +343,7 @@ export function PaySkeleton() {
 
 function Choose({
   checkout,
+  cancelHref,
   method,
   setMethod,
   live,
@@ -320,6 +356,7 @@ function Choose({
   onTest,
 }: {
   checkout: CheckoutForPay;
+  cancelHref: string;
   method: Method;
   setMethod: (m: Method) => void;
   live: boolean;
@@ -359,13 +396,14 @@ function Choose({
               </div>
             </div>
             <Link
-              href={routes.checkoutReview}
+              href={cancelHref}
               className="inline-flex min-h-11 flex-none items-center gap-1.5 rounded-full bg-canvas px-3.5 text-sm font-semibold text-ink"
             >
               <X aria-hidden className="size-[18px]" strokeWidth={2} />
               Cancel
             </Link>
           </div>
+          {checkout.payBy ? <BillSummary checkout={checkout} /> : null}
           <div className="grid grid-cols-[200px_minmax(0,1fr)] m:grid-cols-1">
             <div className="flex flex-col gap-1 bg-canvas px-3 py-4">
               <div id="pay-with" className="px-3.5 pb-1.5 text-[11px] font-bold tracking-[0.04em] text-[#9A9E95]">
@@ -616,6 +654,103 @@ function Expired() {
         </p>
         <ButtonLink href={routes.cart} variant="lime" size="lg" fullWidth className="mt-6 min-h-[54px]">
           Back to cart
+        </ButtonLink>
+      </section>
+    </Page>
+  );
+}
+
+/** A delivery bill: each farm's products and delivery, and when it must be paid by. */
+function BillSummary({ checkout }: { checkout: CheckoutForPay }) {
+  return (
+    <div className="px-[22px] py-4 text-sm shadow-[inset_0_-1px_0_#ECEEE8]">
+      <h2 className="m-0 text-sm font-bold">Your bill</h2>
+      <ul className="m-0 mt-2 list-none p-0">
+        {checkout.orders.map((o) => (
+          <li key={o._id} className="py-1.5">
+            <div className="flex justify-between gap-3">
+              <span className="font-semibold">
+                {o.number} · {o.farmName}
+              </span>
+              <span className="font-semibold">{naira(o.totalKobo)}</span>
+            </div>
+            <div className="cap">
+              Products {naira(o.itemsTotalKobo)} · Delivery {naira(o.deliveryFeeKobo)}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-1.5 flex justify-between gap-3 pt-2 shadow-[inset_0_1px_0_#EEF0EB]">
+        <span className="font-semibold">Total</span>
+        <span className="font-display text-base font-extrabold text-forest">{naira(checkout.totalKobo)}</span>
+      </div>
+      {checkout.payBy ? (
+        <p className="cap mt-2">
+          Pay by <strong className="text-ink">{dateTime(checkout.payBy)}</strong>, or the order is cancelled. The farm has it packed and
+          ready for the rider.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Paying someone else's bill through the link: done. */
+function PaidThanks({ checkout }: { checkout: CheckoutForPay }) {
+  return (
+    <Page top={140}>
+      <section role="status" className={panel}>
+        <span aria-hidden className="flex size-[72px] items-center justify-center rounded-full bg-ok-bg text-ok">
+          <ShieldCheck className="size-[34px]" strokeWidth={1.75} />
+        </span>
+        <h1 className={title}>Paid. Thank you</h1>
+        <p className="p mt-2.5">
+          {naira(checkout.totalKobo)} is held safely by Farmkeke. {checkout.contact.name || "The shopper"} will hear when the rider is on
+          the way.
+        </p>
+        <ButtonLink href={routes.home} variant="ghost" size="lg" fullWidth className="mt-6 min-h-[54px]">
+          Go to Farmkeke
+        </ButtonLink>
+      </section>
+    </Page>
+  );
+}
+
+/** A delivery order whose farms haven't all answered, or whose delivery isn't priced yet. */
+function BillNotReady() {
+  return (
+    <Page top={140}>
+      <section className={panel}>
+        <span aria-hidden className="flex size-[72px] items-center justify-center rounded-full bg-pend-bg text-pend">
+          <Clock className="size-[34px]" strokeWidth={1.75} />
+        </span>
+        <h1 className={title}>Your bill isn&apos;t ready yet</h1>
+        <p className="p mt-2.5">
+          The farm needs to accept, then we arrange a rider and price the delivery. We&apos;ll send your bill by email, text and in the
+          app. There&apos;s nothing to pay until then.
+        </p>
+        <ButtonLink href={routes.myOrders} variant="lime" size="lg" fullWidth className="mt-6 min-h-[54px]">
+          See your orders
+        </ButtonLink>
+      </section>
+    </Page>
+  );
+}
+
+/** A delivery bill that wasn't paid within 12 hours: its orders were cancelled. */
+function BillExpired() {
+  return (
+    <Page top={140}>
+      <section className={panel}>
+        <span aria-hidden className="flex size-[72px] items-center justify-center rounded-full bg-pend-bg text-pend">
+          <Clock className="size-[34px]" strokeWidth={1.75} />
+        </span>
+        <h1 className={title}>This bill has expired</h1>
+        <p className="p mt-2.5">
+          It wasn&apos;t paid within 12 hours, so the order was cancelled and the farm was told. You haven&apos;t been charged. You can
+          order again any time.
+        </p>
+        <ButtonLink href={routes.shop} variant="lime" size="lg" fullWidth className="mt-6 min-h-[54px]">
+          Shop again
         </ButtonLink>
       </section>
     </Page>

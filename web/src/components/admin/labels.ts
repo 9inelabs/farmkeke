@@ -52,6 +52,7 @@ const ACTIONS: Record<string, string> = {
   "rider.activate": "Rider switched on",
   "rider.deactivate": "Rider switched off",
   "dispatch.assign_rider": "Rider assigned",
+  "dispatch.set_delivery_price": "Delivery priced",
   "dispatch.collected_from_farm": "Collected from the farm",
   "dispatch.dropped_at_pickup_point": "Dropped at the pickup point",
   "dispatch.delivered": "Delivered",
@@ -111,6 +112,7 @@ export const OUTCOME: Record<string, string> = {
 
 export const ORDER_STATUS: Record<string, [string, string]> = {
   awaiting_payment: ["b-grey", "Awaiting payment"],
+  placed: ["b-pend", "Waiting for the farm (not paid)"],
   paid: ["b-pend", "Waiting for the farm"],
   accepted: ["b-held", "Accepted"],
   preparing: ["b-held", "Preparing"],
@@ -118,6 +120,7 @@ export const ORDER_STATUS: Record<string, [string, string]> = {
   out_for_delivery: ["b-held", "Out for delivery"],
   with_rider: ["b-held", "On the way to pickup"],
   at_pickup_point: ["b-pend", "At pickup point"],
+  ready_for_collection: ["b-pend", "Ready to collect at the farm"],
   delivered: ["b-ok", "Delivered"],
   collected: ["b-ok", "Collected"],
   completed: ["b-ok", "Completed"],
@@ -138,6 +141,7 @@ export const STUCK_REASON: Record<string, string> = {
   not_preparing: "Accepted 2+ days ago, not preparing",
   not_ready: "Preparing for 2+ days",
   no_rider: "No rider assigned",
+  needs_delivery_price: "Accepted, delivery not priced",
   not_collected_from_farm: "Rider hasn't collected",
   delivery_late: "Delivery window passed",
   not_at_pickup_point: "Not at the pickup point after a day",
@@ -172,7 +176,11 @@ export const RIDER_REVIEW: Record<string, [string, string]> = {
 /** "rider_assigned" → "Rider assigned" for order timeline events. */
 export const eventLabel = (kind: string) => {
   const map: Record<string, string> = {
+    placed: "Placed (not paid yet)",
     paid: "Paid",
+    delivery_priced: "Delivery priced",
+    bill_sent: "Bill sent to the shopper",
+    ready_for_collection: "Ready to collect at the farm",
     accepted: "Accepted by the farm",
     declined: "Declined by the farm",
     preparing: "Preparing",

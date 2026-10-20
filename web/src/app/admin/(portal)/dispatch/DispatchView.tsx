@@ -1,13 +1,16 @@
 "use client";
 
-// A-53 / A-54 Dispatch board: orders the farms have ready, on the road, at
-// pickup points and just delivered. Staff give orders to riders and record
-// each step; the shopper and the farm are told as it happens.
+// A-53 / A-54 Dispatch board. Delivery orders arrive unpaid: once the farm
+// accepts, staff assign and brief a rider and set the delivery price, which
+// completes the shopper's bill. Paid orders then move to "Ready for a rider",
+// on the road and delivered. Pickup orders wait at the farm for the shopper.
+// The shopper and the farm are told at each step.
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useStaff } from "@/components/admin/context";
 import { FormError } from "@/components/admin/errors";
+import { koboFrom, NairaField, nairaText } from "@/components/admin/inputs";
 import { LATE } from "@/components/admin/labels";
 import { adminRoutes } from "@/components/admin/routes";
 import { ConfirmDialog, Notice, PageHeader, TableSkeleton } from "@/components/admin/ui";
@@ -17,7 +20,7 @@ import { admin } from "@/convex/admin";
 import type { Id } from "@/convex/api";
 import type { Board, BoardRow } from "@/convex/returns/adminOps";
 import { isoDayLabel } from "@/components/orders/format";
-import { clock, dateTime, displayPhone } from "@/lib/format";
+import { clock, dateTime, displayPhone, naira } from "@/lib/format";
 
 type Step = "collected_from_farm" | "dropped_at_pickup_point" | "delivered" | "collected_by_consumer";
 const STEP_LABEL: Record<Step, string> = {
@@ -26,6 +29,20 @@ const STEP_LABEL: Record<Step, string> = {
   delivered: "Delivered",
   collected_by_consumer: "Collected by the shopper",
 };
+
+type Rider = Board["riders"][number];
+const riderLine = (r: Pick<Rider, "name" | "plateNumber" | "bikeModel">) =>
+  [r.name, r.plateNumber, r.bikeModel].filter(Boolean).join(" · ");
+
+/** Where a delivery order's bill stands, for the card's badge. */
+function billBadge(row: BoardRow): { tone: string; text: string } | null {
+  if (row.fulfilment !== "delivery" || row.paid) return null;
+  const bill = row.bill;
+  if (bill?.status === "awaiting_payment") return { tone: "b-pend", text: `Bill sent · pay by ${bill.payBy ? dateTime(bill.payBy) : "–"}` };
+  if (row.deliveryPricedAt !== null) return { tone: "b-grey", text: `Priced ${naira(row.deliveryFeeKobo)} · waiting for other farms` };
+  if (row.status === "placed") return { tone: "b-grey", text: "Waiting for the farm" };
+  return row.rider ? { tone: "b-pend", text: "Set the delivery price" } : { tone: "b-pend", text: "Assign a rider" };
+}
 
 /** "2026-10-20T09:30" in the browser's time, for datetime-local inputs. */
 const localInput = (ms: number) => {
@@ -42,7 +59,9 @@ function useNow(stepMs = 60_000) {
   return now;
 }
 
-function Card({ row, actions }: { row: BoardRow; actions: React.ReactNode }) {
+function Card({ row, riders, actions }: { row: BoardRow; riders: Rider[]; actions: React.ReactNode }) {
+  const bill = billBadge(row);
+  const rider = row.rider ? (riders.find((r) => r._id === row.rider!._id) ?? null) : null;
   return (
     <li className="card flex flex-col gap-2 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -50,10 +69,12 @@ function Card({ row, actions }: { row: BoardRow; actions: React.ReactNode }) {
           {row.number}
         </Link>
         <span className="flex flex-wrap gap-1.5">
-          <span className="badge b-grey">{row.fulfilment === "delivery" ? "Delivery" : "Pickup"}</span>
+          <span className="badge b-grey">{row.fulfilment === "delivery" ? "Delivery" : "Pickup at farm"}</span>
+          {row.fulfilment === "delivery" && !row.paid ? <span className="badge b-err">Not paid</span> : null}
           {row.late ? <span className="badge b-err">{LATE[row.late]}</span> : null}
         </span>
       </div>
+      {bill ? <span className={`badge ${bill.tone} self-start`}>{bill.text}</span> : null}
       <dl className="m-0 grid gap-1.5 text-sm">
         <div>
           <dt className="cap inline">From </dt>
@@ -67,9 +88,26 @@ function Card({ row, actions }: { row: BoardRow; actions: React.ReactNode }) {
           <dd className="m-0 inline text-ink-2">
             {row.dropOff.kind === "address"
               ? `${row.dropOff.street}${row.dropOff.landmark ? ` (${row.dropOff.landmark})` : ""}, ${row.dropOff.area}`
-              : `${row.dropOff.name} pickup point`}
+              : row.dropOff.kind === "farm"
+                ? "The shopper collects at the farm"
+                : `${row.dropOff.name} pickup point`}
           </dd>
         </div>
+        {row.dropOff.kind === "address" && row.dropOff.note ? (
+          <div>
+            <dt className="cap inline">Note </dt>
+            <dd className="m-0 inline text-ink-2">{row.dropOff.note}</dd>
+          </div>
+        ) : null}
+        {row.fulfilment === "delivery" ? (
+          <div>
+            <dt className="cap inline">Products </dt>
+            <dd className="m-0 inline text-ink-2">
+              {naira(row.itemsTotalKobo)}
+              {row.deliveryPricedAt !== null ? <span className="text-subtle"> · delivery {naira(row.deliveryFeeKobo)}</span> : null}
+            </dd>
+          </div>
+        ) : null}
         <div>
           <dt className="cap inline">Shopper </dt>
           <dd className="m-0 inline text-ink-2">
@@ -87,7 +125,7 @@ function Card({ row, actions }: { row: BoardRow; actions: React.ReactNode }) {
         <div>
           <dt className="cap inline">Rider </dt>
           <dd className="m-0 inline text-ink-2">
-            {row.rider ? `${row.rider.name} · ${displayPhone(row.rider.phone)}` : "Not assigned"}
+            {row.rider ? `${rider ? riderLine(rider) : row.rider.name} · ${displayPhone(row.rider.phone)}` : "Not assigned"}
             {row.riderCollectAt ? <span className="text-subtle"> · collects {dateTime(row.riderCollectAt)}</span> : null}
           </dd>
         </div>
@@ -97,7 +135,19 @@ function Card({ row, actions }: { row: BoardRow; actions: React.ReactNode }) {
   );
 }
 
-function Column({ title, rows, empty, actions }: { title: string; rows: BoardRow[]; empty: string; actions: (r: BoardRow) => React.ReactNode }) {
+function Column({
+  title,
+  rows,
+  riders,
+  empty,
+  actions,
+}: {
+  title: string;
+  rows: BoardRow[];
+  riders: Rider[];
+  empty: string;
+  actions: (r: BoardRow) => React.ReactNode;
+}) {
   return (
     <section aria-label={title} className="flex min-w-0 flex-col gap-3">
       <h2 className="h3 flex items-center gap-2">
@@ -109,7 +159,7 @@ function Column({ title, rows, empty, actions }: { title: string; rows: BoardRow
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {rows.map((r) => (
-            <Card key={r.orderId} row={r} actions={actions(r)} />
+            <Card key={r.orderId} row={r} riders={riders} actions={actions(r)} />
           ))}
         </ul>
       )}
@@ -123,7 +173,10 @@ export function DispatchView() {
   const board = useQuery(admin.dispatch.board, { now }) as Board | undefined;
   const assign = useMutation(admin.dispatch.assignRider);
   const recordStep = useMutation(admin.dispatch.recordStep);
+  const setPrice = useMutation(admin.dispatch.setDeliveryPrice);
   const [assigning, setAssigning] = useState<BoardRow | null>(null);
+  const [pricing, setPricing] = useState<BoardRow | null>(null);
+  const [fee, setFee] = useState("");
   const [stepping, setStepping] = useState<{ row: BoardRow; step: Step } | null>(null);
   const [riderId, setRiderId] = useState("");
   const [collectAt, setCollectAt] = useState("");
@@ -153,23 +206,53 @@ export function DispatchView() {
         {row.rider ? "Change rider" : "Assign rider"}
       </Button>
     ) : null;
+  const priceButton = (row: BoardRow) =>
+    canDispatch && row.canPrice && row.rider ? (
+      <Button
+        size="sm"
+        variant={row.deliveryPricedAt === null ? "lime" : "ghost"}
+        onClick={() => {
+          setFee(row.deliveryPricedAt === null ? "" : nairaText(row.deliveryFeeKobo));
+          setNote("");
+          setPricing(row);
+        }}
+      >
+        {row.deliveryPricedAt === null ? "Set price" : "Change price"}
+      </Button>
+    ) : null;
+  const riders = board.riders;
 
   return (
     <>
       <PageHeader
         title="Dispatch"
-        description={`Orders ready to move, on the road and at pickup points. ${board.riders.length} riders working. Updates live.`}
+        description={`Price new deliveries, then send paid orders on their way. ${board.riders.length} riders working. Updates live.`}
       />
       {done ? (
         <div className="mb-4">
           <Notice tone="ok">{done}</Notice>
         </div>
       ) : null}
-      <div className="grid grid-cols-4 gap-5 m:grid-cols-1">
+      <div className="grid grid-cols-1 gap-5 min-[761px]:grid-cols-2 min-[1400px]:grid-cols-5">
+        <Column
+          title="Price the delivery"
+          rows={board.awaitingBill}
+          riders={riders}
+          empty="No deliveries to price. New ones appear here when a farm accepts."
+          actions={(r) =>
+            r.canPrice ? (
+              <>
+                {assignButton(r)}
+                {priceButton(r)}
+              </>
+            ) : null
+          }
+        />
         <Column
           title="Ready for a rider"
           rows={board.readyForRider}
-          empty="Nothing waiting at farms."
+          riders={riders}
+          empty="Nothing paid and waiting at farms."
           actions={(r) => (
             <>
               {assignButton(r)}
@@ -184,6 +267,7 @@ export function DispatchView() {
         <Column
           title="With a rider"
           rows={board.withRider}
+          riders={riders}
           empty="No one on the road."
           actions={(r) =>
             canDispatch ? (
@@ -194,9 +278,10 @@ export function DispatchView() {
           }
         />
         <Column
-          title="At pickup points"
+          title="Waiting for the shopper"
           rows={board.atPickupPoint}
-          empty="No orders waiting for collection."
+          riders={riders}
+          empty="No pickup orders waiting at farms."
           actions={(r) =>
             canDispatch ? (
               <Button size="sm" variant="ghost" onClick={() => step(r, "collected_by_consumer")}>
@@ -205,7 +290,7 @@ export function DispatchView() {
             ) : null
           }
         />
-        <Column title="Delivered recently" rows={board.delivered} empty="Nothing delivered yet." actions={() => null} />
+        <Column title="Delivered recently" rows={board.delivered} riders={riders} empty="Nothing delivered yet." actions={() => null} />
       </div>
 
       <ConfirmDialog
@@ -228,12 +313,54 @@ export function DispatchView() {
           <option value="">Choose a rider</option>
           {board.riders.map((r) => (
             <option key={r._id} value={r._id}>
-              {r.name} · {r.jobs === 1 ? "1 job" : `${r.jobs} jobs`}
+              {riderLine(r)} · {r.jobs === 1 ? "1 job" : `${r.jobs} jobs`}
             </option>
           ))}
         </SelectField>
         <TextField label="Collects from the farm at" type="datetime-local" value={collectAt} onChange={(e) => setCollectAt(e.target.value)} />
         <TextField label="Note" labelNote="(optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={pricing !== null}
+        onClose={() => setPricing(null)}
+        title={pricing ? `Delivery price for ${pricing.number}` : ""}
+        description={
+          pricing
+            ? `Brief ${pricing.rider?.name ?? "the rider"} on where it's going first. When every farm in the order has answered, the shopper gets the bill by email, text and in the app, and has 12 hours to pay.`
+            : ""
+        }
+        confirmLabel="Save price"
+        variant="lime"
+        onConfirm={async () => {
+          if (!pricing) return;
+          const kobo = koboFrom(fee);
+          if (kobo === null) throw new FormError("Enter the delivery price in naira.");
+          const { billSent } = (await setPrice({ orderId: pricing.orderId, feeKobo: kobo, note: note || undefined })) as { billSent: boolean };
+          setDone(
+            billSent
+              ? `Bill sent for ${pricing.number}. The shopper has 12 hours to pay.`
+              : `Price saved for ${pricing.number}. The bill goes out once the other farms in the order have answered.`,
+          );
+        }}
+      >
+        {pricing ? (
+          <dl className="m-0 grid gap-1 text-sm">
+            <div>
+              <dt className="cap inline">Products </dt>
+              <dd className="m-0 inline">{naira(pricing.itemsTotalKobo)}</dd>
+            </div>
+            {pricing.dropOff.kind === "address" ? (
+              <div>
+                <dt className="cap inline">To </dt>
+                <dd className="m-0 inline">
+                  {pricing.dropOff.street}, {pricing.dropOff.area} ({pricing.dropOff.lga})
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        ) : null}
+        <NairaField label="Delivery price" value={fee} onChange={setFee} hint="What the shopper pays for this farm's delivery." />
+        <TextField label="Note" labelNote="(optional)" placeholder="e.g. 8 km, after 4pm" value={note} onChange={(e) => setNote(e.target.value)} />
       </ConfirmDialog>
       <ConfirmDialog
         open={stepping !== null}

@@ -20,12 +20,17 @@ export function timingText(o: OrderRow, now: number): string {
     return `${stage === "collected" ? "Collected" : "Delivered"} ${relDay(lagosDay(o.deliveredAt), now)}, ${hm(o.deliveredAt)}`;
   }
   if (stage === "paid") return "Waiting for the farm to accept";
+  // Delivery orders are paid by bill once the delivery is priced
+  if (o.fulfilment === "delivery" && o.paid === false && ["accepted", "preparing", "ready"].includes(stage)) {
+    return o.billReady ? "Your bill is ready. Pay now" : "Waiting for your bill";
+  }
+  if (o.status === "ready_for_collection") return "Ready to collect at the farm";
   if (stage === "at_pickup_point") return "Ready to collect at the pickup point";
   if (o.fulfilment === "delivery" && o.window && ["accepted", "preparing", "ready", "out_for_delivery"].includes(stage)) {
     return `Arriving ${relDay(o.window.day, now)}, ${windowLabel(o.window.from, o.window.to)}`;
   }
   if (o.fulfilment === "pickup" && ["accepted", "preparing", "ready", "out_for_delivery"].includes(stage)) {
-    return "On its way to the pickup point";
+    return o.status === "with_rider" ? "On its way to the pickup point" : "Being prepared at the farm";
   }
   return `Ordered ${dayMonth(o.placedAt)}`;
 }

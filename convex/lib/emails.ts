@@ -124,6 +124,8 @@ export const links = {
   product: (listingId: string) => `${siteUrl()}/shop/product/${id(listingId)}`,
   linkGuestOrders: (token: string) => `${siteUrl()}/account/orders?link=${encodeURIComponent(token)}`,
   order: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}`,
+  // Delivery bill: works on any device for whoever has the link
+  pay: (token: string) => `${siteUrl()}/pay/${id(token)}`,
   chat: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/chat`,
   review: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/review`,
   refund: (orderId: string) => `${siteUrl()}/orders/${id(orderId)}/refund`,
@@ -331,6 +333,8 @@ const itemLabel = (it: OrderItem) =>
 export type PickupPoint = {
   name: string;
   address: string;
+  /** "farm": pickup is at the farm itself (the default since pickup points went away). */
+  kind?: "farm" | "point";
   /** Opening hours as display lines, e.g. ["Mon – Sat, 8am – 7pm"]. */
   hours: string[];
   phone?: string;
@@ -450,8 +454,10 @@ export function orderConfirmationEmail(p: {
   fulfilment: "delivery" | "pickup";
   /** For delivery: the address line and the default delivery window. */
   delivery?: { address: string; window?: string };
-  /** For pickup: where to collect. */
+  /** For pickup through a pickup point (older orders). Without it, pickup is at each farm. */
   pickupPoint?: { name: string; address: string };
+  /** Delivery: this is the bill being paid, after the farms accepted. */
+  paidBill?: boolean;
 }): Email {
   if (p.orders.length === 0) throw new Error("orderConfirmationEmail needs at least one order");
   const many = p.orders.length > 1;
@@ -487,13 +493,17 @@ export function orderConfirmationEmail(p: {
       ? `A Farmkeke rider will deliver to <strong>${esc(p.delivery.address)}</strong>${p.delivery.window ? `, <strong>${esc(p.delivery.window)}</strong>` : ""}.`
       : p.fulfilment === "pickup" && p.pickupPoint
         ? `You'll collect from <strong>${esc(p.pickupPoint.name)}</strong>, ${esc(p.pickupPoint.address)}. We'll email your pickup code when it's ready.`
-        : "";
+        : p.fulfilment === "pickup"
+          ? `You'll collect ${many ? "each order at its farm" : "it at the farm"}. We'll email the address and your pickup code when it's ready.`
+          : "";
   const whereText =
     p.fulfilment === "delivery" && p.delivery
       ? `A Farmkeke rider will deliver to ${p.delivery.address}${p.delivery.window ? `, ${p.delivery.window}` : ""}.`
       : p.fulfilment === "pickup" && p.pickupPoint
         ? `You'll collect from ${p.pickupPoint.name}, ${p.pickupPoint.address}. We'll email your pickup code when it's ready.`
-        : "";
+        : p.fulfilment === "pickup"
+          ? `You'll collect ${many ? "each order at its farm" : "it at the farm"}. We'll email the address and your pickup code when it's ready.`
+          : "";
 
   const guestHtml = p.isGuest
     ? NOTE(
@@ -510,16 +520,21 @@ export function orderConfirmationEmail(p: {
       ]
     : [];
 
+  const heading = p.paidBill ? "Thank you for paying" : many ? "Your orders are placed" : "Your order is placed";
+  const intro = p.paidBill
+    ? `thank you. The ${many ? "farms have" : "farm has"} your ${many ? "orders" : "order"} ready, and a Farmkeke rider will collect and deliver ${many ? "them" : "it"}.`
+    : `thank you. We've sent your ${many ? "orders" : "order"} to the ${many ? "farms" : "farm"}.`;
+  const acceptLine = p.paidBill ? "" : "Farms have 24 hours to accept. If a farm doesn't, that order is refunded in full.";
   const body = [
-    H1(many ? "Your orders are placed" : "Your order is placed"),
-    P(`${esc(hi(p.name))} thank you. We've sent your ${many ? "orders" : "order"} to the ${many ? "farms" : "farm"}.`),
+    H1(heading),
+    P(`${esc(hi(p.name))} ${esc(intro)}`),
     NOTE(
       `<strong>${esc(naira(p.totalKobo))} is held safely by Farmkeke.</strong> The farm is paid only after you confirm you got everything.`,
     ),
     orderCards,
     many ? ROWS([{ label: "Total paid", value: naira(p.totalKobo), strong: true }]) : "",
     H2("What happens next"),
-    P(`Farms have <strong>24 hours</strong> to accept. If a farm doesn't, that order is refunded in full.`),
+    acceptLine ? P(`Farms have <strong>24 hours</strong> to accept. If a farm doesn't, that order is refunded in full.`) : "",
     where ? P(where) : "",
     P("When it arrives, check everything. Then confirm receipt. Something wrong? Report it before you confirm."),
     guestHtml,
@@ -540,15 +555,15 @@ export function orderConfirmationEmail(p: {
 
   const text = plain({
     lines: [
-      many ? "Your orders are placed" : "Your order is placed",
+      heading,
       "",
-      `${hi(p.name)} thank you. We've sent your ${many ? "orders" : "order"} to the ${many ? "farms" : "farm"}.`,
+      `${hi(p.name)} ${intro}`,
       `${naira(p.totalKobo)} is held safely by Farmkeke. The farm is paid only after you confirm you got everything.`,
       ...orderText,
       ...(many ? ["", `Total paid: ${naira(p.totalKobo)}`] : []),
       "",
       "What happens next",
-      "Farms have 24 hours to accept. If a farm doesn't, that order is refunded in full.",
+      ...(acceptLine ? [acceptLine] : []),
       ...(whereText ? [whereText] : []),
       "When it arrives, check everything. Then confirm receipt. Something wrong? Report it before you confirm.",
       ...guestText,
@@ -559,9 +574,17 @@ export function orderConfirmationEmail(p: {
 
   return {
     to: p.to,
-    subject: oneLine(many ? `Your ${p.orders.length} Farmkeke orders are placed` : `Order placed: ${first.number}`),
+    subject: oneLine(
+      p.paidBill
+        ? `Paid: order ${p.orders.map((o) => o.number).join(", ")}`
+        : many
+          ? `Your ${p.orders.length} Farmkeke orders are placed`
+          : `Order placed: ${first.number}`,
+    ),
     html: page({
-      preheader: `${naira(p.totalKobo)} held safely until you confirm. Farms have 24 hours to accept.`,
+      preheader: p.paidBill
+        ? `${naira(p.totalKobo)} held safely until you confirm. A rider is on the way to the farm.`
+        : `${naira(p.totalKobo)} held safely until you confirm. Farms have 24 hours to accept.`,
       body,
       reason,
     }),
@@ -591,25 +614,36 @@ export function orderAcceptedEmail(
     fulfilment: "delivery" | "pickup";
     /** Delivery window label, e.g. "Sun 18 Oct, 9am – 12pm". */
     window?: string;
-    /** Pickup point name, for pickup orders. */
+    /** Pickup point name, for pickup orders through a point (older orders). */
     pickupPointName?: string;
+    /** Delivery placed before payment: the bill comes next. */
+    unpaid?: boolean;
   },
 ): Email {
   const cta = { label: "Track your order", url: links.order(p.orderId) };
   const reason = orderReason(p.number);
   const next =
-    p.fulfilment === "delivery"
-      ? `A Farmkeke rider will bring it to you${p.window ? ` on <strong>${esc(p.window)}</strong>` : ""}. We'll email you when it's on its way.`
-      : `It will go to ${p.pickupPointName ? `<strong>${esc(p.pickupPointName)}</strong>` : "your pickup point"}. We'll email your pickup code when it's ready.`;
+    p.fulfilment === "delivery" && p.unpaid
+      ? "Farmkeke is arranging a rider. We'll send your bill, with the delivery price, as soon as it's set. You'll have 12 hours to pay."
+      : p.fulfilment === "delivery"
+        ? `A Farmkeke rider will bring it to you${p.window ? ` on <strong>${esc(p.window)}</strong>` : ""}. We'll email you when it's on its way.`
+        : p.pickupPointName
+          ? `It will go to <strong>${esc(p.pickupPointName)}</strong>. We'll email your pickup code when it's ready.`
+          : "You'll collect it at the farm. We'll email the address and your pickup code when it's ready.";
   const nextText =
-    p.fulfilment === "delivery"
-      ? `A Farmkeke rider will bring it to you${p.window ? ` on ${p.window}` : ""}. We'll email you when it's on its way.`
-      : `It will go to ${p.pickupPointName ?? "your pickup point"}. We'll email your pickup code when it's ready.`;
+    p.fulfilment === "delivery" && p.unpaid
+      ? "Farmkeke is arranging a rider. We'll send your bill, with the delivery price, as soon as it's set. You'll have 12 hours to pay."
+      : p.fulfilment === "delivery"
+        ? `A Farmkeke rider will bring it to you${p.window ? ` on ${p.window}` : ""}. We'll email you when it's on its way.`
+        : p.pickupPointName
+          ? `It will go to ${p.pickupPointName}. We'll email your pickup code when it's ready.`
+          : "You'll collect it at the farm. We'll email the address and your pickup code when it's ready.";
+  const moneyNote = p.unpaid ? "You haven't paid anything yet." : "Your money is still held safely by Farmkeke.";
   const body = [
     H1("Your order was accepted"),
     P(`${esc(hi(p.name))} <strong>${esc(p.farmName)}</strong> accepted order <strong>${esc(p.number)}</strong>. They're getting it ready now.`),
     P(next),
-    NOTE("Your money is still held safely by Farmkeke."),
+    NOTE(esc(moneyNote)),
     BUTTON(cta.url, cta.label),
   ].join("\n");
   const text = plain({
@@ -618,7 +652,7 @@ export function orderAcceptedEmail(
       "",
       `${hi(p.name)} ${p.farmName} accepted order ${p.number}. They're getting it ready now.`,
       nextText,
-      "Your money is still held safely by Farmkeke.",
+      moneyNote,
     ],
     cta,
     reason,
@@ -696,8 +730,10 @@ export function readyForPickupEmail(
   const cta = { label: "See pickup details", url: links.order(p.orderId) };
   const reason = orderReason(p.number);
   const pt = p.pickupPoint;
+  const atFarm = pt.kind !== "point";
+  const place = atFarm ? "the farm" : "the counter";
   const rows: Row[] = [
-    { label: "Pickup point", value: pt.name },
+    { label: atFarm ? "Farm" : "Pickup point", value: pt.name },
     { label: "Address", value: pt.address },
     ...pt.hours.map((h, i) => ({ label: i === 0 ? "Open" : "", value: h })),
     ...(pt.phone ? [{ label: "Phone", value: pt.phone }] : []),
@@ -707,10 +743,10 @@ export function readyForPickupEmail(
     H1("Your order is ready for pickup"),
     P(`${esc(hi(p.name))} order <strong>${esc(p.number)}</strong> from ${esc(p.farmName)} is waiting for you.`),
     CODE(p.pickupCode),
-    SMALL("Show this code at the counter. Only share it when you are collecting your order.", "text-align:center;margin:-8px 0 20px;"),
+    SMALL(`Show this code at ${place}. Only share it when you are collecting your order.`, "text-align:center;margin:-8px 0 20px;"),
     ROWS(rows),
     NOTE(`Please collect within <strong>${days} days</strong>, by <strong>${esc(p.collectBy)}</strong>.`),
-    P("Check everything at the counter. Something wrong? Report it before you confirm."),
+    P(`Check everything at ${place}. Something wrong? Report it before you confirm.`),
     BUTTON(cta.url, cta.label),
   ].join("\n");
   const text = plain({
@@ -720,15 +756,15 @@ export function readyForPickupEmail(
       `${hi(p.name)} order ${p.number} from ${p.farmName} is waiting for you.`,
       "",
       `YOUR PICKUP CODE: ${p.pickupCode}`,
-      "Show this code at the counter. Only share it when you are collecting your order.",
+      `Show this code at ${place}. Only share it when you are collecting your order.`,
       "",
-      `Pickup point: ${pt.name}`,
+      `${atFarm ? "Farm" : "Pickup point"}: ${pt.name}`,
       `Address: ${pt.address}`,
       ...pt.hours.map((h) => `Open: ${h}`),
       ...(pt.phone ? [`Phone: ${pt.phone}`] : []),
       "",
       `Please collect within ${days} days, by ${p.collectBy}.`,
-      "Check everything at the counter. Something wrong? Report it before you confirm.",
+      `Check everything at ${place}. Something wrong? Report it before you confirm.`,
     ],
     cta,
     reason,
@@ -1191,12 +1227,16 @@ const SECURITY_REASON =
 // ---------------------------------------------------------------------------
 
 export function orderPreparingEmail(
-  p: OrderRef & { fulfilment: "delivery" | "pickup"; window?: string; pickupPointName?: string; isGuest?: boolean },
+  p: OrderRef & { fulfilment: "delivery" | "pickup"; window?: string; pickupPointName?: string; isGuest?: boolean; unpaid?: boolean },
 ): Email {
   const next: Part[] =
-    p.fulfilment === "delivery"
-      ? ["When it's packed, a Farmkeke rider collects it and brings it to you", ...(p.window ? [" on ", { b: p.window }] : []), "."]
-      : ["When it's packed, a rider takes it to ", { b: p.pickupPointName ?? "your pickup point" }, ". We'll email your pickup code when it's ready."];
+    p.fulfilment === "delivery" && p.unpaid
+      ? ["We'll send your bill, with the delivery price, as soon as a rider is arranged. The rider collects it once you've paid."]
+      : p.fulfilment === "delivery"
+        ? ["When it's packed, a Farmkeke rider collects it and brings it to you", ...(p.window ? [" on ", { b: p.window }] : []), "."]
+        : p.pickupPointName
+          ? ["When it's packed, a rider takes it to ", { b: p.pickupPointName }, ". We'll email your pickup code when it's ready."]
+          : ["When it's ready, you'll collect it at the farm. We'll email the address and your pickup code."];
   return compose({
     to: p.to,
     subject: `${p.farmName} is preparing order ${p.number}`,
@@ -1205,7 +1245,7 @@ export function orderPreparingEmail(
     blocks: [
       b.p(hi(p.name), " ", { b: p.farmName }, " has started preparing order ", { b: p.number }, "."),
       b.p(...next),
-      b.note("Your money is still held safely by Farmkeke."),
+      b.note(p.unpaid ? "You haven't paid anything yet." : "Your money is still held safely by Farmkeke."),
     ],
     cta: { label: "Track your order", url: links.order(p.orderId) },
     reason: optionalOrderReason(p.number, p.isGuest),
@@ -1217,9 +1257,24 @@ export function orderPreparingEmail(
 // ---------------------------------------------------------------------------
 
 export function orderCancelledEmail(
-  p: OrderRef & { refundKobo: number; deliveryFeeKobo?: number; paymentMethod?: string },
+  p: OrderRef & { refundKobo: number; deliveryFeeKobo?: number; paymentMethod?: string; unpaid?: boolean },
 ): Email {
   const back = p.paymentMethod ? `your ${p.paymentMethod}` : "the way you paid";
+  // A delivery order cancelled before its bill was paid: nothing to refund
+  if (p.unpaid) {
+    return compose({
+      to: p.to,
+      subject: `Order ${p.number} was cancelled`,
+      preheader: "You weren't charged.",
+      title: "Your order was cancelled",
+      blocks: [
+        b.p(hi(p.name), " sorry. Farmkeke had to cancel order ", { b: p.number }, ` from ${p.farmName}.`),
+        b.note({ b: "You weren't charged." }, " The order hadn't been paid yet."),
+      ],
+      cta: { label: "Shop again", url: links.shop() },
+      reason: orderReason(p.number),
+    });
+  }
   return compose({
     to: p.to,
     subject: `Order ${p.number} was cancelled. Full refund on the way`,
@@ -1241,6 +1296,108 @@ export function orderCancelledEmail(
 }
 
 // ---------------------------------------------------------------------------
+// 14a. Delivery orders: received (unpaid), the bill and its reminder, and the
+// bill lapsing. Delivery is priced per order once a rider is arranged.
+// ---------------------------------------------------------------------------
+
+export type BillOrder = {
+  orderId: string;
+  number: string;
+  farmName: string;
+  items: OrderItem[];
+  itemsKobo: number;
+  deliveryFeeKobo: number;
+};
+
+const billRows = (o: BillOrder, withDelivery: boolean): Row[] => [
+  ...o.items.map((it) => ({ label: itemLabel(it), value: naira(it.totalKobo) })),
+  { label: "Products", value: naira(o.itemsKobo) },
+  ...(withDelivery ? [{ label: "Delivery", value: naira(o.deliveryFeeKobo) }] : []),
+];
+
+export function orderReceivedEmail(p: { to: string; name?: string; orders: BillOrder[]; address: string; isGuest: boolean }): Email {
+  const many = p.orders.length > 1;
+  const first = p.orders[0]!;
+  const numbers = p.orders.map((o) => o.number).join(", ");
+  const productsKobo = p.orders.reduce((sum, o) => sum + o.itemsKobo, 0);
+  return compose({
+    to: p.to,
+    subject: `We've got your order ${numbers}`,
+    preheader: "Nothing to pay yet. Your bill comes once the delivery is priced.",
+    title: many ? "We've got your orders" : "We've got your order",
+    blocks: [
+      b.p(hi(p.name), " thank you. We've sent ", many ? "your orders to the farms" : `your order to ${first.farmName}`, "."),
+      b.note({ b: "Nothing to pay yet." }, " Products come to ", { b: naira(productsKobo) }, ". Delivery is priced once a rider is arranged."),
+      ...p.orders.flatMap((o) => [b.h2(`${o.number} · ${o.farmName}`), b.rows(billRows(o, false))]),
+      b.h2("What happens next"),
+      b.steps([
+        { title: "The farm accepts", note: "Farms have 24 hours to accept." },
+        { title: "We arrange a rider and price the delivery", note: `To ${p.address}.` },
+        { title: "You get your bill", note: "By email, text and in the app. You'll have 12 hours to pay." },
+        { title: "The rider brings your order", note: "Your money is held safely until you confirm it arrived." },
+      ]),
+    ],
+    cta: { label: many ? "See your orders" : "See your order", url: many && !p.isGuest ? links.account() : links.order(first.orderId) },
+    reason: `You're getting this email because you placed ${many ? "orders" : "order"} ${numbers} on Farmkeke.`,
+  });
+}
+
+export function billEmail(p: {
+  to: string;
+  name?: string;
+  orders: BillOrder[];
+  totalKobo: number;
+  deliveryFeeKobo: number;
+  /** "Tue 20 Oct, 9:15pm" */
+  payBy: string;
+  link: string;
+  reminder?: boolean;
+}): Email {
+  const numbers = p.orders.map((o) => o.number).join(", ");
+  return compose({
+    to: p.to,
+    subject: p.reminder ? `Reminder: pay ${naira(p.totalKobo)} for order ${numbers}` : `Your bill for order ${numbers}: ${naira(p.totalKobo)}`,
+    preheader: `${naira(p.totalKobo)}, delivery included. Pay by ${p.payBy}.`,
+    title: p.reminder ? "Your bill is still waiting" : "Your bill is ready",
+    blocks: [
+      b.p(
+        hi(p.name),
+        p.reminder
+          ? " your order is packed and waiting at the farm. Pay now so the rider can bring it."
+          : " the farm has accepted your order and a rider is arranged. Here's your bill, delivery included.",
+      ),
+      ...p.orders.flatMap((o) => [b.h2(`${o.number} · ${o.farmName}`), b.rows(billRows(o, true))]),
+      b.rows([
+        { label: "Delivery", value: naira(p.deliveryFeeKobo) },
+        { label: "Total to pay", value: naira(p.totalKobo), strong: true },
+      ]),
+      b.note({ b: `Pay by ${p.payBy}.` }, " If it isn't paid by then, the order is cancelled and the farm is told."),
+      b.p("Your money is held safely by Farmkeke. The farm is paid only after you confirm you got everything."),
+    ],
+    cta: { label: `Pay ${naira(p.totalKobo)}`, url: p.link },
+    after: [b.small("The link works on any phone or computer. Anyone you share it with can pay this bill, so keep it to yourself.")],
+    reason: `You're getting this email because you placed order ${numbers} on Farmkeke. We always send bills.`,
+  });
+}
+
+export function billExpiredEmail(p: { to: string; name?: string; numbers: string[] }): Email {
+  const numbers = p.numbers.join(", ");
+  return compose({
+    to: p.to,
+    subject: `Order ${numbers} was cancelled`,
+    preheader: "The bill wasn't paid in time. You weren't charged.",
+    title: "Your order was cancelled",
+    blocks: [
+      b.p(hi(p.name), " the bill for order ", { b: numbers }, " wasn't paid within 12 hours, so the order is cancelled."),
+      b.note({ b: "You weren't charged." }, " The farm has been told."),
+      b.p("Still want it? You can order again any time."),
+    ],
+    cta: { label: "Shop again", url: links.shop() },
+    reason: `You're getting this email because you placed order ${numbers} on Farmkeke.`,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 15. Pickup reminder (a day before collect-by)
 // ---------------------------------------------------------------------------
 
@@ -1257,7 +1414,7 @@ export function pickupReminderEmail(
       b.p(hi(p.name), " order ", { b: p.number }, ` from ${p.farmName} is waiting for you at `, { b: pt.name }, "."),
       b.code(p.pickupCode),
       b.rows([
-        { label: "Pickup point", value: pt.name },
+        { label: pt.kind === "point" ? "Pickup point" : "Farm", value: pt.name },
         { label: "Address", value: pt.address },
         ...pt.hours.map((h, i) => ({ label: i === 0 ? "Open" : "", value: h })),
         ...(pt.phone ? [{ label: "Phone", value: pt.phone }] : []),
@@ -1274,10 +1431,10 @@ export function pickupReminderEmail(
 // 16. Pickup window ended (pickup_overdue)
 // ---------------------------------------------------------------------------
 
-export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKobo?: number }): Email {
+export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKobo?: number; atFarm?: boolean }): Email {
   return compose({
     to: p.to,
-    subject: `Order ${p.number} is still at the pickup point`,
+    subject: p.atFarm ? `Order ${p.number} is still waiting at the farm` : `Order ${p.number} is still at the pickup point`,
     preheader: "Your collection time has passed. Here is what happens next.",
     title: "Your collection time has passed",
     blocks: [
@@ -1715,6 +1872,8 @@ export function farmNewOrderEmail(
     /** "Mon 19 Oct, 14:30" */
     acceptBy: string;
     hours: number;
+    /** Delivery orders arrive unpaid: the shopper pays once the delivery is priced. */
+    unpaid?: boolean;
   },
 ): Email {
   return compose({
@@ -1723,20 +1882,27 @@ export function farmNewOrderEmail(
     preheader: `Accept or decline by ${p.acceptBy}.`,
     title: "You have a new order",
     blocks: [
-      b.p(hi(p.name), " order ", { b: p.number }, ` is paid and waiting for ${p.farmName}.`),
+      b.p(hi(p.name), " order ", { b: p.number }, p.unpaid ? ` is waiting for ${p.farmName}.` : ` is paid and waiting for ${p.farmName}.`),
       b.rows([
         ...p.items.map((it) => ({ label: itemLabel(it), value: naira(it.totalKobo) })),
         { label: "Order value", value: naira(p.itemsKobo), strong: true },
         {
           label: "How it goes",
-          value: p.fulfilment === "delivery" ? "A rider collects it and delivers to the shopper" : "A rider collects it for a pickup point",
+          value:
+            p.fulfilment === "delivery"
+              ? "A Farmkeke rider collects it from you and delivers it"
+              : "The shopper collects it from you with a 4-digit code",
         },
       ]),
       b.note(
         { b: `Accept or decline within ${p.hours} hours, by ${p.acceptBy}.` },
-        " If you don't answer in time, the order expires and the shopper is refunded.",
+        p.unpaid ? " If you don't answer in time, the order expires." : " If you don't answer in time, the order expires and the shopper is refunded.",
       ),
-      b.p("The money is already held safely by Farmkeke. You're paid once the shopper confirms they got everything."),
+      b.p(
+        p.unpaid
+          ? "It isn't paid yet. Once you accept, Farmkeke prices the delivery and the shopper pays. The rider only collects after they've paid, and you're paid once they confirm they got everything."
+          : "The money is already held safely by Farmkeke. You're paid once the shopper confirms they got everything.",
+      ),
       b.inApp(farmOrderPath(p.number)),
     ],
     cta: openApp(),

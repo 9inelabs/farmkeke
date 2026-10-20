@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
+import { deliver, paidOrder } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -55,47 +56,6 @@ async function seed(t: T) {
 }
 
 const as = (t: T, u: U) => t.withIdentity({ subject: `${u.id}|${u.sessionId}`, tokenIdentifier: `test|${u.id}` });
-
-/** A paid order of `quantity` baskets of tomatoes from farm A. */
-async function paidOrder(t: T, s: Awaited<ReturnType<typeof seed>>, who: U, fulfilment: "delivery" | "pickup", quantity = 2, email?: string) {
-  const buyer = as(t, who);
-  const items = [{ listingId: s.tomatoes, unitId: s.unitId, quantity, priceKobo: 450000 }];
-  const contact = { name: "Chidi Okeke", phone: "0803 111 2222", ...(email ? { email } : {}) };
-  let placed;
-  if (fulfilment === "delivery") {
-    const windows = await buyer.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now: Date.now() });
-    const day = windows.days[0];
-    placed = await buyer.mutation(api.checkout.place, {
-      items, fulfilment, expectedTotalKobo: quantity * 450000 + 100000,
-      address: { street: "53b Nob Oluwa", landmark: "Church", serviceAreaId: s.areaId },
-      window: { day: day.day, ...day.slots[0] }, contact,
-    });
-  } else {
-    placed = await buyer.mutation(api.checkout.place, { items, fulfilment, expectedTotalKobo: quantity * 450000, pickupPointId: s.pointId, contact });
-  }
-  await buyer.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
-  return placed.orders[0].orderId as any;
-}
-
-/** Farm accepts and hands over; dispatch delivers (delivery) or drops and hands out (pickup). */
-async function deliver(t: T, s: Awaited<ReturnType<typeof seed>>, orderId: any) {
-  const farmer = as(t, s.farmerA);
-  const admin = as(t, s.admin);
-  await farmer.mutation(api.orders.farmer.accept, { orderId });
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-  const riderId = await admin.mutation(api.admin.riders.create, { name: "Emeka", phone: "08035550000", reason: "New rider", serviceAreaIds: [s.areaId] });
-  await admin.mutation(api.admin.dispatch.assignRider, { orderId, riderId, collectAt: Date.now() + 3600_000 });
-  await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_from_farm" });
-  const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
-  if (order.fulfilment === "delivery") {
-    await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" });
-  } else {
-    await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "dropped_at_pickup_point" });
-    await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_by_consumer", pickupCode: "000000" })).rejects.toThrow(/WRONG_PICKUP_CODE/);
-    await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_by_consumer", pickupCode: order.pickupCode });
-  }
-}
 
 const page = { cursor: null, numItems: 50 };
 

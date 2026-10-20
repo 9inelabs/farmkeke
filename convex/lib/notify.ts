@@ -36,7 +36,8 @@ export async function notify(ctx: MutationCtx, n: NotifyArgs): Promise<Id<"notif
 
 /**
  * Tells the shopper about their order: push, or SMS when there is no push
- * (guests always get SMS), plus email for the order emails.
+ * (guests always get SMS; bills always go by SMS), plus email for the order
+ * emails.
  */
 export async function notifyConsumer(
   ctx: MutationCtx,
@@ -44,6 +45,7 @@ export async function notifyConsumer(
   kind: string,
   title: string,
   body: string,
+  opts: { href?: string } = {},
 ) {
   const user = await ctx.db.get("users", order.userId);
   if (user === null) return;
@@ -53,7 +55,7 @@ export async function notifyConsumer(
     kind,
     title,
     body,
-    href: `/order/${order._id}`,
+    href: opts.href ?? `/order/${order._id}`,
     orderId: order._id,
     smsTo: order.contact.phone,
   });
@@ -122,6 +124,13 @@ export async function notifyStaff(
   }
   return staff.length;
 }
+
+/**
+ * Whether texts actually go out. False until an SMS provider is connected
+ * (notifications/deliver.ts records them in smsLog meanwhile). While false,
+ * delivery orders need an email so the shopper can get their bill.
+ */
+export const smsSending = () => false;
 
 /** "₦12,500" or "₦12,500.50" from kobo, without relying on Intl. */
 export function naira(kobo: number): string {

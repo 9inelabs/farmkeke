@@ -1,11 +1,12 @@
 "use client";
 
-// W-30 Order confirmation. Clears the cart once the checkout is paid and, for
-// guests, offers "Save your details as an account": the guest's orders are
-// moved into the new account (startGuestClaim → sign up → claimGuestOrders).
+// W-30 Order confirmation. Clears the cart once the checkout is paid (pickup)
+// or placed (delivery, which is paid later by bill) and, for guests, offers
+// "Save your details as an account": the guest's orders are moved into the
+// new account (startGuestClaim → sign up → claimGuestOrders).
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Check, Info, ShieldCheck, Smartphone } from "lucide-react";
+import { Check, Info, Receipt, ShieldCheck, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -13,7 +14,7 @@ import { claimPendingGuestOrders, forgetClaimToken, saveClaimToken } from "@/com
 import { draft } from "@/components/checkout/draft";
 import { looksLikeEmail } from "@/components/checkout/draft";
 import { MinimalHeader, NARROW_WRAP } from "@/components/layout/SimpleHeaders";
-import { firstName, windowLabel, isoDayLabel } from "@/components/orders/format";
+import { firstName } from "@/components/orders/format";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { PasswordField, TextField } from "@/components/ui/Field";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
@@ -22,7 +23,7 @@ import type { PlacedSummary } from "@/convex/returns/checkout";
 import { stageOf, statusBadge } from "@/convex/returns/orders";
 import { errorCode, useViewer } from "@/lib/auth";
 import { cart } from "@/lib/cart";
-import { displayPhone, initials, naira, plural, tintFor } from "@/lib/format";
+import { dateTime, displayPhone, initials, naira, plural, tintFor } from "@/lib/format";
 import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
@@ -81,16 +82,19 @@ export function PlacedView({ checkoutId }: { checkoutId: string }) {
   const summary = live ?? kept;
 
   const status = summary?.status;
+  // A pickup checkout not paid yet goes to its pay page; a delivery bill is paid from its own link
+  const toPay = status === "awaiting_payment" && !summary?.payBy;
+  const placedDelivery = summary?.fulfilment === "delivery" && status !== "abandoned";
   useEffect(() => {
-    if (status === "awaiting_payment") router.replace(routes.pay(checkoutId));
-    if (status === "paid") {
+    if (toPay) router.replace(routes.pay(checkoutId));
+    if (status === "paid" || placedDelivery) {
       cart.clear();
       const d = draft.get();
       if (d.checkoutId === checkoutId) draft.finish(d.placed);
     }
-  }, [status, router, checkoutId]);
+  }, [toPay, placedDelivery, status, router, checkoutId]);
 
-  if (summary === undefined || (live === undefined && !kept) || status === "awaiting_payment") return <PlacedSkeleton />;
+  if (summary === undefined || (live === undefined && !kept) || toPay) return <PlacedSkeleton />;
   if (summary === null) return <NotFound />;
   return <Placed summary={summary} />;
 }
@@ -118,10 +122,11 @@ function Placed({ summary }: { summary: PlacedSummary }) {
   const name = firstName(summary.contact.name);
   const orders = summary.orders;
   const delivery = summary.fulfilment === "delivery";
-  const win = orders.find((o) => o.window)?.window ?? null;
+  // Delivery: not paid until the bill; the bill is ready once every delivery is priced
+  const unpaid = delivery && summary.status !== "paid";
+  const billReady = unpaid && summary.status === "awaiting_payment" && !!summary.payToken;
   // From the server (Phase 5); this browser's checkout only if the backend predates it
   const street = summary.address !== undefined ? summary.address?.street : mine?.street;
-  const pointName = summary.pickupPoint !== undefined ? summary.pickupPoint?.name : mine?.pointName;
   const guest = summary.isGuest && viewerStatus !== "signed-in";
   const trackHref =
     orders.length === 1 ? routes.order(orders[0]!._id) : viewerStatus === "signed-in" ? routes.myOrders : routes.order(orders[0]!._id);
@@ -131,17 +136,25 @@ function Placed({ summary }: { summary: PlacedSummary }) {
       title: orders.length > 1 ? "The farms accept and pack your orders" : "The farm accepts and packs your order",
       detail: "Usually within a few hours",
     },
-    delivery
-      ? {
-          title: street ? `A Farmkeke rider delivers to ${street}` : "A Farmkeke rider delivers to your address",
-          detail: win ? `${isoDayLabel(win.day)}, ${windowLabel(win.from, win.to)}` : "",
-        }
-      : {
-          title: pointName ? `Your ${orders.length > 1 ? "orders go" : "order goes"} to ${pointName}` : "Your order goes to your pickup point",
-          detail: "We'll text your pickup code when it's ready to collect",
-        },
+    ...(delivery
+      ? [
+          {
+            title: "We price the delivery and send your bill",
+            detail: "By email, text and in the app. You'll have 12 hours to pay.",
+          },
+          {
+            title: street ? `A Farmkeke rider delivers to ${street}` : "A Farmkeke rider delivers to your address",
+            detail: "Once you've paid",
+          },
+        ]
+      : [
+          {
+            title: orders.length > 1 ? "Collect each order at its farm" : "Collect your order at the farm",
+            detail: "We'll send the farm's address and your 4-digit code when it's ready. You have 3 days.",
+          },
+        ]),
     {
-      title: delivery ? "You check everything and confirm receipt" : "You collect, check everything and confirm receipt",
+      title: delivery ? "You check everything and confirm receipt" : "You check everything and confirm receipt",
       detail: `Then ${orders.length > 1 ? "each farm is" : "the farm is"} paid. Something wrong? Report it before confirming.`,
     },
   ];
@@ -158,11 +171,25 @@ function Placed({ summary }: { summary: PlacedSummary }) {
               Order placed. Thank you{name ? `, ${name}` : ""}
             </h1>
             <p className="p mt-1">
-              We&apos;ve sent your {orders.length > 1 ? "orders to the farms" : "order to the farm"}. We&apos;ll text{" "}
-              {displayPhone(summary.contact.phone)} at every step.
+              We&apos;ve sent your {orders.length > 1 ? "orders to the farms" : "order to the farm"}.
+              {unpaid ? " Nothing to pay yet." : ""} We&apos;ll text {displayPhone(summary.contact.phone)} at every step.
             </p>
           </div>
         </section>
+        {billReady ? (
+          <section className="mt-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:px-4">
+            <Receipt aria-hidden className="size-6 flex-none text-pend" strokeWidth={1.75} />
+            <div className="min-w-[220px] flex-1">
+              <div className="text-[15px] font-semibold text-ink">Your bill is ready: {naira(summary.totalKobo)}</div>
+              <div className="sm">
+                Delivery included. Pay by {summary.payBy ? dateTime(summary.payBy) : "the time on your bill"}, or the order is cancelled.
+              </div>
+            </div>
+            <ButtonLink href={routes.payBill(summary.payToken!)} variant="lime" className="min-h-[52px] rounded-[14px] px-[22px]">
+              Pay {naira(summary.totalKobo)}
+            </ButtonLink>
+          </section>
+        ) : null}
 
         <div className="mt-8 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:grid-cols-1">
           <div className="flex flex-col gap-5">
@@ -171,10 +198,14 @@ function Placed({ summary }: { summary: PlacedSummary }) {
                 <h2 id="your-orders" className="h3 text-lg leading-[26px]">
                   Your orders
                 </h2>
-                <span className="badge b-held">
-                  <ShieldCheck aria-hidden className="size-[13px]" strokeWidth={2} />
-                  {naira(summary.totalKobo)} held safely
-                </span>
+                {unpaid ? (
+                  <span className="badge b-pend">{billReady ? "Bill ready" : "Bill coming soon"}</span>
+                ) : (
+                  <span className="badge b-held">
+                    <ShieldCheck aria-hidden className="size-[13px]" strokeWidth={2} />
+                    {naira(summary.totalKobo)} held safely
+                  </span>
+                )}
               </div>
               <ul className="m-0 list-none p-0">
                 {orders.map((o) => {
@@ -194,7 +225,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
                         </div>
                         <div className="sm">
                           {plural(o.itemCount, "item")} · {naira(o.totalKobo)}
-                          {o.fulfilment === "delivery" ? " with delivery" : ""}
+                          {o.fulfilment === "delivery" ? (o.deliveryPricedAt || o.paid ? " with delivery" : " · delivery priced later") : ""}
                         </div>
                       </div>
                       <span className={`badge ${badge.cls}`}>{badge.label}</span>
@@ -204,9 +235,13 @@ function Placed({ summary }: { summary: PlacedSummary }) {
               </ul>
               <div className="sm flex gap-2.5 bg-[#FAFBF8] px-6 py-4 shadow-[inset_0_1px_0_#EEF0EB] m:px-4">
                 <Info aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={1.75} />
-                {orders.length > 1
-                  ? "Farms have up to 24 hours to accept. If one doesn't, that order is refunded in full."
-                  : "The farm has up to 24 hours to accept. If it doesn't, your order is refunded in full."}
+                {delivery
+                  ? orders.length > 1
+                    ? "Farms have up to 24 hours to accept. If one doesn't, that order is left off your bill."
+                    : "The farm has up to 24 hours to accept. If it doesn't, the order is cancelled and you pay nothing."
+                  : orders.length > 1
+                    ? "Farms have up to 24 hours to accept. If one doesn't, that order is refunded in full."
+                    : "The farm has up to 24 hours to accept. If it doesn't, your order is refunded in full."}
               </div>
             </section>
 

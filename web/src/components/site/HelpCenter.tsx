@@ -34,7 +34,7 @@ const TOPICS: Topic[] = [
       ],
       [
         "Can I order from more than one farm?",
-        "Yes. Your cart can hold items from several farms. At checkout, each farm gets its own order, with its own delivery fee and tracking.",
+        "Yes. Your cart can hold items from several farms. At checkout, each farm gets its own order and its own tracking. For home delivery, you get one bill for all of them.",
       ],
       [
         "How do I find my order as a guest?",
@@ -70,10 +70,14 @@ const TOPICS: Topic[] = [
         "Where do you deliver?",
         "Within our service areas in Owerri. Enter your area when you start shopping to see delivery and pickup options.",
       ],
-      ["How much is delivery?", "Each farm order has its own delivery fee, shown at checkout before you pay. Pickup is free."],
+      ["How much is delivery?", "We price each farm order's delivery once the farm accepts and we've arranged a rider. It's added to your bill, which we send by email, text and in the app. Pickup at the farm is free."],
+      [
+        "When do I pay for home delivery?",
+        "After the farm accepts. We send one bill with your produce and delivery, and you have 12 hours to pay. The rider collects your order only once it's paid. If you don't pay in time, the order is cancelled.",
+      ],
       [
         "How long do I have to collect a pickup order?",
-        "Your order waits at the pickup point for 3 days. Bring your 4-digit pickup code.",
+        "3 days from when the farm has it ready. We send you the farm's address and your 4-digit pickup code. Give the code to the farmer when you collect.",
       ],
       [
         "Can someone else collect for me?",
@@ -207,9 +211,9 @@ export function HelpCenter() {
             <ShieldCheck aria-hidden size={15} strokeWidth={2} />
             How refunds work
           </Link>
-          <Link href={routes.pickupLocations} className={heroChip}>
+          <Link href={routes.howItWorks} className={heroChip}>
             <MapPin aria-hidden size={15} strokeWidth={2} />
-            Pickup points
+            Delivery and pickup
           </Link>
         </div>
       </div>

@@ -1,13 +1,15 @@
 "use client";
 
 // A-51 / A-52: one order, its money and its full history. Staff can add
-// notes; with orders.manage they can cancel it (full refund), give the farm
-// more time to accept, or change the rider.
+// notes; with orders.manage they can cancel it (full refund if paid), give
+// the farm more time to accept, or change the rider. Delivery orders show
+// their bill, and dispatch staff can set the delivery price here too.
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
 import { useStaff } from "@/components/admin/context";
 import { FormError } from "@/components/admin/errors";
+import { koboFrom, NairaField, nairaText } from "@/components/admin/inputs";
 import { ESCROW, eventLabel, LEDGER_KIND, ORDER_STATUS } from "@/components/admin/labels";
 import { MoneyActions } from "@/components/admin/MoneyActions";
 import { adminRoutes } from "@/components/admin/routes";
@@ -21,7 +23,30 @@ import type { LedgerEntry } from "@/convex/returns/adminMoney";
 import type { OrderDetail, RiderRow } from "@/convex/returns/adminOps";
 import { clock, dateTime, displayPhone, naira } from "@/lib/format";
 
-const CANCELLABLE = ["awaiting_payment", "paid", "accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider", "at_pickup_point"];
+const CANCELLABLE = [
+  "awaiting_payment",
+  "placed",
+  "paid",
+  "accepted",
+  "preparing",
+  "ready_for_rider",
+  "out_for_delivery",
+  "with_rider",
+  "at_pickup_point",
+  "ready_for_collection",
+];
+
+/** The bill in plain words, for the Bill panel. */
+function billText(o: OrderDetail): string {
+  const b = o.bill;
+  if (!b) return "–";
+  if (o.paid || b.status === "paid") return "Paid";
+  if (b.status === "awaiting_payment") return `Sent. The shopper has until ${b.payBy ? dateTime(b.payBy) : "–"} to pay`;
+  if (b.status === "abandoned") return b.abandonReason === "bill_not_paid" ? "Not paid in time. Cancelled" : "Closed: no orders left";
+  if (o.status === "placed") return "Waiting for the farm to accept";
+  if (o.deliveryPricedAt === null) return o.riderDetail ? "Waiting for the delivery price" : "Waiting for a rider and the delivery price";
+  return "Priced. Waiting for the other farms in this order";
+}
 const ACTOR: Record<string, string> = { consumer: "shopper", farm: "farm", staff: "staff", system: "automatic" };
 const RIDER_STAGES = ["accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider"];
 
@@ -37,7 +62,9 @@ export function OrderView({ orderId }: { orderId: string }) {
   const cancel = useMutation(admin.orders.cancel);
   const extend = useMutation(admin.orders.extendDeadline);
   const reassign = useMutation(admin.orders.reassignRider);
-  const [dialog, setDialog] = useState<"cancel" | "extend" | "rider" | null>(null);
+  const setPrice = useMutation(admin.dispatch.setDeliveryPrice);
+  const [dialog, setDialog] = useState<"cancel" | "extend" | "rider" | "price" | null>(null);
+  const [fee, setFee] = useState("");
   const [note, setNote] = useState("");
   const [hours, setHours] = useState(12);
   const [riderId, setRiderId] = useState("");
@@ -96,15 +123,16 @@ export function OrderView({ orderId }: { orderId: string }) {
                   <strong>{naira(it.lineTotalKobo)}</strong>
                 </li>
               ))}
-              {[
-                ["Products", o.itemsTotalKobo],
-                ["Delivery", o.deliveryFeeKobo],
-              ].map(([label, kobo]) => (
-                <li key={label as string} className="flex justify-between px-6 py-2 text-sm text-muted m:px-4">
-                  <span>{label}</span>
-                  <span>{naira(kobo as number)}</span>
+              <li className="flex justify-between px-6 py-2 text-sm text-muted m:px-4">
+                <span>Products</span>
+                <span>{naira(o.itemsTotalKobo)}</span>
+              </li>
+              {o.fulfilment === "delivery" ? (
+                <li className="flex justify-between px-6 py-2 text-sm text-muted m:px-4">
+                  <span>Delivery</span>
+                  <span>{o.deliveryPricedAt === null && !o.paid ? "Not priced yet" : naira(o.deliveryFeeKobo)}</span>
                 </li>
-              ))}
+              ) : null}
               <li className="flex justify-between px-6 pt-2 pb-4 text-[15px] font-bold text-ink m:px-4">
                 <span>Total</span>
                 <span>{naira(o.totalKobo)}</span>
@@ -131,7 +159,8 @@ export function OrderView({ orderId }: { orderId: string }) {
                   label: "Rider",
                   value: o.riderDetail ? (
                     <Link href={adminRoutes.rider(o.riderDetail._id)} className="font-semibold">
-                      {o.riderDetail.name} · {displayPhone(o.riderDetail.phone)}
+                      {[o.riderDetail.name, o.riderDetail.plateNumber, o.riderDetail.bikeModel].filter(Boolean).join(" · ")} ·{" "}
+                      {displayPhone(o.riderDetail.phone)}
                     </Link>
                   ) : (
                     "None"
@@ -148,17 +177,53 @@ export function OrderView({ orderId }: { orderId: string }) {
                   ? [
                       { label: "Address", value: o.address ? `${o.address.street}, ${o.address.areaName}, ${o.address.lga}` : "–" },
                       { label: "Landmark", value: o.address?.landmark || "–" },
-                      { label: "Window", value: o.window ? `${isoDayLabel(o.window.day)}, ${clock(o.window.from)} – ${clock(o.window.to)}` : "–" },
+                      { label: "Note for the rider", value: o.riderNote || "–" },
+                      // Orders placed before time slots went away
+                      ...(o.window
+                        ? [{ label: "Window", value: `${isoDayLabel(o.window.day)}, ${clock(o.window.from)} – ${clock(o.window.to)}` }]
+                        : []),
                       { label: "Delivered", value: o.deliveredAt ? dateTime(o.deliveredAt) : "Not yet" },
                     ]
                   : [
-                      { label: "Pickup point", value: o.pickupPoint ? `${o.pickupPoint.name}, ${o.pickupPoint.address}` : "–" },
+                      o.pickupPoint
+                        ? { label: "Pickup point", value: `${o.pickupPoint.name}, ${o.pickupPoint.address}` }
+                        : { label: "Collect at", value: o.collectFrom ? `${o.collectFrom.farmName}, ${o.collectFrom.address}, ${o.collectFrom.lga}` : "–" },
                       { label: "Pickup code", value: o.pickupCode ?? "–" },
+                      { label: "Collect by", value: o.collectBy ? dateTime(o.collectBy) : "When the farm has it ready" },
                       { label: "Collected", value: o.deliveredAt ? dateTime(o.deliveredAt) : "Not yet" },
                     ]
               }
             />
           </Panel>
+          {o.bill ? (
+            <Panel title="Bill" description="Delivery orders are paid once every farm has answered and each delivery is priced.">
+              <Facts
+                items={[
+                  { label: "Bill", value: billText(o) },
+                  { label: "Bill total", value: o.bill.status === "awaiting_bill" ? "Not sent yet" : naira(o.bill.totalKobo) },
+                  { label: "Sent", value: o.bill.billedAt ? dateTime(o.bill.billedAt) : "–" },
+                ]}
+              />
+              {o.bill.canPrice && me.can("dispatch.manage") ? (
+                <div className="mt-4">
+                  {o.riderDetail ? (
+                    <Button
+                      variant={o.deliveryPricedAt === null ? "lime" : "ghost"}
+                      onClick={() => {
+                        setFee(o.deliveryPricedAt === null ? "" : nairaText(o.deliveryFeeKobo));
+                        setNote("");
+                        setDialog("price");
+                      }}
+                    >
+                      {o.deliveryPricedAt === null ? "Set the delivery price" : "Change the delivery price"}
+                    </Button>
+                  ) : (
+                    <p className="sm m-0">Assign and brief a rider first, then set the delivery price.</p>
+                  )}
+                </div>
+              ) : null}
+            </Panel>
+          ) : null}
           <Panel title="Money">
             <Facts
               items={[
@@ -266,7 +331,7 @@ export function OrderView({ orderId }: { orderId: string }) {
                 Read the order chat
               </Link>
             ) : null}
-            {canManage && o.status === "paid" ? (
+            {canManage && (o.status === "paid" || o.status === "placed") ? (
               <Button variant="ghost" fullWidth onClick={() => setDialog("extend")}>
                 Give the farm more time
               </Button>
@@ -297,15 +362,35 @@ export function OrderView({ orderId }: { orderId: string }) {
         open={dialog === "cancel"}
         onClose={() => setDialog(null)}
         title={`Cancel ${o.number}`}
-        description="The shopper gets a full refund, delivery fee included. The shopper and the farm are told why."
+        description={
+          o.escrow === "held"
+            ? "The shopper gets a full refund, delivery fee included. The shopper and the farm are told why."
+            : "Nothing has been paid, so there's nothing to refund. The shopper and the farm are told."
+        }
         hint="Shown to the farm and saved in the audit log."
-        confirmLabel="Cancel and refund"
+        confirmLabel={o.escrow === "held" ? "Cancel and refund" : "Cancel order"}
         variant="danger"
         onConfirm={async (reason) => {
           await cancel({ orderId: id, reason });
-          setDone("Order cancelled. The refund is on its way.");
+          setDone(o.escrow === "held" ? "Order cancelled. The refund is on its way." : "Order cancelled.");
         }}
       />
+      <ReasonDialog
+        open={dialog === "price"}
+        onClose={() => setDialog(null)}
+        title={`Delivery price for ${o.number}`}
+        description="Brief the rider on where it's going first. When every farm in the order has answered, the shopper gets the bill by email, text and in the app, and has 12 hours to pay."
+        confirmLabel="Save price"
+        variant="lime"
+        onConfirm={async (reason) => {
+          const kobo = koboFrom(fee);
+          if (kobo === null) throw new FormError("Enter the delivery price in naira.");
+          const { billSent } = (await setPrice({ orderId: id, feeKobo: kobo, note: reason })) as { billSent: boolean };
+          setDone(billSent ? "Bill sent. The shopper has 12 hours to pay." : "Price saved. The bill goes out once the other farms have answered.");
+        }}
+      >
+        <NairaField label="Delivery price" value={fee} onChange={setFee} hint={`Products: ${naira(o.itemsTotalKobo)}`} />
+      </ReasonDialog>
       <ReasonDialog
         open={dialog === "extend"}
         onClose={() => setDialog(null)}

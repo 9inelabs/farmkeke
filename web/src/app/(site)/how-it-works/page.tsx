@@ -39,7 +39,7 @@ const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: stri
   {
     icon: Lock,
     title: "Pay securely",
-    body: "Pay with card, bank transfer or USSD through Paystack. Farmkeke holds the money safely.",
+    body: "Pay with card, bank transfer or USSD through Paystack. Farmkeke holds the money safely. For home delivery, you pay once the farm accepts and we've priced the delivery.",
     points: [
       "No account needed. Check out as a guest",
       "Each farm gets its own order, and has 24 hours to accept",
@@ -49,7 +49,7 @@ const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: stri
   {
     icon: Truck,
     title: "Receive your order",
-    body: "A Farmkeke rider brings it to your door, or you collect it from a pickup point.",
+    body: "A Farmkeke rider brings it to your door, or you collect it from the farm.",
     points: [
       "Follow each step: accepted, packed, on the way",
       "Chat with the farmer about your order",
@@ -74,8 +74,8 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
     title: "Home delivery",
     sub: "Brought to your door by a Farmkeke rider",
     rows: [
-      ["Delivery fee", "Per farm, shown at checkout"],
-      ["When", "Choose a time slot"],
+      ["Delivery fee", "Priced per order once the farm accepts"],
+      ["When you pay", "Within 12 hours of your bill, before the rider collects"],
       ["You need", "Your address and phone number"],
       ["To confirm", "Check items when the rider arrives"],
     ],
@@ -83,15 +83,15 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
   },
   {
     icon: MapPin,
-    title: "Pickup point",
-    sub: "Collect from a Farmkeke pickup point",
+    title: "Pickup at the farm",
+    sub: "Collect from the farm yourself",
     rows: [
       ["Pickup fee", "Free"],
-      ["When", "Within 3 days of it arriving"],
+      ["When", "Within 3 days of it being ready"],
       ["You need", "Your 4-digit pickup code"],
-      ["To confirm", "Check items at the pickup point"],
+      ["To confirm", "Check items at the farm"],
     ],
-    cta: ["Find a pickup point", routes.pickupLocations],
+    cta: ["Start shopping", routes.shop],
   },
 ];
 
@@ -99,7 +99,7 @@ const STATUSES: Array<[string, string, string]> = [
   ["b-pend", "Waiting for the farm", "The farm has up to 24 hours to accept your order."],
   ["b-held", "Accepted", "The farm is preparing your produce."],
   ["b-held", "Packed", "A rider is on the way to collect it from the farm."],
-  ["b-pend", "Out for delivery", "Your order is on its way to you or the pickup point."],
+  ["b-pend", "Out for delivery", "Your order is on its way to you."],
   ["b-ok", "Delivered", "Check your items, then confirm to release payment."],
   ["b-err", "Problem reported", "Your money stays held while Farmkeke reviews it."],
 ];

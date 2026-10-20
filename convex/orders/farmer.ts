@@ -1,17 +1,31 @@
 // Farmer mode: orders (F-10, F-40 to F-49). One step at a time:
-// accept → start preparing → mark packed → ready for rider → handed to rider.
+// accept → start preparing → mark packed → ready → handed over.
+// Delivery orders arrive unpaid: the farm accepts and packs, Farmkeke prices
+// the delivery and bills the shopper, and the rider collects once it's paid.
+// Pickup orders are paid up front and handed over at the farm with the
+// shopper's 4-digit code.
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
 import { getViewer, requireFarmer } from "../lib/auth";
-import { notifyConsumer } from "../lib/notify";
-import { endWithFullRefund, orderCore, orderRow, transition, type OrderStatus } from "../lib/orders";
+import { checkBill } from "../lib/bill";
+import { notifyConsumer, notifyStaff } from "../lib/notify";
+import {
+  endWithFullRefund,
+  isActive,
+  orderCore,
+  orderRow,
+  pickupDeadline,
+  transition,
+  type OrderStatus,
+} from "../lib/orders";
+import { hitLimit } from "../lib/rateLimit";
 import { commissionOn, getRules, HOUR } from "../lib/settings";
 import { recordResponseTime } from "../lib/shop";
 
 const TABS = {
-  new: ["paid"],
-  to_prepare: ["accepted", "preparing", "ready_for_rider"],
+  new: ["paid", "placed"],
+  to_prepare: ["accepted", "preparing", "ready_for_rider", "ready_for_collection"],
   with_rider: ["with_rider", "out_for_delivery", "at_pickup_point", "delivered", "collected"],
   completed: ["completed"],
   cancelled: ["declined", "expired", "cancelled"],
@@ -150,8 +164,10 @@ export const get = query({
     const id = ctx.db.normalizeId("orders", args.orderId);
     const order = id ? await ctx.db.get("orders", id) : null;
     if (farm === null || order === null || order.farmId !== farm._id) return null;
-    // Unpaid orders aren't the farm's business yet.
-    if (order.status === "awaiting_payment" || (order.paidAt === undefined && order.status === "cancelled")) return null;
+    // Unpaid pickup orders aren't the farm's business yet. Delivery orders are,
+    // even unpaid: the farm accepts and packs them before the bill.
+    if (order.status === "awaiting_payment") return null;
+    if (order.fulfilment === "pickup" && order.paidAt === undefined && order.status === "cancelled") return null;
     const core = await orderCore(ctx, order);
     return {
       ...core,
@@ -160,6 +176,8 @@ export const get = query({
       declineNote: order.declineNote ?? null,
       money: await money(ctx, order),
       next: nextStep(order),
+      // Delivery: "Not paid yet. The rider collects once the shopper pays."
+      paymentPending: order.fulfilment === "delivery" && order.escrow === "none" && isActive(order),
     };
   },
 });
@@ -168,13 +186,19 @@ export const get = query({
 function nextStep(order: Doc<"orders">) {
   switch (order.status) {
     case "paid":
+    case "placed":
       return "accept" as const;
     case "accepted":
       return "start_preparing" as const;
     case "preparing":
       return order.packedAt === undefined ? ("mark_packed" as const) : ("ready_for_rider" as const);
     case "ready_for_rider":
-      return "confirm_handover" as const;
+      // Delivery: the rider only collects once the bill is paid
+      return order.fulfilment === "delivery" && order.escrow === "none"
+        ? ("waiting_for_payment" as const)
+        : ("confirm_handover" as const);
+    case "ready_for_collection":
+      return "confirm_collection" as const;
     default:
       return null;
   }
@@ -187,13 +211,15 @@ export const packingSlip = query({
     const farm = await viewerFarm(ctx);
     const id = ctx.db.normalizeId("orders", args.orderId);
     const order = id ? await ctx.db.get("orders", id) : null;
-    if (farm === null || order === null || order.farmId !== farm._id || order.paidAt === undefined) return null;
+    if (farm === null || order === null || order.farmId !== farm._id) return null;
+    // Delivery orders are packed before they're paid
+    if (order.paidAt === undefined && !(order.fulfilment === "delivery" && isActive(order) && order.status !== "placed")) return null;
     const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
     return {
       number: order.number,
       farmName: farm.name,
       placedAt: order._creationTime,
-      paidAt: order.paidAt,
+      paidAt: order.paidAt ?? null,
       consumerFirstName: order.contact.name.split(/\s+/)[0] ?? "",
       fulfilment: order.fulfilment,
       area: order.address ? `${order.address.areaName}, ${order.address.lga}` : null,
@@ -216,12 +242,12 @@ export const accept = mutation({
   handler: async (ctx, args) => {
     const { farm, order, actor } = await ownOrder(ctx, args.orderId);
     if (farm.status !== "active") throw new ConvexError({ code: "FARM_SUSPENDED" });
-    if (order.status !== "paid") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    if (order.status !== "paid" && order.status !== "placed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     if (order.respondBy !== undefined && Date.now() > order.respondBy) throw new ConvexError({ code: "EXPIRED" });
     const acceptedAt = Date.now();
     const accepted = await transition(ctx, order, "accepted", actor, { acceptedAt });
     // "Usually accepts within…" on the shop's farm and product pages
-    if (order.paidAt !== undefined) await recordResponseTime(ctx, farm._id, (acceptedAt - order.paidAt) / HOUR);
+    await recordResponseTime(ctx, farm._id, (acceptedAt - (order.paidAt ?? order._creationTime)) / HOUR);
     if (order.expiryJobId) {
       const job = await ctx.db.system.get("_scheduled_functions", order.expiryJobId);
       if (job !== null && job.state.kind === "pending") await ctx.scheduler.cancel(order.expiryJobId);
@@ -231,8 +257,25 @@ export const accept = mutation({
       accepted,
       "order_accepted",
       `Order ${order.number} accepted`,
-      `${farm.name} accepted your order and will start preparing it.`,
+      order.status === "placed"
+        ? `${farm.name} accepted your order. We're arranging a rider and will send your bill, delivery included.`
+        : `${farm.name} accepted your order and will start preparing it.`,
     );
+    // Dispatch: brief a rider and price the delivery, so the shopper gets their bill
+    if (order.status === "placed") {
+      await notifyStaff(
+        ctx,
+        {
+          kind: "delivery_to_price",
+          title: `Price the delivery for ${order.number}`,
+          body: `${farm.name} accepted it. Assign and brief a rider, then set the delivery price.`,
+          href: `/admin/orders/${order._id}`,
+          orderId: order._id,
+        },
+        "dispatch.manage",
+      );
+    }
+    await checkBill(ctx, order.checkoutId);
   },
 });
 
@@ -245,7 +288,7 @@ export const decline = mutation({
   },
   handler: async (ctx, args) => {
     const { farm, order, actor } = await ownOrder(ctx, args.orderId);
-    if (order.status !== "paid") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    if (order.status !== "paid" && order.status !== "placed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     const note = args.note?.trim().slice(0, 500) || undefined;
     if (args.reason === "other" && note === undefined) throw new ConvexError({ code: "NOTE_REQUIRED" });
     // Out of stock: the stock wasn't really there, so don't put it back.
@@ -263,8 +306,11 @@ export const decline = mutation({
       ended,
       "order_declined",
       `Order ${order.number} declined`,
-      `${farm.name} couldn't take your order. Your money will be refunded in full.`,
+      order.status === "placed"
+        ? `${farm.name} couldn't take your order. You haven't been charged for it.`
+        : `${farm.name} couldn't take your order. Your money will be refunded in full.`,
     );
+    await checkBill(ctx, order.checkoutId);
   },
 });
 
@@ -299,18 +345,60 @@ export const markPacked = mutation({
       order,
       "order_packed",
       `Order ${order.number} is packed`,
-      order.fulfilment === "delivery" ? "It's waiting for a Farmkeke rider." : "It's waiting for a rider to take it to your pickup point.",
+      order.fulfilment === "delivery" ? "It's waiting for a Farmkeke rider." : "It's nearly ready to collect from the farm.",
     );
   },
 });
 
-/** F-44 Ready for rider pickup: staff assign a rider (A-53). */
+/**
+ * F-44 Ready. Delivery: ready for the rider (staff assign one, A-53).
+ * Pickup: ready to collect at the farm, which starts the shopper's 3 days.
+ */
 export const readyForRider = mutation({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    const { order, actor } = await ownOrder(ctx, args.orderId);
+    const { farm, order, actor } = await ownOrder(ctx, args.orderId);
     const now = Date.now();
-    await transition(ctx, order, "ready_for_rider", actor, { readyAt: now, packedAt: order.packedAt ?? now });
+    // Older pickup orders still go through a Farmkeke pickup point
+    if (order.fulfilment === "delivery" || order.pickupPointId !== undefined) {
+      await transition(ctx, order, "ready_for_rider", actor, { readyAt: now, packedAt: order.packedAt ?? now });
+      return;
+    }
+    const collectBy = await pickupDeadline(ctx, order, now);
+    const ready = await transition(ctx, order, "ready_for_collection", actor, {
+      readyAt: now,
+      packedAt: order.packedAt ?? now,
+      arrivedAt: now,
+      collectBy,
+    });
+    await notifyConsumer(
+      ctx,
+      ready,
+      "ready_for_pickup",
+      `Order ${order.number} is ready to collect`,
+      `Collect it from ${farm.name}, ${farm.collectionAddress}. Show your code ${order.pickupCode ?? ""} at the farm.`,
+    );
+  },
+});
+
+/** Pickup at the farm: the farmer enters the shopper's 4-digit code to hand the order over. */
+export const confirmCollection = mutation({
+  args: { orderId: v.id("orders"), code: v.string() },
+  handler: async (ctx, args) => {
+    const { order, actor } = await ownOrder(ctx, args.orderId);
+    if (order.status !== "ready_for_collection") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    // Four digits are guessable: a few tries per order each hour
+    await hitLimit(ctx, `collect:${order._id}`, 5, HOUR);
+    const code = args.code.replace(/\D/g, "");
+    if (!order.pickupCode || code !== order.pickupCode) throw new ConvexError({ code: "WRONG_PICKUP_CODE" });
+    const collected = await transition(ctx, order, "collected", actor, { deliveredAt: Date.now() });
+    await notifyConsumer(
+      ctx,
+      collected,
+      "order_collected",
+      `Order ${order.number} was collected`,
+      "Check everything, then confirm receipt. Something wrong? Report it before you confirm.",
+    );
   },
 });
 
@@ -319,6 +407,8 @@ export const confirmHandover = mutation({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
     const { order, actor } = await ownOrder(ctx, args.orderId);
+    // The rider only takes a delivery once the shopper has paid the bill
+    if (order.fulfilment === "delivery" && order.escrow === "none") throw new ConvexError({ code: "NOT_PAID_YET" });
     const to = order.fulfilment === "delivery" ? "out_for_delivery" : "with_rider";
     const moved = await transition(ctx, order, to, actor, { handedOverAt: Date.now() });
     if (to === "out_for_delivery") {

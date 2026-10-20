@@ -44,7 +44,7 @@ export function MiniCart() {
                 <span className="text-sm text-muted">Subtotal</span>
                 <span className="font-display text-[22px] font-extrabold text-forest">{naira(itemsTotalKobo)}</span>
               </div>
-              <div className="-mt-2 text-xs text-subtle">Delivery fee is added at checkout</div>
+              <div className="-mt-2 text-xs text-subtle">Delivery is priced once the farm accepts</div>
               <div className="grid grid-cols-2 gap-2.5">
                 <ButtonLink href={routes.cart} variant="ghost" fullWidth className="min-h-[50px] rounded-[14px]" onClick={miniCart.close}>
                   View cart

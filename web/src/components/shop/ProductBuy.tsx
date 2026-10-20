@@ -339,20 +339,20 @@ function DeliveryRow({ id, today, delivery, pickup }: { id: string; today: strin
   const { chosen, data } = useProductForArea(id, today);
   const icon = <Truck aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />;
   if (!delivery) {
-    return <Row icon={icon} title="Pickup only" sub="Collect for free at a Farmkeke pickup point" />;
+    return <Row icon={icon} title="Pickup only" sub="Collect for free at the farm" />;
   }
   const where = data?.deliveryArea?.name ?? chosen?.name;
-  const fee = data?.deliveryFeeKobo;
-  const title = where
-    ? typeof fee === "number"
-      ? `Delivery to ${where} from ${naira(fee)}`
-      : `Delivery to ${where}`
-    : "Delivery by Farmkeke riders";
+  // Delivery is priced per order once the farm accepts; it's added to the bill then
+  const title = where ? `Delivery to ${where}` : "Delivery by Farmkeke riders";
   return (
     <Row
       icon={icon}
       title={title}
-      sub={pickup ? "Or free collection at a Farmkeke pickup point" : "Delivery only. Pickup isn't offered for this product."}
+      sub={
+        pickup
+          ? "Priced once the farm accepts, and added to your bill. Or collect for free at the farm."
+          : "Priced once the farm accepts, and added to your bill. Pickup isn't offered for this product."
+      }
     />
   );
 }

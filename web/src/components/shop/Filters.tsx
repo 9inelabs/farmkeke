@@ -258,7 +258,7 @@ export function FilterSidebar({ current, subtypes = [] }: { current: Current; su
           Delivery
         </Opt>
         <Opt type="checkbox" checked={pickup} onChange={() => setGet(delivery, !pickup)}>
-          Pickup point
+          Pickup at the farm
         </Opt>
       </Group>
       <div className="px-[22px] py-5 shadow-[inset_0_1px_0_var(--color-line-soft)]">
@@ -340,7 +340,7 @@ export function ActiveChips({ current, total, subtypes = [] }: { current: Curren
   if (dist) chips.push({ label: dist.label, clear: () => go({ dist: undefined }) });
   if (current.area) chips.push({ label: current.area.split("|")[0] ?? current.area, clear: () => go({ area: undefined }) });
   if (current.get === "delivery") chips.push({ label: "Delivery", clear: () => go({ get: undefined }) });
-  if (current.get === "pickup") chips.push({ label: "Pickup point", clear: () => go({ get: undefined }) });
+  if (current.get === "pickup") chips.push({ label: "Pickup at the farm", clear: () => go({ get: undefined }) });
   if (current.rated === "1") chips.push({ label: "Top-rated farms", clear: () => go({ rated: undefined }) });
   return (
     <div className="mb-[18px] flex flex-wrap items-center gap-2">
@@ -499,7 +499,7 @@ export function FilterPanel({
             <ChevronDown aria-hidden className="size-4" />
           </m.button>
           <m.button type="button" className={`chip ${current.get ? "on" : ""}`} onClick={openPanel} aria-haspopup="dialog" {...pressable}>
-            {current.get === "delivery" ? "Delivery" : current.get === "pickup" ? "Pickup point" : "Delivery or pickup"}
+            {current.get === "delivery" ? "Delivery" : current.get === "pickup" ? "Pickup at the farm" : "Delivery or pickup"}
             <ChevronDown aria-hidden className="size-4" />
           </m.button>
         </>
@@ -574,7 +574,7 @@ export function FilterPanel({
                 Delivery
               </PanelChip>
               <PanelChip on={pickup} onClick={() => (pickup && !delivery ? null : setPickup(!pickup))}>
-                Pickup point
+                Pickup at the farm
               </PanelChip>
             </div>
           </PanelGroup>

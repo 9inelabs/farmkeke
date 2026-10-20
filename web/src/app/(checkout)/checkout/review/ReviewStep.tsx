@@ -1,11 +1,13 @@
 "use client";
 
-// W-25 Checkout · Review. "Pay" places the cart with checkout.place (one
-// checkout, one order per farm, stock held for an hour) and opens the payment
-// page. Guests get an anonymous identity on this browser first, which is what
-// lets only this device confirm delivery later.
-import { useMutation, useQuery } from "convex/react";
-import { Lock, MapPin, Truck, User } from "lucide-react";
+// W-25 Checkout · Review. Pickup: "Pay" places the cart with checkout.place
+// (one checkout, one order per farm, stock held for an hour) and opens the
+// payment page. Delivery: "Place order" sends the orders to the farms unpaid;
+// the shopper pays the bill once the deliveries are priced. Guests get an
+// anonymous identity on this browser first, which is what lets only this
+// device confirm delivery later.
+import { useMutation } from "convex/react";
+import { Lock, MapPin, Send, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,11 +16,10 @@ import { draft, validPhone } from "@/components/checkout/draft";
 import { CheckoutShell, CheckoutSkeleton, checkoutCard, checkoutH1, useCheckoutGuard } from "@/components/checkout/Shell";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/convex/api";
-import type { CheckoutPickupPoint, DeliveryWindows, PlaceResult } from "@/convex/returns/checkout";
+import type { PlaceResult } from "@/convex/returns/checkout";
 import { errorCode, errorData, useEnsureIdentity } from "@/lib/auth";
 import { quoteItems } from "@/lib/cart";
-import { clock, displayPhone, naira, plural } from "@/lib/format";
-import { isoDayLabel } from "@/components/orders/format";
+import { displayPhone, naira, plural } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
 export function ReviewStep() {
@@ -30,6 +31,11 @@ const ESCROW = [
   { title: "You pay Farmkeke", body: "Not the farm directly" },
   { title: "We hold it safely", body: "While the farm prepares and delivers" },
   { title: "You confirm, they're paid", body: "Problem? Report it and we step in" },
+];
+const ESCROW_DELIVERY = [
+  { title: "The farm accepts", body: "And packs your order" },
+  { title: "You pay your bill", body: "Products plus delivery, within 12 hours" },
+  { title: "You confirm, they're paid", body: "We hold your money until then" },
 ];
 
 type Problem = { message: string; fix?: { href: string; label: string } };
@@ -46,16 +52,15 @@ function problemFor(e: unknown): Problem {
         message: "Your note for the rider is too long. Keep it to 200 characters.",
         fix: { href: routes.checkoutDetails, label: "Edit your note" },
       };
-    case "WINDOW_FULL":
+    case "EMAIL_REQUIRED":
       return {
-        message: "Someone just took the last place in that delivery time. Choose another time to continue.",
-        fix: { href: routes.checkoutDetails, label: "Choose another time" },
+        message: "Add your email so we can send your bill once the delivery is priced.",
+        fix: { href: routes.checkoutDetails, label: "Add your email" },
       };
-    case "WINDOW_UNAVAILABLE":
-    case "WINDOW_REQUIRED":
+    case "TOO_MANY_UNPAID":
       return {
-        message: "That delivery time is no longer available. Choose another time to continue.",
-        fix: { href: routes.checkoutDetails, label: "Choose another time" },
+        message: "You already have unpaid delivery orders waiting for their bill. Pay one of those first, or choose pickup.",
+        fix: { href: routes.myOrders, label: "See your orders" },
       };
     case "FULFILMENT_NOT_OFFERED":
       return {
@@ -66,11 +71,6 @@ function problemFor(e: unknown): Problem {
       return {
         message: "We don't deliver to that area yet. Choose another area, or pick up instead.",
         fix: { href: routes.checkoutDelivery, label: "Change delivery or pickup" },
-      };
-    case "PICKUP_POINT_REQUIRED":
-      return {
-        message: "That pickup point isn't taking orders right now. Choose another one.",
-        fix: { href: routes.checkoutDetails, label: "Choose another pickup point" },
       };
     case "STREET_REQUIRED":
     case "LANDMARK_REQUIRED":
@@ -107,16 +107,8 @@ function Review() {
   const farms = groupByFarm(lines);
   const place = useMutation(api.checkout.place);
   const ensureIdentity = useEnsureIdentity();
-  const points = useQuery(api.checkout.pickupPoints, fulfilment === "pickup" ? (area ? { serviceAreaId: area.id } : {}) : "skip") as
-    | CheckoutPickupPoint[]
-    | undefined;
-  const [now] = useState(() => Date.now());
-  const windows = useQuery(
-    api.checkout.deliveryWindows,
-    fulfilment === "pickup" && farms.length ? { farmIds: farms.map((f) => f.farmId), now } : "skip",
-  ) as DeliveryWindows | undefined;
-  const point = points?.find((p) => p._id === d.pickupPointId);
   const [busy, setBusy] = useState(false);
+  const delivery = fulfilment === "delivery";
   const [problem, setProblem] = useState<Problem | null>(null);
 
   const total = quote?.totalKobo;
@@ -151,23 +143,21 @@ function Review() {
                 note: d.address.note.trim() || undefined,
               }
             : undefined,
-        pickupPointId: fulfilment === "pickup" ? (d.pickupPointId ?? undefined) : undefined,
-        window: fulfilment === "delivery" ? (d.window ?? undefined) : undefined,
         contact: {
           name: d.contact.name,
           phone: phone ? `+234${phone}` : d.contact.phone,
           email: d.contact.email || undefined,
         },
-        replaces: d.checkoutId ?? undefined,
+        replaces: delivery ? undefined : (d.checkoutId ?? undefined),
       })) as PlaceResult;
-      draft.patch({
-        checkoutId: result.checkoutId,
-        placed: {
-          checkoutId: result.checkoutId,
-          street: fulfilment === "delivery" ? d.address.street : undefined,
-          pointName: point?.name,
-        },
-      });
+      const placed = { checkoutId: result.checkoutId, street: delivery ? d.address.street : undefined };
+      if (result.payNow === false) {
+        // Delivery: nothing to pay yet. The bill comes once the deliveries are priced.
+        draft.finish(placed);
+        router.push(routes.orderPlaced(result.checkoutId));
+        return;
+      }
+      draft.patch({ checkoutId: result.checkoutId, placed });
       router.push(routes.pay(result.checkoutId));
     } catch (e) {
       if (errorCode(e) === "CART_CHANGED") {
@@ -186,7 +176,7 @@ function Review() {
       aside={
         <aside aria-labelledby="pay-summary" className={`${checkoutCard} p-6`}>
           <h2 id="pay-summary" className="h3 text-lg leading-[26px]">
-            Payment summary
+            {delivery ? "Order summary" : "Payment summary"}
           </h2>
           <div className="mt-3.5">
             <div className="flex justify-between py-1.5 text-sm text-ink-3">
@@ -202,26 +192,38 @@ function Review() {
               ) : (
                 <>
                   <span>Delivery ({plural(farms.length, "order")})</span>
-                  <span>{quote ? naira(quote.deliveryFeeKobo) : "…"}</span>
+                  <span className="text-subtle">Added to your bill</span>
                 </>
               )}
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between pt-3.5 shadow-[inset_0_1px_0_#EEF0EB]">
-            <span className="font-semibold">Total to pay</span>
+            <span className="font-semibold">{delivery ? "Products total" : "Total to pay"}</span>
             <span className="font-display text-[26px] font-extrabold text-forest">{total !== undefined ? naira(total) : "…"}</span>
           </div>
+          {delivery ? (
+            <p className="cap mt-2">
+              Nothing to pay now. Once the {farms.length > 1 ? "farms accept" : "farm accepts"}, we price the delivery and send your bill
+              by email, text and in the app. You&apos;ll have 12 hours to pay.
+            </p>
+          ) : null}
           <Button
             variant="lime"
             size="lg"
             fullWidth
             className="mt-5 min-h-[54px]"
-            icon={<Lock aria-hidden className="size-[18px]" strokeWidth={2} />}
+            icon={
+              delivery ? (
+                <Send aria-hidden className="size-[18px]" strokeWidth={2} />
+              ) : (
+                <Lock aria-hidden className="size-[18px]" strokeWidth={2} />
+              )
+            }
             loading={busy}
             disabled={!quote}
             onClick={pay}
           >
-            {total !== undefined ? `Pay ${naira(total)}` : "Pay"}
+            {delivery ? "Place order" : total !== undefined ? `Pay ${naira(total)}` : "Pay"}
           </Button>
           {problem ? (
             <div role="alert" className="mt-3 rounded-xl bg-err-bg px-3.5 py-3 text-[13px] leading-[18px] text-err">
@@ -235,7 +237,7 @@ function Review() {
           ) : null}
           <div className="cap mt-2.5 text-center">Card, bank transfer or USSD · Secured by Paystack</div>
           <p className="cap mt-4 text-center">
-            By paying you agree to the{" "}
+            By {delivery ? "placing your order" : "paying"} you agree to the{" "}
             <Link href={routes.legal("terms")} className="font-semibold">
               Terms of use
             </Link>{" "}
@@ -252,7 +254,7 @@ function Review() {
         <section className={checkoutCard}>
           <div className="px-6 pt-7 pb-2 m:px-4">
             <h1 className={checkoutH1}>Check your order</h1>
-            <p className="p mt-1">Make sure everything is right before you pay.</p>
+            <p className="p mt-1">{delivery ? "Make sure everything is right before you place it." : "Make sure everything is right before you pay."}</p>
           </div>
           <Block
             icon={<User className="size-5" strokeWidth={1.75} />}
@@ -267,28 +269,18 @@ function Review() {
               icon={<Truck className="size-5" strokeWidth={1.75} />}
               label="Home delivery"
               title={[d.address.street, area?.name].filter(Boolean).join(", ")}
-              detail={[
-                d.address.landmark,
-                d.window ? `${isoDayLabel(d.window.day)}, ${clock(d.window.from)} – ${clock(d.window.to)}` : "",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
+              detail={[d.address.landmark, d.address.note.trim()].filter(Boolean).join(" · ")}
               edit={routes.checkoutDetails}
-              editLabel="delivery address and time"
+              editLabel="delivery address"
             />
           ) : (
             <Block
               icon={<MapPin className="size-5" strokeWidth={1.75} />}
-              label="Pickup point"
-              title={point?.name ?? "…"}
-              detail={[
-                point ? [point.address, point.lga].filter(Boolean).join(", ") : "",
-                windows?.readyDay ? `Ready from ${isoDayLabel(windows.readyDay)}` : "",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              edit={routes.checkoutDetails}
-              editLabel="pickup point"
+              label="Pickup at the farm"
+              title={farms.length > 1 ? `Collect from ${farms.length} farms` : `Collect from ${farms[0]?.farmName ?? "the farm"}`}
+              detail="We'll send the farm's address and your 4-digit code when it's ready. You have 3 days to collect."
+              edit={routes.checkoutDelivery}
+              editLabel="delivery or pickup"
             />
           )}
         </section>
@@ -305,7 +297,7 @@ function Review() {
                     Order {gi + 1} · {g.farmName}
                   </h2>
                   <span className="badge flex-none bg-canvas text-ink-3">
-                    {fulfilment === "pickup" ? "Pickup · No fee" : fq ? `Delivery ${naira(fq.deliveryFeeKobo)}` : "Delivery"}
+                    {fulfilment === "pickup" ? `Pickup at the farm${fq?.collectionArea ? ` · ${fq.collectionArea}` : ""}` : "Delivery priced later"}
                   </span>
                 </div>
                 <ul className="m-0 list-none p-0">
@@ -338,7 +330,7 @@ function Review() {
             How your money is protected
           </h2>
           <ol className="m-0 mt-3.5 grid list-none grid-cols-3 gap-3 p-0 m:grid-cols-1">
-            {ESCROW.map((s, i) => (
+            {(delivery ? ESCROW_DELIVERY : ESCROW).map((s, i) => (
               <li key={s.title} className="rounded-[14px] bg-soft p-3.5">
                 <div className="font-display text-lg font-extrabold text-lime" aria-hidden>
                   {i + 1}
@@ -348,7 +340,11 @@ function Review() {
               </li>
             ))}
           </ol>
-          <p className="cap mt-3.5">If a farm declines or doesn&apos;t accept within 24 hours, that order is refunded in full.</p>
+          <p className="cap mt-3.5">
+            {delivery
+              ? "If a farm declines or doesn't accept within 24 hours, that order is left off your bill."
+              : "If a farm declines or doesn't accept within 24 hours, that order is refunded in full."}
+          </p>
         </section>
       </div>
     </CheckoutShell>

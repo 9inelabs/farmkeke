@@ -387,12 +387,13 @@ export const product = query({
       (url): url is string => url !== null,
     );
 
-    // "Delivery to Owerri North from ₦1,200" for the shopper's chosen area
+    // "Delivery to Owerri North" for the shopper's chosen area. Delivery is
+    // priced per order after the farm accepts, so there's no fee to show.
     const areaId = args.serviceAreaId ? ctx.db.normalizeId("serviceAreas", args.serviceAreaId) : null;
     const area = areaId ? await ctx.db.get("serviceAreas", areaId) : null;
     const deliveryArea =
       area !== null && area.active
-        ? { id: area._id, name: area.name, lga: area.lga, state: area.state, deliveryFeeKobo: area.deliveryFeeKobo }
+        ? { id: area._id, name: area.name, lga: area.lga, state: area.state, deliveryFeeKobo: null }
         : null;
 
     const moreFromFarm = onBreak
@@ -444,7 +445,7 @@ export const product = query({
       inStock: !isOutOfStock(listing.units),
       freshness: freshnessLabel(listing.harvestedOn, args.today),
       priceKobo: offerOf(listing)?.priceKobo ?? 0,
-      deliveryFeeKobo: deliveryArea?.deliveryFeeKobo ?? null,
+      deliveryFeeKobo: null,
       deliveryArea,
       moreFromFarm,
     };

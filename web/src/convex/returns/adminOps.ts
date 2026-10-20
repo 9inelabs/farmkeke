@@ -8,7 +8,8 @@ export type ServiceArea = {
   state: string;
   name: string;
   lga: string;
-  deliveryFeeKobo: number;
+  /** The old fixed fee; delivery is priced per order now */
+  deliveryFeeKobo?: number;
   active: boolean;
   sortOrder: number;
   latitude?: number;
@@ -55,6 +56,8 @@ export type RiderRow = {
   active: boolean;
   reviewStatus: RiderReview;
   vehicleType: Vehicle | null;
+  plateNumber: string | null;
+  bikeModel: string | null;
   photoUrl: string | null;
   serviceAreas: { _id: Id<"serviceAreas">; name: string }[];
   activeJobs: number;
@@ -75,6 +78,7 @@ export type RiderDetail = {
   idPhotoUrl: string | null;
   vehicleType: Vehicle | null;
   plateNumber: string | null;
+  bikeModel: string | null;
   guarantor: { name: string; phone: string; address: string; relationship: string } | null;
   bankCode: string | null;
   bankName: string | null;
@@ -98,8 +102,9 @@ export type BoardRow = {
   fulfilment: "delivery" | "pickup";
   farm: { _id: Id<"farms">; name: string; phone: string; collectionAddress: string; lga: string } | null;
   dropOff:
-    | { kind: "address"; area: string; lga: string; street: string; landmark: string }
-    | { kind: "pickup_point"; name: string; address: string };
+    | { kind: "address"; area: string; lga: string; street: string; landmark: string; note: string | null }
+    | { kind: "pickup_point"; name: string; address: string }
+    | { kind: "farm"; name: string; address: string };
   consumer: { name: string; phone: string };
   window: Window | null;
   windowEnd: number | null;
@@ -111,14 +116,40 @@ export type BoardRow = {
   collectBy: number | null;
   deliveredAt: number | null;
   late: "no_rider" | "collection_late" | "past_window" | "not_at_point" | "not_collected" | null;
+  itemsTotalKobo: number;
+  deliveryFeeKobo: number;
+  deliveryPricedAt: number | null;
+  paid: boolean;
+  bill: BillState | null;
+  canPrice: boolean;
+};
+
+/** A delivery checkout's bill: waiting for farms or prices, sent, paid, or lapsed. */
+export type BillState = {
+  status: "awaiting_bill" | "awaiting_payment" | "paid" | "abandoned";
+  billedAt: number | null;
+  payBy: number | null;
+  totalKobo: number;
+  abandonReason?: string | null;
+  canPrice?: boolean;
 };
 
 export type Board = {
+  /** Delivery orders not paid yet: rider to brief, price to set, or the bill out */
+  awaitingBill: BoardRow[];
   readyForRider: BoardRow[];
   withRider: BoardRow[];
   atPickupPoint: BoardRow[];
   delivered: BoardRow[];
-  riders: { _id: Id<"riders">; name: string; phone: string; serviceAreaIds: Id<"serviceAreas">[]; jobs: number }[];
+  riders: {
+    _id: Id<"riders">;
+    name: string;
+    phone: string;
+    serviceAreaIds: Id<"serviceAreas">[];
+    jobs: number;
+    plateNumber: string | null;
+    bikeModel: string | null;
+  }[];
 };
 
 export type OrderRow = {
@@ -178,6 +209,13 @@ export type OrderDetail = {
   window: Window | null;
   address: { street: string; landmark: string; areaName: string; lga: string; state: string } | null;
   pickupPoint: { _id: Id<"pickupPoints">; name: string; address: string; phone: string } | null;
+  /** Pickup at the farm: where the shopper collects */
+  collectFrom: { farmName: string; address: string; lga: string; state: string; phone: string; collectWithinDays: number } | null;
+  collectBy: number | null;
+  deliveryPricedAt: number | null;
+  paid: boolean;
+  bill: BillState | null;
+  riderNote: string | null;
   riderCollectAt: number | null;
   disputeId: Id<"disputes"> | null;
   pickupCode: string | null;
@@ -185,7 +223,7 @@ export type OrderDetail = {
   consumer: { userId: Id<"users">; name: string; email: string | null; isGuest: boolean };
   farmDetail: { _id: Id<"farms">; name: string; phone: string; collectionAddress: string } | null;
   payment: { checkoutReference: string; reference: string | null; provider: string | null } | null;
-  riderDetail: { _id: Id<"riders">; name: string; phone: string } | null;
+  riderDetail: { _id: Id<"riders">; name: string; phone: string; plateNumber: string | null; bikeModel: string | null } | null;
   unconfirmedFlaggedAt: number | null;
   refunds: { _id: string; amountKobo: number; kind: string; status: string; reason: string; at: number }[];
   payoutIds: string[];

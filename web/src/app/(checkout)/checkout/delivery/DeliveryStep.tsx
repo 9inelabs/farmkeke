@@ -1,8 +1,8 @@
 "use client";
 
-// W-22 Checkout · Delivery or pickup. Fees per farm come from checkout.quote
-// for the chosen area; items a farm only offers one way block the other.
-import { useQuery } from "convex/react";
+// W-22 Checkout · Delivery or pickup. Home delivery is priced per order once
+// the farm accepts (the shopper pays the bill then); pickup is at each farm
+// and paid now. Items a farm only offers one way block the other.
 import { MapPin, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type KeyboardEvent } from "react";
@@ -18,10 +18,9 @@ import {
 } from "@/components/checkout/Shell";
 import { useCheckoutGuard } from "@/components/checkout/Shell";
 import { Button } from "@/components/ui/Button";
-import { api } from "@/convex/api";
-import type { CheckoutPickupPoint, QuoteBlocker } from "@/convex/returns/checkout";
+import type { QuoteBlocker } from "@/convex/returns/checkout";
 import { areaPicker } from "@/lib/area";
-import { naira, plural } from "@/lib/format";
+import { naira } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
 export function DeliveryStep() {
@@ -36,25 +35,13 @@ function Choose() {
   const router = useRouter();
   const [mode, setMode] = useState<"delivery" | "pickup">(() => draft.get().fulfilment ?? "delivery");
   const { quote, lines, area } = useQuote("delivery");
-  const points = useQuery(
-    api.checkout.pickupPoints,
-    area ? { serviceAreaId: area.id } : {},
-  ) as CheckoutPickupPoint[] | undefined;
   const [error, setError] = useState<string | null>(null);
 
   const farms = groupByFarm(lines);
   const deliveryBlocked = quote?.deliveryBlockers ?? [];
   const pickupBlocked = quote?.pickupBlockers ?? [];
-  const deliveryFee = quote?.area ? quote.deliveryFeeKobo : null;
-  const inArea = area ? (points ?? []).filter((p) => p.lga === area.lga).length : 0;
-  const pointsLine =
-    points === undefined
-      ? ""
-      : area && inArea > 0
-        ? `${plural(inArea, "pickup point")} in ${area.lga}`
-        : points.length > 0
-          ? `${plural(points.length, "pickup point")}${area ? ` in ${area.state}` : ""}`
-          : "No pickup points open yet";
+  // Where each farm is, roughly ("Owerri North, Imo"); the exact address comes when it's ready
+  const farmAreas = (quote?.farms ?? []).map((f) => (f.collectionArea ? `${f.farmName}, ${f.collectionArea}` : f.farmName)).join(" · ");
   const appliesTo =
     farms.length === 1 ? "This applies to your whole order." : farms.length === 2 ? "This applies to both farms in your cart." : `This applies to all ${farms.length} farms in your cart.`;
 
@@ -82,7 +69,7 @@ function Choose() {
       return;
     }
     if (mode === "delivery" && !area) {
-      setError("Choose your area first, so we can work out the delivery fee.");
+      setError("Choose your area first, so we know where to send the rider.");
       areaPicker.open();
       return;
     }
@@ -105,16 +92,14 @@ function Choose() {
             onPick={() => pick("delivery")}
             icon={<Truck aria-hidden className="size-6" strokeWidth={1.75} />}
             title="Home delivery"
-            price={deliveryFee === null ? (area ? "…" : "Choose area") : naira(deliveryFee)}
-            body="A Farmkeke rider brings each farm's order to your door. Usually same day or next day."
+            price="Priced later"
+            body="Nothing to pay now. Once the farm accepts, we arrange a Farmkeke rider, price the delivery and send your bill by email, text and in the app. You pay then, and the rider brings your order."
             meta={
               deliveryBlocked.length > 0
                 ? `Not available for ${blockerText(deliveryBlocked)}`
-                : quote?.area
-                  ? quote.farms.map((f) => `${f.farmName} ${naira(f.deliveryFeeKobo)}`).join(" · ")
-                  : area
-                    ? ""
-                    : "Choose your area to see the delivery fee"
+                : area
+                  ? `Delivering to ${area.name}, ${area.state}`
+                  : "Choose your area so we know where to send the rider"
             }
           />
           <Option
@@ -124,15 +109,15 @@ function Choose() {
             icon={<MapPin aria-hidden className="size-6" strokeWidth={1.75} />}
             title={
               <>
-                Pickup point{" "}
+                Pickup at the farm{" "}
                 <span className="ml-1.5 inline-flex h-[22px] items-center rounded-md bg-lime-soft px-2 align-middle text-[11px] font-bold text-forest">
                   No fee
                 </span>
               </>
             }
             price={naira(0)}
-            body="Collect from a Farmkeke pickup point near you with your pickup code. Ready the day after the farms accept."
-            meta={pickupBlocked.length > 0 ? `Not available for ${blockerText(pickupBlocked)}` : pointsLine}
+            body="Pay now and collect from the farm. When it's ready, we send the farm's address and your 4-digit pickup code. You have 3 days to collect."
+            meta={pickupBlocked.length > 0 ? `Not available for ${blockerText(pickupBlocked)}` : farmAreas}
           />
         </div>
         {mode === "delivery" && !area ? (

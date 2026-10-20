@@ -12,10 +12,10 @@ import { RIDER_REVIEW, VEHICLE } from "@/components/admin/labels";
 import { adminRoutes } from "@/components/admin/routes";
 import { DataTable, FilterTabs, PageHeader, Panel, Photo, ReasonDialog, StatusBadge, TableSkeleton, type Column } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/Field";
+import { SelectField, TextField } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
 import type { Id } from "@/convex/api";
-import type { RiderRow, ServiceArea } from "@/convex/returns/adminOps";
+import type { RiderRow, ServiceArea, Vehicle } from "@/convex/returns/adminOps";
 import { displayPhone } from "@/lib/format";
 import { AreaChecklist } from "./AreaChecklist";
 
@@ -41,7 +41,19 @@ const columns: Column<RiderRow>[] = [
       </span>
     ),
   },
-  { key: "vehicle", label: "Vehicle", render: (r) => (r.vehicleType ? VEHICLE[r.vehicleType] : "–") },
+  {
+    key: "vehicle",
+    label: "Vehicle",
+    render: (r) =>
+      r.vehicleType ? (
+        <span>
+          <span className="block">{VEHICLE[r.vehicleType]}</span>
+          <span className="block text-xs text-subtle">{[r.plateNumber, r.bikeModel].filter(Boolean).join(" · ") || "No plate yet"}</span>
+        </span>
+      ) : (
+        "–"
+      ),
+  },
   { key: "areas", label: "Areas", render: (r) => r.serviceAreas.map((a) => a.name).join(", ") || "None" },
   { key: "jobs", label: "On the road", render: (r) => String(r.activeJobs) },
   { key: "today", label: "Delivered today", render: (r) => String(r.deliveriesToday) },
@@ -60,6 +72,9 @@ export function RidersView() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [areaIds, setAreaIds] = useState<Id<"serviceAreas">[]>([]);
+  const [vehicle, setVehicle] = useState<Vehicle>("motorbike");
+  const [plate, setPlate] = useState("");
+  const [model, setModel] = useState("");
 
   const inTab = (r: RiderRow, t: Tab) =>
     t === "pending" ? r.reviewStatus === "pending" : t === "rejected" ? r.reviewStatus === "rejected" : r.reviewStatus === "approved" && r.active === (t === "active");
@@ -80,6 +95,9 @@ export function RidersView() {
                 setName("");
                 setPhone("");
                 setAreaIds([]);
+                setVehicle("motorbike");
+                setPlate("");
+                setModel("");
                 setAdding(true);
               }}
             >
@@ -110,19 +128,40 @@ export function RidersView() {
         open={adding}
         onClose={() => setAdding(false)}
         title="Add a rider"
-        description="Next you'll add their photo, ID, vehicle, guarantor and bank account. They can't take deliveries until the profile is approved."
+        description="Name, phone, vehicle and the areas they work in are what's needed. Photo, ID, guarantor and bank details can be added on the next page. They can take deliveries once the profile is approved."
         label="Note"
         optional
         confirmLabel="Add and continue"
         variant="lime"
         onConfirm={async (reason) => {
           if (!name.trim()) throw new FormError("Add the rider's name.");
-          const id = (await create({ name, phone, serviceAreaIds: areaIds, pendingReview: true, reason: reason || "New rider" })) as Id<"riders">;
+          if (areaIds.length === 0) throw new FormError("Choose at least one area they work in.");
+          const id = (await create({
+            name,
+            phone,
+            serviceAreaIds: areaIds,
+            pendingReview: true,
+            vehicleType: vehicle,
+            plateNumber: plate || undefined,
+            bikeModel: model || undefined,
+            reason: reason || "New rider",
+          })) as Id<"riders">;
           router.push(adminRoutes.rider(id));
         }}
       >
         <TextField label="Full name" value={name} onChange={(e) => setName(e.target.value)} />
         <TextField label="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0803 123 4567" />
+        <SelectField label="Vehicle" value={vehicle} onChange={(e) => setVehicle(e.target.value as Vehicle)}>
+          {(Object.keys(VEHICLE) as Vehicle[]).map((v) => (
+            <option key={v} value={v}>
+              {VEHICLE[v]}
+            </option>
+          ))}
+        </SelectField>
+        <div className="grid grid-cols-2 gap-4 m:grid-cols-1">
+          <TextField label="Plate number" value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="OWR-123-AA" />
+          <TextField label="Bike model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="Bajaj Boxer 150" />
+        </div>
         <AreaChecklist areas={areas ?? []} value={areaIds} onChange={setAreaIds} />
       </ReasonDialog>
     </>

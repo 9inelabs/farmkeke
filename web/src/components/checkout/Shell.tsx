@@ -65,9 +65,7 @@ export function missingStep(d: CheckoutDraft, upTo: 2 | 3 | 4): string | null {
   if (upTo === 2) return null;
   if (!d.fulfilment) return routes.checkoutDelivery;
   if (upTo === 3) return null;
-  if (d.fulfilment === "delivery" && (!d.address.street.trim() || !d.address.landmark.trim() || !d.window))
-    return routes.checkoutDetails;
-  if (d.fulfilment === "pickup" && !d.pickupPointId) return routes.checkoutDetails;
+  if (d.fulfilment === "delivery" && (!d.address.street.trim() || !d.address.landmark.trim())) return routes.checkoutDetails;
   return null;
 }
 
@@ -150,7 +148,7 @@ export function ItemsSummary({ lines, quote }: { lines: CartLine[]; quote: Quote
       </div>
       <div className="mt-3 pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <Row label="Items" value={naira(items)} />
-        <Row label="Delivery" value="Next step" valueClass="text-subtle" />
+        <Row label="Delivery" value="Priced after the farm accepts" valueClass="text-subtle" />
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">Total so far</span>
@@ -176,7 +174,6 @@ export function FarmsSummary({
   const rows = priced(lines, quote);
   const groups = groupByFarm(rows);
   const items = rows.reduce((s, l) => s + l.priceKobo * l.quantity, 0);
-  const fee = fulfilment === "delivery" ? (quote?.area ? quote.deliveryFeeKobo : null) : 0;
   const meta = [
     plural(groups.length, "farm"),
     plural(lines.length, "item"),
@@ -199,21 +196,22 @@ export function FarmsSummary({
       <div className="mt-2.5 pt-2.5 shadow-[inset_0_1px_0_#EEF0EB]">
         <Row label="Items" value={naira(items)} />
         {fulfilment === "pickup" ? (
-          <Row label="Pickup" value="No fee" valueClass="font-semibold text-ok" />
+          <Row label="Pickup at the farm" value="No fee" valueClass="font-semibold text-ok" />
         ) : fulfilment === "delivery" ? (
-          <Row
-            label={`Delivery (${plural(groups.length, "order")})`}
-            value={fee === null ? "Choose your area" : naira(fee)}
-            valueClass={fee === null ? "text-subtle" : undefined}
-          />
+          <Row label={`Delivery (${plural(groups.length, "order")})`} value="Added to your bill" valueClass="text-subtle" />
         ) : (
           <Row label="Delivery" value="Choose below" valueClass="text-subtle" />
         )}
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
-        <span className="font-semibold">Total</span>
-        <span className="font-display text-[22px] font-extrabold text-forest">{naira(items + (fee ?? 0))}</span>
+        <span className="font-semibold">{fulfilment === "delivery" ? "Products total" : "Total"}</span>
+        <span className="font-display text-[22px] font-extrabold text-forest">{naira(items)}</span>
       </div>
+      {fulfilment === "delivery" ? (
+        <p className="cap mt-2.5">
+          Nothing to pay now. Once the farm accepts, we price the delivery and send your bill. You&apos;ll have 12 hours to pay.
+        </p>
+      ) : null}
     </aside>
   );
 }

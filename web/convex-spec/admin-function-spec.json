@@ -194,7 +194,7 @@
             "fieldType": {
               "type": "number"
             },
-            "optional": false
+            "optional": true
           },
           "latitude": {
             "fieldType": {
@@ -1311,6 +1311,18 @@
       "returns": null
     },
     {
+      "identifier": "admin/dispatch.js:needsPriceCount",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/dispatch.js:recordStep",
       "functionType": "Mutation",
       "visibility": {
@@ -1361,6 +1373,38 @@
               ]
             },
             "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/dispatch.js:setDeliveryPrice",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "orderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "orders"
+            },
+            "optional": false
+          },
+          "feeKobo": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "note": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
           }
         }
       },
@@ -3190,6 +3234,10 @@
                 },
                 {
                   "type": "literal",
+                  "value": "placed"
+                },
+                {
+                  "type": "literal",
                   "value": "paid"
                 },
                 {
@@ -3215,6 +3263,10 @@
                 {
                   "type": "literal",
                   "value": "at_pickup_point"
+                },
+                {
+                  "type": "literal",
+                  "value": "ready_for_collection"
                 },
                 {
                   "type": "literal",
@@ -3801,6 +3853,46 @@
               "type": "boolean"
             },
             "optional": true
+          },
+          "vehicleType": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "motorbike"
+                },
+                {
+                  "type": "literal",
+                  "value": "tricycle"
+                },
+                {
+                  "type": "literal",
+                  "value": "car"
+                },
+                {
+                  "type": "literal",
+                  "value": "van"
+                },
+                {
+                  "type": "literal",
+                  "value": "bicycle"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "plateNumber": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "bikeModel": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
           }
         }
       },
@@ -3984,6 +4076,12 @@
             "optional": true
           },
           "plateNumber": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "bikeModel": {
             "fieldType": {
               "type": "string"
             },

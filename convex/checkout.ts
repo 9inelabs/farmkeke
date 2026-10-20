@@ -1,7 +1,12 @@
 // Cart and checkout (M-30 to M-41, W-20 to W-24). The cart lives on the
 // device; these functions check it against the server, then `place` turns it
 // into one checkout (one payment) and one order per farm.
+//
+// Pickup is at each farm and is paid at once. Delivery is placed unpaid and
+// without a delivery fee: farms accept, staff price each delivery, and the
+// shopper pays the bill afterwards (lib/bill.ts).
 import { ConvexError, v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireUser } from "./lib/auth";
@@ -16,6 +21,8 @@ import {
   transition,
   SYSTEM,
 } from "./lib/orders";
+import { MAX_OPEN_BILLS } from "./lib/bill";
+import { notifyConsumer, notifyFarm, smsSending } from "./lib/notify";
 import { looksLikeEmail, normalizeNigerianPhone } from "./lib/phone";
 import { hitLimit } from "./lib/rateLimit";
 import { getRules, HOUR, slotCapacityReader } from "./lib/settings";
@@ -56,7 +63,6 @@ export async function buildQuote(
   const areaId = args.serviceAreaId ? ctx.db.normalizeId("serviceAreas", args.serviceAreaId) : null;
   const areaDoc = areaId ? await ctx.db.get("serviceAreas", areaId) : null;
   const area = areaDoc !== null && areaDoc.active ? areaDoc : null;
-  const charged = args.fulfilment !== "pickup" && area !== null;
 
   // Merge repeated lines for the same listing and unit.
   const merged = new Map<string, CartItem>();
@@ -142,11 +148,15 @@ export async function buildQuote(
   const farmRows = await Promise.all(
     [...farms.values()].map(async ({ farm, farmPhotoUrl, lines }) => {
       const itemsTotalKobo = lines.reduce((sum, l) => sum + l.lineTotalKobo, 0);
-      const deliveryFeeKobo = charged ? area!.deliveryFeeKobo : 0;
+      // Delivery is priced by staff after the farm accepts (the bill)
+      const deliveryFeeKobo = 0;
       return {
         farmId: farm._id,
         farmName: farm.name,
         farmArea: farm.lga,
+        // Pickup is at the farm: where it is, roughly, and when it hands over
+        collectionArea: `${farm.lga}, ${farm.state}`,
+        collectionHours: farm.collectionHours,
         farmPhotoUrl,
         lines,
         itemsTotalKobo,
@@ -172,7 +182,8 @@ export async function buildQuote(
             name: area.name,
             lga: area.lga,
             state: area.state,
-            deliveryFeeKobo: area.deliveryFeeKobo,
+            // No fixed fee any more: delivery is priced per order
+            deliveryFeeKobo: 0,
             latitude: area.latitude,
             longitude: area.longitude,
           },
@@ -184,6 +195,8 @@ export async function buildQuote(
     itemsTotalKobo,
     deliveryFeeKobo,
     totalKobo: itemsTotalKobo + deliveryFeeKobo,
+    // Delivery: the fee is added to the bill once staff have priced it
+    deliveryFeeLater: args.fulfilment !== "pickup",
     // Internal: the raw lines with photo ids, for `place`
     _farms: farmRows,
   };
@@ -439,9 +452,11 @@ export const contactDefaults = query({
 });
 
 /**
- * M-41 Pay / W-24: places the cart as one checkout awaiting payment and one
- * order per farm. Stock is held until payment or until the checkout is
- * abandoned. Throws CART_CHANGED when the server's view differs.
+ * M-41 Pay / W-24: places the cart as one checkout and one order per farm.
+ * Pickup: the checkout awaits payment now, and stock is held until payment or
+ * until it's abandoned. Delivery: the orders go to the farms unpaid and the
+ * checkout awaits its bill; stock is held until the bill is paid or lapses.
+ * Throws CART_CHANGED when the server's view differs.
  */
 export const place = mutation({
   args: {
@@ -463,6 +478,8 @@ export const place = mutation({
         note: v.optional(v.string()),
       }),
     ),
+    // Ignored: pickup is at the farm, and delivery times are agreed with the rider.
+    // Kept so an older website or app can still place orders.
     pickupPointId: v.optional(v.string()),
     window: v.optional(v.object({ day: v.string(), from: v.string(), to: v.string() })),
     contact: v.optional(
@@ -483,7 +500,8 @@ export const place = mutation({
     if (args.replaces) {
       const oldId = ctx.db.normalizeId("checkouts", args.replaces);
       const old = oldId ? await ctx.db.get("checkouts", oldId) : null;
-      if (old !== null && old.userId === user._id && old.status === "awaiting_payment") {
+      // Only an unpaid pickup checkout can be replaced; bills have their own lifecycle
+      if (old !== null && old.userId === user._id && old.status === "awaiting_payment" && old.payBy === undefined) {
         await abandonCheckout(ctx, old, "replaced");
         replaces = old._id;
       }
@@ -491,7 +509,6 @@ export const place = mutation({
 
     // Where it goes
     let address: Doc<"orders">["address"];
-    let pickupPointId: Id<"pickupPoints"> | undefined;
     let serviceAreaId: string | undefined;
     if (args.fulfilment === "delivery") {
       const a = args.address;
@@ -551,11 +568,6 @@ export const place = mutation({
           });
         }
       }
-    } else {
-      const pointId = args.pickupPointId ? ctx.db.normalizeId("pickupPoints", args.pickupPointId) : null;
-      const point = pointId ? await ctx.db.get("pickupPoints", pointId) : null;
-      if (point === null || !point.active) throw new ConvexError({ code: "PICKUP_POINT_REQUIRED" });
-      pickupPointId = point._id;
     }
 
     // Who to contact (M-39)
@@ -565,7 +577,38 @@ export const place = mutation({
     if (name.length === 0) throw new ConvexError({ code: "NAME_REQUIRED" });
     if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
     if (emailRaw.length > 0 && !looksLikeEmail(emailRaw)) throw new ConvexError({ code: "INVALID_EMAIL" });
+    // The delivery bill goes by email and SMS; until texts really send, email is the only way it reaches a guest.
+    if (args.fulfilment === "delivery" && emailRaw.length === 0 && !smsSending()) {
+      throw new ConvexError({ code: "EMAIL_REQUIRED" });
+    }
     const contact = { name: name.slice(0, 80), phone, email: emailRaw || undefined };
+
+    // Farms pack unpaid delivery orders, so cap how many one person can have open.
+    if (args.fulfilment === "delivery") {
+      const mine = await ctx.db
+        .query("checkouts")
+        .withIndex("by_userId", (q) => q.eq("userId", user._id))
+        .order("desc")
+        .take(50);
+      const byPhone = [
+        ...(await ctx.db
+          .query("checkouts")
+          .withIndex("by_contact_phone_and_status", (q) => q.eq("contact.phone", phone).eq("status", "awaiting_bill"))
+          .take(MAX_OPEN_BILLS)),
+        ...(await ctx.db
+          .query("checkouts")
+          .withIndex("by_contact_phone_and_status", (q) => q.eq("contact.phone", phone).eq("status", "awaiting_payment"))
+          .take(MAX_OPEN_BILLS + 1)),
+      ].filter((c) => c.fulfilment === "delivery");
+      const openBill = (c: Doc<"checkouts">) =>
+        c.fulfilment === "delivery" && (c.status === "awaiting_bill" || c.status === "awaiting_payment");
+      if (mine.filter(openBill).length >= MAX_OPEN_BILLS || byPhone.length >= MAX_OPEN_BILLS) {
+        throw new ConvexError({
+          code: "TOO_MANY_UNPAID",
+          message: "You have unpaid delivery orders waiting. Pay or cancel one before placing another.",
+        });
+      }
+    }
 
     // Check the cart again on the server
     const quoted = await buildQuote(ctx, { items: args.items, fulfilment: args.fulfilment, serviceAreaId });
@@ -576,30 +619,13 @@ export const place = mutation({
       throw new ConvexError({ code: "TOTAL_CHANGED", totalKobo: quoted.totalKobo });
     }
 
-    // Delivery window must be one the farms can make (M-36)
-    let window: Doc<"orders">["window"];
-    if (args.fulfilment === "delivery") {
-      if (args.window === undefined) throw new ConvexError({ code: "WINDOW_REQUIRED" });
-      const w = args.window;
-      const { allDays } = await windowsFor(ctx, quoted._farms.map((f) => f.farmId), Date.now(), {
-        serviceAreaId: address?.serviceAreaId ?? null,
-        newOrders: quoted._farms.length,
-      });
-      const slot = allDays.find((d) => d.day === w.day)?.slots.find((s) => s.from === w.from && s.to === w.to);
-      // W-23: someone else took the last place in this slot
-      if (slot?.reason === "full") throw new ConvexError({ code: "WINDOW_FULL" });
-      if (slot === undefined || !slot.open) throw new ConvexError({ code: "WINDOW_UNAVAILABLE" });
-      window = { day: w.day, from: w.from, to: w.to };
-    }
-
+    const delivery = args.fulfilment === "delivery";
     const checkoutId = await ctx.db.insert("checkouts", {
       userId: user._id,
       reference: await checkoutReference(ctx),
-      status: "awaiting_payment",
+      status: delivery ? "awaiting_bill" : "awaiting_payment",
       fulfilment: args.fulfilment,
       address,
-      pickupPointId,
-      window,
       contact,
       itemsTotalKobo: quoted.itemsTotalKobo,
       deliveryFeeKobo: quoted.deliveryFeeKobo,
@@ -608,6 +634,8 @@ export const place = mutation({
     });
 
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
+    const rules = await getRules(ctx);
+    const now = Date.now();
     const orders: { orderId: Id<"orders">; number: string; farmName: string; totalKobo: number }[] = [];
     for (const farm of quoted._farms) {
       const items = farm.lines.map((l) => ({
@@ -622,29 +650,57 @@ export const place = mutation({
       }));
       await takeStock(ctx, items);
       const number = await orderNumber(ctx);
+      // Delivery orders go to the farm now, unpaid, with the usual 24 hours to answer
+      const respondBy = delivery ? now + rules.farmerResponseHours * HOUR : undefined;
       const orderId = await ctx.db.insert("orders", {
         checkoutId,
         userId: user._id,
         farmId: farm.farmId,
         number,
-        status: "awaiting_payment",
+        status: delivery ? "placed" : "awaiting_payment",
         escrow: "none",
         fulfilment: args.fulfilment,
         items,
         itemsTotalKobo: farm.itemsTotalKobo,
-        deliveryFeeKobo: farm.deliveryFeeKobo,
-        totalKobo: farm.totalKobo,
+        deliveryFeeKobo: 0,
+        totalKobo: farm.itemsTotalKobo,
         address,
-        pickupPointId,
-        pickupCode: args.fulfilment === "pickup" ? newPickupCode() : undefined,
-        window,
+        pickupCode: delivery ? undefined : newPickupCode(),
         contact,
+        respondBy,
       });
-      await logOrderEvent(ctx, orderId, "awaiting_payment", actor);
-      orders.push({ orderId, number, farmName: farm.farmName, totalKobo: farm.totalKobo });
+      await logOrderEvent(ctx, orderId, delivery ? "placed" : "awaiting_payment", actor);
+      if (delivery) {
+        const expiryJobId = await ctx.scheduler.runAt(respondBy!, internal.orders.system.expireOne, { orderId });
+        await ctx.db.patch("orders", orderId, { expiryJobId });
+        const order = (await ctx.db.get("orders", orderId))!;
+        await notifyFarm(
+          ctx,
+          order,
+          "order_new",
+          "New delivery order",
+          `Order ${number} is waiting. Accept or decline within ${rules.farmerResponseHours} hours. ` +
+            "The shopper pays once Farmkeke has priced the delivery; the rider only collects after that.",
+        );
+        await notifyConsumer(
+          ctx,
+          order,
+          "order_received",
+          `Order ${number} received`,
+          `We've sent it to ${farm.farmName}. Once they accept, we'll arrange a rider and send your bill, delivery included.`,
+        );
+      }
+      orders.push({ orderId, number, farmName: farm.farmName, totalKobo: farm.itemsTotalKobo });
     }
     const checkout = (await ctx.db.get("checkouts", checkoutId))!;
-    return { checkoutId, reference: checkout.reference, totalKobo: checkout.totalKobo, orders };
+    return {
+      checkoutId,
+      reference: checkout.reference,
+      totalKobo: checkout.totalKobo,
+      orders,
+      // Pickup is paid now; delivery is paid when the bill comes
+      payNow: !delivery,
+    };
   },
 });
 
@@ -682,10 +738,15 @@ export const abandonStale = internalMutation({
   args: { olderThanMinutes: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const cutoff = Date.now() - (args.olderThanMinutes ?? 60) * 60_000;
-    const stale = await ctx.db
-      .query("checkouts")
-      .withIndex("by_status", (q) => q.eq("status", "awaiting_payment").lt("_creationTime", cutoff))
-      .take(50);
+    // Delivery bills (payBy set) have their own 12 hours (lib/bill.ts)
+    const stale = (
+      await ctx.db
+        .query("checkouts")
+        .withIndex("by_status", (q) => q.eq("status", "awaiting_payment").lt("_creationTime", cutoff))
+        .take(200)
+    )
+      .filter((c) => c.payBy === undefined)
+      .slice(0, 50);
     let abandoned = 0;
     for (const checkout of stale) {
       // A payment page still open keeps the checkout alive a little longer.

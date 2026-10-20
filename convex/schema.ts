@@ -85,6 +85,9 @@ export const listingUnit = v.object({
 // step inside "preparing" (packedAt), not its own status.
 export const orderStatus = v.union(
   v.literal("awaiting_payment"),
+  // Delivery orders: placed but not paid. The farm accepts and packs first;
+  // the shopper pays once staff have priced the delivery (the bill).
+  v.literal("placed"),
   // Paid, money held, waiting for the farm to accept (24h)
   v.literal("paid"),
   v.literal("accepted"),
@@ -95,6 +98,8 @@ export const orderStatus = v.union(
   // Pickup orders on their way to the pickup point
   v.literal("with_rider"),
   v.literal("at_pickup_point"),
+  // Pickup orders: packed and waiting at the farm for the shopper
+  v.literal("ready_for_collection"),
   v.literal("delivered"),
   v.literal("collected"),
   v.literal("completed"),
@@ -271,12 +276,13 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_retired_and_sortOrder", ["retired", "sortOrder"]),
 
-  // A-83. Areas riders cover, each with its own delivery fee per farm order.
+  // A-83. Areas riders cover. Delivery is priced per order by staff now;
+  // deliveryFeeKobo is the old fixed fee, kept on existing rows only.
   serviceAreas: defineTable({
     state: v.string(),
     name: v.string(),
     lga: v.string(),
-    deliveryFeeKobo: v.number(),
+    deliveryFeeKobo: v.optional(v.number()),
     active: v.boolean(),
     sortOrder: v.number(),
     // Centre and radius used to match a phone's GPS position to an area (M-05)
@@ -287,7 +293,8 @@ export default defineSchema({
     .index("by_state_and_name", ["state", "name"])
     .index("by_active_and_state_and_sortOrder", ["active", "state", "sortOrder"]),
 
-  // A-82. Farmkeke-run pickup points.
+  // A-82. Farmkeke-run pickup points. No longer offered: pickup is at the
+  // farm. Kept for orders placed before the change.
   pickupPoints: defineTable({
     name: v.string(),
     address: v.string(),
@@ -603,11 +610,19 @@ export default defineSchema({
   // Ordering, escrow and payments
 
   // M-41 / W-24: one payment for a cart, split into one order per farm.
+  // Pickup checkouts are paid at once. Delivery checkouts wait in
+  // "awaiting_bill" until every farm has answered and every accepted order
+  // has a delivery price; then the bill goes out and they await payment.
   checkouts: defineTable({
     userId: v.id("users"),
     // "CK-10001"
     reference: v.string(),
-    status: v.union(v.literal("awaiting_payment"), v.literal("paid"), v.literal("abandoned")),
+    status: v.union(
+      v.literal("awaiting_bill"),
+      v.literal("awaiting_payment"),
+      v.literal("paid"),
+      v.literal("abandoned"),
+    ),
     fulfilment,
     address: v.optional(orderAddress),
     pickupPointId: v.optional(v.id("pickupPoints")),
@@ -621,12 +636,21 @@ export default defineSchema({
     // The successful payment's reference (refunds go against it)
     paymentReference: v.optional(v.string()),
     abandonedAt: v.optional(v.number()),
+    abandonReason: v.optional(v.string()),
     // Checkout this one replaced when the shopper went back and changed it
     replaces: v.optional(v.id("checkouts")),
+    // Delivery bill: when it went out, the pay-by time (12 hours), and the
+    // secret in the pay link, which lets anyone holding it pay this bill
+    billedAt: v.optional(v.number()),
+    payBy: v.optional(v.number()),
+    payToken: v.optional(v.string()),
   })
     .index("by_userId", ["userId"])
     .index("by_reference", ["reference"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_payToken", ["payToken"])
+    // Caps open unpaid delivery orders per phone number
+    .index("by_contact_phone_and_status", ["contact.phone", "status"]),
 
   // One order per farm. Status drives the screens; escrow says where the money is.
   orders: defineTable({
@@ -682,6 +706,9 @@ export default defineSchema({
     riderCollectAt: v.optional(v.number()),
     disputeId: v.optional(v.id("disputes")),
     reviewedAt: v.optional(v.number()),
+    // Delivery orders: staff set the price after briefing the rider
+    deliveryPricedAt: v.optional(v.number()),
+    deliveryPricedBy: v.optional(v.id("users")),
     // Set when a guest's orders were linked to an account (W-44)
     claimedFrom: v.optional(v.id("users")),
   })
@@ -725,6 +752,8 @@ export default defineSchema({
     idPhotoStorageId: v.optional(v.id("_storage")),
     vehicleType: v.optional(riderVehicle),
     plateNumber: v.optional(v.string()),
+    // "Bajaj Boxer 150"
+    bikeModel: v.optional(v.string()),
     guarantor: v.optional(
       v.object({ name: v.string(), phone: v.string(), address: v.string(), relationship: v.string() }),
     ),

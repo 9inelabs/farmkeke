@@ -1,13 +1,16 @@
 // A-53 Dispatch board and A-54 Assign rider / update delivery. Staff give
-// ready orders to riders and record each step: collected from the farm,
-// dropped at the pickup point, delivered, collected by the consumer.
+// accepted delivery orders to riders, brief the rider, and set the delivery
+// price, which completes the shopper's bill (lib/bill.ts). Once the bill is
+// paid the rider collects; staff record each step: collected from the farm,
+// delivered, collected by the shopper (pickup at the farm).
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
-import { notifyConsumer, notifyFarm } from "../lib/notify";
-import { pickupDeadline, transition, type OrderStatus } from "../lib/orders";
+import { checkBill, MAX_DELIVERY_FEE_KOBO } from "../lib/bill";
+import { naira, notifyConsumer, notifyFarm } from "../lib/notify";
+import { logOrderEvent, pickupDeadline, transition, type OrderStatus } from "../lib/orders";
 import { HOUR } from "../lib/settings";
 
 // Riders can be lined up as soon as the farm accepts
@@ -26,9 +29,11 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
   const farm = await ctx.db.get("farms", o.farmId);
   const rider = o.riderId ? await ctx.db.get("riders", o.riderId) : null;
   const point = o.pickupPointId ? await ctx.db.get("pickupPoints", o.pickupPointId) : null;
+  const checkout = await ctx.db.get("checkouts", o.checkoutId);
   const end = windowEnd(o.window);
   let late: string | null = null;
   if (o.status === "ready_for_rider" && o.riderId === undefined) late = "no_rider";
+  else if (o.status === "ready_for_collection" && o.collectBy !== undefined && o.collectBy < now) late = "not_collected";
   else if (o.status === "ready_for_rider" && o.riderCollectAt !== undefined && o.riderCollectAt < now) late = "collection_late";
   else if (o.status === "out_for_delivery" && end !== null && end < now) late = "past_window";
   else if (o.status === "with_rider" && o.handedOverAt !== undefined && o.handedOverAt < now - 24 * HOUR) late = "not_at_point";
@@ -52,7 +57,9 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
             latitude: o.address?.latitude ?? null,
             longitude: o.address?.longitude ?? null,
           }
-        : { kind: "pickup_point" as const, name: point?.name ?? "", address: point?.address ?? "" },
+        : point !== null
+          ? { kind: "pickup_point" as const, name: point.name, address: point.address }
+          : { kind: "farm" as const, name: farm?.name ?? "", address: farm?.collectionAddress ?? "" },
     consumer: { name: o.contact.name, phone: o.contact.phone },
     window: o.window ?? null,
     windowEnd: end,
@@ -64,6 +71,22 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
     collectBy: o.collectBy ?? null,
     deliveredAt: o.deliveredAt ?? null,
     late,
+    // Delivery pricing and the shopper's bill
+    itemsTotalKobo: o.itemsTotalKobo,
+    deliveryFeeKobo: o.deliveryFeeKobo,
+    deliveryPricedAt: o.deliveryPricedAt ?? null,
+    paid: o.escrow !== "none",
+    bill:
+      o.fulfilment !== "delivery" || checkout === null
+        ? null
+        : {
+            status: checkout.status,
+            billedAt: checkout.billedAt ?? null,
+            payBy: checkout.payBy ?? null,
+            totalKobo: checkout.totalKobo,
+          },
+    // A-53: a rider can be assigned; the delivery can be priced
+    canPrice: o.fulfilment === "delivery" && checkout?.status === "awaiting_bill" && ASSIGNABLE.includes(o.status),
   };
 }
 
@@ -79,11 +102,15 @@ export const board = query({
         .order(order)
         .take(n);
     const rows = (list: Doc<"orders">[]) => Promise.all(list.map((o) => boardRow(ctx, o, args.now)));
-    // Lined up early: accepted or preparing orders that already have a rider
-    const upcoming = [...(await take("accepted", 100)), ...(await take("preparing", 100))].filter((o) => o.riderId !== undefined);
+    // Accepted delivery orders: each needs a rider and a delivery price before the bill
+    const atFarm = [...(await take("accepted", 200)), ...(await take("preparing", 200))];
     const ready = await take("ready_for_rider", 200);
+    const needsPrice = [...atFarm, ...ready].filter((o) => o.fulfilment === "delivery" && o.escrow === "none");
+    // Lined up early: accepted or preparing orders that already have a rider
+    const upcoming = atFarm.filter((o) => o.riderId !== undefined && !needsPrice.includes(o));
+    const readyPaid = ready.filter((o) => !needsPrice.includes(o));
     const withRider = [...(await take("out_for_delivery", 200)), ...(await take("with_rider", 200))];
-    const atPoint = await take("at_pickup_point", 200);
+    const atPoint = [...(await take("ready_for_collection", 200)), ...(await take("at_pickup_point", 200))];
     // Most recent deliveries only
     const delivered = [...(await take("delivered", 50, "desc")), ...(await take("collected", 50, "desc"))].sort(
       (a, b) => (b.deliveredAt ?? 0) - (a.deliveredAt ?? 0),
@@ -93,11 +120,13 @@ export const board = query({
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(200);
     const busy = new Map<string, number>();
-    for (const o of [...upcoming, ...ready, ...withRider]) {
+    for (const o of [...needsPrice, ...upcoming, ...readyPaid, ...withRider]) {
       if (o.riderId) busy.set(o.riderId, (busy.get(o.riderId) ?? 0) + 1);
     }
     return {
-      readyForRider: await rows([...ready, ...upcoming]),
+      // Unpaid: rider to brief, price to set, or the bill out waiting for payment
+      awaitingBill: await rows(needsPrice),
+      readyForRider: await rows([...readyPaid, ...upcoming]),
       withRider: await rows(withRider),
       atPickupPoint: await rows(atPoint),
       delivered: await rows(delivered.slice(0, 50)),
@@ -107,8 +136,71 @@ export const board = query({
         phone: r.phone,
         serviceAreaIds: r.serviceAreaIds,
         jobs: busy.get(r._id) ?? 0,
+        plateNumber: r.plateNumber ?? null,
+        bikeModel: r.bikeModel ?? null,
       })),
     };
+  },
+});
+
+/**
+ * Staff set the delivery price once they've briefed the rider. When every
+ * farm in the checkout has answered and every accepted order is priced, the
+ * shopper's bill goes out (lib/bill.checkBill). The price can be changed
+ * until then.
+ */
+export const setDeliveryPrice = mutation({
+  args: { orderId: v.id("orders"), feeKobo: v.number(), note: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const staff = await requireStaff(ctx, "dispatch.manage");
+    const order = await ctx.db.get("orders", args.orderId);
+    if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
+    if (order.fulfilment !== "delivery") throw new ConvexError({ code: "NOT_DELIVERY" });
+    if (!ASSIGNABLE.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    const checkout = await ctx.db.get("checkouts", order.checkoutId);
+    if (checkout === null || checkout.status !== "awaiting_bill") throw new ConvexError({ code: "BILL_ALREADY_SENT" });
+    if (order.riderId === undefined) {
+      throw new ConvexError({ code: "NO_RIDER", message: "Assign and brief a rider before setting the price." });
+    }
+    const fee = args.feeKobo;
+    if (!Number.isInteger(fee) || fee < 0 || fee > MAX_DELIVERY_FEE_KOBO) throw new ConvexError({ code: "INVALID_AMOUNT" });
+    const note = args.note?.trim().slice(0, 300) || undefined;
+    const now = Date.now();
+    await ctx.db.patch("orders", order._id, {
+      deliveryFeeKobo: fee,
+      totalKobo: order.itemsTotalKobo + fee,
+      deliveryPricedAt: now,
+      deliveryPricedBy: staff._id,
+    });
+    await logOrderEvent(ctx, order._id, "delivery_priced", { kind: "staff", id: staff._id }, note ? `${naira(fee)}: ${note}` : naira(fee));
+    await writeAudit(ctx, {
+      actorId: staff._id,
+      action: "dispatch.set_delivery_price",
+      targetTable: "orders",
+      targetId: order._id,
+      reason: note ?? `Delivery priced at ${naira(fee)}`,
+      details: { number: order.number, from: order.deliveryPricedAt === undefined ? null : order.deliveryFeeKobo, to: fee },
+    });
+    await checkBill(ctx, order.checkoutId);
+    const after = await ctx.db.get("checkouts", order.checkoutId);
+    return { billSent: after?.status === "awaiting_payment" };
+  },
+});
+
+/** Sidebar badge: accepted delivery orders that still need a delivery price. */
+export const needsPriceCount = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireStaff(ctx, ["dispatch.manage", "orders.view"]);
+    let count = 0;
+    for (const status of ASSIGNABLE) {
+      const rows = await ctx.db
+        .query("orders")
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .take(200);
+      count += rows.filter((o) => o.fulfilment === "delivery" && o.escrow === "none" && o.deliveryPricedAt === undefined).length;
+    }
+    return count;
   },
 });
 
@@ -153,7 +245,7 @@ const STEP_FROM: Record<string, OrderStatus[]> = {
   collected_from_farm: ["ready_for_rider"],
   dropped_at_pickup_point: ["with_rider"],
   delivered: ["out_for_delivery"],
-  collected_by_consumer: ["at_pickup_point"],
+  collected_by_consumer: ["at_pickup_point", "ready_for_collection"],
 };
 
 /** A-54: record a delivery step. Collecting at the pickup point needs the consumer's code. */
@@ -182,6 +274,10 @@ export const recordStep = mutation({
       return { status: order.status };
     }
     if (!STEP_FROM[args.step]!.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    // The rider only takes a delivery once the shopper has paid the bill
+    if (args.step === "collected_from_farm" && order.fulfilment === "delivery" && order.escrow === "none") {
+      throw new ConvexError({ code: "NOT_PAID_YET" });
+    }
     if (args.step === "collected_by_consumer") {
       const code = (args.pickupCode ?? "").replace(/\D/g, "");
       if (!order.pickupCode || code !== order.pickupCode) throw new ConvexError({ code: "WRONG_PICKUP_CODE" });

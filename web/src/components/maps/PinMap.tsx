@@ -1,9 +1,8 @@
 "use client";
 
 // OpenStreetMap with one draggable drop-off pin (W-23 "Pin on the map",
-// W-46b "Set pin"). Client-only: load it with next/dynamic (ssr: false), as
-// components/site/PickupMap.tsx is. The marker is a DivIcon in the designs'
-// lime pin, so no image files are needed.
+// W-46b "Set pin"). Client-only: load it with next/dynamic (ssr: false).
+// The marker is a DivIcon in the designs' lime pin, so no image files are needed.
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect } from "react";

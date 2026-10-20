@@ -15,7 +15,6 @@ const SITE_COLUMNS: Col[] = [
     links: [
       { href: routes.about, label: "About" },
       { href: routes.howItWorks, label: "How it works" },
-      { href: routes.pickupLocations, label: "Pickup locations" },
       { href: routes.escrow, label: "Escrow protection" },
     ],
   },
@@ -53,7 +52,6 @@ const SHOP_COLUMNS: Col[] = [
     links: [
       { href: routes.about, label: "About" },
       { href: routes.howItWorks, label: "How it works" },
-      { href: routes.pickupLocations, label: "Pickup locations" },
     ],
   },
   {

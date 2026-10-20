@@ -17,7 +17,7 @@ import { dateTime } from "@/lib/format";
 const RULES = [
   { key: "farmerResponseHours", label: "Farm must accept within", unit: "hours", min: 1, max: 72, note: "Otherwise the order expires and the shopper is refunded." },
   { key: "unconfirmedAfterHours", label: "Delivered but not confirmed: flag after", unit: "hours", min: 1, max: 168, note: "The order shows under Orders, Needs attention." },
-  { key: "pickupHoldDays", label: "Pickup orders wait at the point for", unit: "days", min: 1, max: 14, note: "A pickup point can set a longer time." },
+  { key: "pickupHoldDays", label: "Pickup orders wait at the farm for", unit: "days", min: 1, max: 14, note: "The shopper's time to collect once the farm has it ready." },
   { key: "disputeReplyHours", label: "Farm must reply to a problem report within", unit: "hours", min: 1, max: 72, note: "After that, staff decide without the farm's reply." },
 ] as const;
 type RuleKey = (typeof RULES)[number]["key"];
@@ -120,9 +120,9 @@ export function RulesView() {
             ))}
           </ul>
         </Panel>
-        <Panel title="Delivery fees" description="Each service area has its own delivery fee per farm.">
-          <ButtonLink href={adminRoutes.areas} variant="ghost" size="sm">
-            Go to areas and delivery fees
+        <Panel title="Delivery prices" description="Each delivery is priced by staff once the farm accepts and a rider is briefed. The shopper then has 12 hours to pay the bill.">
+          <ButtonLink href={adminRoutes.dispatch} variant="ghost" size="sm">
+            Go to Dispatch
           </ButtonLink>
         </Panel>
       </div>

@@ -1,8 +1,10 @@
 "use client";
 
-// W-51 Order tracking (home delivery), W-51b (pickup, with the pickup code)
-// and W-51c (view only: opened with Find my order on another device).
-import { ChevronLeft, Eye, Flag, LifeBuoy, MapPin, MessageCircle, Phone, ShieldCheck } from "lucide-react";
+// W-51 Order tracking (home delivery), W-51b (pickup at the farm, with the
+// pickup code) and W-51c (view only: opened with Find my order on another
+// device). Delivery orders are paid by bill once the delivery is priced, so
+// an unpaid one shows where its bill stands and, when it's ready, Pay.
+import { ChevronLeft, Eye, Flag, LifeBuoy, MapPin, MessageCircle, Phone, Receipt, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { capitalise, Thumb } from "@/components/cart/parts";
@@ -14,7 +16,7 @@ import { useOrder } from "@/components/orders/useOrder";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { LoadingRegion, Skeleton } from "@/components/ui/Skeleton";
 import { Timeline, type TimelineStep } from "@/components/ui/Timeline";
-import { stageOf, statusBadge, type OrderDetail } from "@/convex/returns/orders";
+import { stageOf, statusBadge, type OrderBill, type OrderDetail } from "@/convex/returns/orders";
 import { useViewer } from "@/lib/auth";
 import { initials, naira, plural } from "@/lib/format";
 import { Reveal } from "@/lib/motion";
@@ -75,6 +77,7 @@ function Missing() {
 
 const RANK: Record<string, number> = {
   awaiting_payment: 0,
+  placed: 1,
   paid: 1,
   accepted: 2,
   preparing: 3,
@@ -82,6 +85,7 @@ const RANK: Record<string, number> = {
   out_for_delivery: 4,
   with_rider: 4,
   at_pickup_point: 4.5,
+  ready_for_collection: 4.5,
   delivered: 5,
   collected: 5,
   disputed: 5,
@@ -89,34 +93,81 @@ const RANK: Record<string, number> = {
 };
 const ENDED = ["declined", "expired", "cancelled"];
 const at = (ms: number | null | undefined) => (ms ? dayTime(ms) : undefined);
+/** A delivery order not paid yet (its bill hasn't been paid). */
+const unpaidDelivery = (o: OrderDetail) => o.fulfilment === "delivery" && o.escrow === "none";
+/** The bill is out and this device can pay it. */
+const payable = (o: OrderDetail): o is OrderDetail & { bill: OrderBill & { payToken: string } } =>
+  o.bill?.state === "ready_to_pay" && !!o.bill.payToken && !o.viewOnly;
 
 function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[] {
   const r = RANK[o.status] ?? 0;
   const state = (done: boolean, current: boolean): TimelineStep["state"] => (done ? "done" : current ? "current" : "todo");
   const farm = o.farmName;
-  const placed: TimelineStep = {
-    key: "paid",
-    title: "Order placed and paid",
-    detail: [at(o.paidAt ?? o.placedAt), "Money held by Farmkeke"].filter(Boolean).join(" · "),
-    state: "done",
-  };
+  // Delivery orders are placed first and paid by bill later
+  const billFirst = o.fulfilment === "delivery" && (o.bill != null || o.paidAt === null);
+  const placed: TimelineStep = billFirst
+    ? { key: "placed", title: "Order placed", detail: at(o.placedAt), state: "done" }
+    : {
+        key: "paid",
+        title: "Order placed and paid",
+        detail: [at(o.paidAt ?? o.placedAt), "Money held by Farmkeke"].filter(Boolean).join(" · "),
+        state: "done",
+      };
 
   if (ENDED.includes(o.status)) {
     const title =
-      o.status === "declined" ? `Declined by ${farm}` : o.status === "expired" ? `${farm} didn't accept in time` : "Order cancelled";
+      o.status === "declined"
+        ? `Declined by ${farm}`
+        : o.status === "expired"
+          ? `${farm} didn't accept in time`
+          : o.cancelReason === "bill_not_paid"
+            ? "Cancelled: the bill wasn't paid in time"
+            : "Order cancelled";
     return [
       placed,
       {
         key: "ended",
         title,
-        detail: o.escrow === "refunded" ? `${naira(o.totalKobo)} refunded in full` : `Your ${naira(o.totalKobo)} is being refunded in full`,
+        detail:
+          o.escrow === "none"
+            ? "You weren't charged"
+            : o.escrow === "refunded"
+              ? `${naira(o.totalKobo)} refunded in full`
+              : `Your ${naira(o.totalKobo)} is being refunded in full`,
         state: "current",
       },
     ];
   }
 
+  if (o.fulfilment === "pickup" && !o.pickupPoint) {
+    return [
+      placed,
+      {
+        key: "packed",
+        title: r >= 4.5 ? `Accepted and packed by ${farm}` : r <= 1 ? `Waiting for ${farm} to accept` : `${farm} is preparing your order`,
+        detail: r >= 4.5 ? at(o.readyAt ?? o.packedAt) : r <= 1 && o.respondBy ? `They have until ${dayTime(o.respondBy)}` : at(o.acceptedAt),
+        state: state(r >= 4.5, r < 4.5),
+      },
+      {
+        key: "farm",
+        title: "Ready to collect at the farm",
+        detail: r >= 4.5 && o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : undefined,
+        state: state(r >= 5, r >= 4.5 && r < 5),
+      },
+      { key: "collected", title: o.status === "disputed" ? "Collected · Problem reported" : "Collected", detail: at(o.deliveredAt), state: state(r >= 5, false) },
+      {
+        key: "confirm",
+        title: o.status === "disputed" ? "We're looking into your report" : "You confirm receipt",
+        detail: o.status === "disputed" ? "Your payment stays held until it's resolved" : `Then ${farm} is paid`,
+        state: state(r >= 6, r === 5),
+      },
+    ];
+  }
+
   if (o.fulfilment === "pickup") {
-    const point = o.pickupPoint?.name ?? "the pickup point";
+    // Older orders went to a pickup point; new ones are collected at the farm
+    const point = o.pickupPoint?.name;
+    const waiting = point ? "Waiting at the pickup point" : `Ready to collect at ${farm}`;
     return [
       placed,
       {
@@ -127,7 +178,7 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
       },
       {
         key: "point",
-        title: r >= 4.5 ? "Waiting at the pickup point" : r >= 4 ? `On its way to ${point}` : "Waiting at the pickup point",
+        title: r >= 4.5 ? waiting : r >= 4 && point ? `On its way to ${point}` : waiting,
         detail:
           r >= 4.5
             ? [o.arrivedAt ? `Arrived ${dayTime(o.arrivedAt)}` : "", o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : ""]
@@ -147,6 +198,23 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
   }
 
   const arriving = o.window ? `Arriving ${relDay(o.window.day, now)}, ${windowLabel(o.window.from, o.window.to)}` : undefined;
+  const isPaid = o.escrow !== "none";
+  const bill: TimelineStep[] = billFirst
+    ? [
+        {
+          key: "bill",
+          title: isPaid ? "Bill paid" : o.bill?.state === "ready_to_pay" ? "Pay your bill" : "We price the delivery and send your bill",
+          detail: isPaid
+            ? [at(o.paidAt), "Money held by Farmkeke"].filter(Boolean).join(" · ")
+            : o.bill?.state === "ready_to_pay"
+              ? `${naira(o.bill.totalKobo)}, delivery included. Pay by ${o.bill.payBy ? dayTime(o.bill.payBy) : "the time on your bill"}`
+              : r >= 2
+                ? "By email, text and in the app, once a rider is arranged"
+                : undefined,
+          state: state(isPaid, r >= 2 && !isPaid),
+        },
+      ]
+    : [];
   return [
     placed,
     {
@@ -155,11 +223,12 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
       detail: r >= 2 ? at(o.acceptedAt) : o.respondBy ? `They have until ${dayTime(o.respondBy)}` : undefined,
       state: state(r >= 2, r < 2),
     },
+    ...bill,
     {
       key: "packed",
       title: r >= 4 ? "Packed and handed to the rider" : r >= 3.5 ? "Packed, waiting for the rider" : "Being prepared",
       detail: r >= 4 ? at(o.outForDeliveryAt ?? o.packedAt) : r >= 3.5 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt) : undefined,
-      state: state(r >= 4, r >= 2 && r < 4),
+      state: state(r >= 4, r >= 2 && r < 4 && (isPaid || !billFirst)),
     },
     {
       key: "out",
@@ -242,9 +311,25 @@ function Tracking({ order: o }: { order: OrderDetail }) {
               <ShieldCheck aria-hidden className="size-[13px]" strokeWidth={2} />
               {naira(o.totalKobo)} held
             </span>
+          ) : unpaidDelivery(o) && o.isActive ? (
+            <span className="badge b-grey h-[26px] rounded-lg px-2.5">Not paid yet</span>
           ) : null}
         </div>
       </div>
+      {payable(o) ? (
+        <section className="mb-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:px-4">
+          <Receipt aria-hidden className="size-6 flex-none text-pend" strokeWidth={1.75} />
+          <div className="min-w-[220px] flex-1">
+            <div className="text-[15px] font-semibold text-ink">Your bill is ready: {naira(o.bill.totalKobo)}</div>
+            <div className="sm">
+              Delivery included. Pay by {o.bill.payBy ? dayTime(o.bill.payBy) : "the time on your bill"}, or the order is cancelled.
+            </div>
+          </div>
+          <ButtonLink href={routes.payBill(o.bill.payToken)} variant="lime" className="min-h-[52px] rounded-[14px] px-[22px]">
+            Pay {naira(o.bill.totalKobo)}
+          </ButtonLink>
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
         <div className="flex flex-col gap-5">
@@ -264,7 +349,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
                   ))}
                 </div>
                 <p className="mt-3.5 text-sm leading-[21px] text-on-forest">
-                  Show this code at the counter. Only hand it over when you&apos;re collecting your order.
+                  Show this code at {o.pickupPoint ? "the counter" : "the farm"}. Only hand it over when you&apos;re collecting your order.
                 </p>
               </div>
               <PickupQr code={o.pickupCode} />
@@ -306,10 +391,10 @@ function Tracking({ order: o }: { order: OrderDetail }) {
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery</span>
-                  <span>{naira(o.deliveryFeeKobo)}</span>
+                  <span>{o.deliveryPricedAt || o.paid ? naira(o.deliveryFeeKobo) : "Priced after the farm accepts"}</span>
                 </div>
                 <div className="flex justify-between pt-1.5 font-bold text-ink">
-                  <span>Total paid</span>
+                  <span>{o.paid ? "Total paid" : o.deliveryPricedAt ? "Total to pay" : "Products total"}</span>
                   <span>{naira(o.totalKobo)}</span>
                 </div>
               </div>
@@ -318,7 +403,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
         </div>
 
         <aside className="flex flex-col gap-5">
-          {pickup ? <PickupPointCard order={o} /> : null}
+          {pickup ? o.pickupPoint ? <PickupPointCard order={o} /> : <CollectFromCard order={o} /> : null}
           <NextStep order={o} onConfirm={() => setConfirming(true)} />
           {pickup ? (
             <section aria-labelledby="pitems-title" className="card p-5">
@@ -406,7 +491,13 @@ function PaymentLine({ order: o }: { order: OrderDetail }) {
           ? [`${naira(o.totalKobo)} refunded to you`, "Back to how you paid"]
           : o.escrow === "split"
             ? ["Part refunded, part released", "See the refund for details"]
-            : ["Payment pending", "We'll update this once your payment is confirmed"];
+            : o.bill?.state === "ready_to_pay"
+              ? [`Bill ready: ${naira(o.bill.totalKobo)}`, o.bill.payBy ? `Pay by ${dayTime(o.bill.payBy)}` : "Delivery included"]
+              : o.bill?.state === "waiting_for_price"
+                ? ["Nothing to pay yet", "We'll send your bill once the delivery is priced"]
+                : o.bill?.state === "not_paid"
+                  ? ["Not paid", "The bill wasn't paid in time, so you weren't charged"]
+                  : ["Payment pending", "We'll update this once your payment is confirmed"];
   return (
     <div>
       <div className="cap">Payment</div>
@@ -452,21 +543,39 @@ function NextStep({ order: o, onConfirm }: { order: OrderDetail; onConfirm: () =
     );
   } else if (ENDED.includes(o.status)) {
     title = o.status === "declined" ? "The farm couldn't take this order" : o.status === "expired" ? "The farm didn't accept in time" : "This order was cancelled";
-    body = "Your money comes back to you in full. Banks can take a few working days to show it.";
+    body =
+      o.escrow === "none"
+        ? "You weren't charged for this order."
+        : "Your money comes back to you in full. Banks can take a few working days to show it.";
     action = o.hasRefund ? (
       <ButtonLink href={routes.refund(o._id)} variant="lime" fullWidth className="mt-4 min-h-[52px] rounded-[14px]">
         View refund
       </ButtonLink>
     ) : null;
+  } else if (unpaidDelivery(o)) {
+    if (payable(o)) {
+      title = "Pay your bill";
+      body = `${o.farmName} has packed your order and a rider is arranged. Pay ${naira(o.bill.totalKobo)}, delivery included, and the rider brings it.`;
+      action = (
+        <ButtonLink href={routes.payBill(o.bill.payToken)} variant="lime" fullWidth className="mt-4 min-h-[52px] rounded-[14px]">
+          Pay {naira(o.bill.totalKobo)}
+        </ButtonLink>
+      );
+    } else {
+      title = r <= 1 ? `Waiting for ${o.farmName} to accept` : "We're pricing your delivery";
+      body = "Nothing to pay yet. We'll send your bill by email, text and in the app once a rider is arranged. You'll have 12 hours to pay.";
+      action = null;
+    }
   } else if (pickup) {
+    const where = o.pickupPoint ? "the counter" : "the farm";
     title = "Collect your order, then confirm";
-    body = "Check everything at the counter. Something wrong? Report it before confirming.";
+    body = `Check everything at ${where}. Something wrong? Report it before confirming.`;
     action = o.canConfirm ? (
       <Button variant="lime" fullWidth className="mt-4 min-h-[52px] rounded-[14px]" onClick={onConfirm}>
         I&apos;ve collected my order
       </Button>
     ) : (
-      disabledConfirm("I've collected my order", "Available once the pickup point hands it over")
+      disabledConfirm("I've collected my order", o.pickupPoint ? "Available once the pickup point hands it over" : "Available once the farm hands it over")
     );
   } else if (o.canConfirm) {
     title = "Check everything arrived";
@@ -547,6 +656,45 @@ function PickupPointCard({ order: o }: { order: OrderDetail }) {
   );
 }
 
+/** Pickup at the farm: where to collect, once it's ready. */
+function CollectFromCard({ order: o }: { order: OrderDetail }) {
+  const f = o.collectFrom;
+  if (!f) return null;
+  const hours = hoursSummary(f.hours);
+  const ready = (RANK[o.status] ?? 0) >= 4.5;
+  const place = [f.address, f.lga, f.state].filter(Boolean).join(", ");
+  return (
+    <section aria-labelledby="farm-title" className="card p-5">
+      <div className="cap">Collect at the farm</div>
+      <h2 id="farm-title" className="m-0 mt-1 text-base font-bold">
+        {f.farmName}
+      </h2>
+      <div className="mt-1 text-sm text-muted">{place}</div>
+      {hours ? <div className="cap mt-2">Hands over orders: {hours}</div> : null}
+      <p className="cap mt-2">
+        {ready && o.collectBy
+          ? `Ready now. Collect by ${dayLabel(o.collectBy)}.`
+          : `We'll tell you when it's ready. You'll have ${f.collectWithinDays} days to collect.`}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2.5">
+        <a
+          className="btn ghost sm"
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${f.farmName}, ${place}`)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Get directions<span className="sr-only"> (opens Google Maps)</span>
+        </a>
+        {f.phone ? (
+          <a className="btn ghost sm" href={`tel:${f.phone}`}>
+            Call the farm
+          </a>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // W-51c View only
 
@@ -554,12 +702,14 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
   const r = RANK[o.status] ?? 0;
   const badge = statusBadge({ stage: stageOf(o.status), fulfilment: o.fulfilment });
   const area = o.address?.areaName ?? o.address?.lga ?? o.pickupPoint?.name;
-  const rows: Array<{ title: string; at?: number | null; current?: boolean }> = [{ title: "Order placed and paid", at: o.paidAt ?? o.placedAt }];
+  const rows: Array<{ title: string; at?: number | null; current?: boolean }> = [
+    { title: o.fulfilment === "delivery" && o.paidAt === null ? "Order placed" : "Order placed and paid", at: o.paidAt ?? o.placedAt },
+  ];
   if (r >= 3 || o.packedAt) rows.push({ title: "Accepted and packed", at: o.packedAt ?? o.acceptedAt });
   else if (r >= 2) rows.push({ title: `Accepted by ${o.farmName}`, at: o.acceptedAt });
   if (r >= 5)
     rows.push({
-      title: o.fulfilment === "pickup" ? "Collected from the pickup point" : `Delivered${area ? ` to ${area}` : ""}`,
+      title: o.fulfilment === "pickup" ? (o.pickupPoint ? "Collected from the pickup point" : "Collected from the farm") : `Delivered${area ? ` to ${area}` : ""}`,
       at: o.deliveredAt,
     });
   const current =
@@ -574,10 +724,14 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
           : r >= 5
             ? "Waiting for receipt to be confirmed"
             : r >= 4.5
-              ? "Waiting at the pickup point"
+              ? o.pickupPoint
+                ? "Waiting at the pickup point"
+                : "Ready to collect at the farm"
               : r >= 4
                 ? o.fulfilment === "pickup"
-                  ? "On its way to the pickup point"
+                  ? o.pickupPoint
+                    ? "On its way to the pickup point"
+                    : "Being prepared at the farm"
                   : "Out for delivery"
                 : r >= 2
                   ? "Being prepared"

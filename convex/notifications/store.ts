@@ -14,6 +14,8 @@ import {
   applicationReceivedEmail,
   applicationRejectedEmail,
   backInStockEmail,
+  billEmail,
+  billExpiredEmail,
   chatMessageEmail,
   confirmReminderEmail,
   disputeMessageEmail,
@@ -36,11 +38,13 @@ import {
   farmRiderAssignedEmail,
   hoursLines,
   lagosTime,
+  links,
   orderAcceptedEmail,
   orderCancelledEmail,
   orderConfirmationEmail,
   orderDeliveredEmail,
   orderPreparingEmail,
+  orderReceivedEmail,
   outForDeliveryEmail,
   paymentReleasedEmail,
   pickupReminderEmail,
@@ -52,8 +56,10 @@ import {
   reviewReminderEmail,
   supportReplyEmail,
   windowLabel,
+  type BillOrder,
   type ConfirmedOrder,
   type Email,
+  type PickupPoint,
 } from "../lib/emails";
 import { claimSlot, markReadBatch, notify } from "../lib/notify";
 import { DAY, getRules, HOUR } from "../lib/settings";
@@ -61,6 +67,8 @@ import { DAY, getRules, HOUR } from "../lib/settings";
 /** Message emails: at most one per thread in this window. */
 export const MESSAGE_EMAIL_WINDOW_MS = 30 * 60_000;
 const MESSAGE_KINDS = new Set(["chat_message", "dispute_message", "support_reply"]);
+// Delivery bills reach every shopper by text as well as email and in-app
+const ALWAYS_SMS = new Set(["bill_ready", "bill_reminder"]);
 
 export const create = internalMutation({
   args: {
@@ -146,9 +154,11 @@ export const plan = internalQuery({
     }));
 
     // Farms get push and SMS. Shoppers get push, or SMS when there's no push;
-    // guests always get SMS (Screen Inventory section 5).
+    // guests always get SMS (Screen Inventory section 5), and bills always text.
     const wantsSms =
-      n.smsTo !== undefined && allow("sms") && (n.side === "farm" || user.isAnonymous === true || push.length === 0);
+      n.smsTo !== undefined &&
+      allow("sms") &&
+      (n.side === "farm" || user.isAnonymous === true || push.length === 0 || ALWAYS_SMS.has(n.kind));
     const sms = wantsSms
       ? { to: n.smsTo!, body: `Farmkeke: ${n.title}. ${n.body}`, userId: user._id, notificationId: n._id }
       : null;
@@ -258,6 +268,44 @@ async function paymentMethodLabel(ctx: QueryCtx, order: Doc<"orders">): Promise<
   return undefined;
 }
 
+/** Each order's lines for a delivery bill email. */
+async function billOrders(ctx: QueryCtx, orders: Doc<"orders">[]): Promise<BillOrder[]> {
+  return await Promise.all(
+    orders.map(async (o) => ({
+      orderId: o._id,
+      number: o.number,
+      farmName: (await ctx.db.get("farms", o.farmId))?.name ?? "Farm",
+      items: o.items.map((i) => ({ name: i.name, quantity: i.quantity, unit: unitOf(i), totalKobo: i.priceKobo * i.quantity })),
+      itemsKobo: o.itemsTotalKobo,
+      deliveryFeeKobo: o.deliveryFeeKobo,
+    })),
+  );
+}
+
+/** Where a pickup order is collected: its farm, or (older orders) a Farmkeke pickup point. */
+async function collectionPlace(ctx: QueryCtx, order: Doc<"orders">): Promise<{ place: PickupPoint; days: number } | null> {
+  if (order.pickupPointId !== undefined) {
+    const point = await ctx.db.get("pickupPoints", order.pickupPointId);
+    if (point === null) return null;
+    return {
+      place: { kind: "point", name: point.name, address: point.address, hours: hoursLines(point.hours), phone: point.phone },
+      days: point.collectWithinDays,
+    };
+  }
+  const farm = await ctx.db.get("farms", order.farmId);
+  if (farm === null) return null;
+  return {
+    place: {
+      kind: "farm",
+      name: farm.name,
+      address: `${farm.collectionAddress}, ${farm.lga}`,
+      hours: hoursLines(farm.collectionHours),
+      phone: farm.phone,
+    },
+    days: 0,
+  };
+}
+
 async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"users">): Promise<Email | null> {
   if (n.side !== "shop" || n.orderId === undefined) return null;
   const order = await ctx.db.get("orders", n.orderId);
@@ -300,6 +348,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       }
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderConfirmationEmail({
+        paidBill: order.fulfilment === "delivery",
         to,
         name: ref.name,
         isGuest,
@@ -313,10 +362,56 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         pickupPoint: point ? { name: point.name, address: point.address } : undefined,
       });
     }
+    case "order_received": {
+      // One email per checkout, sent with its first order's notification
+      const siblings = await ctx.db
+        .query("orders")
+        .withIndex("by_checkoutId", (q) => q.eq("checkoutId", order.checkoutId))
+        .take(50);
+      if (siblings[0]?._id !== order._id) return null;
+      return orderReceivedEmail({
+        to,
+        name: ref.name,
+        orders: await billOrders(ctx, siblings),
+        address: order.address ? `${order.address.street}, ${order.address.areaName}` : "your address",
+        isGuest,
+      });
+    }
+    case "bill_ready":
+    case "bill_reminder": {
+      const checkout = await ctx.db.get("checkouts", order.checkoutId);
+      if (checkout === null || checkout.status !== "awaiting_payment" || !checkout.payToken || checkout.payBy === undefined) return null;
+      const siblings = await ctx.db
+        .query("orders")
+        .withIndex("by_checkoutId", (q) => q.eq("checkoutId", order.checkoutId))
+        .take(50);
+      return billEmail({
+        to,
+        name: ref.name,
+        orders: await billOrders(ctx, siblings.filter((o) => !["declined", "expired", "cancelled"].includes(o.status))),
+        totalKobo: checkout.totalKobo,
+        deliveryFeeKobo: checkout.deliveryFeeKobo,
+        payBy: lagosTime(checkout.payBy),
+        link: links.pay(checkout.payToken),
+        reminder: n.kind === "bill_reminder",
+      });
+    }
+    case "bill_expired": {
+      const siblings = await ctx.db
+        .query("orders")
+        .withIndex("by_checkoutId", (q) => q.eq("checkoutId", order.checkoutId))
+        .take(50);
+      return billExpiredEmail({
+        to,
+        name: ref.name,
+        numbers: siblings.filter((o) => o.cancelReason === "bill_not_paid").map((o) => o.number),
+      });
+    }
     case "order_accepted": {
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderAcceptedEmail({
         ...ref,
+        unpaid: order.fulfilment === "delivery" && order.escrow === "none",
         fulfilment: order.fulfilment,
         window: order.window ? windowLabel(order.window) : undefined,
         pickupPointName: point?.name,
@@ -332,15 +427,16 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       });
     }
     case "ready_for_pickup": {
-      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
-      if (point === null || !order.pickupCode || order.collectBy === undefined) return null;
+      if (!order.pickupCode || order.collectBy === undefined) return null;
+      const where = await collectionPlace(ctx, order);
+      if (where === null) return null;
       const rules = await getRules(ctx);
       return readyForPickupEmail({
         ...ref,
         pickupCode: order.pickupCode,
-        pickupPoint: { name: point.name, address: point.address, hours: hoursLines(point.hours), phone: point.phone },
+        pickupPoint: where.place,
         collectBy: lagosTime(order.collectBy, { time: false }),
-        collectWithinDays: Math.max(rules.pickupHoldDays, point.collectWithinDays),
+        collectWithinDays: Math.max(rules.pickupHoldDays, where.days),
       });
     }
     case "order_delivered":
@@ -407,6 +503,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderPreparingEmail({
         ...ref,
+        unpaid: order.fulfilment === "delivery" && order.escrow === "none",
         fulfilment: order.fulfilment,
         window: order.window ? windowLabel(order.window) : undefined,
         pickupPointName: point?.name,
@@ -420,25 +517,28 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       if (order.status !== "cancelled") return null;
       return orderCancelledEmail({
         ...ref,
+        unpaid: order.escrow === "none",
         refundKobo: order.totalKobo,
         deliveryFeeKobo: order.deliveryFeeKobo,
         paymentMethod: await paymentMethodLabel(ctx, order),
       });
     case "pickup_reminder": {
-      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
-      if (point === null || !order.pickupCode || order.collectBy === undefined) return null;
+      if (!order.pickupCode || order.collectBy === undefined) return null;
+      const where = await collectionPlace(ctx, order);
+      if (where === null) return null;
       return pickupReminderEmail({
         ...ref,
         pickupCode: order.pickupCode,
-        pickupPoint: { name: point.name, address: point.address, hours: hoursLines(point.hours), phone: point.phone },
+        pickupPoint: where.place,
         collectBy: lagosTime(order.collectBy),
       });
     }
     case "pickup_overdue": {
-      const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
+      const where = await collectionPlace(ctx, order);
       return pickupWindowEndedEmail({
         ...ref,
-        pointName: point?.name ?? "the pickup point",
+        pointName: where?.place.name ?? "the farm",
+        atFarm: where?.place.kind !== "point",
         heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
       });
     }
@@ -594,6 +694,7 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
       if (order.respondBy === undefined) return null;
       return farmNewOrderEmail({
         ...ref,
+        unpaid: order.status === "placed",
         items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, unit: unitOf(i), totalKobo: i.priceKobo * i.quantity })),
         itemsKobo: order.itemsTotalKobo,
         fulfilment: order.fulfilment,
@@ -601,7 +702,7 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
         hours: rules.farmerResponseHours,
       });
     case "order_deadline":
-      if (order.respondBy === undefined || order.status !== "paid") return null;
+      if (order.respondBy === undefined || (order.status !== "paid" && order.status !== "placed")) return null;
       return farmDeadlineEmail({
         ...ref,
         acceptBy: lagosTime(order.respondBy),

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
+import { billDelivery, handOver, paidOrder, payTest, placeDelivery } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 const HOUR = 3_600_000;
@@ -79,39 +80,6 @@ type S = Awaited<ReturnType<typeof seed>>;
 
 const as = (t: T, u: U) => t.withIdentity({ subject: `${u.id}|${u.sessionId}`, tokenIdentifier: `test|${u.id}` });
 
-async function paidOrder(t: T, s: S, who: U, fulfilment: "delivery" | "pickup", quantity = 2, email?: string) {
-  const buyer = as(t, who);
-  const items = [{ listingId: s.tomatoes, unitId: s.unitId, quantity, priceKobo: 450000 }];
-  const contact = { name: "Chidi Okeke", phone: "0803 111 2222", ...(email ? { email } : {}) };
-  let placed;
-  if (fulfilment === "delivery") {
-    const windows = await buyer.query(api.checkout.deliveryWindows, { farmIds: [s.farmA], now: Date.now() });
-    const day = windows.days[0];
-    placed = await buyer.mutation(api.checkout.place, {
-      items, fulfilment, expectedTotalKobo: quantity * 450000 + 100000,
-      address: { street: "53b Nob Oluwa", landmark: "Church", serviceAreaId: s.areaId },
-      window: { day: day.day, ...day.slots[0] }, contact,
-    });
-  } else {
-    placed = await buyer.mutation(api.checkout.place, { items, fulfilment, expectedTotalKobo: quantity * 450000, pickupPointId: s.pointId, contact });
-  }
-  await buyer.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
-  return placed.orders[0].orderId as any;
-}
-
-/** Accept, prepare, pack, ready, rider assigned, collected from the farm. */
-async function toRider(t: T, s: S, orderId: any) {
-  const farmer = as(t, s.farmerA);
-  const admin = as(t, s.admin);
-  await farmer.mutation(api.orders.farmer.accept, { orderId });
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.markPacked, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-  const riderId = await admin.mutation(api.admin.riders.create, { name: "Emeka Eze", phone: "08035550000", reason: "New rider", serviceAreaIds: [s.areaId] });
-  await admin.mutation(api.admin.dispatch.assignRider, { orderId, riderId, collectAt: Date.now() + 3600_000 });
-  await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_from_farm" });
-}
-
 test("each shop status change sends the right email (delivery)", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
@@ -119,23 +87,41 @@ test("each shop status change sends the right email (delivery)", async () => {
   const shopper = "ada@example.com";
   const farmer = "a@example.com";
 
-  const orderId = await paidOrder(t, s, s.account, "delivery");
+  // Placed unpaid: "we've got it" to the shopper, the new order to the farm
+  const placed = await placeDelivery(t, s, s.account);
+  const orderId = placed.orders[0]!.orderId;
   await flush(t);
-  expect(mail.to(shopper)).toEqual(["Order placed: FK-10001"]);
+  expect(mail.to(shopper)).toEqual(["We've got your order FK-10001"]);
+  expect(mail.sent.find((m) => m.to[0] === shopper)!.text).toContain("Nothing to pay yet.");
   expect(mail.to(farmer)).toEqual(["New order FK-10001: accept within 24 hours"]);
+  expect(mail.sent.find((m) => m.to[0] === farmer)!.text).toContain("It isn't paid yet.");
 
+  // The farm accepts, staff brief a rider and price the delivery: the bill
   mail.clear();
-  await toRider(t, s, orderId);
+  await billDelivery(t, s, orderId);
+  await flush(t);
+  expect(mail.to(shopper)).toEqual(["Ada Greens accepted order FK-10001", "Your bill for order FK-10001: ₦10,000"]);
+  expect(mail.to(farmer)).toEqual(["Rider for order FK-10001"]);
+  const bill = mail.sent.find((m) => m.subject.startsWith("Your bill"))!;
+  expect(bill.text).toContain("Total to pay: ₦10,000");
+  expect(bill.text).toMatch(/https:\/\/farmkeke\.com\/pay\/[0-9a-f]{48}/);
+  // The bill also goes by text, even to a signed-in shopper with the app
+  const texts = await t.run(async (ctx) => await ctx.db.query("smsLog").collect());
+  expect(texts.filter((m) => m.to === "+2348031112222" && m.body.includes("farmkeke.com/pay/"))).toHaveLength(1);
+
+  // Paid: the thank-you email; then the farm packs and the rider collects
+  mail.clear();
+  await payTest(t, s.account, placed.checkoutId);
+  await flush(t);
+  expect(mail.to(shopper)).toEqual(["Paid: order FK-10001"]);
+  mail.clear();
+  await handOver(t, s, orderId, { packed: true });
   await flush(t);
   // Packed is push only; out for delivery follows the rider's collection
-  expect(mail.to(shopper)).toEqual([
-    "Ada Greens accepted order FK-10001",
-    "Ada Greens is preparing order FK-10001",
-    "Your order FK-10001 is on its way",
-  ]);
-  expect(mail.to(farmer)).toEqual(["Rider for order FK-10001"]);
+  expect(mail.to(shopper)).toEqual(["Ada Greens is preparing order FK-10001", "Your order FK-10001 is on its way"]);
   const kinds = await t.run(async (ctx) => (await ctx.db.query("notifications").collect()).map((n) => n.kind));
   expect(kinds).toContain("order_packed");
+  expect(kinds).toContain("order_paid");
 
   mail.clear();
   await as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" });
@@ -175,8 +161,7 @@ test("pickup, cancel and decline emails; guests only with an email", async () =>
 
   // Pickup order by a guest who gave an email
   const pickup = await paidOrder(t, s, s.guest, "pickup", 1, guestEmail);
-  await toRider(t, s, pickup);
-  await as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId: pickup, step: "dropped_at_pickup_point" });
+  await handOver(t, s, pickup);
   await flush(t);
   expect(mail.to(guestEmail)).toEqual([
     "Order placed: FK-10001",
@@ -190,9 +175,11 @@ test("pickup, cancel and decline emails; guests only with an email", async () =>
   expect(mail.to(guestEmail)).toHaveLength(1);
   expect(mail.to(guestEmail)[0]).toMatch(/^Reminder: collect order FK-10001 by /);
   expect(mail.sent.find((m) => m.to[0] === guestEmail)!.text).toContain("YOUR PICKUP CODE:");
+  // Pickup is at the farm now: its name and collection address
+  expect(mail.sent.find((m) => m.to[0] === guestEmail)!.text).toContain("Farm: Ada Greens");
   mail.clear();
   await later(t, DAY);
-  expect(mail.to(guestEmail)).toEqual(["Order FK-10001 is still at the pickup point"]);
+  expect(mail.to(guestEmail)).toEqual(["Order FK-10001 is still waiting at the farm"]);
 
   // Staff cancel: notification, cancel email with the refund line, then the refund
   mail.clear();
@@ -352,7 +339,8 @@ test("farm application approved email", async () => {
 test("farm emails: orders on by default, messages and reviews off", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
-  const orderId = await paidOrder(t, s, s.account, "delivery");
+  // Placed and waiting for the farm (delivery orders reach the farm before they're paid)
+  const orderId = (await placeDelivery(t, s, s.account)).orders[0]!.orderId;
   const plan = async (kind: string, title = "T") =>
     (await t.query(internal.notifications.store.plan, {
       notificationId: await t.mutation(internal.notifications.store.create, {

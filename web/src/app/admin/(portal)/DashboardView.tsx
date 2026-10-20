@@ -62,7 +62,7 @@ export function DashboardView() {
           <div className="grid grid-cols-3 gap-4 m:grid-cols-1">
             <Tile href={me.can("orders.view") ? adminRoutes.orders : undefined} value={String(stats.pipeline.waitingForFarms)} label="Waiting for farms to accept" />
             <Tile href={me.can("orders.view") ? adminRoutes.orders : undefined} value={String(stats.pipeline.inProgress)} label="Accepted, being prepared" />
-            <Tile href={me.can("dispatch.manage") || me.can("orders.view") ? adminRoutes.dispatch : undefined} value={String(stats.pipeline.onTheRoad)} label="On the road or at pickup points" />
+            <Tile href={me.can("dispatch.manage") || me.can("orders.view") ? adminRoutes.dispatch : undefined} value={String(stats.pipeline.onTheRoad)} label="On the road or waiting to be collected" />
           </div>
           <Panel title="Last 7 days" description={`Paid orders and sales per day${stats.capped ? " (first 5,000 orders)" : ""}.`} className="mt-8">
             <div className="flex h-44 items-end gap-3" aria-hidden>
