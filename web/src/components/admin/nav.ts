@@ -19,7 +19,6 @@ import {
   MessageSquareWarning,
   Users,
   LayoutGrid,
-  MapPin,
   Map as MapIcon,
   Package,
   Receipt,
@@ -41,7 +40,8 @@ export type Badge =
   | "ridersPending"
   | "disputes"
   | "support"
-  | "moneyProblems";
+  | "moneyProblems"
+  | "deliveryToPrice";
 export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
 
@@ -71,10 +71,9 @@ export const NAV: NavGroup[] = [
     label: "Operations",
     items: [
       { href: adminRoutes.orders, label: "Orders", icon: Receipt, any: ["orders.view"] },
-      { href: adminRoutes.dispatch, label: "Dispatch", icon: Truck, any: ["dispatch.manage", "orders.view"] },
+      { href: adminRoutes.dispatch, label: "Dispatch", icon: Truck, any: ["dispatch.manage", "orders.view"], badge: "deliveryToPrice" },
       { href: adminRoutes.riders, label: "Riders", icon: Bike, any: ["riders.view"], badge: "ridersPending" },
-      { href: adminRoutes.areas, label: "Areas and delivery fees", icon: MapIcon, any: ["areas.manage", "fees.manage", "orders.view"] },
-      { href: adminRoutes.pickupPoints, label: "Pickup points", icon: MapPin, any: ["areas.manage", "orders.view"] },
+      { href: adminRoutes.areas, label: "Delivery areas", icon: MapIcon, any: ["areas.manage", "fees.manage", "orders.view"] },
       { href: adminRoutes.rules, label: "Fees and rules", icon: SlidersHorizontal, any: ["fees.manage", "commission.manage", "money.view"] },
     ],
   },

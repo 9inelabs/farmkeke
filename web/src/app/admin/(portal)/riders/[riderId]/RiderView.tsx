@@ -1,7 +1,9 @@
 "use client";
 
-// A-55 Rider profile: photo, ID, vehicle, guarantor and bank account, then a
-// review. Approved riders can be switched on and off for dispatch.
+// A-55 Rider profile: the vehicle (type, plate number, bike model) and the
+// areas the rider works in are required; photo, ID, guarantor and bank
+// account are optional. Then a review. Approved riders can be switched on
+// and off for dispatch.
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -31,6 +33,7 @@ type Form = {
   idPhoto?: Id<"_storage">;
   vehicleType: Vehicle | "";
   plateNumber: string;
+  bikeModel: string;
   gName: string;
   gPhone: string;
   gAddress: string;
@@ -74,6 +77,7 @@ export function RiderView({ riderId }: { riderId: string }) {
       idNumber: r.idNumber ?? "",
       vehicleType: r.vehicleType ?? "",
       plateNumber: r.plateNumber ?? "",
+      bikeModel: r.bikeModel ?? "",
       gName: r.guarantor?.name ?? "",
       gPhone: r.guarantor?.phone ?? "",
       gAddress: r.guarantor?.address ?? "",
@@ -152,6 +156,7 @@ export function RiderView({ riderId }: { riderId: string }) {
               items={[
                 { label: "Type", value: r.vehicleType ? VEHICLE[r.vehicleType] : "Not added" },
                 { label: "Plate number", value: r.plateNumber ?? (r.vehicleType === "bicycle" ? "Not needed" : "Not added") },
+                { label: "Model", value: r.bikeModel ?? "Not added" },
               ]}
             />
           </Panel>
@@ -265,6 +270,7 @@ export function RiderView({ riderId }: { riderId: string }) {
               idNumber: form.idNumber,
               ...(form.vehicleType ? { vehicleType: form.vehicleType } : {}),
               plateNumber: form.plateNumber,
+              bikeModel: form.bikeModel,
               ...(guarantorStarted
                 ? { guarantor: { name: form.gName, phone: form.gPhone, address: form.gAddress, relationship: form.gRelationship } }
                 : {}),
@@ -308,6 +314,7 @@ export function RiderView({ riderId }: { riderId: string }) {
               ))}
             </SelectField>
             <TextField label="Plate number" value={form.plateNumber} onChange={set("plateNumber")} hint="Not needed for bicycles." />
+            <TextField label="Bike model" value={form.bikeModel} onChange={set("bikeModel")} placeholder="Bajaj Boxer 150" hint="Needed for motorbikes and tricycles." />
           </div>
 
           <h3 className="h3 m-0 mt-2">Guarantor</h3>
@@ -337,7 +344,7 @@ export function RiderView({ riderId }: { riderId: string }) {
         open={dialog === "approve"}
         onClose={() => setDialog(null)}
         title={`Approve ${r.name}`}
-        description="Check the photo, ID and guarantor first. Once approved, the rider can be given deliveries."
+        description="Check the vehicle and plate, and any photo, ID or guarantor details you added. Once approved, the rider can be given deliveries."
         label="Note"
         optional
         confirmLabel="Approve rider"

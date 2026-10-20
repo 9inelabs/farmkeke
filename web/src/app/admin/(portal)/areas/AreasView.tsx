@@ -1,23 +1,22 @@
 "use client";
 
-// A-83 Service areas: where Farmkeke delivers, and the delivery fee each
-// farm charges there. Shoppers pick an area in the app and on the website;
-// turned-off areas disappear from that list.
+// A-83 Service areas: where Farmkeke delivers. Shoppers pick an area in the
+// app and on the website; turned-off areas disappear from that list.
+// Delivery isn't priced per area any more: staff price each delivery order
+// on Dispatch once the farm has accepted it.
 import { useMutation, useQuery } from "convex/react";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useStaff } from "@/components/admin/context";
 import { FormError } from "@/components/admin/errors";
-import { koboFrom, NairaField, nairaText } from "@/components/admin/inputs";
 import { DataTable, Notice, PageHeader, Panel, ReasonDialog, TableSkeleton, type Column } from "@/components/admin/ui";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
 import type { ServiceArea } from "@/convex/returns/adminOps";
-import { naira } from "@/lib/format";
 
-type Form = { state: string; name: string; lga: string; fee: string; lat: string; lng: string; radius: string };
-const EMPTY: Form = { state: "", name: "", lga: "", fee: "", lat: "", lng: "", radius: "" };
+type Form = { state: string; name: string; lga: string; lat: string; lng: string; radius: string };
+const EMPTY: Form = { state: "", name: "", lga: "", lat: "", lng: "", radius: "" };
 const num = (s: string) => (s.trim() === "" ? undefined : Number(s));
 
 export function AreasView() {
@@ -36,7 +35,6 @@ export function AreasView() {
   const columns: Column<ServiceArea>[] = [
     { key: "name", label: "Area", render: (a) => a.name },
     { key: "lga", label: "LGA", render: (a) => a.lga },
-    { key: "fee", label: "Delivery fee", render: (a) => <strong>{naira(a.deliveryFeeKobo)}</strong> },
     { key: "map", label: "Map position", render: (a) => (a.latitude !== undefined && a.longitude !== undefined ? `Set${a.radiusKm ? `, ${a.radiusKm} km` : ""}` : "Not set") },
     { key: "status", label: "Status", render: (a) => (a.active ? <span className="badge b-ok">On</span> : <span className="badge b-grey">Off</span>) },
     ...(canEdit
@@ -54,7 +52,6 @@ export function AreasView() {
                       state: a.state,
                       name: a.name,
                       lga: a.lga,
-                      fee: nairaText(a.deliveryFeeKobo),
                       lat: a.latitude?.toString() ?? "",
                       lng: a.longitude?.toString() ?? "",
                       radius: a.radiusKm?.toString() ?? "",
@@ -77,8 +74,8 @@ export function AreasView() {
   return (
     <>
       <PageHeader
-        title="Areas and delivery fees"
-        description="Where Farmkeke delivers. Shoppers choose their area, and each farm in their cart charges that area's delivery fee."
+        title="Delivery areas"
+        description="Where Farmkeke delivers. Shoppers choose their area at checkout. Each delivery is priced on Dispatch once the farm accepts."
         actions={
           canEdit ? (
             <Button
@@ -120,18 +117,16 @@ export function AreasView() {
         open={dialog?.kind === "new" || dialog?.kind === "edit"}
         onClose={() => setDialog(null)}
         title={dialog?.kind === "edit" ? `Edit ${dialog.area.name}` : "New area"}
-        description="A new fee applies to orders placed from now on."
         confirmLabel={dialog?.kind === "edit" ? "Save" : "Create area"}
         variant="lime"
         onConfirm={async (reason) => {
-          const fee = koboFrom(form.fee);
-          if (fee === null) throw new FormError("Enter the delivery fee in naira.");
+          if (!form.name.trim() || !form.lga.trim()) throw new FormError("Enter the area name and its LGA.");
           const position = { latitude: num(form.lat), longitude: num(form.lng), radiusKm: num(form.radius) };
           if (dialog?.kind === "edit") {
-            await update({ areaId: dialog.area._id, name: form.name, lga: form.lga, deliveryFeeKobo: fee, ...position, reason });
+            await update({ areaId: dialog.area._id, name: form.name, lga: form.lga, ...position, reason });
             setDone("Area saved.");
           } else {
-            await create({ state: form.state, name: form.name, lga: form.lga, deliveryFeeKobo: fee, ...position, reason });
+            await create({ state: form.state, name: form.name, lga: form.lga, ...position, reason });
             setDone("Area created. Shoppers can choose it now.");
           }
         }}
@@ -140,7 +135,6 @@ export function AreasView() {
           <TextField label="State" value={form.state} onChange={set("state")} disabled={dialog?.kind === "edit"} placeholder="Imo" />
           <TextField label="Area name" value={form.name} onChange={set("name")} placeholder="New Owerri" />
           <TextField label="LGA" value={form.lga} onChange={set("lga")} placeholder="Owerri North" />
-          <NairaField label="Delivery fee per farm" value={form.fee} onChange={(fee) => setForm((f) => ({ ...f, fee }))} />
         </div>
         <fieldset className="m-0 border-0 p-0">
           <legend className="lbl">Map position (optional)</legend>
