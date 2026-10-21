@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function ProductPage(props: Props) {
   return (
-    <div className="wrap type-product pt-7">
+    <div className="wrap type-product pt-7 m:pt-3">
       <Suspense fallback={<ProductSkeleton />}>
         <ProductContent {...props} />
       </Suspense>
@@ -124,30 +124,30 @@ async function ProductContent({ params }: Props) {
         ]}
       />
 
-      <section className="mt-5 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-10 m:grid-cols-1 m:gap-6">
+      <section className="mt-5 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-10 m:mt-3 m:grid-cols-1 m:gap-4">
         <ProductGallery id={p.id} name={p.name} photos={p.photos} freshness={freshness} canSave={p.available} />
         <BuyBox product={p} harvestedText={harvestedText} today={today} subtype={subtype} />
       </section>
 
-      <section className="mt-14 grid grid-cols-2 items-start gap-5 m:grid-cols-1">
-        <div className="card p-7 m:p-5">
+      <section className="mt-14 grid grid-cols-2 items-start gap-5 m:mt-6 m:grid-cols-1 m:gap-3">
+        <div className="card p-7 m:p-4">
           <h2 className="h2">About this produce</h2>
-          <p className="p mt-3">{p.description || `${p.farm.name} hasn't added a description for this product yet.`}</p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-soft p-3.5">
+          <p className="p mt-3 m:mt-2">{p.description || `${p.farm.name} hasn't added a description for this product yet.`}</p>
+          <div className="mt-5 grid grid-cols-2 gap-3 m:mt-3 m:gap-2">
+            <div className="rounded-xl bg-soft p-3.5 m:p-3">
               <div className="cap">Grown in</div>
               <div className="mt-0.5 text-sm font-semibold">
                 {p.farm.lga}, {p.farm.state}
               </div>
             </div>
-            <div className="rounded-xl bg-soft p-3.5">
+            <div className="rounded-xl bg-soft p-3.5 m:p-3">
               <div className="cap">Ships within</div>
               <div className="mt-0.5 text-sm font-semibold">{shipsWithinText(p.farm.acceptsWithinHours)}</div>
             </div>
           </div>
         </div>
-        <div className="card p-7 m:p-5">
-          <div className="flex items-center gap-3.5">
+        <div className="card p-7 m:p-4">
+          <div className="flex items-center gap-3.5 m:gap-3">
             <FarmAvatar
               id={p.farm.id}
               name={p.farm.name}
@@ -167,8 +167,8 @@ async function ProductContent({ params }: Props) {
               </div>
             </div>
           </div>
-          {about || usually ? <p className="p mt-3.5">{[about, usually].filter(Boolean).join(" ")}</p> : null}
-          <div className="mt-[18px] flex flex-wrap gap-2.5">
+          {about || usually ? <p className="p mt-3.5 m:mt-2.5">{[about, usually].filter(Boolean).join(" ")}</p> : null}
+          <div className="mt-[18px] flex flex-wrap gap-2.5 m:mt-3 m:gap-2">
             <ButtonLink href={routes.farm(p.farm.id)} variant="ghost">
               View farm
             </ButtonLink>
@@ -179,7 +179,7 @@ async function ProductContent({ params }: Props) {
         </div>
       </section>
 
-      <section className="card mt-5 p-7 m:p-5" aria-labelledby="reviews-title">
+      <section className="card mt-5 p-7 m:mt-3 m:p-4" aria-labelledby="reviews-title">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 id="reviews-title" className="h2">
             Reviews
@@ -194,10 +194,10 @@ async function ProductContent({ params }: Props) {
           ) : null}
         </div>
         {summary.count > 0 ? (
-          <div className="mt-5 grid grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-10 m:grid-cols-1 m:gap-6">
+          <div className="mt-5 grid grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-10 m:mt-3 m:grid-cols-1 m:gap-4">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-[44px] leading-[48px] font-extrabold">{avg}</span>
+                <span className="font-display text-[44px] leading-[48px] font-extrabold m:text-[34px] m:leading-10">{avg}</span>
                 <span className="sm">out of 5</span>
               </div>
               <RatingBars summary={summary} />
@@ -245,12 +245,12 @@ function ProductRow({
   mini?: boolean;
 }) {
   return (
-    <section className="mt-14">
-      <div className="mb-5 flex items-end justify-between">
+    <section className="mt-14 m:mt-8">
+      <div className="mb-5 flex items-end justify-between m:mb-3">
         <h2 className="h2">{title}</h2>
         {action}
       </div>
-      <div className="grid grid-cols-4 gap-5 m:grid-cols-2 m:gap-3">
+      <div className="grid grid-cols-4 gap-5 m:grid-cols-2 m:gap-2.5">
         {items.map((s) => (
           <ProductCard key={s.id} item={s} variant={mini ? "mini" : "full"} />
         ))}
@@ -263,7 +263,7 @@ function Unavailable({ name, similar }: { name: string; similar: ListingSummary[
   return (
     <>
       <Breadcrumb items={[{ href: routes.shop, label: "Shop" }, { label: name }]} />
-      <section className="card mt-5 flex flex-col items-center gap-4 px-8 py-14 text-center m:px-5">
+      <section className="card mt-5 flex flex-col items-center gap-4 px-8 py-14 text-center m:gap-3 m:px-5 m:py-9">
         <span className="tile size-[72px] rounded-[22px]">
           <PackageX aria-hidden className="size-8" strokeWidth={1.6} />
         </span>

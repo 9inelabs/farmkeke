@@ -33,15 +33,15 @@ const TEAM: Array<[string, string, string]> = [
   ["CS", "[Name]", "Customer support"],
 ];
 
-const bodyLg = "m-0 text-base leading-[27px] text-muted";
+const bodyLg = "m-0 text-base leading-[27px] text-muted m:text-sm m:leading-[22px]";
 
 export default function AboutPage() {
   return (
     <>
-      <section className="wrap-site pt-[72px]">
+      <section className="wrap-site pt-[72px] m:pt-9">
         <FadeUp>
-          <div className="grid grid-cols-2 items-end gap-14 m:grid-cols-1 m:gap-6">
-            <div className="flex flex-col items-start gap-[18px]">
+          <div className="grid grid-cols-2 items-end gap-14 m:grid-cols-1 m:gap-3.5">
+            <div className="flex flex-col items-start gap-[18px] m:gap-3">
               <Eyebrow icon={Heart}>About Farmkeke</Eyebrow>
               <h1 className={S.h1}>We&apos;re shortening the road from farm to home</h1>
             </div>
@@ -50,12 +50,12 @@ export default function AboutPage() {
               who buy it should pay less. Today we connect households with verified farmers across Imo State.
             </p>
           </div>
-          <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:h-[340px] m:rounded-[22px]">
+          <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:mt-7 m:h-[230px] m:rounded-[20px]">
             <div aria-hidden className="absolute -top-10 -right-10 size-80 rounded-full bg-[rgba(169,214,84,0.16)]" />
             <div aria-hidden className="absolute right-[120px] -bottom-20 size-[220px] rounded-full bg-white/6" />
-            <div className="absolute bottom-11 left-12 max-w-[520px] text-white m:right-5 m:bottom-7 m:left-5">
+            <div className="absolute bottom-11 left-12 max-w-[520px] text-white m:right-5 m:bottom-5 m:left-5">
               <div className="text-[13px] font-semibold text-lime">Our mission</div>
-              <p className="m-0 mt-2 font-display text-[28px] leading-9 font-bold m:text-[22px] m:leading-[30px]">
+              <p className="m-0 mt-2 font-display text-[28px] leading-9 font-bold m:mt-1 m:text-lg m:leading-6">
                 Fair prices for families. Fair pay for farmers. Fresh food for everyone.
               </p>
             </div>
@@ -64,12 +64,12 @@ export default function AboutPage() {
       </section>
 
       <section className={S.sec}>
-        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-14 m:grid-cols-1 m:gap-6">
-          <div className="flex flex-col items-start gap-3.5">
+        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-14 m:grid-cols-1 m:gap-3.5">
+          <div className="flex flex-col items-start gap-3.5 m:gap-2.5">
             <Eyebrow icon={Sprout}>Our story</Eyebrow>
             <h2 className={S.h2}>Too many hands between the farm and your table</h2>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 m:gap-3">
             <p className={bodyLg}>
               In Nigeria, produce often passes through several traders before it reaches a household. Each one adds a
               markup, and farmers see only a small part of what families pay.
@@ -89,10 +89,13 @@ export default function AboutPage() {
             <Eyebrow icon={Star}>What we stand for</Eyebrow>
             <h2 className={S.h2}>Our values</h2>
           </div>
-          <div className="grid grid-cols-3 gap-5 m:grid-cols-1">
+          <div className="grid grid-cols-3 gap-5 m:grid-cols-1 m:gap-2.5">
             {VALUES.map(([Icon, title, body]) => (
-              <div key={title} className={`${S.card} flex flex-col gap-3.5 p-[30px]`}>
-                <Tile icon={Icon} />
+              <div
+                key={title}
+                className={`${S.card} flex flex-col gap-3.5 p-[30px] m:grid m:grid-cols-[auto_minmax(0,1fr)] m:gap-x-3.5 m:gap-y-1 m:p-4`}
+              >
+                <Tile icon={Icon} className="m:row-span-2" />
                 <h3 className={S.h3}>{title}</h3>
                 <p className={para}>{body}</p>
               </div>
@@ -103,10 +106,10 @@ export default function AboutPage() {
 
       <section className={S.sec}>
         <FadeUp className="wrap-site">
-          <div className={`${surface} ${S.panel} grid grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-12 m:grid-cols-1 m:gap-6`}>
-            <div className="flex flex-col items-start gap-3.5">
+          <div className={`${surface} ${S.panel} grid grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-12 m:grid-cols-1 m:gap-3`}>
+            <div className="flex flex-col items-start gap-3.5 m:gap-2.5">
               <Eyebrow icon={BadgeCheck}>How we check farmers</Eyebrow>
-              <h2 className="font-display text-[30px] leading-[38px] font-bold tracking-[-0.02em] m:text-[27px] m:leading-[35px]">
+              <h2 className="font-display text-[30px] leading-[38px] font-bold tracking-[-0.02em] m:text-[22px] m:leading-7">
                 Every farm is verified before it sells
               </h2>
               <p className={para}>Our team reviews each application by hand, and we keep checking after approval.</p>
@@ -115,12 +118,12 @@ export default function AboutPage() {
               {CHECKS.map(([title, body], i) => (
                 <li
                   key={title}
-                  className={`flex gap-4 py-[18px] ${i < CHECKS.length - 1 ? "shadow-[inset_0_-1px_0_var(--color-line-soft)]" : ""}`}
+                  className={`flex gap-4 py-[18px] m:gap-3 m:py-3 ${i < CHECKS.length - 1 ? "shadow-[inset_0_-1px_0_var(--color-line-soft)]" : ""}`}
                 >
                   <span className={`${num} ${i === 3 ? "!bg-lime !text-ink" : ""}`}>{i + 1}</span>
                   <div>
-                    <h3 className="m-0 text-[15px] font-semibold">{title}</h3>
-                    <p className="m-0 mt-0.5 text-sm leading-6 text-muted">{body}</p>
+                    <h3 className="m-0 text-[15px] font-semibold m:mt-1 m:text-sm m:leading-5">{title}</h3>
+                    <p className="m-0 mt-0.5 text-sm leading-6 text-muted m:text-[13px] m:leading-5">{body}</p>
                   </div>
                 </li>
               ))}
@@ -135,28 +138,28 @@ export default function AboutPage() {
             <Eyebrow icon={Users}>The team</Eyebrow>
             <h2 className={S.h2}>The people behind Farmkeke</h2>
           </div>
-          <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1">
+          <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-2 m:gap-2.5">
             {TEAM.map(([ini, name, role]) => (
-              <li key={role} className={`${S.card} flex items-center gap-3.5 p-6`}>
+              <li key={role} className={`${S.card} flex items-center gap-3.5 p-6 m:flex-col m:items-start m:gap-2.5 m:p-3.5`}>
                 <span
                   aria-hidden
-                  className="flex size-14 flex-none items-center justify-center rounded-full bg-lime-soft font-display text-[17px] font-bold text-forest"
+                  className="flex size-14 flex-none items-center justify-center rounded-full bg-lime-soft font-display text-[17px] font-bold text-forest m:size-10 m:text-sm"
                 >
                   {ini}
                 </span>
                 <div>
-                  <div className="text-[15px] font-bold">{name}</div>
+                  <div className="text-[15px] font-bold m:text-sm m:leading-5">{name}</div>
                   <div className="mt-0.5 text-xs leading-4 text-subtle">{role}</div>
                 </div>
               </li>
             ))}
           </ul>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <Link href={routes.shop} className="btn lime h-12 px-[22px] text-[15px]">
+          <div className="mt-10 flex flex-wrap justify-center gap-3 m:mt-6 m:flex-col m:gap-2.5">
+            <Link href={routes.shop} className="btn lime h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
               <Store aria-hidden size={18} strokeWidth={2} />
               Start shopping
             </Link>
-            <Link href={routes.contact} className="btn ghost h-12 px-[22px] text-[15px]">
+            <Link href={routes.contact} className="btn ghost h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
               <Mail aria-hidden size={18} strokeWidth={2} />
               Get in touch
             </Link>

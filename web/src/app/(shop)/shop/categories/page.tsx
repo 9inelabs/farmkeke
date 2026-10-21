@@ -20,21 +20,21 @@ export default async function AllCategories() {
   return (
     <>
       <CategoryBar active={routes.categories} />
-      <div className="wrap pt-7">
+      <div className="wrap pt-7 m:pt-3">
         <Breadcrumb items={[{ href: routes.shop, label: "Shop" }, { label: "All categories" }]} />
-        <div className="mt-4 mb-8">
+        <div className="mt-4 mb-8 m:mt-2 m:mb-4">
           <h1 className="h1">All categories</h1>
           <p className="p mt-1.5">Fresh produce from verified farms, sorted the way you shop.</p>
         </div>
 
-        <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 m:grid-cols-1">
+        <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 m:grid-cols-2 m:gap-2.5">
           {categories.map((c) => (
             <li key={c._id} className="flex">
               <Link
                 href={routes.category(c.slug)}
-                className="card flex w-full flex-col gap-4 p-6 text-ink hover:text-ink hover:shadow-[inset_0_0_0_1.5px_var(--color-lime)]"
+                className="card flex w-full flex-col gap-4 p-6 text-ink hover:text-ink hover:shadow-[inset_0_0_0_1.5px_var(--color-lime)] m:gap-2.5 m:p-3.5"
               >
-                <span className="tile size-[42px] rounded-xl">
+                <span className="tile size-[42px] rounded-xl m:size-9">
                   <CategoryIcon illustration={c.illustration} className="size-[22px]" strokeWidth={1.75} />
                 </span>
                 <div>
@@ -55,12 +55,12 @@ export default async function AllCategories() {
           ))}
         </ul>
 
-        <div className="card mt-8 flex flex-wrap items-center gap-4 px-7 py-6 m:px-5">
-          <div className="min-w-[240px] flex-1">
+        <div className="card mt-8 flex flex-wrap items-center gap-4 px-7 py-6 m:mt-4 m:gap-3 m:p-4">
+          <div className="min-w-[240px] flex-1 m:min-w-0">
             <h2 className="h3">Can&apos;t find what you need?</h2>
             <p className="sm mt-1">Search by product or farm name, or ask our support team.</p>
           </div>
-          <ButtonLink href={routes.search()} variant="dark">
+          <ButtonLink href={routes.search()} variant="dark" className="m:w-full">
             Search products
           </ButtonLink>
         </div>

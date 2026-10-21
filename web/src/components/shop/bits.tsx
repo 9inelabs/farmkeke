@@ -27,14 +27,14 @@ export function CategoryIcon({ illustration, className, strokeWidth = 1.6 }: { i
 /** W-01 / W-04b "Shop by category" grid: 8 columns, 4 on phones. */
 export function CategoryGrid({ categories }: { categories: Category[] }) {
   return (
-    <ul className="m-0 grid list-none grid-cols-8 gap-3 p-0 m:grid-cols-4">
+    <ul className="m-0 grid list-none grid-cols-8 gap-3 p-0 m:grid-cols-4 m:gap-2">
       {categories.map((c) => (
         <li key={c._id} className="flex">
           <Link
             href={routes.category(c.slug)}
-            className="card flex w-full flex-col items-center gap-2.5 px-2.5 py-[18px] text-center text-[13px] font-semibold text-ink hover:text-ink hover:shadow-[inset_0_0_0_1.5px_var(--color-lime)]"
+            className="card flex w-full flex-col items-center gap-2.5 px-2.5 py-[18px] text-center text-[13px] font-semibold text-ink hover:text-ink hover:shadow-[inset_0_0_0_1.5px_var(--color-lime)] m:gap-1.5 m:rounded-[14px] m:px-1 m:py-2.5 m:text-[11px] m:leading-[14px]"
           >
-            <span className="tile size-[52px] rounded-2xl">
+            <span className="tile size-[52px] rounded-2xl m:size-10 m:rounded-xl">
               <CategoryIcon illustration={c.illustration} />
             </span>
             {c.name}
@@ -76,7 +76,7 @@ export function Breadcrumb({ items }: { items: Array<{ href?: string; label: str
 
 export function SectionHead({ title, sub, action, id }: { title: string; sub?: string; action?: ReactNode; id?: string }) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-4">
+    <div className="mb-5 flex items-end justify-between gap-4 m:mb-3 m:gap-3">
       <div>
         <h2 className="h2" id={id}>
           {title}
@@ -90,7 +90,7 @@ export function SectionHead({ title, sub, action, id }: { title: string; sub?: s
 
 export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold whitespace-nowrap">
+    <Link href={href} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold whitespace-nowrap m:min-h-9 m:text-[13px]">
       {children}
       <ChevronRight aria-hidden className="size-4" strokeWidth={2} />
     </Link>

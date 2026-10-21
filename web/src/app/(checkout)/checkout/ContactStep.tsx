@@ -87,19 +87,19 @@ function ContactForm() {
 
   return (
     <CheckoutShell step={1} aside={<ItemsSummary lines={lines} quote={quote} />}>
-      <section className={`${checkoutCard} p-8 m:p-5`}>
+      <section className={`${checkoutCard} p-8 m:p-4`}>
         <h1 className={checkoutH1}>Your contact details</h1>
         <p className="p mt-1.5">So the farm and our rider can reach you about this order.</p>
         {status === "signed-in" ? null : (
-          <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-xl bg-soft px-3.5 py-3 text-sm">
+          <div className="mt-4 flex flex-wrap items-center gap-2.5 rounded-xl bg-soft px-3.5 py-3 text-sm m:mt-3 m:gap-x-2 m:gap-y-0 m:py-1 m:text-[13px]">
             <User aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={1.75} />
-            <span className="flex-1 text-ink-3">Have an account?</span>
-            <Link href={routes.signIn(routes.checkout)} className="inline-flex min-h-11 items-center font-semibold">
+            <span className="flex-1 text-ink-3 m:flex-none">Have an account?</span>
+            <Link href={routes.signIn(routes.checkout)} className="inline-flex min-h-11 items-center font-semibold m:ml-auto">
               Sign in for faster checkout
             </Link>
           </div>
         )}
-        <form id="contact-form" noValidate onSubmit={submit} className="mt-6 flex flex-col gap-[18px]">
+        <form id="contact-form" noValidate onSubmit={submit} className="mt-6 flex flex-col gap-[18px] m:mt-4 m:gap-3.5">
           <TextField
             ref={nameRef}
             label="Full name"
@@ -132,7 +132,7 @@ function ContactForm() {
           />
         </form>
         <StepActions back={routes.cart}>
-          <Button type="submit" form="contact-form" variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0">
+          <Button type="submit" form="contact-form" variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]">
             Continue
           </Button>
         </StepActions>

@@ -132,7 +132,7 @@ export function AuthCard({
   );
 }
 
-export const authTitle = "m-0 font-display text-[26px] leading-[34px] font-extrabold tracking-[-0.02em]";
+export const authTitle = "m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7 tracking-[-0.02em]";
 
 export function BackLink({ href, children }: { href: string; children: ReactNode }) {
   return (

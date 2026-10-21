@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 export function PrintButton() {
   return (
-    <button type="button" onClick={() => window.print()} className="btn sm ghost flex-none px-4 print:hidden">
+    <button type="button" onClick={() => window.print()} className="btn sm ghost flex-none px-4 m:hidden print:hidden">
       <Printer aria-hidden size={16} strokeWidth={2} />
       Print
     </button>

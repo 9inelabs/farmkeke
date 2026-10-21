@@ -29,7 +29,7 @@ export function HomeNearYou({ initial }: { initial: StorefrontHome }) {
 
   return (
     <>
-      <section id="fresh" className="mt-14 scroll-mt-6" aria-labelledby="fresh-title">
+      <section id="fresh" className="mt-14 scroll-mt-6 m:mt-9" aria-labelledby="fresh-title">
         <SectionHead
           id="fresh-title"
           title="Fresh picks near you"
@@ -37,7 +37,7 @@ export function HomeNearYou({ initial }: { initial: StorefrontHome }) {
           action={<MoreLink href={routes.categories}>See all</MoreLink>}
         />
         {picks.length ? (
-          <div className="grid grid-cols-4 gap-5 m:grid-cols-2 m:gap-3">
+          <div className="grid grid-cols-4 gap-5 m:grid-cols-2 m:gap-2.5">
             {picks.map((p, i) => (
               <ProductCard key={p.id} item={p} priority={i < 4} />
             ))}
@@ -50,19 +50,19 @@ export function HomeNearYou({ initial }: { initial: StorefrontHome }) {
       </section>
 
       {farms.length ? (
-        <section className="mt-14" aria-labelledby="farms-title">
+        <section className="mt-14 m:mt-9" aria-labelledby="farms-title">
           <SectionHead id="farms-title" title="Farms near you" sub="Every farm is verified by the Farmkeke team" />
-          <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 m:grid-cols-2 m:gap-3">
+          <ul className="m-swipe m-0 grid list-none grid-cols-4 gap-5 p-0 [--swipe-w:72%] m:!gap-2.5">
             {farms.map((f) => {
               const dist = distanceText(f.distanceKm);
               const rating = ratingText(f.rating);
               return (
                 <li key={f.id} className="flex">
-                  <Link href={routes.farm(f.id)} className="card flex w-full flex-col gap-3.5 p-5 text-ink hover:text-ink">
+                  <Link href={routes.farm(f.id)} className="card flex w-full flex-col gap-3.5 p-5 text-ink hover:text-ink m:gap-3 m:p-4">
                     <div className="flex items-center gap-3">
-                      <FarmAvatar id={f.id} name={f.name} photoUrl={f.photoUrl} size={48} />
+                      <FarmAvatar id={f.id} name={f.name} photoUrl={f.photoUrl} size={44} />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-[5px] text-[15px] font-semibold">
+                        <div className="flex items-center gap-[5px] text-[15px] font-semibold m:text-sm">
                           <span className="truncate">{f.name}</span>
                           {f.verified !== false ? (
                             <BadgeCheck role="img" aria-label="Verified farm" className="size-3.5 flex-none text-forest" strokeWidth={2} />
@@ -74,7 +74,7 @@ export function HomeNearYou({ initial }: { initial: StorefrontHome }) {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between gap-2 pt-3 text-[13px] shadow-[inset_0_1px_0_var(--color-line-soft)]">
+                    <div className="flex justify-between gap-2 pt-3 text-[13px] shadow-[inset_0_1px_0_var(--color-line-soft)] m:text-xs">
                       <span className="flex items-center gap-1 font-semibold">
                         <Star aria-hidden className="size-3.5 fill-pending text-pending" strokeWidth={1.5} />
                         {rating ? (

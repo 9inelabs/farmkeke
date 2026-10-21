@@ -57,7 +57,7 @@ export function ProductGallery({
   return (
     <div>
       <div
-        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl text-[rgba(107,59,44,0.35)]"
+        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl text-[rgba(107,59,44,0.35)] m:rounded-[18px]"
         style={{ background: tintFor(id) }}
       >
         {current ? (
@@ -74,7 +74,7 @@ export function ProductGallery({
         ) : null}
       </div>
       {photos.length > 1 ? (
-        <div className="mt-3 grid grid-cols-4 gap-3">
+        <div className="mt-3 grid grid-cols-4 gap-3 m:mt-2 m:gap-2">
           {photos.slice(0, 8).map((p, i) => (
             <button
               key={p}
@@ -197,7 +197,7 @@ export function BuyBox({
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 m:gap-4">
       <div>
         <div className="flex flex-wrap gap-2">
           {product.category ? <span className="badge b-fresh">{product.category.name}</span> : null}
@@ -212,7 +212,7 @@ export function BuyBox({
             </span>
           )}
         </div>
-        <h1 className="h1 mt-3">{product.name}</h1>
+        <h1 className="h1 mt-3 m:mt-2">{product.name}</h1>
         <Link href={routes.farm(farm.id)} className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-sm font-semibold">
           {farm.name}
           {farm.verified ? <BadgeCheck role="img" aria-label="Verified farm" className="size-4 text-forest" strokeWidth={2} /> : null}
@@ -224,7 +224,7 @@ export function BuyBox({
 
       {unit ? (
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-[34px] font-extrabold tracking-[-0.02em] text-forest">{naira(unit.priceKobo)}</span>
+          <span className="font-display text-[34px] font-extrabold tracking-[-0.02em] text-forest m:text-[28px]">{naira(unit.priceKobo)}</span>
           <span className="p">per {unit.singular}</span>
         </div>
       ) : null}
@@ -258,14 +258,14 @@ export function BuyBox({
       ) : null}
 
       {buyable ? (
-        <div className="flex gap-3 m:flex-col">
-          <div className="flex h-[54px] items-center rounded-[14px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line-2)] m:self-start">
+        <div className="flex gap-3 m:gap-2.5">
+          <div className="flex h-[54px] items-center rounded-[14px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line-2)] m:h-[50px]">
             <button
               type="button"
               aria-label="Decrease quantity"
               disabled={qty <= minQty}
               onClick={() => setQty((q) => Math.max(minQty, q - 1))}
-              className="flex h-[54px] w-[52px] cursor-pointer items-center justify-center border-0 bg-transparent text-forest disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-[54px] w-[52px] cursor-pointer items-center justify-center border-0 bg-transparent text-forest disabled:cursor-not-allowed disabled:opacity-40 m:h-[50px] m:w-10"
             >
               <Minus aria-hidden className="size-5" />
             </button>
@@ -278,12 +278,12 @@ export function BuyBox({
               aria-label="Increase quantity"
               disabled={qty >= unit.stock}
               onClick={() => setQty((q) => Math.min(unit.stock, q + 1))}
-              className="flex h-[54px] w-[52px] cursor-pointer items-center justify-center border-0 bg-transparent text-forest disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-[54px] w-[52px] cursor-pointer items-center justify-center border-0 bg-transparent text-forest disabled:cursor-not-allowed disabled:opacity-40 m:h-[50px] m:w-10"
             >
               <Plus aria-hidden className="size-5" />
             </button>
           </div>
-          <m.button type="button" className="btn lime lg flex-1" onClick={add} {...pressable}>
+          <m.button type="button" className="btn lime lg flex-1 m:min-h-[50px] m:px-3 m:text-[15px]" onClick={add} {...pressable}>
             Add to cart · {naira(unit.priceKobo * qty)}
           </m.button>
         </div>
@@ -301,7 +301,7 @@ export function BuyBox({
       )}
       {buyable && unit.minOrder > 1 ? <p className="cap -mt-3">Minimum order: {unit.minOrder} {unit.plural}</p> : null}
 
-      <div className="card px-[18px] py-1">
+      <div className="card px-[18px] py-1 m:px-3.5">
         {harvestedText ? (
           <Row icon={<Calendar aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />} title={harvestedText} sub="Picked to order and packed the same day" />
         ) : null}
@@ -325,7 +325,7 @@ export function BuyBox({
 
 function Row({ icon, title, sub }: { icon: React.ReactNode; title: React.ReactNode; sub: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 py-3.5 [&+&]:shadow-[inset_0_1px_0_var(--color-line-soft)]">
+    <div className="flex items-start gap-3 py-3.5 [&+&]:shadow-[inset_0_1px_0_var(--color-line-soft)] m:py-3">
       {icon}
       <div>
         <div className="text-sm font-semibold">{title}</div>

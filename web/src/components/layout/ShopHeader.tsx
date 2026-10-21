@@ -21,7 +21,7 @@ const hlink =
 export function ShopHeader() {
   return (
     <header className="shop-header bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
-      <div className="wrap flex h-[76px] items-center gap-4 m:h-auto m:flex-wrap m:gap-x-2 m:gap-y-3 m:py-3">
+      <div className="wrap flex h-[76px] items-center gap-4 m:h-auto m:flex-wrap m:gap-x-2 m:gap-y-2 m:pt-2.5 m:pb-3">
         <HomeLogo height={24} />
         <AreaChip />
         <Suspense fallback={<SearchBox initial="" />}>
@@ -44,10 +44,10 @@ function AreaChip() {
     <button
       type="button"
       onClick={areaPicker.open}
-      className="inline-flex h-[46px] cursor-pointer items-center gap-2 rounded-xl bg-surface px-3.5 text-left text-sm whitespace-nowrap text-ink shadow-[inset_0_0_0_1px_var(--color-field)] hover:bg-soft m:order-4 m:h-11 m:w-full"
+      className="inline-flex h-[46px] cursor-pointer items-center gap-2 rounded-xl bg-surface px-3.5 text-left text-sm whitespace-nowrap text-ink shadow-[inset_0_0_0_1px_var(--color-field)] hover:bg-soft m:order-4 m:h-10 m:w-full m:rounded-[10px] m:px-3 m:text-[13px]"
       aria-haspopup="dialog"
     >
-      <MapPin aria-hidden className="size-[18px] text-forest" strokeWidth={1.75} />
+      <MapPin aria-hidden className="size-[18px] text-forest m:size-4" strokeWidth={1.75} />
       <span className="m:flex m:gap-1.5">
         <span className="cap block leading-3 m:leading-4">Deliver to</span>
         <span className="font-semibold">{chosen ? chosen.name : "Choose your area"}</span>
@@ -76,7 +76,7 @@ function SearchBox({ initial }: { initial: string }) {
     <form
       role="search"
       onSubmit={submit}
-      className="flex h-[46px] flex-1 items-center gap-2.5 rounded-xl bg-canvas pr-1.5 pl-4 text-[15px] text-faint shadow-[inset_0_0_0_1px_var(--color-field)] focus-within:shadow-[inset_0_0_0_2px_var(--color-forest)] m:order-3 m:basis-full"
+      className="flex h-[46px] flex-1 items-center gap-2.5 rounded-xl bg-canvas pr-1.5 pl-4 text-[15px] text-faint shadow-[inset_0_0_0_1px_var(--color-field)] focus-within:shadow-[inset_0_0_0_2px_var(--color-forest)] m:order-3 m:h-11 m:min-w-0 m:basis-full m:gap-2 m:rounded-[10px] m:pl-3 m:text-base"
     >
       <Search aria-hidden className="size-[18px] flex-none" />
       <input
@@ -89,7 +89,7 @@ function SearchBox({ initial }: { initial: string }) {
         enterKeyHint="search"
         className="min-w-0 flex-1 border-0 bg-transparent text-ink outline-none placeholder:text-faint"
       />
-      <m.button type="submit" className="btn sm dark" {...pressable}>
+      <m.button type="submit" className="btn sm dark m:min-h-8 m:rounded-lg m:px-3 m:text-[13px]" {...pressable}>
         Search
       </m.button>
     </form>

@@ -95,7 +95,7 @@ function Form({ next }: { next: string | undefined }) {
 
   return (
     <AuthSplit side="signup">
-      <h1 className="m-0 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em]">Create your account</h1>
+      <h1 className="m-0 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em] m:text-[26px] m:leading-8">Create your account</h1>
       <p className="p mt-1.5">Save your addresses, follow orders from any device and check out in seconds.</p>
       <form noValidate onSubmit={submit} className="mt-[26px] flex flex-col gap-[18px]">
         <TextField

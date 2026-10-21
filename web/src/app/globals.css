@@ -141,9 +141,11 @@
   }
   @media (max-width: 760px) {
     .wrap {
+      --gutter: 16px;
       padding: 0 16px;
     }
     .wrap-site {
+      --gutter: 20px;
       padding: 0 20px;
     }
   }
@@ -194,8 +196,20 @@
   }
   @media (max-width: 760px) {
     .h1 {
-      font-size: var(--h1-size-m, 26px);
-      line-height: var(--h1-lh-m, 34px);
+      font-size: var(--h1-size-m, 24px);
+      line-height: var(--h1-lh-m, 31px);
+    }
+    .h2 {
+      font-size: var(--h2-size-m, 19px);
+      line-height: var(--h2-lh-m, 26px);
+    }
+    .h3 {
+      font-size: 15px;
+      line-height: 21px;
+    }
+    .p {
+      font-size: 14px;
+      line-height: 21px;
     }
   }
   /* Per-design heading scales, from each design's own .h1/.h2 rules */
@@ -203,27 +217,33 @@
     /* W-04, W-04b */
     --h1-size: 30px;
     --h1-lh: 38px;
-    --h1-size-m: 24px;
-    --h1-lh-m: 32px;
+    --h1-size-m: 22px;
+    --h1-lh-m: 29px;
     --h2-size: 20px;
     --h2-lh: 28px;
     --h2-ls: -0.015em;
+    --h2-size-m: 17px;
+    --h2-lh-m: 24px;
   }
   .type-product {
     /* W-06 */
     --h2-size: 20px;
     --h2-lh: 28px;
     --h2-ls: -0.015em;
+    --h2-size-m: 17px;
+    --h2-lh-m: 24px;
   }
   .type-compact {
     /* W-07 farm profile; W-20 and W-20c cart */
     --h1-size: 32px;
     --h1-lh: 40px;
-    --h1-size-m: 24px;
-    --h1-lh-m: 32px;
+    --h1-size-m: 22px;
+    --h1-lh-m: 29px;
     --h2-size: 18px;
     --h2-lh: 26px;
     --h2-ls: -0.01em;
+    --h2-size-m: 16px;
+    --h2-lh-m: 23px;
   }
 
   .card {
@@ -319,6 +339,20 @@
     justify-content: center;
     flex: none;
   }
+  @media (max-width: 760px) {
+    .card {
+      border-radius: 16px;
+    }
+    .tile {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+    }
+    .tile > svg {
+      width: 19px;
+      height: 19px;
+    }
+  }
 
   .chip {
     display: inline-flex;
@@ -335,6 +369,13 @@
     border: 0;
     white-space: nowrap;
     cursor: pointer;
+  }
+  @media (max-width: 760px) {
+    .chip {
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 12.5px;
+    }
   }
   .chip.on,
   .chip[aria-pressed="true"] {
@@ -398,6 +439,13 @@
     background: var(--color-surface);
     color: var(--color-ink);
   }
+  /* Phones: a little shorter, and 16px text so iOS doesn't zoom in on focus */
+  @media (max-width: 760px) {
+    .fin {
+      height: 48px;
+      font-size: 16px;
+    }
+  }
   textarea.fin {
     height: auto;
     min-height: 120px;
@@ -445,4 +493,36 @@
    Unlayered so it beats the header's shadow utility. */
 body:has([data-category-bar]) .shop-header {
   box-shadow: none;
+}
+
+/*
+ * Phones: a row of cards you swipe sideways instead of a tall stack.
+ * It bleeds to the screen edges (the page gutter) and snaps per card.
+ * Set --swipe-w on the row to change the card width. Unlayered, so on
+ * phones it wins over the row's desktop layout utilities (grid, centring).
+ */
+@media (max-width: 760px) {
+  .m-swipe {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter, 20px);
+    margin-inline: calc(-1 * var(--gutter, 20px));
+    padding: 4px var(--gutter, 20px) 18px;
+    scrollbar-width: none;
+  }
+  .m-swipe::-webkit-scrollbar {
+    display: none;
+  }
+  .m-swipe > * {
+    flex: 0 0 auto;
+    width: var(--swipe-w, 80%);
+    scroll-snap-align: start;
+  }
 }

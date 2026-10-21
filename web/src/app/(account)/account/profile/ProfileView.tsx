@@ -44,7 +44,7 @@ function Profile() {
       <AccountTitle title="Profile and login" sub="Keep your details up to date so farms and riders can reach you." />
       <PersonalDetails name={viewer?.name ?? ""} phone={viewer?.phone ?? ""} />
 
-      <section aria-labelledby="login-title" className="card p-6 m:px-4">
+      <section aria-labelledby="login-title" className="card p-6 m:p-4">
         <div className="mb-[18px]">
           <h2 id="login-title" className="h3">
             Login details
@@ -125,7 +125,7 @@ function PersonalDetails({ name: initial, phone: initialPhone }: { name: string;
   };
 
   return (
-    <section aria-labelledby="personal-title" className="card p-6 m:px-4">
+    <section aria-labelledby="personal-title" className="card p-6 m:p-4">
       <div className="mb-[18px]">
         <h2 id="personal-title" className="h3">
           Personal details

@@ -34,7 +34,7 @@ export function RefundView({ orderId }: { orderId: string }) {
     return (
       <FocusShell orderId={orderId} width={720}>
         <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-          <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold">No refund on this order yet</h1>
+          <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">No refund on this order yet</h1>
           <p className="p">If a refund is decided, you&apos;ll see where it&apos;s up to here, and we&apos;ll text you.</p>
           <ButtonLink href={routes.order(orderId)} variant="ghost" className="mt-2">
             Back to order
@@ -96,17 +96,17 @@ function Refund({ refund: r, order: o, dispute: d }: { refund: RefundRow; order:
         <ChevronLeft aria-hidden className="size-4" strokeWidth={2} />
         {status === "signed-in" ? "My orders" : "Back to order"}
       </Link>
-      <section className="flex flex-wrap items-end justify-between gap-4 rounded-[22px] bg-forest p-7 text-white m:p-5">
+      <section className="flex flex-wrap items-end justify-between gap-4 rounded-[22px] bg-forest p-7 text-white m:rounded-[18px] m:p-4">
         <div>
           <div className="text-[13px] font-semibold text-lime">{d ? `Refund for case ${d.number}` : `Refund for order ${o.number}`}</div>
-          <div className="mt-1.5 font-display text-[40px] leading-[48px] font-extrabold tracking-[-0.02em]">{naira(r.amountKobo)}</div>
+          <div className="mt-1.5 font-display text-[40px] leading-[48px] font-extrabold tracking-[-0.02em] m:text-[32px] m:leading-10">{naira(r.amountKobo)}</div>
           <div className="mt-1 text-sm text-on-forest">
             {what} · Order {o.number}
           </div>
         </div>
         <span className="inline-flex h-[30px] items-center rounded-full bg-lime px-3 text-[13px] font-bold text-forest">{pill}</span>
       </section>
-      <section aria-labelledby="progress-title" className="card p-6 m:px-4">
+      <section aria-labelledby="progress-title" className="card p-6 m:p-4">
         <h1 id="progress-title" className="m-0 font-display text-[17px] font-bold">
           Refund progress
         </h1>

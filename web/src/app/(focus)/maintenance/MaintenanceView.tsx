@@ -68,7 +68,7 @@ export function MaintenanceView() {
               <CircleCheck aria-hidden className="size-[15px]" />
               Maintenance finished
             </span>
-            <h1 className="h1 text-[46px] leading-[54px]">Farmkeke is back</h1>
+            <h1 className="h1 text-[46px] leading-[54px] m:text-[30px] m:leading-[37px]">Farmkeke is back</h1>
             <p className="text-lg leading-[29px] text-muted m:text-base m:leading-[26px]">
               Thanks for waiting. Everything is working again.
             </p>
@@ -82,7 +82,7 @@ export function MaintenanceView() {
               <Wrench aria-hidden className="size-[15px]" />
               Scheduled maintenance
             </span>
-            <h1 className="h1 text-[46px] leading-[54px]">We&apos;re making Farmkeke better</h1>
+            <h1 className="h1 text-[46px] leading-[54px] m:text-[30px] m:leading-[37px]">We&apos;re making Farmkeke better</h1>
             <p className="text-lg leading-[29px] text-muted m:text-base m:leading-[26px]">
               {config?.maintenanceMessage ||
                 "The website and app are briefly offline while we make some improvements. We'll be back shortly."}

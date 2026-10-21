@@ -100,7 +100,7 @@ function Form({ next }: { next: string | undefined }) {
 
   return (
     <AuthSplit side="signin">
-      <h1 className="m-0 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em]">Welcome back</h1>
+      <h1 className="m-0 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em] m:text-[26px] m:leading-8">Welcome back</h1>
       <p className="p mt-1.5">Sign in to track orders and check out faster.</p>
       <form noValidate onSubmit={submit} className="mt-7 flex flex-col gap-[18px]">
         <TextField

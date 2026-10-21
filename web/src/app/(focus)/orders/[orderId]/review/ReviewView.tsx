@@ -56,8 +56,8 @@ function BackLink({ orderId }: { orderId: string }) {
 
 function Note({ title, body }: { title: string; body: string }) {
   return (
-    <section className="card mt-3.5 p-8 text-center m:p-5">
-      <h1 className="m-0 font-display text-2xl leading-8 font-extrabold">{title}</h1>
+    <section className="card mt-3.5 p-8 text-center m:p-5 m:py-7">
+      <h1 className="m-0 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">{title}</h1>
       <p className="p mt-2">{body}</p>
       <ButtonLink href={routes.shop} variant="lime" className="mt-5">
         Shop again
@@ -159,7 +159,7 @@ function Form({ data }: { data: NonNullable<ReviewForOrder> }) {
   };
 
   return (
-    <section aria-labelledby="review-title" className="card mt-3.5 p-8 m:p-5">
+    <section aria-labelledby="review-title" className="card mt-3.5 p-8 m:p-4">
       <div className="flex items-center gap-3.5">
         <span
           aria-hidden
@@ -173,7 +173,7 @@ function Form({ data }: { data: NonNullable<ReviewForOrder> }) {
             Order {data.number}
             {data.deliveredAt ? ` · Delivered ${dayLabel(data.deliveredAt)}` : ""}
           </div>
-          <h1 id="review-title" className="m-0 mt-0.5 font-display text-2xl leading-8 font-extrabold">
+          <h1 id="review-title" className="m-0 mt-0.5 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">
             How was {data.farmName}?
           </h1>
         </div>

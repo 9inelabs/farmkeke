@@ -16,7 +16,7 @@ export async function CategoryBar({ active }: { active?: string }) {
   return (
     <div data-category-bar className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
       <nav aria-label="Categories" className="wrap">
-        <ul className="m-0 flex h-[50px] [scrollbar-width:none] list-none items-stretch gap-7 overflow-x-auto p-0 text-sm font-medium m:gap-5">
+        <ul className="m-0 flex h-[50px] [scrollbar-width:none] list-none items-stretch gap-7 overflow-x-auto p-0 text-sm font-medium m:h-11 m:gap-5 m:text-[13px]">
           {items.map((c) => {
             const on = active === c.href;
             return (

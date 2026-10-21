@@ -28,7 +28,7 @@ export function DisputeView({ orderId }: { orderId: string }) {
     return (
       <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">
         <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-          <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold">No problem report found</h1>
+          <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">No problem report found</h1>
           <p className="p">
             There&apos;s no report for this order, or it was made on another account or device.
           </p>
@@ -118,7 +118,7 @@ function Case({ d }: { d: DisputeDetail }) {
         <span className={`badge h-[26px] rounded-lg px-2.5 ${badge.cls}`}>{badge.label}</span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
+      <div className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1 m:gap-3">
         <div className="flex flex-col gap-5">
           <section aria-label="Case progress" className="card p-[22px] m:px-4">
             <ol className="m-0 grid list-none grid-cols-4 gap-2 p-0">

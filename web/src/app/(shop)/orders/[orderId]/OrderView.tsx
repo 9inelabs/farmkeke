@@ -29,7 +29,7 @@ export function OrderSkeleton() {
         <Skeleton className="h-5 w-28" />
         <Skeleton className="mt-4 h-10 w-72" />
         <Skeleton className="mt-2 h-5 w-96 max-w-full" />
-        <div className="mt-6 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
+        <div className="mt-6 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1 m:gap-3">
           <Skeleton className="h-[420px] w-full" rounded={18} />
           <Skeleton className="h-[320px] w-full" rounded={18} />
         </div>
@@ -54,7 +54,7 @@ function Missing() {
   return (
     <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">
       <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold">We couldn&apos;t open this order</h1>
+        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">We couldn&apos;t open this order</h1>
         <p className="p">
           It may belong to another account or device. Look it up with the order number and phone number, or sign in to see
           your orders.
@@ -317,7 +317,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
         </div>
       </div>
       {payable(o) ? (
-        <section className="mb-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:px-4">
+        <section className="mb-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:gap-3 m:rounded-[18px] m:px-4 m:py-3.5">
           <Receipt aria-hidden className="size-6 flex-none text-pend" strokeWidth={1.75} />
           <div className="min-w-[220px] flex-1">
             <div className="text-[15px] font-semibold text-ink">Your bill is ready: {naira(o.bill.totalKobo)}</div>
@@ -331,10 +331,10 @@ function Tracking({ order: o }: { order: OrderDetail }) {
         </section>
       ) : null}
 
-      <div className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
+      <div className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1 m:gap-3">
         <div className="flex flex-col gap-5">
           {pickup && o.pickupCode ? (
-            <section aria-label="Your pickup code" className="flex flex-wrap items-center gap-7 rounded-[22px] bg-forest p-7 text-white m:p-5">
+            <section aria-label="Your pickup code" className="flex flex-wrap items-center gap-7 rounded-[22px] bg-forest p-7 text-white m:gap-4 m:rounded-[18px] m:p-4">
               <div className="min-w-[260px] flex-1 m:min-w-0">
                 <div className="text-[13px] font-semibold text-lime">Your pickup code</div>
                 <div className="mt-3 flex gap-2.5" aria-label={`Pickup code ${o.pickupCode.split("").join(" ")}`} role="img">
@@ -356,7 +356,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
             </section>
           ) : null}
 
-          <section aria-labelledby="progress-title" className="card p-6 m:px-4">
+          <section aria-labelledby="progress-title" className="card p-6 m:p-4">
             <h2 id="progress-title" className="h3">
               Progress
             </h2>
@@ -366,7 +366,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
           </section>
 
           {pickup ? null : (
-            <section aria-labelledby="items-title" className="card p-6 m:px-4">
+            <section aria-labelledby="items-title" className="card p-6 m:p-4">
               <h2 id="items-title" className="h3">
                 Items
               </h2>
@@ -756,10 +756,10 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
           </div>
         </div>
       </div>
-      <section className="card p-6 m:px-4">
+      <section className="card p-6 m:p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="m-0 font-display text-2xl leading-8 font-extrabold">Order {o.number}</h1>
+            <h1 className="m-0 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">Order {o.number}</h1>
             <div className="mt-0.5 text-sm text-muted">
               {o.farmName} · Ordered {dayLabel(o.placedAt)}
             </div>

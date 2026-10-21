@@ -30,20 +30,20 @@ export default async function ShopHome() {
   return (
     <>
       <CategoryBar />
-      <div className="wrap pt-7">
-        <section className="grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] gap-5 m:grid-cols-1">
-          <div className="grid min-h-[340px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center gap-7 rounded-3xl bg-forest p-11 m:min-h-0 m:grid-cols-1 m:p-7">
-            <div className="flex flex-col items-start gap-4">
+      <div className="wrap pt-7 m:pt-4">
+        <section className="grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] gap-5 m:grid-cols-1 m:gap-3">
+          <div className="grid min-h-[340px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center gap-7 rounded-3xl bg-forest p-11 m:min-h-0 m:grid-cols-1 m:rounded-[20px] m:p-5">
+            <div className="flex flex-col items-start gap-4 m:gap-3">
               <span className="badge bg-[rgba(169,214,84,0.18)] text-on-forest-lime">
                 {banner?.tag ?? "Harvested this week"}
               </span>
-              <h1 className="h1 text-[38px] leading-[46px] text-white m:text-[30px] m:leading-[38px]">
+              <h1 className="h1 text-[38px] leading-[46px] text-white m:text-2xl m:leading-[30px]">
                 {banner?.title ?? "Fresh picks from farms near you"}
               </h1>
               <p className="p text-on-forest">
                 Buy straight from verified farmers in Owerri. Your money is held safely until your order arrives.
               </p>
-              <ButtonLink href={banner ? routes.product(banner.listing.id) : "#fresh"} size="lg" className="mt-1.5">
+              <ButtonLink href={banner ? routes.product(banner.listing.id) : "#fresh"} size="lg" className="mt-1.5 m:mt-0.5 m:min-h-11 m:text-sm">
                 {banner?.buttonLabel ?? "Shop fresh picks"}
               </ButtonLink>
             </div>
@@ -72,36 +72,36 @@ export default async function ShopHome() {
               </ul>
             ) : null}
           </div>
-          <div className="flex flex-col gap-5">
-            <div className="card flex flex-1 gap-3.5 p-6">
-              <span className="tile size-[42px] rounded-xl">
+          <div className="flex flex-col gap-5 m:gap-3">
+            <div className="card flex flex-1 gap-3.5 p-6 m:gap-3 m:p-4">
+              <span className="tile size-[42px] rounded-xl m:size-[38px]">
                 <ShieldCheck aria-hidden className="size-[22px]" strokeWidth={1.75} />
               </span>
               <div>
                 <h2 className="h3">Your money is protected</h2>
-                <p className="sm mt-1.5">
+                <p className="sm mt-1.5 m:mt-1">
                   We hold your payment and release it to the farmer only after you confirm delivery.
                 </p>
                 <Link
                   href={routes.escrow}
-                  className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+                  className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold m:mt-0 m:min-h-9 m:text-[13px]"
                 >
                   How escrow works
                 </Link>
               </div>
             </div>
-            <div className="card flex flex-1 gap-3.5 p-6">
-              <span className="tile size-[42px] rounded-xl">
+            <div className="card flex flex-1 gap-3.5 p-6 m:gap-3 m:p-4">
+              <span className="tile size-[42px] rounded-xl m:size-[38px]">
                 <Truck aria-hidden className="size-[22px]" strokeWidth={1.75} />
               </span>
               <div>
                 <h2 className="h3">Delivery or pickup</h2>
-                <p className="sm mt-1.5">
+                <p className="sm mt-1.5 m:mt-1">
                   Farmkeke riders deliver to your door, or collect from the farm yourself.
                 </p>
                 <Link
                   href={routes.howItWorks}
-                  className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold"
+                  className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold m:mt-0 m:min-h-9 m:text-[13px]"
                 >
                   How delivery works
                 </Link>
@@ -111,7 +111,7 @@ export default async function ShopHome() {
         </section>
 
         {categories.length ? (
-          <section className="mt-14" aria-labelledby="cats-title">
+          <section className="mt-14 m:mt-9" aria-labelledby="cats-title">
             <SectionHead
               id="cats-title"
               title="Shop by category"
@@ -123,16 +123,16 @@ export default async function ShopHome() {
 
         <HomeNearYou initial={home} />
 
-        <section className="mt-14">
-          <div className="card flex flex-wrap items-center gap-6 px-8 py-7 m:px-5 m:py-6">
-            <span className="tile size-[52px] rounded-2xl">
+        <section className="mt-14 m:mt-9">
+          <div className="card flex flex-wrap items-center gap-6 px-8 py-7 m:gap-3.5 m:p-4">
+            <span className="tile size-[52px] rounded-2xl m:size-[38px] m:rounded-[11px]">
               <Smartphone aria-hidden className="size-6" strokeWidth={1.75} />
             </span>
-            <div className="min-w-[240px] flex-1">
+            <div className="min-w-[240px] flex-1 m:min-w-0">
               <h2 className="h3">Shop faster in the Farmkeke app</h2>
               <p className="sm mt-1">Get order updates, chat with farmers and reorder in a tap.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 m:grid m:w-full m:grid-cols-2 m:gap-2">
               <ButtonLink href={routes.getTheApp} variant="dark">
                 App Store
               </ButtonLink>

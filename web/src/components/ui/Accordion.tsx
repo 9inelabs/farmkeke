@@ -41,12 +41,12 @@ export function Accordion({
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 onClick={() => toggle(i)}
-                className="flex min-h-16 w-full cursor-pointer items-center justify-between gap-4 bg-transparent px-6 py-5 text-left font-display text-base font-bold text-ink m:px-4"
+                className="flex min-h-16 w-full cursor-pointer items-center justify-between gap-4 bg-transparent px-6 py-5 text-left font-display text-base font-bold text-ink m:min-h-[52px] m:gap-3 m:px-4 m:py-3.5 m:text-sm m:leading-5"
               >
                 <span>{item.question}</span>
                 <m.span
                   aria-hidden
-                  className="flex size-8 flex-none items-center justify-center rounded-full bg-tint text-forest"
+                  className="flex size-8 flex-none items-center justify-center rounded-full bg-tint text-forest m:size-7"
                   animate={{ rotate: isOpen ? 180 : 0 }}
                   transition={transition.fast}
                 >
@@ -57,7 +57,7 @@ export function Accordion({
             <div id={panelId} role="region" aria-labelledby={btnId} hidden={!isOpen}>
               {isOpen ? (
                 <m.div
-                  className="px-6 pb-6 text-[15px] leading-6 text-muted m:px-4"
+                  className="px-6 pb-6 text-[15px] leading-6 text-muted m:px-4 m:pb-4 m:text-[13px] m:leading-5"
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={transition.base}

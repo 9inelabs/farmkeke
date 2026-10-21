@@ -82,16 +82,16 @@ export function CartView() {
   };
 
   return (
-    <div className="wrap pt-8 pb-24">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="wrap pt-8 pb-24 m:pt-4 m:pb-14">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 m:mb-4 m:gap-x-3 m:gap-y-1">
         <div>
-          <h1 className="h1 text-[32px] leading-10 m:text-[26px] m:leading-[34px]">Your cart</h1>
+          <h1 className="h1 text-[32px] leading-10 m:text-2xl m:leading-[30px]">Your cart</h1>
           <p className="p mt-1">
             {plural(lines.length, "item")} from {plural(groups.length, "farm")}
           </p>
         </div>
         {changed ? null : (
-          <Link href={routes.shop} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold">
+          <Link href={routes.shop} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold m:min-h-9 m:text-[13px]">
             <ChevronLeft aria-hidden className="size-4" strokeWidth={2} />
             Continue shopping
           </Link>
@@ -102,7 +102,7 @@ export function CartView() {
         <Reveal>
           <div
             role="status"
-            className="mb-5 flex items-start gap-3.5 rounded-2xl bg-pend-bg px-5 py-[18px] shadow-[inset_0_0_0_1px_#F2DDB5]"
+            className="mb-5 flex items-start gap-3.5 rounded-2xl bg-pend-bg px-5 py-[18px] shadow-[inset_0_0_0_1px_#F2DDB5] m:mb-3 m:gap-3 m:px-4 m:py-3.5"
           >
             <TriangleAlert aria-hidden className="mt-px size-[22px] flex-none text-pend" strokeWidth={1.75} />
             <div className="flex-1">
@@ -115,10 +115,10 @@ export function CartView() {
         </Reveal>
       ) : null}
 
-      <div className="grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] items-start gap-7 m:grid-cols-1">
-        <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] items-start gap-7 m:grid-cols-1 m:gap-3">
+        <div className="flex flex-col gap-5 m:gap-3">
           {changed ? null : (
-            <div className="flex items-center gap-3 rounded-[14px] bg-[#F4F7EE] px-[18px] py-3.5 text-sm text-[#2E3A28]">
+            <div className="flex items-center gap-3 rounded-[14px] bg-[#F4F7EE] px-[18px] py-3.5 text-sm text-[#2E3A28] m:px-3.5 m:py-3 m:text-[13px] m:leading-[19px]">
               <Info aria-hidden className="size-5 flex-none text-forest" strokeWidth={1.75} />
               Each farm&apos;s items become their own order, with their own delivery. You pay once for everything.
             </div>
@@ -129,7 +129,7 @@ export function CartView() {
             const subtotal = g.lines.filter((l) => !blocked(l)).reduce((s, l) => s + priceOf(l) * qtyOf(l), 0);
             return (
               <section key={g.farmId} aria-labelledby={`farm-${g.farmId}`} className="card overflow-hidden">
-                <div className="flex items-center gap-3 px-6 py-[18px] shadow-[inset_0_-1px_0_#EEF0EB] m:px-4">
+                <div className="flex items-center gap-3 px-6 py-[18px] shadow-[inset_0_-1px_0_#EEF0EB] m:px-4 m:py-3">
                   <span
                     aria-hidden
                     className="flex size-10 flex-none items-center justify-center rounded-full font-display text-[13px] font-bold text-forest"
@@ -171,7 +171,7 @@ export function CartView() {
           })}
         </div>
 
-        <aside aria-labelledby="cart-summary" className="card p-6">
+        <aside aria-labelledby="cart-summary" className="card p-6 m:p-4">
           <h2 id="cart-summary" className="h3 text-lg leading-[26px]">
             Order summary
           </h2>
@@ -193,7 +193,7 @@ export function CartView() {
             variant="lime"
             size="lg"
             fullWidth
-            className="mt-5 min-h-[54px]"
+            className="mt-5 min-h-[54px] m:mt-4 m:min-h-12"
             onClick={proceed}
             disabled={available.length === 0}
           >
@@ -239,7 +239,7 @@ function CartRow({
   const unit = capitalise(l.unitSingular);
   return (
     <li
-      className="flex items-center gap-4 px-6 py-[18px] [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:flex-wrap m:px-4"
+      className="flex items-center gap-4 px-6 py-[18px] [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:flex-wrap m:gap-x-3 m:gap-y-1 m:px-4 m:py-3.5"
       style={{ background: gone ? "#FCF7F7" : change ? "#FFFCF6" : undefined }}
     >
       <Thumb id={l.listingId} imageUrl={l.imageUrl} size={76} radius={14} dim={gone} />
@@ -299,7 +299,7 @@ function CartRow({
           </Button>
         </div>
       ) : (
-        <div className="flex items-center gap-4 m:w-full m:justify-between m:pl-[92px]">
+        <div className="flex items-center gap-4 m:w-full m:justify-between m:pl-[88px]">
           <QtyStepper line={{ ...l, quantity }} />
           <div className="w-[110px] text-right font-display text-base font-extrabold m:w-auto">
             {naira(priceKobo * quantity)}
@@ -356,7 +356,7 @@ function EmptyCart() {
 
 export function CartSkeleton() {
   return (
-    <div className="wrap pt-8 pb-24">
+    <div className="wrap pt-8 pb-24 m:pt-4 m:pb-14">
       <LoadingRegion label="Loading your cart">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="mt-2 h-5 w-40" />

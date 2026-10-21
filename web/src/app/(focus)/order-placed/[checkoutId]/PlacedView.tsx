@@ -59,7 +59,7 @@ export function PlacedSkeleton() {
             <Skeleton className="mt-2 h-5 w-[520px] max-w-full" />
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:grid-cols-1">
+        <div className="mt-8 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:mt-4 m:grid-cols-1 m:gap-3">
           <Skeleton className="h-[300px] w-full" rounded={20} />
           <Skeleton className="h-[360px] w-full" rounded={20} />
         </div>
@@ -103,7 +103,7 @@ function NotFound() {
   return (
     <Shell>
       <section className={`${card} mx-auto flex max-w-[560px] flex-col items-center gap-3 px-8 py-12 text-center m:px-5`}>
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold">We couldn&apos;t find this order</h1>
+        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">We couldn&apos;t find this order</h1>
         <p className="p">
           It may have been placed on another device or account. Find it with your order number and phone number.
         </p>
@@ -177,7 +177,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
           </div>
         </section>
         {billReady ? (
-          <section className="mt-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:px-4">
+          <section className="mt-6 flex flex-wrap items-center gap-4 rounded-[20px] bg-pend-bg px-6 py-5 m:gap-3 m:rounded-[18px] m:px-4 m:py-3.5">
             <Receipt aria-hidden className="size-6 flex-none text-pend" strokeWidth={1.75} />
             <div className="min-w-[220px] flex-1">
               <div className="text-[15px] font-semibold text-ink">Your bill is ready: {naira(summary.totalKobo)}</div>
@@ -191,10 +191,10 @@ function Placed({ summary }: { summary: PlacedSummary }) {
           </section>
         ) : null}
 
-        <div className="mt-8 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:grid-cols-1">
+        <div className="mt-8 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:mt-4 m:grid-cols-1 m:gap-3">
           <div className="flex flex-col gap-5">
             <section aria-labelledby="your-orders" className={`${card} overflow-hidden`}>
-              <div className="flex items-center justify-between gap-3 px-6 py-5 shadow-[inset_0_-1px_0_#EEF0EB] m:px-4">
+              <div className="flex items-center justify-between gap-3 px-6 py-5 shadow-[inset_0_-1px_0_#EEF0EB] m:px-4 m:py-3.5">
                 <h2 id="your-orders" className="h3 text-lg leading-[26px]">
                   Your orders
                 </h2>
@@ -211,7 +211,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
                 {orders.map((o) => {
                   const badge = statusBadge({ stage: stageOf(o.status), fulfilment: o.fulfilment });
                   return (
-                    <li key={o._id} className="flex items-center gap-3.5 px-6 py-[18px] [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:flex-wrap m:px-4">
+                    <li key={o._id} className="flex items-center gap-3.5 px-6 py-[18px] [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:flex-wrap m:gap-3 m:px-4 m:py-3.5">
                       <span
                         aria-hidden
                         className="flex size-11 flex-none items-center justify-center rounded-full font-display text-sm font-bold text-forest"
@@ -233,7 +233,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
                   );
                 })}
               </ul>
-              <div className="sm flex gap-2.5 bg-[#FAFBF8] px-6 py-4 shadow-[inset_0_1px_0_#EEF0EB] m:px-4">
+              <div className="sm flex gap-2.5 bg-[#FAFBF8] px-6 py-4 shadow-[inset_0_1px_0_#EEF0EB] m:px-4 m:py-3">
                 <Info aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={1.75} />
                 {delivery
                   ? orders.length > 1

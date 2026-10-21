@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function FarmPage(props: Props) {
   return (
-    <div className="wrap type-compact pt-7">
+    <div className="wrap type-compact pt-7 m:pt-3">
       <Suspense fallback={<FarmSkeleton />}>
         <FarmContent {...props} />
       </Suspense>
@@ -83,21 +83,21 @@ async function FarmContent({ params }: Props) {
         ]}
       />
 
-      <section className="card mt-5 overflow-hidden">
-        <div className="relative h-[150px] bg-forest">
+      <section className="card mt-5 overflow-hidden m:mt-3">
+        <div className="relative h-[150px] bg-forest m:h-[84px]">
           <div className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(169,214,84,0.08)_0_2px,transparent_2px_22px)]" />
         </div>
-        <div className="relative -mt-12 flex flex-wrap items-end gap-6 px-8 pb-7 m:px-5">
+        <div className="relative -mt-12 flex flex-wrap items-end gap-6 px-8 pb-7 m:-mt-9 m:gap-3 m:px-4 m:pb-4">
           <FarmAvatar
             id={farm.id}
             name={farm.name}
             photoUrl={farm.photoUrl}
             size={112}
-            className="rounded-[28px] shadow-[0_0_0_6px_#FFFFFF]"
+            className="rounded-[28px] shadow-[0_0_0_6px_#FFFFFF] m:!size-[72px] m:!rounded-[20px] m:text-xl m:shadow-[0_0_0_4px_#FFFFFF]"
             textClass="text-[34px] font-extrabold"
           />
-          <div className="min-w-[260px] flex-1 pb-1">
-            <div className="flex flex-wrap items-center gap-2.5">
+          <div className="min-w-[260px] flex-1 pb-1 m:min-w-0 m:basis-full m:pb-0">
+            <div className="flex flex-wrap items-center gap-2.5 m:gap-2">
               <h1 className="h1">{farm.name}</h1>
               {farm.verified ? (
                 <span className="badge b-fresh">
@@ -134,12 +134,12 @@ async function FarmContent({ params }: Props) {
         </dl>
       </section>
 
-      <section className="mt-7 grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] items-start gap-6 m:grid-cols-1">
+      <section className="mt-7 grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] items-start gap-6 m:mt-4 m:grid-cols-1 m:gap-4">
         <div>
           <h2 className="sr-only">Products from {farm.name}</h2>
           {farm.onBreak ? (
-            <div className="card flex gap-3.5 p-6">
-              <span className="tile size-[42px] rounded-xl bg-pend-bg text-pend">
+            <div className="card flex gap-3.5 p-6 m:gap-3 m:p-4">
+              <span className="tile size-[42px] rounded-xl bg-pend-bg text-pend m:size-[38px]">
                 <Coffee aria-hidden className="size-[22px]" strokeWidth={1.75} />
               </span>
               <div>
@@ -160,10 +160,10 @@ async function FarmContent({ params }: Props) {
           )}
         </div>
 
-        <aside className="flex flex-col gap-5">
-          <div className="card p-6">
+        <aside className="flex flex-col gap-5 m:gap-3">
+          <div className="card p-6 m:p-4">
             <h2 className="h2">About the farm</h2>
-            <p className="p mt-2.5 text-sm leading-[22px]">
+            <p className="p mt-2.5 text-sm leading-[22px] m:mt-1.5 m:text-[13px] m:leading-5">
               {farm.description ||
                 `${farm.name} is a verified farm in ${farm.lga}, ${farm.state}, selling on Farmkeke.`}
             </p>
@@ -178,8 +178,8 @@ async function FarmContent({ params }: Props) {
             ) : null}
           </div>
           {farm.verified ? (
-            <div className="card flex gap-3.5 p-6">
-              <span className="tile size-[42px] rounded-xl">
+            <div className="card flex gap-3.5 p-6 m:gap-3 m:p-4">
+              <span className="tile size-[42px] rounded-xl m:size-[38px]">
                 <ShieldCheck aria-hidden className="size-[22px]" strokeWidth={1.75} />
               </span>
               <div>
@@ -190,7 +190,7 @@ async function FarmContent({ params }: Props) {
               </div>
             </div>
           ) : null}
-          <div className="card p-6">
+          <div className="card p-6 m:p-4">
             <div className="flex items-center justify-between">
               <h2 className="h2">Reviews</h2>
               {reviews.page.page.length ? (
@@ -226,7 +226,7 @@ async function FarmContent({ params }: Props) {
       </section>
 
       {reviews.page.page.length ? (
-        <section id="reviews" className="card mt-6 scroll-mt-6 p-7 m:p-5" aria-labelledby="all-reviews">
+        <section id="reviews" className="card mt-6 scroll-mt-6 p-7 m:mt-3 m:p-4" aria-labelledby="all-reviews">
           <h2 id="all-reviews" className="h2">
             What shoppers say
           </h2>
@@ -243,9 +243,9 @@ async function FarmContent({ params }: Props) {
 
 function Stat({ label, children, first }: { label: string; children: React.ReactNode; first?: boolean }) {
   return (
-    <div className={`px-6 py-[18px] m:px-5 ${first ? "" : "d:shadow-[inset_1px_0_0_var(--color-line-soft)]"}`}>
+    <div className={`px-6 py-[18px] m:px-4 m:py-3 ${first ? "" : "d:shadow-[inset_1px_0_0_var(--color-line-soft)]"}`}>
       <dt className="cap">{label}</dt>
-      <dd className="m-0 mt-0.5 text-base font-bold">{children}</dd>
+      <dd className="m-0 mt-0.5 text-base font-bold m:text-sm">{children}</dd>
     </div>
   );
 }

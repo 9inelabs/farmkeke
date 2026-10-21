@@ -87,7 +87,7 @@ function Delete() {
     return (
       <div className="flex max-w-[720px] flex-col gap-5">
         <AccountTitle title="Delete your account" />
-        <section role="status" className="card p-6 m:px-4">
+        <section role="status" className="card p-6 m:p-4">
           <h2 className="m-0 text-base font-bold">We&apos;ll delete your account once your orders are done</h2>
           <p className="p mt-2">
             You have {plural(waiting, "order")} in progress. As soon as {waiting === 1 ? "it's" : "they're"} completed, we&apos;ll
@@ -108,7 +108,7 @@ function Delete() {
       </Link>
       <AccountTitle title="Delete your account" sub="This permanently removes your Farmkeke account on the website and in the app." />
 
-      <section aria-labelledby="what-title" className="card p-6 m:px-4">
+      <section aria-labelledby="what-title" className="card p-6 m:p-4">
         <div className="flex items-center gap-3">
           <span aria-hidden className="flex size-[42px] flex-none items-center justify-center rounded-xl bg-err-bg text-err">
             <TriangleAlert className="size-5" strokeWidth={1.75} />
@@ -143,7 +143,7 @@ function Delete() {
         )}
       </section>
 
-      <section aria-label="Confirm deletion" className="card p-6 m:px-4">
+      <section aria-label="Confirm deletion" className="card p-6 m:p-4">
         <form noValidate onSubmit={submit} className="flex flex-col gap-4">
           <SelectField
             label="Why are you leaving?"

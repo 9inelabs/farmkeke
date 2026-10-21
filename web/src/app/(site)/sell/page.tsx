@@ -88,12 +88,12 @@ const QUESTIONS: Array<[string, string]> = [
 export default function SellPage() {
   return (
     <>
-      <section className="wrap-site pt-7">
+      <section className="wrap-site pt-7 m:pt-4">
         <FadeUp>
           <div
             className={`${S.panel} on-dark grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-center gap-12 bg-forest m:grid-cols-1`}
           >
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5 m:gap-3.5">
               <Eyebrow icon={Sprout} dark className="self-start">
                 For farmers
               </Eyebrow>
@@ -102,26 +102,26 @@ export default function SellPage() {
                 Set your own prices, get orders from households near you, and know the buyer has already paid before you
                 pack a single item.
               </p>
-              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0 m:gap-2.5">
                 {[
                   "No listing fees. You only pay when you sell",
                   "Buyer's money is secured before you deliver",
                   "Farmkeke riders collect from your farm",
                 ].map((t) => (
-                  <li key={t} className="flex items-center gap-3 text-[15px] text-white">
-                    <OkDot />
+                  <li key={t} className="flex items-center gap-3 text-[15px] text-white m:gap-2.5 m:text-sm m:leading-5">
+                    <OkDot size={20} />
                     {t}
                   </li>
                 ))}
               </ul>
-              <div className="mt-2 flex flex-wrap gap-3">
-                <Link href={routes.getTheApp} className="btn lime h-12 px-[22px] text-[15px]">
+              <div className="mt-2 flex flex-wrap gap-3 m:mt-1 m:flex-col m:gap-2.5">
+                <Link href={routes.getTheApp} className="btn lime h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
                   <Smartphone aria-hidden size={18} strokeWidth={2} />
                   Download the app to apply
                 </Link>
                 <Link
                   href="#requirements"
-                  className="btn h-12 bg-white/10 px-[22px] text-[15px] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] hover:bg-white/15 hover:text-white"
+                  className="btn h-12 bg-white/10 px-[22px] text-[15px] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] hover:bg-white/15 hover:text-white m:h-11 m:text-sm"
                 >
                   <ClipboardCheck aria-hidden size={18} strokeWidth={2} />
                   See what you need
@@ -180,10 +180,13 @@ export default function SellPage() {
             <h2 className={S.h2}>Grow your sales without the middlemen</h2>
             <p className={lead}>Farmkeke handles payments, delivery and customer support, so you can focus on growing.</p>
           </div>
-          <div className="grid grid-cols-4 gap-5 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1">
+          <div className="grid grid-cols-4 gap-5 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1 m:gap-2.5">
             {WHY.map(([Icon, title, body]) => (
-              <div key={title} className={`${S.card} flex flex-col gap-3.5 p-7`}>
-                <Tile icon={Icon} />
+              <div
+                key={title}
+                className={`${S.card} flex flex-col gap-3.5 p-7 m:grid m:grid-cols-[auto_minmax(0,1fr)] m:gap-x-3.5 m:gap-y-1 m:p-4`}
+              >
+                <Tile icon={Icon} className="m:row-span-2" />
                 <h3 className={S.h3}>{title}</h3>
                 <p className={para}>{body}</p>
               </div>
@@ -193,53 +196,53 @@ export default function SellPage() {
       </section>
 
       <section className={S.sec}>
-        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-8 m:grid-cols-1">
-          <div className={`${S.card} p-10 m:px-5 m:py-7`}>
+        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-8 m:grid-cols-1 m:gap-3">
+          <div className={`${S.card} p-10 m:p-4`}>
             <Eyebrow icon={Package}>How selling works</Eyebrow>
-            <h2 className="mt-4 font-display text-[28px] leading-9 font-bold tracking-[-0.02em]">
+            <h2 className="mt-4 font-display text-[28px] leading-9 font-bold tracking-[-0.02em] m:mt-3 m:text-xl m:leading-[27px]">
               From new order to money in your bank
             </h2>
-            <ol className="m-0 mt-7 list-none p-0">
+            <ol className="m-0 mt-7 list-none p-0 m:mt-4">
               {FLOW.map(([title, body], i) => (
-                <li key={title} className="relative flex gap-[18px] pb-[26px]">
+                <li key={title} className="relative flex gap-[18px] pb-[26px] m:gap-3 m:pb-4 m:last:pb-0">
                   {i < FLOW.length - 1 ? (
-                    <span aria-hidden className="absolute top-11 -bottom-1.5 left-[19px] w-0.5 bg-[#DDE3D5]" />
+                    <span aria-hidden className="absolute top-11 -bottom-1.5 left-[19px] w-0.5 bg-[#DDE3D5] m:top-9 m:-bottom-0.5 m:left-[15px]" />
                   ) : null}
                   <span className={`${num} ${i === FLOW.length - 1 ? "!bg-lime !text-ink" : ""}`}>{i + 1}</span>
-                  <div className="pt-1.5">
-                    <div className="text-base font-semibold">{title}</div>
-                    <p className="m-0 mt-1 text-sm leading-6 text-muted">{body}</p>
+                  <div className="pt-1.5 m:pt-1">
+                    <div className="text-base font-semibold m:text-[15px] m:leading-5">{title}</div>
+                    <p className="m-0 mt-1 text-sm leading-6 text-muted m:mt-0.5 m:text-[13px] m:leading-5">{body}</p>
                   </div>
                 </li>
               ))}
             </ol>
           </div>
-          <div className="flex flex-col gap-6">
-            <div id="requirements" className={`${S.card} scroll-mt-6 p-8 m:px-5 m:py-7`}>
+          <div className="flex flex-col gap-6 m:gap-3">
+            <div id="requirements" className={`${S.card} scroll-mt-6 p-8 m:p-4`}>
               <h3 className={S.h3}>What you&apos;ll need to apply</h3>
-              <p className="m-0 mt-1.5 text-sm leading-6 text-muted">
+              <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">
                 Take clear photos with your phone. Our team checks every application.
               </p>
               <ul className="m-0 mt-2 list-none p-0">
                 {NEEDS.map(([Icon, title, body], i) => (
                   <li
                     key={title}
-                    className={`flex items-start gap-3.5 py-4 ${i ? "shadow-[inset_0_1px_0_var(--color-line-soft)]" : ""}`}
+                    className={`flex items-start gap-3.5 py-4 m:gap-3 m:py-3 ${i ? "shadow-[inset_0_1px_0_var(--color-line-soft)]" : ""}`}
                   >
                     <Tile icon={Icon} size={40} iconSize={20} />
                     <div>
-                      <div className="text-[15px] font-semibold">{title}</div>
-                      <div className="mt-0.5 text-sm leading-6 text-muted">{body}</div>
+                      <div className="text-[15px] font-semibold m:text-sm m:leading-5">{title}</div>
+                      <div className="mt-0.5 text-sm leading-6 text-muted m:text-[13px] m:leading-[19px]">{body}</div>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className={`${S.card} flex items-start gap-4 p-7`}>
+            <div className={`${S.card} flex items-start gap-4 p-7 m:gap-3 m:p-4`}>
               <Tile icon={Wallet} />
               <div>
-                <h3 className={`${h3b} text-[17px] leading-[25px]`}>Simple, fair pricing</h3>
-                <p className="m-0 mt-1.5 text-sm leading-6 text-muted">
+                <h3 className={`${h3b} text-[17px] leading-[25px] m:text-[15px] m:leading-[21px]`}>Simple, fair pricing</h3>
+                <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">
                   Joining and listing are free. Farmkeke takes a small commission only on completed sales. You&apos;ll see
                   the exact rate before you submit your application.
                 </p>
@@ -252,43 +255,46 @@ export default function SellPage() {
       <section id="apply" className={`${S.sec} scroll-mt-0`}>
         <FadeUp className="wrap-site">
           <div className={`${surface} ${S.panel}`}>
-            <div className={`${S.sechead} !mb-9`}>
+            <div className={`${S.sechead} !mb-9 m:!mb-5`}>
               <Eyebrow icon={Smartphone}>How to apply</Eyebrow>
               <h2 className={S.h2}>Apply in the Farmkeke app</h2>
               <p className={lead}>
                 It takes about 10 minutes. We&apos;ll review your application and let you know by SMS and email.
               </p>
             </div>
-            <ol className="m-0 grid list-none grid-cols-4 gap-5 p-0 text-center min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1">
+            <ol className="m-0 grid list-none grid-cols-4 gap-5 p-0 text-center min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1 m:gap-3.5 m:text-left">
               {APPLY.map(([title, body], i) => (
-                <li key={title} className="flex flex-col items-center gap-3">
-                  <span className={`${num} ${i === 3 ? "!bg-lime !text-ink" : ""}`}>{i + 1}</span>
-                  <div className="text-base font-semibold">{title}</div>
-                  <p className="m-0 text-sm leading-6 text-muted">{body}</p>
+                <li
+                  key={title}
+                  className="flex flex-col items-center gap-3 m:grid m:grid-cols-[auto_minmax(0,1fr)] m:items-start m:gap-x-3 m:gap-y-0.5"
+                >
+                  <span className={`${num} m:row-span-2 ${i === 3 ? "!bg-lime !text-ink" : ""}`}>{i + 1}</span>
+                  <div className="text-base font-semibold m:mt-1 m:text-[15px] m:leading-5">{title}</div>
+                  <p className="m-0 text-sm leading-6 text-muted m:text-[13px] m:leading-5">{body}</p>
                 </li>
               ))}
             </ol>
-            <StoreButtons className="mt-10 justify-center" />
+            <StoreButtons className="mt-10 justify-center m:mt-5" />
           </div>
         </FadeUp>
       </section>
 
       <section className={S.sec}>
-        <FadeUp className="wrap-site grid grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-14 m:grid-cols-1 m:gap-8">
-          <div className="flex flex-col items-start gap-3.5">
+        <FadeUp className="wrap-site grid grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-14 m:grid-cols-1 m:gap-5">
+          <div className="flex flex-col items-start gap-3.5 m:gap-2.5">
             <Eyebrow icon={CircleHelp}>Farmer questions</Eyebrow>
             <h2 className={S.h2}>Before you apply</h2>
             <p className={para}>Still unsure? Talk to our farmer support team.</p>
-            <Link href={routes.contact} className="btn ghost mt-1.5 h-12 px-[22px] text-[15px]">
+            <Link href={routes.contact} className="btn ghost mt-1.5 h-12 px-[22px] text-[15px] m:mt-0.5 m:h-11 m:text-sm">
               <MessageCircle aria-hidden size={18} strokeWidth={2} />
               Contact farmer support
             </Link>
           </div>
-          <div className={`${S.card} px-8 py-1 m:px-5`}>
+          <div className={`${S.card} px-8 py-1 m:px-4`}>
             {QUESTIONS.map(([q, a], i) => (
-              <div key={q} className={`py-[22px] ${i < QUESTIONS.length - 1 ? "shadow-[inset_0_-1px_0_var(--color-line-soft)]" : ""}`}>
-                <h3 className={`${h3b} text-base leading-[25px]`}>{q}</h3>
-                <p className={`${para} mt-1.5`}>{a}</p>
+              <div key={q} className={`py-[22px] m:py-3.5 ${i < QUESTIONS.length - 1 ? "shadow-[inset_0_-1px_0_var(--color-line-soft)]" : ""}`}>
+                <h3 className={`${h3b} text-base leading-[25px] m:text-[15px] m:leading-[21px]`}>{q}</h3>
+                <p className={`${para} mt-1.5 m:mt-1 m:text-[13px] m:leading-5`}>{a}</p>
               </div>
             ))}
           </div>

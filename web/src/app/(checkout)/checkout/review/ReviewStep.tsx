@@ -174,7 +174,7 @@ function Review() {
       step={4}
       pickup={fulfilment === "pickup"}
       aside={
-        <aside aria-labelledby="pay-summary" className={`${checkoutCard} p-6`}>
+        <aside aria-labelledby="pay-summary" className={`${checkoutCard} p-6 m:p-4`}>
           <h2 id="pay-summary" className="h3 text-lg leading-[26px]">
             {delivery ? "Order summary" : "Payment summary"}
           </h2>
@@ -199,7 +199,7 @@ function Review() {
           </div>
           <div className="mt-2 flex items-baseline justify-between pt-3.5 shadow-[inset_0_1px_0_#EEF0EB]">
             <span className="font-semibold">{delivery ? "Products total" : "Total to pay"}</span>
-            <span className="font-display text-[26px] font-extrabold text-forest">{total !== undefined ? naira(total) : "…"}</span>
+            <span className="font-display text-[26px] font-extrabold text-forest m:text-[22px]">{total !== undefined ? naira(total) : "…"}</span>
           </div>
           {delivery ? (
             <p className="cap mt-2">
@@ -211,7 +211,7 @@ function Review() {
             variant="lime"
             size="lg"
             fullWidth
-            className="mt-5 min-h-[54px]"
+            className="mt-5 min-h-[54px] m:mt-4 m:min-h-12"
             icon={
               delivery ? (
                 <Send aria-hidden className="size-[18px]" strokeWidth={2} />
@@ -250,9 +250,9 @@ function Review() {
         </aside>
       }
     >
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 m:gap-3">
         <section className={checkoutCard}>
-          <div className="px-6 pt-7 pb-2 m:px-4">
+          <div className="px-6 pt-7 pb-2 m:px-4 m:pt-4">
             <h1 className={checkoutH1}>Check your order</h1>
             <p className="p mt-1">{delivery ? "Make sure everything is right before you place it." : "Make sure everything is right before you pay."}</p>
           </div>
@@ -325,17 +325,17 @@ function Review() {
           })}
         </section>
 
-        <section aria-labelledby="escrow-title" className={`${checkoutCard} p-6`}>
+        <section aria-labelledby="escrow-title" className={`${checkoutCard} p-6 m:p-4`}>
           <h2 id="escrow-title" className="h3 text-lg leading-[26px]">
             How your money is protected
           </h2>
-          <ol className="m-0 mt-3.5 grid list-none grid-cols-3 gap-3 p-0 m:grid-cols-1">
+          <ol className="m-0 mt-3.5 grid list-none grid-cols-3 gap-3 p-0 m:mt-2.5 m:grid-cols-1 m:gap-2">
             {(delivery ? ESCROW_DELIVERY : ESCROW).map((s, i) => (
-              <li key={s.title} className="rounded-[14px] bg-soft p-3.5">
-                <div className="font-display text-lg font-extrabold text-lime" aria-hidden>
+              <li key={s.title} className="rounded-[14px] bg-soft p-3.5 m:grid m:grid-cols-[22px_minmax(0,1fr)] m:gap-x-2 m:rounded-xl m:p-3">
+                <div className="font-display text-lg font-extrabold text-lime m:row-span-2 m:text-base m:leading-[18px]" aria-hidden>
                   {i + 1}
                 </div>
-                <div className="mt-1 text-sm font-semibold">{s.title}</div>
+                <div className="mt-1 text-sm font-semibold m:mt-0 m:text-[13px] m:leading-[18px]">{s.title}</div>
                 <div className="cap mt-0.5">{s.body}</div>
               </li>
             ))}
@@ -367,13 +367,13 @@ function Block({
   editLabel: string;
 }) {
   return (
-    <div className="flex items-start gap-3.5 px-6 py-5 [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:px-4">
-      <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-xl bg-tint text-forest">
+    <div className="flex items-start gap-3.5 px-6 py-5 [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:gap-3 m:px-4 m:py-3.5">
+      <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-xl bg-tint text-forest m:size-9 m:[&>svg]:size-[18px]">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
         <div className="cap">{label}</div>
-        <div className="mt-0.5 text-[15px] font-semibold">{title}</div>
+        <div className="mt-0.5 text-[15px] font-semibold m:text-sm">{title}</div>
         {detail ? <div className="sm">{detail}</div> : null}
       </div>
       <Link href={edit} className="-mt-3 inline-flex min-h-11 items-center text-[13px] font-semibold">

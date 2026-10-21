@@ -52,7 +52,7 @@ function CantReport({ orderId, why }: { orderId: string; why: "other-device" | "
   return (
     <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">
       <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold">Report a problem</h1>
+        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">Report a problem</h1>
         <p className="p">{text}</p>
         <div className="mt-2 flex flex-wrap justify-center gap-2.5">
           {why === "reported" ? (
@@ -169,7 +169,7 @@ function Form({ order: o }: { order: OrderDetail }) {
           {o.deliveredAt ? ` · ${o.fulfilment === "pickup" ? "Collected" : "Delivered"} ${dayLabel(o.deliveredAt)}` : ""}
         </p>
       </div>
-      <form noValidate onSubmit={submit} className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1">
+      <form noValidate onSubmit={submit} className="grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-6 m:grid-cols-1 m:gap-3">
         <div className="card">
           <Question n={1} title="What went wrong?" id="q-reason">
             <div role="radiogroup" aria-labelledby="q-reason" onKeyDown={onKey} className="mt-3.5 grid grid-cols-2 gap-2.5 m:grid-cols-1">
@@ -372,7 +372,7 @@ function Form({ order: o }: { order: OrderDetail }) {
 
 function Question({ n, title, id, children }: { n: number; title: string; id: string; children: React.ReactNode }) {
   return (
-    <fieldset className="m-0 min-w-0 border-0 p-6 [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:px-4">
+    <fieldset className="m-0 min-w-0 border-0 p-6 [&+&]:shadow-[inset_0_1px_0_#EEF0EB] m:p-4">
       <legend className="contents">
         <span className="flex items-center gap-2.5">
           <span aria-hidden className="flex size-[26px] flex-none items-center justify-center rounded-full bg-forest text-xs font-bold text-white">

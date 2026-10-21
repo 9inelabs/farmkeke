@@ -143,11 +143,11 @@ function DeliveryDetails() {
 
   return (
     <CheckoutShell step={3} aside={<FarmsSummary lines={lines} quote={quote} fulfilment="delivery" />}>
-      <div className="flex flex-col gap-5">
-        <section className={`${checkoutCard} p-8 m:p-5`}>
+      <div className="flex flex-col gap-5 m:gap-3">
+        <section className={`${checkoutCard} p-8 m:p-4`}>
           <h1 className={checkoutH1}>Where should we deliver?</h1>
           <p className="p mt-1.5">Add clear directions so our rider finds you first time.</p>
-          <form id="address-form" noValidate onSubmit={submit} className="mt-6 flex flex-col gap-[18px]">
+          <form id="address-form" noValidate onSubmit={submit} className="mt-6 flex flex-col gap-[18px] m:mt-4 m:gap-3.5">
             <TextField
               ref={streetRef}
               label="Street address"
@@ -194,7 +194,7 @@ function DeliveryDetails() {
                   role="group"
                   aria-labelledby="pin-label"
                   aria-describedby={pinNote ? "pin-note" : undefined}
-                  className="relative isolate h-[180px] overflow-hidden rounded-[14px] bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6]"
+                  className="relative isolate h-[180px] overflow-hidden rounded-[14px] bg-[#EEF2E8] shadow-[inset_0_0_0_1px_#DCE0D6] m:h-[150px]"
                 >
                   <PinMap
                     at={pinAt}
@@ -228,7 +228,7 @@ function DeliveryDetails() {
           </form>
         </section>
 
-        <section aria-labelledby="bill-title" className={`${checkoutCard} p-8 m:p-5`}>
+        <section aria-labelledby="bill-title" className={`${checkoutCard} p-8 m:p-4`}>
           <h2 id="bill-title" className="h3 text-lg leading-[26px]">
             How you&apos;ll pay
           </h2>
@@ -236,17 +236,17 @@ function DeliveryDetails() {
             Nothing to pay now. Products come to <strong className="text-ink">{naira(quote?.itemsTotalKobo ?? 0)}</strong>; delivery is
             priced for your address once a rider is arranged.
           </p>
-          <ol className="m-0 mt-[18px] grid list-none grid-cols-3 gap-3 p-0 m:grid-cols-1">
+          <ol className="m-0 mt-[18px] grid list-none grid-cols-3 gap-3 p-0 m:mt-3 m:grid-cols-1 m:gap-2">
             {BILL_STEPS.map(({ icon: Icon, title, body }) => (
-              <li key={title} className="rounded-[14px] bg-soft p-3.5">
-                <Icon aria-hidden className="size-5 text-forest" strokeWidth={1.75} />
-                <div className="mt-1.5 text-sm font-semibold">{title}</div>
+              <li key={title} className="rounded-[14px] bg-soft p-3.5 m:grid m:grid-cols-[auto_minmax(0,1fr)] m:gap-x-3 m:rounded-xl m:p-3">
+                <Icon aria-hidden className="size-5 text-forest m:row-span-2 m:mt-px m:size-[18px]" strokeWidth={1.75} />
+                <div className="mt-1.5 text-sm font-semibold m:mt-0 m:text-[13px] m:leading-[18px]">{title}</div>
                 <div className="cap mt-0.5">{body}</div>
               </li>
             ))}
           </ol>
           {needsEmail ? (
-            <div className="mt-[18px]">
+            <div className="mt-[18px] m:mt-3">
               <TextField
                 ref={emailRef}
                 form="address-form"
@@ -265,7 +265,7 @@ function DeliveryDetails() {
             </div>
           ) : null}
           <StepActions back={routes.checkoutDelivery}>
-            <Button type="submit" form="address-form" variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0">
+            <Button type="submit" form="address-form" variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]">
               Continue to review
             </Button>
           </StepActions>
@@ -286,19 +286,19 @@ function PickupDetails() {
 
   return (
     <CheckoutShell step={3} pickup aside={<FarmsSummary lines={lines} quote={quote} fulfilment="pickup" />}>
-      <section className={`${checkoutCard} p-8 m:p-5`}>
+      <section className={`${checkoutCard} p-8 m:p-4`}>
         <h1 className={checkoutH1}>Collect from the {farms.length > 1 ? "farms" : "farm"}</h1>
         <p className="p mt-1.5">
           You pay now. When {farms.length > 1 ? "each order is" : "your order is"} ready, we send the farm&apos;s address and your
           4-digit pickup code. Show the code at the farm. You have 3 days to collect.
         </p>
-        <ul className="m-0 mt-[22px] flex list-none flex-col gap-2.5 p-0">
+        <ul className="m-0 mt-[22px] flex list-none flex-col gap-2.5 p-0 m:mt-4 m:gap-2">
           {farms.map((g) => {
             const f = quoted.get(g.farmId);
             const hours = f?.collectionHours ? hoursSummary(f.collectionHours) : undefined;
             return (
-              <li key={g.farmId} className="flex items-start gap-3.5 rounded-2xl bg-surface p-4 shadow-[inset_0_0_0_1px_#DCE0D6]">
-                <span aria-hidden className="tile size-10 flex-none rounded-xl">
+              <li key={g.farmId} className="flex items-start gap-3.5 rounded-2xl bg-surface p-4 shadow-[inset_0_0_0_1px_#DCE0D6] m:gap-3 m:rounded-[14px] m:p-3">
+                <span aria-hidden className="tile size-10 flex-none rounded-xl m:size-9">
                   <MapPin className="size-5" strokeWidth={1.75} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -315,7 +315,7 @@ function PickupDetails() {
           })}
         </ul>
         <StepActions back={routes.checkoutDelivery}>
-          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0" onClick={() => router.push(routes.checkoutReview)}>
+          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]" onClick={() => router.push(routes.checkoutReview)}>
             Continue to review
           </Button>
         </StepActions>

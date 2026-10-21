@@ -24,7 +24,7 @@ export function ReleasedView({ orderId }: { orderId: string }) {
       <span aria-hidden className="inline-flex size-[76px] items-center justify-center rounded-full bg-lime text-forest">
         <Check className="size-9" strokeWidth={2.5} />
       </span>
-      <h1 className="m-0 mt-[22px] font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em]">Thanks for confirming</h1>
+      <h1 className="m-0 mt-[22px] font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-2xl m:leading-[30px]">Thanks for confirming</h1>
       <p className="p mt-2">
         {released
           ? `${naira(o.totalKobo)} has been released to ${o.farmName} for order ${o.number}.`

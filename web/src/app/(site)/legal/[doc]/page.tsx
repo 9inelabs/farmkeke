@@ -13,10 +13,10 @@ type Section = { id: string; title: string; body: ReactNode };
 type Doc = { title: string; nav: string; icon: LucideIcon; description: string; draft: boolean; short: ReactNode; sections: Section[] };
 
 const P = ({ children }: { children: ReactNode }) => (
-  <p className="m-0 mt-2.5 text-[15px] leading-[26px] text-ink-3">{children}</p>
+  <p className="m-0 mt-2.5 text-[15px] leading-[26px] text-ink-3 m:mt-2 m:text-sm m:leading-[22px]">{children}</p>
 );
 const UL = ({ items }: { items: ReactNode[] }) => (
-  <ul className="m-0 mt-2.5 list-disc pl-5 text-[15px] leading-[26px] text-ink-3">
+  <ul className="m-0 mt-2.5 list-disc pl-5 text-[15px] leading-[26px] text-ink-3 m:mt-2 m:text-sm m:leading-[22px]">
     {items.map((it, i) => (
       <li key={i}>{it}</li>
     ))}
@@ -234,7 +234,7 @@ export default async function LegalPage({ params }: Props) {
   const d = DOCS[doc];
 
   return (
-    <div className="wrap-site pt-10">
+    <div className="wrap-site pt-10 m:pt-5">
       <nav aria-label="Breadcrumb" className="print:hidden">
         <ol className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0 text-[13px] text-subtle">
           <li>
@@ -255,12 +255,12 @@ export default async function LegalPage({ params }: Props) {
         </ol>
       </nav>
 
-      <div className="mt-6 grid grid-cols-[260px_minmax(0,1fr)_220px] items-start gap-8 min-[761px]:max-[1100px]:grid-cols-[240px_minmax(0,1fr)] m:grid-cols-1 m:gap-5">
+      <div className="mt-6 grid grid-cols-[260px_minmax(0,1fr)_220px] items-start gap-8 min-[761px]:max-[1100px]:grid-cols-[240px_minmax(0,1fr)] m:mt-4 m:grid-cols-1 m:gap-3">
         <nav
           aria-label="Legal documents"
-          className="sticky top-5 rounded-[20px] bg-surface p-2.5 shadow-[inset_0_0_0_1px_var(--color-line)] m:static print:hidden"
+          className="sticky top-5 rounded-[20px] bg-surface p-2.5 shadow-[inset_0_0_0_1px_var(--color-line)] m:static m:bg-transparent m:p-0 m:shadow-none print:hidden"
         >
-          <ul className="m-0 list-none p-0">
+          <ul className="m-swipe m-0 list-none p-0 [--swipe-w:auto] m:!gap-2 m:!pb-1">
             {ORDER.map((key) => {
               const item = DOCS[key];
               const on = key === doc;
@@ -269,11 +269,13 @@ export default async function LegalPage({ params }: Props) {
                   <Link
                     href={routes.legal(key)}
                     aria-current={on ? "page" : undefined}
-                    className={`flex min-h-11 items-center gap-2.5 rounded-[10px] px-3 text-sm ${
-                      on ? "bg-tint font-semibold text-forest" : "font-medium text-ink-3 hover:bg-soft hover:text-ink"
+                    className={`flex min-h-11 items-center gap-2.5 rounded-[10px] px-3 text-sm m:min-h-9 m:gap-1.5 m:rounded-full m:text-[13px] m:whitespace-nowrap ${
+                      on
+                        ? "bg-tint font-semibold text-forest m:bg-forest m:text-white"
+                        : "font-medium text-ink-3 hover:bg-soft hover:text-ink m:bg-surface m:shadow-[inset_0_0_0_1px_var(--color-line-2)]"
                     }`}
                   >
-                    <item.icon aria-hidden size={16} strokeWidth={2} className="flex-none" />
+                    <item.icon aria-hidden size={16} strokeWidth={2} className="flex-none m:size-[14px]" />
                     {item.nav}
                   </Link>
                 </li>
@@ -283,10 +285,10 @@ export default async function LegalPage({ params }: Props) {
         </nav>
 
         <FadeUp>
-          <article className="rounded-[20px] bg-surface px-12 py-11 shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-7">
+          <article className="rounded-[20px] bg-surface px-12 py-11 shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px] m:px-4 m:py-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="font-display text-[36px] leading-[44px] font-extrabold tracking-[-0.03em] m:text-[28px] m:leading-9">
+                <h1 className="font-display text-[36px] leading-[44px] font-extrabold tracking-[-0.03em] m:text-2xl m:leading-[30px]">
                   {d.title}
                 </h1>
                 <div className="mt-2 text-[13px] leading-4 text-subtle">
@@ -297,7 +299,7 @@ export default async function LegalPage({ params }: Props) {
             </div>
 
             {d.draft ? (
-              <div className="mt-6 flex gap-3 rounded-[14px] bg-pend-bg px-5 py-[18px] text-sm leading-[22px] text-[#5E3E08]" role="note">
+              <div className="mt-6 flex gap-3 rounded-[14px] bg-pend-bg px-5 py-[18px] text-sm leading-[22px] text-[#5E3E08] m:mt-4 m:px-3.5 m:py-3 m:text-[13px] m:leading-5" role="note">
                 <TriangleAlert aria-hidden size={18} strokeWidth={2} className="mt-0.5 flex-none text-pend" />
                 <span>
                   <strong>Draft: this policy is being finalised.</strong> Below is a plain summary of what it will cover. It is
@@ -306,21 +308,21 @@ export default async function LegalPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className={`${d.draft ? "mt-3" : "mt-6"} flex gap-3 rounded-[14px] bg-[#F4F7EE] px-5 py-[18px] text-sm leading-[22px] text-[#2E3A28]`}>
+            <div className={`${d.draft ? "mt-3" : "mt-6"} flex gap-3 rounded-[14px] bg-[#F4F7EE] px-5 py-[18px] text-sm leading-[22px] text-[#2E3A28] m:px-3.5 m:py-3 m:text-[13px] m:leading-5`}>
               <Info aria-hidden size={18} strokeWidth={2} className="mt-0.5 flex-none text-forest" />
               <span>{d.short}</span>
             </div>
 
             {d.sections.map((s, i) => (
-              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-6 pt-7">
-                <h2 id={`${s.id}-h`} className="font-display text-[19px] leading-[26px] font-bold tracking-[-0.01em]">
+              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-6 pt-7 m:pt-5">
+                <h2 id={`${s.id}-h`} className="font-display text-[19px] leading-[26px] font-bold tracking-[-0.01em] m:text-base m:leading-[22px]">
                   {i + 1}. {s.title}
                 </h2>
                 {s.body}
               </section>
             ))}
 
-            <div className="mt-9 flex flex-wrap items-center justify-between gap-4 pt-6 shadow-[inset_0_1px_0_var(--color-line-soft)] print:hidden">
+            <div className="mt-9 flex flex-wrap items-center justify-between gap-4 pt-6 shadow-[inset_0_1px_0_var(--color-line-soft)] m:mt-6 m:gap-2.5 m:pt-4 print:hidden">
               <span className="text-sm leading-6 text-muted">Questions about this policy?</span>
               <Link href={routes.contact} className="btn sm dark px-4">
                 <Mail aria-hidden size={16} strokeWidth={2} />

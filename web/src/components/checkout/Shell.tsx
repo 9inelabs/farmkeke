@@ -16,9 +16,9 @@ import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 import { draft, looksLikeEmail, validPhone, type CheckoutDraft } from "./draft";
 
-export const checkoutWrap = `${NARROW_WRAP} pt-8`;
-export const checkoutH1 = "m-0 font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em]";
-export const checkoutCard = "rounded-[20px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line)]";
+export const checkoutWrap = `${NARROW_WRAP} pt-8 m:pt-4`;
+export const checkoutH1 = "m-0 font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-[22px] m:leading-7";
+export const checkoutCard = "rounded-[20px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px]";
 
 export function CheckoutShell({
   step,
@@ -36,7 +36,7 @@ export function CheckoutShell({
   return (
     <div className={checkoutWrap}>
       <CheckoutSteps current={step} labels={labels} />
-      <Reveal className="mt-7 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:grid-cols-1">
+      <Reveal className="mt-7 grid grid-cols-[minmax(0,7fr)_minmax(0,5fr)] items-start gap-7 m:mt-4 m:grid-cols-1 m:gap-3">
         {children}
         {aside}
       </Reveal>
@@ -123,7 +123,7 @@ export function ItemsSummary({ lines, quote }: { lines: CartLine[]; quote: Quote
   const groups = groupByFarm(rows);
   const items = rows.reduce((s, l) => s + l.priceKobo * l.quantity, 0);
   return (
-    <aside aria-label="Order summary" className={`${checkoutCard} p-6`}>
+    <aside aria-label="Order summary" className={`${checkoutCard} p-6 m:p-4`}>
       <SummaryHead meta={`${plural(groups.length, "farm")} · ${plural(lines.length, "item")}`} />
       <div className="mt-3.5">
         {groups.map((g, gi) => (
@@ -152,7 +152,7 @@ export function ItemsSummary({ lines, quote }: { lines: CartLine[]; quote: Quote
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">Total so far</span>
-        <span className="font-display text-[22px] font-extrabold text-forest">{naira(items)}</span>
+        <span className="font-display text-[22px] font-extrabold text-forest m:text-xl">{naira(items)}</span>
       </div>
     </aside>
   );
@@ -182,7 +182,7 @@ export function FarmsSummary({
     .filter(Boolean)
     .join(" · ");
   return (
-    <aside aria-label="Order summary" className={`${checkoutCard} p-6`}>
+    <aside aria-label="Order summary" className={`${checkoutCard} p-6 m:p-4`}>
       <SummaryHead meta={meta} />
       <div className="mt-4">
         {groups.map((g) => (
@@ -205,7 +205,7 @@ export function FarmsSummary({
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">{fulfilment === "delivery" ? "Products total" : "Total"}</span>
-        <span className="font-display text-[22px] font-extrabold text-forest">{naira(items)}</span>
+        <span className="font-display text-[22px] font-extrabold text-forest m:text-xl">{naira(items)}</span>
       </div>
       {fulfilment === "delivery" ? (
         <p className="cap mt-2.5">
@@ -219,7 +219,7 @@ export function FarmsSummary({
 /** Back link + Continue button row at the bottom of each step card. */
 export function StepActions({ back, children }: { back: string; children: ReactNode }) {
   return (
-    <div className="mt-7 flex items-center justify-between gap-4 pt-6 shadow-[inset_0_1px_0_#EEF0EB]">
+    <div className="mt-7 flex items-center justify-between gap-4 pt-6 shadow-[inset_0_1px_0_#EEF0EB] m:mt-5 m:pt-4">
       <Link href={back} className="inline-flex min-h-11 items-center text-sm font-semibold">
         Back
       </Link>

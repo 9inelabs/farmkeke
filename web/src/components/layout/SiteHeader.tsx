@@ -45,10 +45,10 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
   }, [open]);
 
   return (
-    <header className="wrap-site relative z-40 pt-5">
+    <header className="wrap-site relative z-40 pt-5 m:pt-3">
       <nav
         aria-label="Main"
-        className="flex h-[66px] items-center gap-5 rounded-[18px] bg-surface pr-3 pl-5 shadow-[inset_0_0_0_1px_var(--color-line)] m:gap-2 m:pr-2 m:pl-4"
+        className="flex h-[66px] items-center gap-5 rounded-[18px] bg-surface pr-3 pl-5 shadow-[inset_0_0_0_1px_var(--color-line)] m:h-14 m:gap-2 m:rounded-2xl m:pr-2 m:pl-3.5"
       >
         <span className="contents m:hidden">
           <HomeLogo height={24} />
@@ -75,19 +75,20 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
           </Link>
         </m.span>
         <m.span {...pressable}>
-          <Link href={routes.getTheApp} className="btn sm lime m:px-3">
+          <Link href={routes.getTheApp} className="btn sm lime m:min-h-10 m:px-3 m:text-[13px]">
             Get the app
           </Link>
         </m.span>
         <button
           type="button"
-          className="btn sm ghost hidden m:inline-flex m:px-3"
+          className="btn sm ghost hidden m:inline-flex m:min-h-10 m:px-3 m:text-[13px] max-[360px]:px-2.5"
           aria-expanded={open}
           aria-controls="site-menu"
           onClick={() => setOpen((o) => !o)}
         >
           {open ? <X aria-hidden className="size-[18px]" /> : <Menu aria-hidden className="size-[18px]" />}
-          {open ? "Close" : "Menu"}
+          {/* Icon only on the smallest phones */}
+          <span className="max-[360px]:sr-only">{open ? "Close" : "Menu"}</span>
         </button>
       </nav>
       <AnimatePresence>

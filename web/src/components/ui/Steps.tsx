@@ -34,7 +34,7 @@ export function CheckoutSteps({
               >
                 {state === "done" ? <Check aria-hidden className="size-3.5" strokeWidth={3} /> : n}
               </span>
-              <span className={state === "cur" ? "m:sr-only" : "m:hidden"}>
+              <span className={state === "cur" ? "m:text-[13px]" : "m:hidden"}>
                 {label}
                 {state === "done" ? <span className="sr-only"> (done)</span> : null}
               </span>

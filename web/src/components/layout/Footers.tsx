@@ -87,9 +87,9 @@ async function CopyrightYear() {
 
 function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
   return (
-    <div className={wide ? "wrap pt-14 pb-7" : "wrap-site pt-16 pb-8"}>
-      <div className="grid grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))] gap-8 m:grid-cols-2">
-        <div className="flex flex-col items-start gap-3 m:col-span-2">
+    <div className={wide ? "wrap pt-14 pb-7 m:pt-9 m:pb-6" : "wrap-site pt-16 pb-8 m:pt-9 m:pb-6"}>
+      <div className="grid grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))] gap-8 m:grid-cols-2 m:gap-x-5 m:gap-y-6">
+        <div className="flex flex-col items-start gap-3 m:col-span-2 m:gap-2">
           <Wordmark height={22} />
           <p className="p max-w-[280px]">From the farm directly to your home.</p>
           <a href={`mailto:${CONTACT_EMAIL}`} className="text-sm font-semibold">
@@ -97,17 +97,17 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
           </a>
         </div>
         {columns.map((col) => (
-          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5">
+          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2.5 m:gap-1.5">
             <div className="text-sm font-semibold">{col.title}</div>
             {col.links.map((l) => (
-              <Link key={l.href} href={l.href} className="py-0.5 text-sm text-muted hover:text-ink">
+              <Link key={l.href} href={l.href} className="py-0.5 text-sm text-muted hover:text-ink m:py-1 m:text-[13px]">
                 {l.label}
               </Link>
             ))}
           </nav>
         ))}
       </div>
-      <div className="mt-10 flex justify-between gap-3 pt-5 shadow-[inset_0_1px_0_var(--color-line-soft)] m:flex-col">
+      <div className="mt-10 flex justify-between gap-3 pt-5 shadow-[inset_0_1px_0_var(--color-line-soft)] m:mt-7 m:flex-col m:gap-1 m:pt-4">
         <span className="cap">
           © <CopyrightYear /> Farmkeke. All rights reserved.
         </span>
@@ -120,7 +120,7 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
 /** Footer of the landing and information pages (Main, W-60, W-80 to W-87). */
 export function SiteFooter() {
   return (
-    <footer className="mt-24 bg-surface shadow-[inset_0_1px_0_var(--color-line)]">
+    <footer className="mt-24 bg-surface shadow-[inset_0_1px_0_var(--color-line)] m:mt-14">
       <FooterBody columns={SITE_COLUMNS} wide={false} />
     </footer>
   );
@@ -129,7 +129,7 @@ export function SiteFooter() {
 /** Footer of the shop pages (W-01 to W-07, W-20). */
 export function ShopFooter() {
   return (
-    <footer className="mt-24 bg-surface shadow-[inset_0_1px_0_var(--color-line)]">
+    <footer className="mt-24 bg-surface shadow-[inset_0_1px_0_var(--color-line)] m:mt-14">
       <FooterBody columns={SHOP_COLUMNS} wide />
     </footer>
   );

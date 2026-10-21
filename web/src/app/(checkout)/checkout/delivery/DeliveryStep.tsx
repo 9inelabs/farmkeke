@@ -82,10 +82,10 @@ function Choose() {
       step={2}
       aside={<FarmsSummary lines={lines} quote={quote} fulfilment={mode} showMethod={false} />}
     >
-      <section className={`${checkoutCard} p-8 m:p-5`}>
+      <section className={`${checkoutCard} p-8 m:p-4`}>
         <h1 className={checkoutH1}>How do you want to get your order?</h1>
         <p className="p mt-1.5">{appliesTo}</p>
-        <div role="radiogroup" aria-label="Delivery or pickup" className="mt-6 flex flex-col gap-3" onKeyDown={onKey}>
+        <div role="radiogroup" aria-label="Delivery or pickup" className="mt-6 flex flex-col gap-3 m:mt-4 m:gap-2.5" onKeyDown={onKey}>
           <Option
             id="opt-delivery"
             on={mode === "delivery"}
@@ -93,7 +93,7 @@ function Choose() {
             icon={<Truck aria-hidden className="size-6" strokeWidth={1.75} />}
             title="Home delivery"
             price="Priced later"
-            body="Nothing to pay now. Once the farm accepts, we arrange a Farmkeke rider, price the delivery and send your bill by email, text and in the app. You pay then, and the rider brings your order."
+            body="Nothing to pay now. When the farm accepts, we price the delivery and send your bill by email, text and in the app. Once you pay, a Farmkeke rider brings your order."
             meta={
               deliveryBlocked.length > 0
                 ? `Not available for ${blockerText(deliveryBlocked)}`
@@ -110,13 +110,13 @@ function Choose() {
             title={
               <>
                 Pickup at the farm{" "}
-                <span className="ml-1.5 inline-flex h-[22px] items-center rounded-md bg-lime-soft px-2 align-middle text-[11px] font-bold text-forest">
+                <span className="ml-1.5 inline-flex h-[22px] items-center rounded-md bg-lime-soft px-2 align-middle text-[11px] font-bold text-forest m:ml-1 m:h-5 m:px-1.5 m:text-[10px]">
                   No fee
                 </span>
               </>
             }
             price={naira(0)}
-            body="Pay now and collect from the farm. When it's ready, we send the farm's address and your 4-digit pickup code. You have 3 days to collect."
+            body="Pay now and collect from the farm. When it's ready, we send the address and your 4-digit pickup code. You have 3 days to collect."
             meta={pickupBlocked.length > 0 ? `Not available for ${blockerText(pickupBlocked)}` : farmAreas}
           />
         </div>
@@ -131,7 +131,7 @@ function Choose() {
           </p>
         ) : null}
         <StepActions back={routes.checkout}>
-          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-w-0" onClick={proceed}>
+          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]" onClick={proceed}>
             Continue
           </Button>
         </StepActions>
@@ -167,7 +167,7 @@ function Option({
       aria-checked={on}
       tabIndex={on ? 0 : -1}
       onClick={onPick}
-      className={`flex w-full cursor-pointer items-start gap-4 rounded-2xl border-0 p-5 text-left text-ink transition-colors duration-150 m:gap-3 m:p-4 ${
+      className={`flex w-full cursor-pointer items-start gap-4 rounded-2xl border-0 p-5 text-left text-ink transition-colors duration-150 m:gap-3 m:rounded-[14px] m:p-3.5 ${
         on ? "bg-[#F7FAF1] shadow-[inset_0_0_0_2px_var(--color-forest)]" : "bg-surface shadow-[inset_0_0_0_1px_#DCE0D6]"
       }`}
     >
@@ -179,16 +179,21 @@ function Option({
       >
         {on ? <span className="size-3 rounded-full bg-forest" /> : null}
       </span>
-      <span className="tile" aria-hidden>
+      <span className="tile m:hidden" aria-hidden>
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex justify-between gap-3">
-          <span className="text-base font-bold">{title}</span>
-          <span className="font-display text-base font-extrabold">{price}</span>
+        <span className="flex justify-between gap-3 m:flex-col m:gap-0">
+          <span className="text-base font-bold m:flex m:items-center m:gap-1.5 m:text-[15px] m:leading-[21px]">
+            <span className="hidden m:inline-flex m:text-forest [&>svg]:size-4" aria-hidden>
+              {icon}
+            </span>
+            {title}
+          </span>
+          <span className="font-display text-base font-extrabold m:text-[13px] m:leading-[18px] m:text-forest">{price}</span>
         </span>
-        <span className="mt-1 block text-sm text-muted">{body}</span>
-        {meta ? <span className="mt-1.5 block text-xs text-subtle">{meta}</span> : null}
+        <span className="mt-1 block text-sm text-muted m:text-[13px] m:leading-[19px]">{body}</span>
+        {meta ? <span className="mt-1.5 block text-xs text-subtle m:mt-1 m:text-[11.5px]">{meta}</span> : null}
       </span>
     </button>
   );

@@ -329,7 +329,7 @@ function Page({ children, right, top = 170 }: { children: ReactNode; right?: Rea
 }
 
 const panel = "flex w-[540px] max-w-full flex-col items-center rounded-[24px] bg-surface px-10 py-11 text-center shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-8";
-const title = "m-0 mt-6 font-display text-[26px] leading-[34px] font-extrabold tracking-[-0.02em] m:text-[23px] m:leading-[30px]";
+const title = "m-0 mt-6 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7 tracking-[-0.02em] m:text-[23px] m:leading-[30px]";
 
 export function PaySkeleton() {
   return (

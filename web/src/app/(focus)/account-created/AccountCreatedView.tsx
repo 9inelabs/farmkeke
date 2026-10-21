@@ -88,7 +88,7 @@ function Welcome({
       <span aria-hidden className="inline-flex size-[72px] items-center justify-center rounded-full bg-lime text-forest">
         <Check className="size-[34px]" strokeWidth={2.5} />
       </span>
-      <h1 className="m-0 mt-[22px] font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em]">
+      <h1 className="m-0 mt-[22px] font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-2xl m:leading-[30px]">
         Welcome to Farmkeke{name ? `, ${name}` : ""}
       </h1>
       <p className="p mt-2">Your account is ready. You&apos;ll stay signed in on this browser.</p>

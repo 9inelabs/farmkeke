@@ -258,7 +258,7 @@ function Empty() {
         <span aria-hidden className="flex size-20 items-center justify-center rounded-3xl bg-tint text-forest">
           <Package className="size-9" strokeWidth={1.5} />
         </span>
-        <h2 className="m-0 mt-1 font-display text-2xl leading-8 font-extrabold">Your first order starts here</h2>
+        <h2 className="m-0 mt-1 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">Your first order starts here</h2>
         <p className="p max-w-[420px]">
           When you buy from a farm, you&apos;ll follow it here, from the farm accepting to the rider at your door.
         </p>

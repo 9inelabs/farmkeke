@@ -104,22 +104,22 @@ const STATUSES: Array<[string, string, string]> = [
   ["b-err", "Problem reported", "Your money stays held while Farmkeke reviews it."],
 ];
 
-const textLink = "mt-2.5 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold";
+const textLink = "mt-2.5 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold m:mt-0.5 m:min-h-10 m:text-[13px]";
 
 export default function HowItWorksPage() {
   return (
     <>
-      <section className="wrap-site pt-[72px]">
+      <section className="wrap-site pt-[72px] m:pt-9">
         <FadeUp className={`${S.sechead} !max-w-[760px]`}>
           <Eyebrow icon={ArrowRight}>How it works</Eyebrow>
           <h1 className={S.h1}>Fresh food from the farm, in four steps</h1>
           <p className={lead}>Whether you shop in the app or on the website, every Farmkeke order works the same way.</p>
-          <div className="mt-2 flex flex-wrap justify-center gap-3">
-            <Link href={routes.shop} className="btn lime h-12 px-[22px] text-[15px]">
+          <div className="mt-2 flex flex-wrap justify-center gap-3 m:mt-1 m:w-full m:flex-col m:gap-2.5">
+            <Link href={routes.shop} className="btn lime h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
               <Store aria-hidden size={18} strokeWidth={2} />
               Start shopping
             </Link>
-            <Link href={routes.escrow} className="btn ghost h-12 px-[22px] text-[15px]">
+            <Link href={routes.escrow} className="btn ghost h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
               <ShieldCheck aria-hidden size={18} strokeWidth={2} />
               How payments are protected
             </Link>
@@ -129,30 +129,30 @@ export default function HowItWorksPage() {
 
       <section className="wrap-site">
         <FadeUp>
-          <ol className="m-0 flex list-none flex-col gap-4 p-0">
+          <ol className="m-0 flex list-none flex-col gap-4 p-0 m:gap-3">
             {STEPS.map((s, i) => (
               <li
                 key={s.title}
-                className={`${S.card} grid grid-cols-[64px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-6 p-7 m:grid-cols-[48px_minmax(0,1fr)] m:gap-4 m:px-5`}
+                className={`${S.card} grid grid-cols-[64px_minmax(0,1fr)_minmax(0,1fr)] items-start gap-6 p-7 m:grid-cols-[32px_minmax(0,1fr)] m:gap-x-3 m:gap-y-3 m:p-4`}
               >
                 <span
-                  className={`flex size-12 flex-none items-center justify-center rounded-full font-display text-lg font-bold ${
+                  className={`flex size-12 flex-none items-center justify-center rounded-full font-display text-lg font-bold m:size-8 m:text-sm ${
                     i === 3 ? "bg-lime text-ink" : "bg-forest text-white"
                   }`}
                 >
                   {i + 1}
                 </span>
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <s.icon aria-hidden size={20} strokeWidth={1.75} className="text-forest" />
+                  <div className="flex items-center gap-2.5 m:min-h-8 m:gap-2">
+                    <s.icon aria-hidden size={20} strokeWidth={1.75} className="text-forest m:size-[17px]" />
                     <h2 className={S.h3}>{s.title}</h2>
                   </div>
-                  <p className="m-0 mt-2 text-[15px] leading-6 text-muted">{s.body}</p>
+                  <p className="m-0 mt-2 text-[15px] leading-6 text-muted m:mt-1 m:text-sm m:leading-[21px]">{s.body}</p>
                 </div>
-                <ul className="m-0 flex list-none flex-col gap-2.5 rounded-[14px] bg-[#F7F8F4] px-[18px] py-4 m:col-span-2">
+                <ul className="m-0 flex list-none flex-col gap-2.5 rounded-[14px] bg-[#F7F8F4] px-[18px] py-4 m:col-span-2 m:gap-2 m:rounded-xl m:px-3.5 m:py-3">
                   {s.points.map((p) => (
-                    <li key={p} className="flex items-start gap-2.5 text-sm leading-[21px] text-ink-3">
-                      <Check aria-hidden size={16} strokeWidth={2.25} className="mt-0.5 flex-none text-ok" />
+                    <li key={p} className="flex items-start gap-2.5 text-sm leading-[21px] text-ink-3 m:gap-2 m:text-[13px] m:leading-[19px]">
+                      <Check aria-hidden size={16} strokeWidth={2.25} className="mt-0.5 flex-none text-ok m:size-[14px]" />
                       {p}
                     </li>
                   ))}
@@ -170,28 +170,28 @@ export default function HowItWorksPage() {
             <h2 className={S.h2}>Delivery or pickup, your choice</h2>
             <p className={lead}>Choose at checkout. You can pick differently for each order.</p>
           </div>
-          <div className="grid grid-cols-2 gap-6 m:grid-cols-1">
+          <div className="grid grid-cols-2 gap-6 m:grid-cols-1 m:gap-3">
             {OPTIONS.map((o) => (
-              <div key={o.title} className={`${S.card} p-7 m:px-5`}>
-                <div className="flex items-center gap-3.5">
+              <div key={o.title} className={`${S.card} p-7 m:p-4`}>
+                <div className="flex items-center gap-3.5 m:gap-3">
                   <Tile icon={o.icon} />
                   <div>
                     <h3 className={S.h3}>{o.title}</h3>
                     <div className={`${cap} mt-0.5`}>{o.sub}</div>
                   </div>
                 </div>
-                <dl className="m-0 mt-3.5">
+                <dl className="m-0 mt-3.5 m:mt-2">
                   {o.rows.map(([k, v], i) => (
                     <div
                       key={k}
-                      className={`flex justify-between gap-3 py-3 text-sm ${i ? "shadow-[inset_0_1px_0_var(--color-line-soft)]" : ""}`}
+                      className={`flex justify-between gap-3 py-3 text-sm m:py-2.5 m:text-[13px] m:leading-[19px] ${i ? "shadow-[inset_0_1px_0_var(--color-line-soft)]" : ""}`}
                     >
-                      <dt className="text-muted-2">{k}</dt>
+                      <dt className="text-muted-2 m:flex-none m:whitespace-nowrap">{k}</dt>
                       <dd className="m-0 text-right font-semibold">{v}</dd>
                     </div>
                   ))}
                 </dl>
-                <Link href={o.cta[1]} className="btn sm ghost mt-4 w-full">
+                <Link href={o.cta[1]} className="btn sm ghost mt-4 w-full m:mt-2">
                   {o.cta[0]}
                 </Link>
               </div>
@@ -201,32 +201,32 @@ export default function HowItWorksPage() {
       </section>
 
       <section className={S.sec}>
-        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-8 m:grid-cols-1">
-          <div className={`${S.card} p-8 m:px-5`}>
-            <h2 className={`${h3b} text-[22px] leading-[30px]`}>What your order status means</h2>
-            <p className="m-0 mt-1.5 text-[15px] leading-6 text-muted">You&apos;ll get an SMS or email each time it changes.</p>
+        <FadeUp className="wrap-site grid grid-cols-2 items-start gap-8 m:grid-cols-1 m:gap-3">
+          <div className={`${S.card} p-8 m:p-4`}>
+            <h2 className={`${h3b} text-[22px] leading-[30px] m:text-lg m:leading-6`}>What your order status means</h2>
+            <p className="m-0 mt-1.5 text-[15px] leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">You&apos;ll get an SMS or email each time it changes.</p>
             <dl className="m-0 mt-3.5">
               {STATUSES.map(([tone, label, body], i) => (
                 <div
                   key={label}
-                  className={`grid grid-cols-[200px_minmax(0,1fr)] items-center gap-4 py-3.5 m:grid-cols-1 m:gap-2 ${
+                  className={`grid grid-cols-[200px_minmax(0,1fr)] items-center gap-4 py-3.5 m:grid-cols-1 m:gap-1.5 m:py-3 ${
                     i < STATUSES.length - 1 ? "shadow-[inset_0_-1px_0_var(--color-line-soft)]" : ""
                   }`}
                 >
                   <dt>
                     <span className={`badge ${tone}`}>{label}</span>
                   </dt>
-                  <dd className="m-0 text-sm leading-6 text-muted">{body}</dd>
+                  <dd className="m-0 text-sm leading-6 text-muted m:text-[13px] m:leading-5">{body}</dd>
                 </div>
               ))}
             </dl>
           </div>
-          <div className="flex flex-col gap-5">
-            <div className={`${S.card} flex gap-4 p-7 m:px-5`}>
+          <div className="flex flex-col gap-5 m:gap-3">
+            <div className={`${S.card} flex gap-4 p-7 m:gap-3 m:p-4`}>
               <Tile icon={User} />
               <div>
-                <h3 className={`${h3b} text-[17px] leading-[25px]`}>Shopping as a guest?</h3>
-                <p className="m-0 mt-1.5 text-sm leading-6 text-muted">
+                <h3 className={`${h3b} text-[17px] leading-[25px] m:text-[15px] m:leading-[21px]`}>Shopping as a guest?</h3>
+                <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">
                   Only the phone or browser you ordered on can confirm delivery. On another device, use Find my order to see
                   your order status.
                 </p>
@@ -236,20 +236,20 @@ export default function HowItWorksPage() {
                 </Link>
               </div>
             </div>
-            <div className={`${S.card} flex gap-4 p-7 m:px-5`}>
+            <div className={`${S.card} flex gap-4 p-7 m:gap-3 m:p-4`}>
               <Tile icon={MessageCircle} />
               <div>
-                <h3 className={`${h3b} text-[17px] leading-[25px]`}>Questions about produce?</h3>
-                <p className="m-0 mt-1.5 text-sm leading-6 text-muted">
+                <h3 className={`${h3b} text-[17px] leading-[25px] m:text-[15px] m:leading-[21px]`}>Questions about produce?</h3>
+                <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">
                   After you order, you can message the farm directly from your order page.
                 </p>
               </div>
             </div>
-            <div className={`${S.card} flex gap-4 p-7 m:px-5`}>
+            <div className={`${S.card} flex gap-4 p-7 m:gap-3 m:p-4`}>
               <Tile icon={Smartphone} />
               <div>
-                <h3 className={`${h3b} text-[17px] leading-[25px]`}>Get the app for alerts</h3>
-                <p className="m-0 mt-1.5 text-sm leading-6 text-muted">The app sends instant updates when your order moves.</p>
+                <h3 className={`${h3b} text-[17px] leading-[25px] m:text-[15px] m:leading-[21px]`}>Get the app for alerts</h3>
+                <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">The app sends instant updates when your order moves.</p>
                 <Link href={routes.getTheApp} className={textLink}>
                   Get the app
                   <ArrowRight aria-hidden size={16} strokeWidth={2} />

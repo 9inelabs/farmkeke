@@ -42,7 +42,7 @@ export function ConfirmReceiptModal({
           Did everything arrive?
         </>
       }
-      titleClassName="m-0 font-display text-2xl leading-8 font-extrabold"
+      titleClassName="m-0 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7"
       headerClassName="flex items-start justify-between gap-4 px-8 pt-8 m:px-5 m:pt-6"
       bodyClassName="px-8 pb-8 m:px-5 m:pb-6"
     >

@@ -120,11 +120,11 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
 
   if (sentTo !== null) {
     return (
-      <Reveal className="flex flex-col items-start gap-3 rounded-[20px] bg-surface p-9 shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-7">
+      <Reveal className="flex flex-col items-start gap-3 rounded-[20px] bg-surface p-9 shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px] m:p-4">
         <span className="flex size-14 items-center justify-center rounded-full bg-ok-bg text-ok">
           <CircleCheck aria-hidden size={28} strokeWidth={2} />
         </span>
-        <h2 className={`${h3b} text-[22px] leading-[30px]`} role="status">
+        <h2 className={`${h3b} text-[22px] leading-[30px] m:text-lg m:leading-6`} role="status">
           Message sent
         </h2>
         <p className="m-0 text-[15px] leading-6 text-muted">
@@ -155,16 +155,16 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
       id="message"
       noValidate
       onSubmit={onSubmit}
-      className="scroll-mt-6 rounded-[20px] bg-surface p-9 shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-7"
+      className="scroll-mt-6 rounded-[20px] bg-surface p-9 shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px] m:p-4"
     >
-      <h2 className={`${h3b} text-[22px] leading-[30px]`}>Send us a message</h2>
+      <h2 className={`${h3b} text-[22px] leading-[30px] m:text-lg m:leading-6`}>Send us a message</h2>
       {about ? (
         <p className="m-0 mt-2 text-sm text-muted">
           About: <span className="font-semibold text-ink">{about}</span>
         </p>
       ) : null}
       <p className="m-0 mt-1 text-sm leading-6 text-muted">We&apos;ll reply by email, and by SMS if it&apos;s about an order.</p>
-      <div className="mt-6 grid grid-cols-2 gap-4 m:grid-cols-1">
+      <div className="mt-6 grid grid-cols-2 gap-4 m:mt-4 m:grid-cols-1 m:gap-3">
         <TextField id="contact-name" label="Your name" autoComplete="name" value={values.name} onChange={set("name")} error={errors.name} />
         <TextField
           id="contact-phone"
@@ -187,7 +187,7 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
         onChange={set("email")}
         error={errors.email}
       />
-      <div className="mt-4 grid grid-cols-2 gap-4 m:grid-cols-1">
+      <div className="mt-4 grid grid-cols-2 gap-4 m:mt-3 m:grid-cols-1 m:gap-3">
         <SelectField label="What is it about?" value={values.topic} onChange={set("topic")}>
           {TOPICS.map(([k, label]) => (
             <option key={k} value={k}>
@@ -222,7 +222,7 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
         <span className="text-xs leading-4 text-subtle">
           By sending, you agree to our <Link href={routes.legal("privacy")}>privacy policy</Link>.
         </span>
-        <Button type="submit" loading={sending} icon={<Send aria-hidden size={18} strokeWidth={2} />} className="h-12 px-[22px]">
+        <Button type="submit" loading={sending} icon={<Send aria-hidden size={18} strokeWidth={2} />} className="h-12 px-[22px] m:h-11 m:w-full">
           Send message
         </Button>
       </div>
