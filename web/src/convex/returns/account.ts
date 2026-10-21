@@ -297,6 +297,8 @@ export type NotificationPrefs = {
     title: string;
     description: string;
     locked: boolean;
+    /** False when this alert is never sent by text (only a few are, to keep costs down) */
+    smsAvailable?: boolean;
     push: boolean;
     sms: boolean;
     email: boolean;

@@ -182,13 +182,47 @@ export function channelOn(prefs: Doc<"notificationPrefs">[], a: Alert, side: Sid
 
 /** The W-48 / F-75 list for one side. */
 export function preferenceRows(prefs: Doc<"notificationPrefs">[], side: Side) {
-  return alertsFor(side).map((a) => ({
-    alert: a.alert,
-    title: a.title,
-    description: a.description,
-    locked: a.locked === true,
-    push: channelOn(prefs, a, side, "push"),
-    sms: channelOn(prefs, a, side, "sms"),
-    email: channelOn(prefs, a, side, "email"),
-  }));
+  return alertsFor(side).map((a) => {
+    // Only alerts that contain a texting event offer an SMS switch.
+    const smsAvailable = a.kinds.some((k) => SMS_KINDS[side].has(k));
+    return {
+      alert: a.alert,
+      title: a.title,
+      description: a.description,
+      locked: a.locked === true,
+      smsAvailable,
+      push: channelOn(prefs, a, side, "push"),
+      sms: smsAvailable && smsWanted(prefs, a, side),
+      email: channelOn(prefs, a, side, "email"),
+    };
+  });
+}
+
+/**
+ * The only events that send a text message (owner's cost decision, 21 Oct 2026).
+ * Everything else goes by email, in-app notification and push. Keep this list
+ * short: every text costs money.
+ *  - shop: the delivery bill with its pay link; order ready for pickup (code)
+ *  - farm: application received and approved; new order (24h to accept);
+ *          payout bank account changed (security)
+ */
+export const SMS_KINDS: Record<Side, ReadonlySet<string>> = {
+  shop: new Set(["bill_ready", "ready_for_pickup"]),
+  farm: new Set(["application_received", "application_approved", "order_new", "payout_account_changed"]),
+};
+
+export const textsFor = (side: string, kind: string) =>
+  (side === "shop" || side === "farm") && SMS_KINDS[side].has(kind);
+
+/**
+ * Texting events go out unless the person explicitly switched SMS off for that
+ * alert (locked money/application alerts can't be switched off).
+ */
+export function smsWanted(prefs: Doc<"notificationPrefs">[], a: Alert, side: Side): boolean {
+  if (a.locked) return true;
+  const rows = prefs.filter((p) => p.side === side && p.alert === a.alert);
+  const exact = rows.find((p) => p.channel === "sms");
+  if (exact) return exact.on;
+  const whole = rows.find((p) => p.channel === undefined);
+  return whole ? whole.on : true;
 }

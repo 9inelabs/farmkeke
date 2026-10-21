@@ -6,7 +6,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "../_generated/server";
-import { alertOfKind, channelOn, type Channel } from "../lib/alerts";
+import { alertOfKind, channelOn, smsWanted, textsFor, type Channel } from "../lib/alerts";
 import { affectedItems, REASON_LABELS } from "../lib/disputes";
 import {
   applicationApprovedEmail,
@@ -67,8 +67,6 @@ import { DAY, getRules, HOUR } from "../lib/settings";
 /** Message emails: at most one per thread in this window. */
 export const MESSAGE_EMAIL_WINDOW_MS = 30 * 60_000;
 const MESSAGE_KINDS = new Set(["chat_message", "dispute_message", "support_reply"]);
-// Delivery bills reach every shopper by text as well as email and in-app
-const ALWAYS_SMS = new Set(["bill_ready", "bill_reminder"]);
 
 export const create = internalMutation({
   args: {
@@ -153,12 +151,11 @@ export const plan = internalQuery({
       data: { href: n.href, kind: n.kind, notificationId: n._id as string, side: n.side },
     }));
 
-    // Farms get push and SMS. Shoppers get push, or SMS when there's no push;
-    // guests always get SMS (Screen Inventory section 5), and bills always text.
-    const wantsSms =
-      n.smsTo !== undefined &&
-      allow("sms") &&
-      (n.side === "farm" || user.isAnonymous === true || push.length === 0 || ALWAYS_SMS.has(n.kind));
+    // Texts cost money, so only the events in lib/alerts SMS_KINDS send one
+    // (delivery bill, ready for pickup, farmer application received/approved,
+    // new farm order, payout account changed). Those always text, unless the
+    // person switched SMS off for that alert. Everything else: email, in-app, push.
+    const wantsSms = n.smsTo !== undefined && textsFor(n.side, n.kind) && smsWanted(prefs, alert, n.side);
     const sms = wantsSms
       ? { to: n.smsTo!, body: `Farmkeke: ${n.title}. ${n.body}`, userId: user._id, notificationId: n._id }
       : null;

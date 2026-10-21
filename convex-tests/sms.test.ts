@@ -89,25 +89,71 @@ test("without a key (or when paused) nothing is sent", async () => {
   expect(sent).toHaveLength(0);
 });
 
-test("a guest's order notification goes out as a real text", async () => {
-  const sent = termii();
-  const t = convexTest(schema, modules);
+/** Stores one notification with a phone number and delivers it. */
+async function deliver(t: ReturnType<typeof convexTest>, side: "shop" | "farm", kind: string, user = {}) {
   const notificationId = await t.run(async (ctx) => {
-    const userId = await ctx.db.insert("users", { isAnonymous: true });
+    const userId = await ctx.db.insert("users", user);
     return await ctx.db.insert("notifications", {
       userId,
-      side: "shop",
-      kind: "order_accepted",
-      title: "Your order was accepted",
-      body: "Okafor Farms accepted FK-10001.",
-      href: "/orders/x",
+      side,
+      kind,
+      title: `Title for ${kind}`,
+      body: "Body.",
+      href: "/x",
       smsTo: "+2348031234567",
     } as never);
   });
   await t.action(internal.notifications.deliver.send, { notificationId });
-  expect(sent).toHaveLength(1);
+}
+
+test("only the six chosen events send a text; everything else doesn't", async () => {
+  const sent = termii();
+  const t = convexTest(schema, modules);
+  const texted = [
+    ["shop", "bill_ready"],
+    ["shop", "ready_for_pickup"],
+    ["farm", "application_received"],
+    ["farm", "application_approved"],
+    ["farm", "order_new"],
+    ["farm", "payout_account_changed"],
+  ] as const;
+  // Signed-in shopper with no push token used to get every update by text: no longer.
+  for (const [side, kind] of texted) await deliver(t, side, kind, { email: "a@b.co" });
+  expect(sent.map((s) => String(s.body.sms))).toHaveLength(6);
   expect(sent[0]!.body.to).toBe("2348031234567");
-  expect(String(sent[0]!.body.sms)).toContain("Your order was accepted");
-  const log = await t.run((ctx) => ctx.db.query("smsLog").collect());
-  expect(log[0]).toMatchObject({ status: "sent", provider: "termii" });
+
+  sent.length = 0;
+  const notTexted = [
+    ["shop", "order_placed"],
+    ["shop", "order_accepted"],
+    ["shop", "out_for_delivery"],
+    ["shop", "bill_reminder"],
+    ["shop", "refund_issued"],
+    ["farm", "order_deadline"],
+    ["farm", "payout_sent"],
+    ["farm", "rider_assigned"],
+    ["farm", "dispute_opened"],
+  ] as const;
+  for (const [side, kind] of notTexted) await deliver(t, side, kind, { isAnonymous: true });
+  expect(sent).toHaveLength(0);
+});
+
+test("a person who switched SMS off for an alert gets no text", async () => {
+  const sent = termii();
+  const t = convexTest(schema, modules);
+  const notificationId = await t.run(async (ctx) => {
+    const userId = await ctx.db.insert("users", { email: "a@b.co" });
+    await ctx.db.insert("notificationPrefs", { userId, side: "shop", alert: "order_updates", channel: "sms", on: false } as never);
+    return await ctx.db.insert("notifications", {
+      userId,
+      side: "shop",
+      kind: "ready_for_pickup",
+      title: "Ready",
+      body: "Body.",
+      href: "/x",
+      smsTo: "+2348031234567",
+    } as never);
+  });
+  await t.action(internal.notifications.deliver.send, { notificationId });
+  expect(sent).toHaveLength(0);
 });

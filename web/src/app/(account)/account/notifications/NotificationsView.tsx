@@ -73,7 +73,20 @@ function Notifications() {
                   <div className="sm mt-0.5">{a.description}</div>
                 </div>
                 <span className="justify-self-center">
-                  <Switch label={`${a.title} by SMS`} checked={a.sms} locked={a.locked} onChange={(on) => flip(a.alert, "sms", on)} />
+                  {/* Only a few alerts are sent by text (backend lib/alerts SMS_KINDS) */}
+                  {a.smsAvailable === false ? (
+                    <span className="cap">
+                      <span aria-hidden>—</span>
+                      <span className="sr-only">{a.title} isn&apos;t sent by SMS</span>
+                    </span>
+                  ) : (
+                    <Switch
+                      label={`${a.title} by SMS`}
+                      checked={a.sms}
+                      locked={a.locked}
+                      onChange={(on) => flip(a.alert, "sms", on)}
+                    />
+                  )}
                 </span>
                 <span className="justify-self-center">
                   <Switch
