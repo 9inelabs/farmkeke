@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Permission } from "./permissions";
+import { smsConfigured } from "./sms";
 
 export type NotifyArgs = {
   userId: Id<"users">;
@@ -126,11 +127,11 @@ export async function notifyStaff(
 }
 
 /**
- * Whether texts actually go out. False until an SMS provider is connected
- * (notifications/deliver.ts records them in smsLog meanwhile). While false,
- * delivery orders need an email so the shopper can get their bill.
+ * Whether texts actually go out: true once Termii is set up (see lib/sms.ts).
+ * While false, texts are only recorded in smsLog, and delivery orders need an
+ * email so the shopper can get their bill.
  */
-export const smsSending = () => false;
+export const smsSending = () => smsConfigured();
 
 /** "₦12,500" or "₦12,500.50" from kobo, without relying on Intl. */
 export function naira(kobo: number): string {

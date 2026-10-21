@@ -9652,6 +9652,31 @@
       "returns": null
     },
     {
+      "identifier": "notifications/deliver.js:testSms",
+      "functionType": "Action",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "to": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "notifications/deliver.js:welcome",
       "functionType": "Action",
       "visibility": {

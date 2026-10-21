@@ -41,6 +41,11 @@ type Env = {
   readonly PAYSTACK_PUBLIC_KEY: string | undefined;
   readonly PAYSTACK_SECRET_KEY: string | undefined;
   readonly SITE_URL: string | undefined;
+  readonly SMS_ENABLED: string | undefined;
+  readonly TERMII_API_KEY: string | undefined;
+  readonly TERMII_BASE_URL: string | undefined;
+  readonly TERMII_CHANNEL: string | undefined;
+  readonly TERMII_SENDER_ID: string | undefined;
   readonly WEBSITE_URL: string | undefined;
 };
 
