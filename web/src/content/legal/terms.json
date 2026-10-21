@@ -1,0 +1,205 @@
+{
+  "title": "Terms of use",
+  "nav": "Terms of use",
+  "draft": true,
+  "description": "The rules for buying fresh produce on Farmkeke, on the website and in the app.",
+  "short": "**In short:** Farmkeke connects you with verified farms. You pay through Farmkeke, we hold your money until you confirm your order arrived, and Farmkeke riders deliver it. These terms explain the rules for everyone who shops with us.",
+  "sections": [
+    {
+      "title": "About these terms",
+      "blocks": [
+        {
+          "p": "These terms apply when you use the Farmkeke website (farmkeke.com) or the Farmkeke app. Farmkeke is run by [Company legal name] (RC [RC number]), [Registered address], Owerri, Imo State, Nigeria (“Farmkeke”, “we”, “us”)."
+        },
+        {
+          "p": "By browsing, creating an account or placing an order, you agree to these terms. Our [Refund and dispute policy](/legal/refunds), [Privacy policy](/legal/privacy) and [Cookie policy](/legal/cookies) also apply. Farmers who sell on Farmkeke also agree to the [Farmer terms](/legal/farmer-terms)."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "Who can use Farmkeke",
+      "blocks": [
+        {
+          "ul": [
+            "You must be at least 18 years old, or use Farmkeke with the permission of a parent or guardian.",
+            "The details you give us, such as your name, phone number, email and delivery address, must be true and yours to give.",
+            "You can shop as a guest or with an account. Please keep one account per person.",
+            "We may refuse, block or close an account that breaks these terms, for example after fraud or abuse."
+          ]
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "What Farmkeke does",
+      "blocks": [
+        {
+          "p": "Farmkeke is an online marketplace. Each farm is the seller of its produce and sets its own prices. Farmkeke checks every farm before it can sell, takes payment on the farm's behalf, holds that payment safely until you confirm your order, and arranges delivery with Farmkeke riders."
+        },
+        {
+          "p": "We check farms and listings, but fresh produce is natural and can vary in size, colour and ripeness. Photos show typical produce, not the exact items you will receive."
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "Your account and guest orders",
+      "blocks": [
+        {
+          "ul": [
+            "Keep your password private. You are responsible for what happens in your account. If you think someone else has used it, change your password and tell us.",
+            "If you untick “Keep me signed in”, you are signed out when you close your browser. Otherwise you stay signed in for up to 30 days.",
+            "**Guest orders** are linked to the phone or browser you ordered on. Only that device can confirm receipt or report a problem. On another device, Find my order shows the order but you cannot act on it.",
+            "You can add guest orders to an account later, from the link we show or send you after ordering."
+          ]
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Placing an order",
+      "blocks": [
+        {
+          "ul": [
+            "Prices are in Naira and are set by each farm. The price shown at checkout is the price you pay for the produce.",
+            "If your cart has items from several farms, each farm gets its own order.",
+            "Each farm has **24 hours** to accept your order. If it declines or does not answer in time, the order is cancelled and anything you paid for it is refunded in full.",
+            "Stock can run out. If an item becomes unavailable, we tell you before you pay, or the farm may decline the order.",
+            "To protect farms and other shoppers, you can have at most **3 unpaid home delivery orders** at a time, and we limit how many checkouts can be started in a short time.",
+            "We may cancel an order and refund you if a price or listing was clearly wrong, or if we suspect fraud."
+          ]
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "Paying",
+      "blocks": [
+        {
+          "ul": [
+            "Payments are processed by **Paystack**, a licensed payment company. You can pay by card, bank transfer or USSD. Farmkeke never sees or stores your full card number.",
+            "**Pickup orders** are paid at checkout. If payment is not completed within 60 minutes, the checkout is cancelled and the stock is released.",
+            "**Home delivery orders** are placed without paying. Once the farm accepts, we price the delivery and send you one bill by email, text and in the app. You have **12 hours** to pay, and we remind you after 6 hours. If the bill is not paid in time, the order is cancelled and you are not charged.",
+            "Anyone who has your bill's pay link can pay it, so only share it with someone you want to pay for you.",
+            "If you are signed in, you can choose to save a card for faster payment next time. You can remove a saved card at any time from your account."
+          ]
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "Delivery and pickup",
+      "blocks": [
+        {
+          "ul": [
+            "We deliver within our service areas. A Farmkeke rider collects your order from the farm only after it has been paid for.",
+            "Give clear directions and keep your phone on. If the rider cannot reach you, we will contact you to arrange another time.",
+            "**Pickup orders** are collected at the farm. When your order is ready, we send you the farm's address and your 4-digit pickup code. Give the code only to the farmer when you collect. You have **3 days** to collect. After that, please contact support.",
+            "Delivery fees are set per order and shown on your bill before you pay."
+          ]
+        }
+      ],
+      "id": "s7"
+    },
+    {
+      "title": "Confirming receipt and our payment protection",
+      "blocks": [
+        {
+          "p": "Your money stays with Farmkeke until you confirm that your order arrived as expected. You can confirm once the order is marked delivered or collected. Confirming releases the payment to the farm and cannot be undone, so check everything first."
+        },
+        {
+          "p": "If something is wrong, report it from your order page **before** you confirm. See the [Refund and dispute policy](/legal/refunds). If you neither confirm nor report a problem within 24 hours of delivery, we remind you, and our team may release the payment to the farm after checking the delivery records."
+        }
+      ],
+      "id": "s8"
+    },
+    {
+      "title": "Reviews, messages and photos",
+      "blocks": [
+        {
+          "ul": [
+            "After an order is completed, you can rate and review it once. Reviews show your first name and the first letter of your surname.",
+            "You can chat with the farm about an active order. Farmkeke support staff can read these chats to help with problems and keep everyone safe.",
+            "Be honest and respectful. Do not post anything false, abusive, hateful, obscene or private about other people, or share contact details to trade outside Farmkeke.",
+            "You keep ownership of what you post. You allow us to show it on Farmkeke and use it to run our service. We may hide or remove content that breaks these terms."
+          ]
+        }
+      ],
+      "id": "s9"
+    },
+    {
+      "title": "Using Farmkeke fairly",
+      "blocks": [
+        {
+          "p": "You must not:"
+        },
+        {
+          "ul": [
+            "pay or ask anyone to pay outside Farmkeke for an order made on Farmkeke",
+            "make false problem reports or payment chargebacks, or use someone else's card or account",
+            "harass farmers, riders or our staff",
+            "copy, scrape or resell our content, or try to break, overload or get around the security of our website, app or systems",
+            "use Farmkeke for anything unlawful, including fraud under the Cybercrimes (Prohibition, Prevention, etc.) Act"
+          ]
+        }
+      ],
+      "id": "s10"
+    },
+    {
+      "title": "Our responsibility to you",
+      "blocks": [
+        {
+          "p": "Your rights under the Federal Competition and Consumer Protection Act 2018 and other Nigerian consumer laws are not affected by these terms."
+        },
+        {
+          "p": "Each farm is responsible for the quality, safety and description of its produce. Farmkeke is responsible for running the marketplace, holding and refunding payments as these terms describe, and for deliveries made by our riders."
+        },
+        {
+          "p": "As far as the law allows, we are not responsible for losses that were not foreseeable, for business losses, or for delays caused by events outside our reasonable control, such as severe weather, road closures or network outages. Nothing in these terms limits liability that cannot be limited by law."
+        }
+      ],
+      "id": "s11"
+    },
+    {
+      "title": "Closing your account",
+      "blocks": [
+        {
+          "p": "You can delete your account at any time from **Account → Delete account**. If you have orders still in progress, we finish them first. See the [Privacy policy](/legal/privacy) for what we keep."
+        },
+        {
+          "p": "We may suspend or close an account that breaks these terms. Where we can, we tell you why and give you a chance to respond."
+        }
+      ],
+      "id": "s12"
+    },
+    {
+      "title": "Changes to these terms",
+      "blocks": [
+        {
+          "p": "We may update these terms as Farmkeke changes or the law requires. We show the date of the latest version at the top of this page. For important changes, we tell you by email or in the app before they apply. Orders already placed follow the terms in force when you placed them."
+        }
+      ],
+      "id": "s13"
+    },
+    {
+      "title": "Law and disputes",
+      "blocks": [
+        {
+          "p": "These terms are governed by the laws of the Federal Republic of Nigeria. If you have a complaint, please contact us first and we will try to resolve it quickly. If we cannot agree, either of us may refer the matter to mediation, and then to the courts of Nigeria. You can also complain to the Federal Competition and Consumer Protection Commission (FCCPC)."
+        }
+      ],
+      "id": "s14"
+    },
+    {
+      "title": "Contact us",
+      "blocks": [
+        {
+          "p": "Email [support@farmkeke.com](mailto:support@farmkeke.com), use the [contact page](/contact), or write to [Company legal name], [Registered address], Owerri, Imo State, Nigeria."
+        }
+      ],
+      "id": "s15"
+    }
+  ],
+  "updated": "21 October 2026"
+}

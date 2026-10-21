@@ -1,215 +1,28 @@
-// W-87 Legal. "refunds" is the designed Refund and dispute policy; the other four
-// documents use the same layout as clearly marked drafts (no binding terms yet).
+// W-87 Legal: terms of use, privacy, refunds and disputes, farmer terms and
+// cookies. A document marked draft shows a notice that it is awaiting approval
+// and is not yet in force.
 import { ChevronRight, Cookie, File, Info, Lock, Mail, RefreshCw, Sprout, TriangleAlert, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 import { OnThisPage, PrintButton } from "@/components/site/LegalClient";
 import { FadeUp } from "@/lib/motion";
 import { routes, type LegalDoc } from "@/lib/routes";
 
-type Section = { id: string; title: string; body: ReactNode };
-type Doc = { title: string; nav: string; icon: LucideIcon; description: string; draft: boolean; short: ReactNode; sections: Section[] };
+import cookies from "@/content/legal/cookies.json";
+import farmerTerms from "@/content/legal/farmer-terms.json";
+import privacy from "@/content/legal/privacy.json";
+import refunds from "@/content/legal/refunds.json";
+import { Blocks, inline, type LegalContent } from "@/content/legal/render";
+import terms from "@/content/legal/terms.json";
 
-const P = ({ children }: { children: ReactNode }) => (
-  <p className="m-0 mt-2.5 text-[15px] leading-[26px] text-ink-3 m:mt-2 m:text-sm m:leading-[22px]">{children}</p>
-);
-const UL = ({ items }: { items: ReactNode[] }) => (
-  <ul className="m-0 mt-2.5 list-disc pl-5 text-[15px] leading-[26px] text-ink-3 m:mt-2 m:text-sm m:leading-[22px]">
-    {items.map((it, i) => (
-      <li key={i}>{it}</li>
-    ))}
-  </ul>
-);
-
-const draftSections = (covers: string[]): Section[] => [
-  { id: "s1", title: "What this policy will cover", body: <UL items={covers} /> },
-  {
-    id: "s2",
-    title: "Until it is published",
-    body: (
-      <P>
-        This page is a plain summary, not the final policy. If you have a question about it now, please{" "}
-        <Link href={routes.contact} className="font-semibold">
-          contact support
-        </Link>{" "}
-        and we will help.
-      </P>
-    ),
-  },
-];
-
-const DOCS: Record<LegalDoc, Doc> = {
-  terms: {
-    title: "Terms of use",
-    nav: "Terms of use",
-    icon: File,
-    draft: true,
-    description: "A summary of what Farmkeke's terms of use will cover. The full terms are being finalised.",
-    short: <>These terms will explain how you can use Farmkeke to buy fresh produce, as a guest or with an account.</>,
-    sections: draftSections([
-      "Who can use Farmkeke, and shopping as a guest or with an account",
-      "Placing orders, prices and delivery or pickup",
-      "How payments are held by Farmkeke until you confirm your order",
-      "Using the website and app fairly and safely",
-      "How to contact us about these terms",
-    ]),
-  },
-  privacy: {
-    title: "Privacy policy",
-    nav: "Privacy policy",
-    icon: Lock,
-    draft: true,
-    description: "A summary of what Farmkeke's privacy policy will cover. The full policy is being finalised.",
-    short: <>This policy will explain what information Farmkeke collects, why, and the choices you have.</>,
-    sections: draftSections([
-      "The details we ask for, such as your name, phone number, email and delivery address",
-      "How we use them to deliver your orders, send updates and help with problems",
-      "Who sees them: the farm and rider for your order, and Paystack for payments",
-      "How long we keep your information",
-      "How to see, change or delete your details and your account",
-    ]),
-  },
-  refunds: {
-    title: "Refund and dispute policy",
-    nav: "Refund and dispute policy",
-    icon: RefreshCw,
-    draft: false,
-    description:
-      "How Farmkeke protects your payment, what happens if a farm doesn't accept, how to report a problem, and how refunds are paid.",
-    short: (
-      <>
-        <strong>In short:</strong> Farmkeke holds your payment until you confirm your order. If something goes wrong,
-        report it before confirming, and we&apos;ll make it right.
-      </>
-    ),
-    sections: [
-      {
-        id: "s1",
-        title: "Our payment protection",
-        body: (
-          <>
-            <P>
-              When you pay for an order, Farmkeke holds the money. The farm is paid only after you confirm that your order
-              arrived as expected, or after a problem report is resolved.
-            </P>
-            <P>
-              You can confirm receipt only once your order is marked delivered or collected. Pickup orders wait at the
-              farm for 3 days once they are ready.
-            </P>
-          </>
-        ),
-      },
-      {
-        id: "s2",
-        title: "If the farm does not accept",
-        body: (
-          <P>
-            Each farm has 24 hours to accept your order. If the farm declines or does not respond in time, the order is
-            cancelled and anything you paid for it is refunded in full. Home delivery orders are paid only after the farm
-            accepts and the delivery is priced, so you pay nothing for a delivery order the farm declines. If you do not
-            pay your delivery bill within 12 hours, the order is cancelled.
-          </P>
-        ),
-      },
-      {
-        id: "s3",
-        title: "Reporting a problem",
-        body: (
-          <>
-            <P>
-              If your order is damaged, incomplete, wrong or not as described, report it from your order page before you
-              confirm receipt. Please include:
-            </P>
-            <UL
-              items={[
-                "which items were affected, and how many",
-                "clear photos where possible",
-                "a short description of what went wrong",
-              ]}
-            />
-            <P>Once you confirm receipt, the payment is released and the order can no longer be disputed through Farmkeke.</P>
-          </>
-        ),
-      },
-      {
-        id: "s4",
-        title: "How decisions are made",
-        body: (
-          <P>
-            The farm has 12 hours to reply to your report. Farmkeke then reviews the photos, messages and delivery records,
-            and usually makes a decision within one day. We will tell you the outcome by SMS and email.
-          </P>
-        ),
-      },
-      {
-        id: "s5",
-        title: "Refund amounts",
-        body: (
-          <UL
-            items={[
-              <>
-                <strong>Full refund</strong> if the whole order is affected, or the farm does not accept it.
-              </>,
-              <>
-                <strong>Part refund</strong> for the affected items only. The rest of the payment is released to the farm.
-              </>,
-              "The delivery fee is not refunded for a part refund, because the delivery took place.",
-            ]}
-          />
-        ),
-      },
-      {
-        id: "s6",
-        title: "How refunds are paid",
-        body: (
-          <P>
-            Refunds go back to the card or bank account you paid with, through Paystack. Your bank may take up to 7 working
-            days to show the refund. You can track it on your order page using the refund reference.
-          </P>
-        ),
-      },
-      {
-        id: "s7",
-        title: "Payments outside Farmkeke",
-        body: (
-          <P>
-            Only payments made through Farmkeke are protected. If a farmer asks you to pay them directly or in cash, please
-            refuse and report it to <a href="mailto:support@farmkeke.com">support@farmkeke.com</a>.
-          </P>
-        ),
-      },
-    ],
-  },
-  "farmer-terms": {
-    title: "Farmer terms",
-    nav: "Farmer terms",
-    icon: Sprout,
-    draft: true,
-    description: "A summary of what Farmkeke's farmer terms will cover. The full terms are being finalised.",
-    short: <>These terms will explain how farmers apply, sell and get paid on Farmkeke. All farmer work happens in the app.</>,
-    sections: draftSections([
-      "Applying in the app (Account, then Sell on Farmkeke) and the documents we check",
-      "Listing produce, setting prices and keeping stock up to date",
-      "Accepting orders within 24 hours, packing them and handing them to Farmkeke riders",
-      "Replying to problem reports within 12 hours",
-      "Payouts to your bank account after the buyer confirms, and the Farmkeke commission",
-    ]),
-  },
-  cookies: {
-    title: "Cookie policy",
-    nav: "Cookie policy",
-    icon: Cookie,
-    draft: true,
-    description: "A summary of what Farmkeke's cookie policy will cover. The full policy is being finalised.",
-    short: <>This policy will explain the small files the website saves in your browser, and how to manage them.</>,
-    sections: draftSections([
-      "What keeps you signed in and remembers your cart and delivery area",
-      "Any cookies used to understand how the website is used",
-      "How to change your cookie choice or clear saved data in your browser",
-    ]),
-  },
+// The wording lives in src/content/legal/*.json (also used for the review PDF)
+const DOCS: Record<LegalDoc, LegalContent & { icon: LucideIcon }> = {
+  terms: { ...(terms as LegalContent), icon: File },
+  privacy: { ...(privacy as LegalContent), icon: Lock },
+  refunds: { ...(refunds as LegalContent), icon: RefreshCw },
+  "farmer-terms": { ...(farmerTerms as LegalContent), icon: Sprout },
+  cookies: { ...(cookies as LegalContent), icon: Cookie },
 };
 
 const ORDER: LegalDoc[] = ["terms", "privacy", "refunds", "farmer-terms", "cookies"];
@@ -292,7 +105,7 @@ export default async function LegalPage({ params }: Props) {
                   {d.title}
                 </h1>
                 <div className="mt-2 text-[13px] leading-4 text-subtle">
-                  {d.draft ? "Draft, not yet in force" : "Last updated 17 October 2026"}
+                  {d.draft ? `Draft for approval, ${d.updated}. Not yet in force` : `Last updated ${d.updated}`}
                 </div>
               </div>
               <PrintButton />
@@ -302,15 +115,15 @@ export default async function LegalPage({ params }: Props) {
               <div className="mt-6 flex gap-3 rounded-[14px] bg-pend-bg px-5 py-[18px] text-sm leading-[22px] text-[#5E3E08] m:mt-4 m:px-3.5 m:py-3 m:text-[13px] m:leading-5" role="note">
                 <TriangleAlert aria-hidden size={18} strokeWidth={2} className="mt-0.5 flex-none text-pend" />
                 <span>
-                  <strong>Draft: this policy is being finalised.</strong> Below is a plain summary of what it will cover. It is
-                  not the final wording.
+                  <strong>Draft: awaiting final approval.</strong> This is the proposed wording. It is not yet in force, and
+                  it may change before it is.
                 </span>
               </div>
             ) : null}
 
             <div className={`${d.draft ? "mt-3" : "mt-6"} flex gap-3 rounded-[14px] bg-[#F4F7EE] px-5 py-[18px] text-sm leading-[22px] text-[#2E3A28] m:px-3.5 m:py-3 m:text-[13px] m:leading-5`}>
               <Info aria-hidden size={18} strokeWidth={2} className="mt-0.5 flex-none text-forest" />
-              <span>{d.short}</span>
+              <span>{inline(d.short)}</span>
             </div>
 
             {d.sections.map((s, i) => (
@@ -318,7 +131,7 @@ export default async function LegalPage({ params }: Props) {
                 <h2 id={`${s.id}-h`} className="font-display text-[19px] leading-[26px] font-bold tracking-[-0.01em] m:text-base m:leading-[22px]">
                   {i + 1}. {s.title}
                 </h2>
-                {s.body}
+                <Blocks blocks={s.blocks} />
               </section>
             ))}
 

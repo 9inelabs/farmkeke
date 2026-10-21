@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { CookieSettingsButton } from "@/components/system/CookieSettingsButton";
 import { routes } from "@/lib/routes";
 
 // Contact email shown in footers. Placeholder until the real inbox is set up
@@ -111,7 +112,10 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
         <span className="cap">
           © <CopyrightYear /> Farmkeke. All rights reserved.
         </span>
-        <span className="cap">Made in Owerri, Nigeria</span>
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <CookieSettingsButton className="cap border-0 bg-transparent p-0 hover:text-ink" />
+          <span className="cap">Made in Owerri, Nigeria</span>
+        </span>
       </div>
     </div>
   );

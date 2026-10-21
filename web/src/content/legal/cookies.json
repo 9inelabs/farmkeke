@@ -1,0 +1,79 @@
+{
+  "title": "Cookie policy",
+  "nav": "Cookie policy",
+  "draft": true,
+  "description": "The small files and saved data the Farmkeke website keeps in your browser, what each is for, and how to manage them.",
+  "short": "**In short:** the website only saves what it needs to work: signing you in, your cart, your delivery area and your checkout details. We do not use advertising or analytics cookies.",
+  "sections": [
+    {
+      "title": "What this policy covers",
+      "blocks": [
+        {
+          "p": "Like most websites, Farmkeke saves small pieces of information in your browser. Some are cookies; most are “local storage”, which works in a similar way. This policy explains both. It applies to farmkeke.com. The Farmkeke app keeps similar information on your phone for the same purposes."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "What we save, and why",
+      "blocks": [
+        {
+          "p": "All of these are **strictly necessary**: the website cannot work properly without them, so they do not need your consent."
+        },
+        {
+          "ul": [
+            "**Signing in:** secure sign-in tokens, so you stay signed in. They last until you sign out, and at most 30 days. Guests get a similar token that links orders to the device they were placed on.",
+            "**“Keep me signed in”:** a cookie called fk_alive and a small marker that sign you out when you close your browser, if you untick this box. The cookie is deleted when you close your browser.",
+            "**Your cart** (fk.cart.v1): the items in your cart, so they are still there when you come back.",
+            "**Your delivery area** (fk.area.v1): the area you chose, and the location found if you used “Use my location”.",
+            "**Checkout details** (fk.checkout.v1): your contact details and delivery address, so you don't have to type them again next time.",
+            "**Your cookie choice** (fk.consent.v1): what you chose in our cookie banner.",
+            "**Short-lived details** (cleared when you close the tab): an order you looked up with Find my order, and steps in signing up, resetting a password or linking guest orders.",
+            "**Staff only:** a timer that signs Farmkeke staff out of the Admin Portal after 30 minutes without activity."
+          ]
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "Analytics and advertising",
+      "blocks": [
+        {
+          "p": "We do not use analytics, advertising or social media tracking cookies. Our cookie banner lets you choose “Only necessary” or “Accept all”, but today both choices save only the cookies listed above. If we add analytics or marketing tools in future, we will update this policy and ask for your consent before using them."
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "Other services",
+      "blocks": [
+        {
+          "ul": [
+            "**Maps:** when you view a map or use your location, map images and addresses come from OpenStreetMap. Your browser connects to their servers, which receive your IP address and the area you view. See [OpenStreetMap's privacy policy](https://osmfoundation.org/wiki/Privacy_Policy).",
+            "**Payments:** when you pay, you go to a secure Paystack page, which may set its own cookies for security and fraud prevention. See [Paystack's privacy policy](https://paystack.com/privacy/merchant)."
+          ]
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Managing them",
+      "blocks": [
+        {
+          "p": "You can delete everything the website has saved by clearing the site data for farmkeke.com in your browser settings. This signs you out and empties your cart. Blocking these items entirely may stop sign-in, the cart or checkout from working. Your choice in our cookie banner can be changed at any time from **Cookie settings**."
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "Changes and contact",
+      "blocks": [
+        {
+          "p": "We will update this policy if what we save changes, and show the date at the top. Questions: [privacy@farmkeke.com](mailto:privacy@farmkeke.com)."
+        }
+      ],
+      "id": "s6"
+    }
+  ],
+  "updated": "21 October 2026"
+}

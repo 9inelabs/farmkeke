@@ -1,0 +1,169 @@
+{
+  "title": "Farmer terms",
+  "nav": "Farmer terms",
+  "draft": true,
+  "description": "The rules for farmers who sell on Farmkeke: applying, listing, orders, payouts, commission and problem reports.",
+  "short": "**In short:** you sell your own produce at your own prices. The buyer pays Farmkeke before you pack, and we pay you as soon as they confirm. You accept orders within 24 hours, keep listings honest, and reply to problem reports within 12 hours. Farmkeke keeps a 5% commission on the products you sell.",
+  "sections": [
+    {
+      "title": "About these terms",
+      "blocks": [
+        {
+          "p": "These terms apply to farmers who sell on Farmkeke, run by [Company legal name] (RC [RC number]), [Registered address], Owerri, Imo State, Nigeria. They add to our [Terms of use](/legal/terms) and [Privacy policy](/legal/privacy). You accept them when you submit your application in the Farmkeke app."
+        },
+        {
+          "p": "You sell to shoppers as an independent seller. You are not an employee, agent or partner of Farmkeke."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "Applying to sell",
+      "blocks": [
+        {
+          "ul": [
+            "Apply in the Farmkeke app under **Account → Sell on Farmkeke**. You must be at least 18 years old.",
+            "We ask for your farm's details and location, the produce you grow, your collection address and hours, a photo of a government ID (NIN slip, voter's card, driver's licence or international passport), at least 3 farm photos, proof of address, a letter from your farmers association or cooperative, and a bank account in your or your farm's name.",
+            "Everything you give us must be true and up to date. We check every application and may call you or visit your farm. We aim to decide within 2 working days.",
+            "We may ask for more information, approve your application, or decline it. If we decline it, we tell you why and when you can apply again."
+          ]
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "Your listings",
+      "blocks": [
+        {
+          "ul": [
+            "Only list produce you grow or raise yourself, or produce from your own cooperative.",
+            "Describe it honestly: the right name, unit (for example basket, tuber or crate), price, available stock and harvest date. Photos must be your own and show the produce you are selling.",
+            "Keep stock up to date, so shoppers do not order what you cannot supply.",
+            "New and edited listings are checked before they go live, usually within 24 hours. Farms with a strong record may be trusted to publish without a check.",
+            "We may ask you to change a listing, send it back, or take it down if it breaks these terms."
+          ]
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "What you may not sell",
+      "blocks": [
+        {
+          "ul": [
+            "produce that is spoiled, contaminated, or unsafe to eat",
+            "anything treated with banned chemicals, or harvested before the safe waiting period after spraying",
+            "protected or endangered wild animals or plants, or bushmeat that is illegal to sell",
+            "processed or packaged foods that need NAFDAC registration but do not have it",
+            "anything else that is illegal to sell in Nigeria"
+          ]
+        },
+        {
+          "p": "You are responsible for the quality, safety and legality of what you sell, and for following food safety and hygiene rules when you harvest, store and pack it."
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Handling orders",
+      "blocks": [
+        {
+          "ul": [
+            "Accept or decline each order within **24 hours**. We remind you when 4 hours are left. If you do not answer in time, the order is cancelled and the shopper gets a full refund.",
+            "Only accept orders you can fulfil. Frequent declines, or orders left to expire, may lead to a review of your farm.",
+            "Prepare and pack the order carefully, then mark it ready in the app.",
+            "**Home delivery:** a Farmkeke rider collects the order from you. Hand it over only once the app shows that the shopper has paid.",
+            "**Pickup:** the shopper collects from your collection address within 3 days. Hand the order over only after you enter the shopper's correct 4-digit code in the app.",
+            "Turn on holiday mode when you cannot take orders. Your listings are hidden until you turn it off."
+          ]
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "Payment, commission and payouts",
+      "blocks": [
+        {
+          "ul": [
+            "Shoppers pay Farmkeke. We hold the money until the shopper confirms that the order arrived, or until we resolve a problem report.",
+            "Farmkeke keeps a commission of **5% of the product total** of each completed order. Delivery fees go to Farmkeke to pay for delivery and are not part of your earnings. If we change the commission rate, we tell you at least 30 days before.",
+            "When an order's money is released, we send your earnings to your registered bank account by Paystack transfer, usually the same day. Your earnings and payouts show in the app.",
+            "Your bank account must be a valid Nigerian account in your or your farm's name. Payments sent to a wrong account you gave us may not be recoverable.",
+            "We may hold a payout while we look into a problem report, a suspected fraud or a mistake. We tell you why.",
+            "You are responsible for your own taxes on your sales."
+          ]
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "Problem reports",
+      "blocks": [
+        {
+          "p": "If a shopper reports a problem, you have **12 hours** to reply in the app with your side, and photos if you have them. We remind you 2 hours before the deadline. Farmkeke then reviews the photos, messages and delivery records and decides, usually within a day. The outcome may be a full refund, a part refund for the affected items with the rest paid to you, or full payment to you."
+        },
+        {
+          "p": "We apply the [Refund and dispute policy](/legal/refunds) fairly to both sides. If you disagree with a decision, contact support and we will look at it again."
+        }
+      ],
+      "id": "s7"
+    },
+    {
+      "title": "Dealing with shoppers",
+      "blocks": [
+        {
+          "ul": [
+            "Never ask a shopper to pay you directly, in cash or by bank transfer, for an order made on Farmkeke. Payments made outside Farmkeke are not protected, and asking for them can lead to suspension.",
+            "Do not use shoppers' details for anything except their Farmkeke order, and do not share them.",
+            "Be polite in chat. Farmkeke support staff can read chats to help with problems.",
+            "Do not write, buy or ask for fake reviews. You can report a review that breaks our rules, and we may hide it."
+          ]
+        }
+      ],
+      "id": "s8"
+    },
+    {
+      "title": "Suspension and leaving",
+      "blocks": [
+        {
+          "p": "We may suspend your farm if you break these terms, for example by selling unsafe produce, taking payments outside Farmkeke, misleading shoppers, or repeatedly letting orders expire. We record the reason and tell you. While suspended, you cannot sell, but you can still finish open orders, and money for completed orders is still paid."
+        },
+        {
+          "p": "You can stop selling at any time. Contact support to close your farm. Orders already placed must still be completed or cancelled with a refund."
+        }
+      ],
+      "id": "s9"
+    },
+    {
+      "title": "Your information",
+      "blocks": [
+        {
+          "p": "We use your information as our [Privacy policy](/legal/privacy) explains. Shoppers see your farm name, photos, location area, ratings and reviews. Shoppers with a pickup order also see your collection address, hours and phone number."
+        }
+      ],
+      "id": "s10"
+    },
+    {
+      "title": "Responsibility",
+      "blocks": [
+        {
+          "p": "You are responsible for the produce you sell and for any harm it causes. If a shopper or authority makes a claim against Farmkeke because of your produce, or because you broke these terms or the law, you agree to cover our reasonable losses. As far as the law allows, Farmkeke is not responsible for your lost sales or profits."
+        }
+      ],
+      "id": "s11"
+    },
+    {
+      "title": "Changes, law and contact",
+      "blocks": [
+        {
+          "p": "We may update these terms and will tell you at least 14 days before important changes apply. These terms are governed by the laws of Nigeria, and disputes follow the process in our [Terms of use](/legal/terms)."
+        },
+        {
+          "p": "Questions: [support@farmkeke.com](mailto:support@farmkeke.com)."
+        }
+      ],
+      "id": "s12"
+    }
+  ],
+  "updated": "21 October 2026"
+}
