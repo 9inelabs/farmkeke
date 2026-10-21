@@ -129,7 +129,7 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
         </h2>
         <p className="m-0 text-[15px] leading-6 text-muted">
           Thanks, {values.name.trim().split(/\s+/)[0]}. We&apos;ll reply to {sentTo}, usually within a few hours, Monday to
-          Saturday. We&apos;ll reply by email, and by SMS if it&apos;s about an order.
+          Saturday. We&apos;ll reply by email.
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
           <Button
@@ -163,7 +163,7 @@ export function ContactForm({ listingId, farmId }: { listingId?: string; farmId?
           About: <span className="font-semibold text-ink">{about}</span>
         </p>
       ) : null}
-      <p className="m-0 mt-1 text-sm leading-6 text-muted">We&apos;ll reply by email, and by SMS if it&apos;s about an order.</p>
+      <p className="m-0 mt-1 text-sm leading-6 text-muted">We&apos;ll reply by email.</p>
       <div className="mt-6 grid grid-cols-2 gap-4 m:mt-4 m:grid-cols-1 m:gap-3">
         <TextField id="contact-name" label="Your name" autoComplete="name" value={values.name} onChange={set("name")} error={errors.name} />
         <TextField

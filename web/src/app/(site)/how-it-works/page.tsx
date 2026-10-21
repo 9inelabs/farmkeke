@@ -204,7 +204,7 @@ export default function HowItWorksPage() {
         <FadeUp className="wrap-site grid grid-cols-2 items-start gap-8 m:grid-cols-1 m:gap-3">
           <div className={`${S.card} p-8 m:p-4`}>
             <h2 className={`${h3b} text-[22px] leading-[30px] m:text-lg m:leading-6`}>What your order status means</h2>
-            <p className="m-0 mt-1.5 text-[15px] leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">You&apos;ll get an SMS or email each time it changes.</p>
+            <p className="m-0 mt-1.5 text-[15px] leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">You&apos;ll get an email or app notification each time it changes.</p>
             <dl className="m-0 mt-3.5">
               {STATUSES.map(([tone, label, body], i) => (
                 <div

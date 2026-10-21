@@ -362,7 +362,7 @@ function Form({ order: o }: { order: OrderDetail }) {
             <Button type="submit" variant="lime" fullWidth loading={busy} disabled={uploading} className="mt-5 min-h-[52px] rounded-[14px]">
               Submit report
             </Button>
-            <p className="cap mt-2.5 text-center">We&apos;ll update you by SMS and email</p>
+            <p className="cap mt-2.5 text-center">We&apos;ll update you by email and in the app</p>
           </section>
         </aside>
       </form>

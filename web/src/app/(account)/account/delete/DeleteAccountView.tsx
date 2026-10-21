@@ -136,7 +136,7 @@ function Delete() {
           <div role="status" className="mt-3.5 rounded-xl bg-pend-bg px-3.5 py-3 text-[13px] leading-[19px] text-pend">
             You have {plural(inProgress.length, "order")} in progress. If you delete now, we&apos;ll finish deleting your
             account once {inProgress.length === 1 ? "it's" : "they're"} completed. Until then you can still follow{" "}
-            {inProgress.length === 1 ? "it" : "them"} by text message.
+            {inProgress.length === 1 ? "it" : "them"} by email.
           </div>
         ) : (
           <p className="sm mt-3.5">If you have an order in progress, you can delete your account once it&apos;s completed.</p>

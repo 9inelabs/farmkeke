@@ -73,7 +73,7 @@ export function FindOrderView() {
                 setNumber(e.target.value.toUpperCase());
                 setErrors({});
               }}
-              hint="It's in the SMS and email we sent when you ordered."
+              hint="It's on your order confirmation, and in the email we sent when you ordered."
               error={errors.number}
             />
             <PhoneField

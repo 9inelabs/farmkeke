@@ -35,7 +35,7 @@ export function ProblemSentView({ orderId }: { orderId: string }) {
         <ShieldCheck className="size-[34px]" strokeWidth={1.75} />
       </span>
       <h1 className="m-0 mt-[22px] font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-2xl m:leading-[30px]">We&apos;ve got your report</h1>
-      <p className="p mt-2">Your payment stays held while we look into it. We&apos;ll update you by SMS and email.</p>
+      <p className="p mt-2">Your payment stays held while we look into it. We&apos;ll update you by email and in the app.</p>
       <dl className="m-0 mt-6 rounded-2xl bg-soft px-[18px] py-1.5 text-left">
         {rows.map(([k, v], i) => (
           <div key={k} className="flex justify-between gap-3 py-2.5 text-sm [&+&]:shadow-[inset_0_1px_0_#EEF0EB]">
