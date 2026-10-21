@@ -222,7 +222,9 @@ test("notifications: preferences decide push, SMS and email; delivery uses Expo 
   await account.mutation(api.notifications.setPreference, { side: "shop", alert: "order_updates", channel: "push", on: false });
   p = (await plan("order_accepted"))!;
   expect(p.push).toHaveLength(0);
-  expect(p.sms).toMatchObject({ to: "+2348031112222" });
+  // No text fallback for order updates: only lib/alerts SMS_KINDS are texted (cost)
+  expect(p.sms).toBeNull();
+  expect((await plan("ready_for_pickup"))!.sms).toMatchObject({ to: "+2348031112222" });
   // The whole alert off: nothing at all
   await account.mutation(api.notifications.setPreference, { side: "shop", alert: "order_updates", on: false });
   p = (await plan("order_accepted"))!;
@@ -237,7 +239,8 @@ test("notifications: preferences decide push, SMS and email; delivery uses Expo 
   const g = (await t.query(internal.notifications.store.plan, {
     notificationId: await t.mutation(internal.notifications.store.create, { userId: s.guest.id, side: "shop", kind: "order_accepted", title: "T", body: "B", href: "/x", smsTo: "+2348030000000" }),
   }))!;
-  expect(g.sms).not.toBeNull();
+  // Guests aren't texted every update any more, only the chosen events
+  expect(g.sms).toBeNull();
   expect(g.email).toBeNull();
 
   // End to end: deliver.send calls Expo and Resend, and drops a dead token

@@ -278,7 +278,7 @@ export const submit = mutation({
       submittedAt: Date.now(),
       moreInfo: app.status === "more_info" ? app.moreInfo : undefined,
     });
-    // F-09a: "We received your application" (push and email)
+    // F-09a: "We received your application" (push, email and a text)
     await notify(ctx, {
       userId: user._id,
       side: "farm",
@@ -286,6 +286,7 @@ export const submit = mutation({
       title: "We received your application",
       body: `Reference ${reference}. Expect a decision within ${REVIEW_DAYS} working days.`,
       href: "/sell/status",
+      smsTo: phone,
     });
     return { reference };
   },

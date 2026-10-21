@@ -157,6 +157,7 @@ export const approve = mutation({
       title: "You're approved",
       body: `${app.farmName} can now sell on Farmkeke. Switch to farmer mode to finish setting up.`,
       href: APPLICATION_HREF,
+      smsTo: app.phone,
     });
     return farmId;
   },
