@@ -1,15 +1,18 @@
 "use client";
 
 // Layouts shared by the sign-in and password pages:
-// - AuthSplit: W-40 / W-41, form on the left, a farm photo on the right
-//   under a forest-green wash (the panel is hidden on phones).
+// - AuthSplit: W-40 / W-41, form on the left, a panel on the right with the
+//   photo staff set in the Admin Portal (A-87), or plain forest green until
+//   one is set. The panel is hidden on phones.
 // - AuthCard: W-42 to W-42e, logo bar and a centred card.
 // Plus the live password rules (W-41, W-42c) and the return-address helper.
 import { Check, ShieldCheck } from "lucide-react";
+import { useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { HomeLogo } from "@/components/brand/Wordmark";
+import { api } from "@/convex/api";
 import { Reveal } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
@@ -18,14 +21,9 @@ export function safeNext(raw: string | null | undefined): string | undefined {
   return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : undefined;
 }
 
-/** Panel photos in public/images/auth (Unsplash licence: free for commercial use) */
-const PHOTOS = {
-  signin: { src: "/images/auth/signin.jpg", position: "50% 50%" },
-  signup: { src: "/images/auth/signup.jpg", position: "50% 50%" },
-};
+export type PanelPhoto = { url: string; focus: "left" | "center" | "right" };
 
 export function AuthSplit({ children, side }: { children: ReactNode; side: "signin" | "signup" }) {
-  const photo = PHOTOS[side];
   return (
     <div className="grid min-h-dvh grid-cols-2 bg-surface m:grid-cols-1">
       <div className="flex flex-col px-14 py-10 m:px-5 m:py-6">
@@ -34,58 +32,99 @@ export function AuthSplit({ children, side }: { children: ReactNode; side: "sign
           <Reveal>{children}</Reveal>
         </main>
       </div>
-      <aside
-        aria-hidden
-        className="relative flex flex-col justify-between overflow-hidden bg-forest p-14 text-white m:hidden"
-      >
-        <Image src={photo.src} alt="" fill priority sizes="50vw" className="object-cover" style={{ objectPosition: photo.position }} />
-        {/* Forest wash: darker at the top and bottom, where the words sit */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,42,14,0.82)_0%,rgba(20,42,14,0.35)_38%,rgba(20,42,14,0.45)_62%,rgba(20,42,14,0.88)_100%)]" />
-        {side === "signin" ? (
-          <>
-            <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
-              From the farm directly to your home
-            </div>
-            <div className="relative flex max-w-[380px] flex-col gap-3">
-              <div className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md">
-                <span className="size-12 flex-none rounded-xl bg-[#F6E3DC]" />
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">Fresh tomatoes</div>
-                  <div className="text-xs text-on-forest">Okafor Farms · Harvested today</div>
-                </div>
-                <span className="font-display font-extrabold text-lime">₦4,500</span>
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md">
-                <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-forest">
-                  <ShieldCheck className="size-[18px]" strokeWidth={2} />
-                </span>
-                <div className="text-sm leading-5">Your money is held safely until you confirm delivery</div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
-              Fresh food, fairer prices, every week
-            </div>
-            <div className="relative flex max-w-[380px] flex-col gap-3">
-              {["Save delivery addresses", "Track orders on any device", "Keep a list of saved produce"].map((t, i) => (
-                <div
-                  key={t}
-                  className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md"
-                >
-                  <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-sm font-bold text-forest">
-                    {i + 1}
-                  </span>
-                  <div className="text-sm">{t}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        <div className="relative text-[13px] text-on-forest">Verified farmers · Protected payments · Delivery or pickup</div>
-      </aside>
+      <PlainOnError fallback={<AuthPanel side={side} photo={null} className="m:hidden" />}>
+        <LivePanel side={side} />
+      </PlainOnError>
     </div>
+  );
+}
+
+/** The panel with the photo staff set in the Admin Portal (A-87); plain until one is set. */
+function LivePanel({ side }: { side: "signin" | "signup" }) {
+  const photos = useQuery(api.sitePhotos.auth, {}) as Record<"signin" | "signup", PanelPhoto | null> | undefined;
+  return <AuthPanel side={side} photo={photos?.[side] ?? null} className="m:hidden" />;
+}
+
+/** If the photo can't be loaded, the sign-in page still works with the plain panel. */
+class PlainOnError extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** The right-hand panel of sign-in and sign-up (also the Admin Portal's preview). */
+export function AuthPanel({ side, photo, className }: { side: "signin" | "signup"; photo: PanelPhoto | null; className?: string }) {
+  return (
+    <aside
+      aria-hidden
+      className={`relative flex flex-col justify-between overflow-hidden bg-forest p-14 text-white ${className ?? ""}`}
+    >
+      {photo ? (
+        <>
+          <Image
+            src={photo.url}
+            alt=""
+            fill
+            priority
+            sizes="50vw"
+            unoptimized={photo.url.startsWith("blob:")}
+            className="object-cover"
+            style={{ objectPosition: `${photo.focus} center` }}
+          />
+          {/* Forest wash: darker at the top and bottom, where the words sit */}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,42,14,0.82)_0%,rgba(20,42,14,0.35)_38%,rgba(20,42,14,0.45)_62%,rgba(20,42,14,0.88)_100%)]" />
+        </>
+      ) : (
+        <div className="absolute -top-[120px] -right-[120px] size-[380px] rounded-full bg-[rgba(169,214,84,0.10)]" />
+      )}
+      {side === "signin" ? (
+        <>
+          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
+            From the farm directly to your home
+          </div>
+          <div className="relative flex max-w-[380px] flex-col gap-3">
+            <div className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md">
+              <span className="size-12 flex-none rounded-xl bg-[#F6E3DC]" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold">Fresh tomatoes</div>
+                <div className="text-xs text-on-forest">Okafor Farms · Harvested today</div>
+              </div>
+              <span className="font-display font-extrabold text-lime">₦4,500</span>
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md">
+              <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-forest">
+                <ShieldCheck className="size-[18px]" strokeWidth={2} />
+              </span>
+              <div className="text-sm leading-5">Your money is held safely until you confirm delivery</div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
+            Fresh food, fairer prices, every week
+          </div>
+          <div className="relative flex max-w-[380px] flex-col gap-3">
+            {["Save delivery addresses", "Track orders on any device", "Keep a list of saved produce"].map((t, i) => (
+              <div
+                key={t}
+                className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md"
+              >
+                <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-sm font-bold text-forest">
+                  {i + 1}
+                </span>
+                <div className="text-sm">{t}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="relative text-[13px] text-on-forest">Verified farmers · Protected payments · Delivery or pickup</div>
+    </aside>
   );
 }
 

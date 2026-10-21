@@ -4247,6 +4247,115 @@
       "returns": null
     },
     {
+      "identifier": "admin/sitePhotos.js:list",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/sitePhotos.js:remove",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "slot": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "signin"
+                },
+                {
+                  "type": "literal",
+                  "value": "signup"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/sitePhotos.js:set",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "slot": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "signin"
+                },
+                {
+                  "type": "literal",
+                  "value": "signup"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "storageId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "_storage"
+            },
+            "optional": true
+          },
+          "focus": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "left"
+                },
+                {
+                  "type": "literal",
+                  "value": "center"
+                },
+                {
+                  "type": "literal",
+                  "value": "right"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/staff.js:alerts",
       "functionType": "Query",
       "visibility": {

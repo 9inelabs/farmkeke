@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FileCheck2,
   GalleryHorizontalEnd,
+  ImagePlus,
   LayoutDashboard,
   ArrowLeftRight,
   Banknote,
@@ -65,6 +66,7 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.categories, label: "Categories", icon: LayoutGrid, any: ["catalog.manage", "listings.view"] },
       { href: adminRoutes.units, label: "Units", icon: Ruler, any: ["catalog.manage", "listings.view"] },
       { href: adminRoutes.banners, label: "Home banners", icon: GalleryHorizontalEnd, any: ["content.manage"] },
+      { href: adminRoutes.sitePhotos, label: "Site photos", icon: ImagePlus, any: ["content.manage"] },
     ],
   },
   {

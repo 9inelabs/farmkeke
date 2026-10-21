@@ -23,7 +23,7 @@ export const PERMISSIONS = [
   { key: "listings.view", group: "Products", label: "See products", description: "Every listing and the review queue." },
   { key: "listings.review", group: "Products", label: "Review products", description: "Approve, send back or unpublish listings." },
   { key: "catalog.manage", group: "Products", label: "Manage categories and units", description: "Create, rename, reorder and hide." },
-  { key: "content.manage", group: "Products", label: "Manage home banners", description: "The featured banners on the app's Home." },
+  { key: "content.manage", group: "Products", label: "Manage home banners and site photos", description: "The featured banners on the app's Home, and the photos on the website's sign-in and sign-up pages." },
 
   // Operations
   { key: "areas.manage", group: "Operations", label: "Manage areas and pickup points", description: "Service areas, pickup points and their hours." },

@@ -38,6 +38,8 @@ const ACTIONS: Record<string, string> = {
   "banner.update": "Banner edited",
   "banner.reorder": "Banners reordered",
   "banner.delete": "Banner deleted",
+  "sitePhoto.set": "Site photo changed",
+  "sitePhoto.remove": "Site photo removed",
   "serviceArea.create": "Area created",
   "serviceArea.update": "Area edited",
   "pickupPoint.create": "Pickup point created",

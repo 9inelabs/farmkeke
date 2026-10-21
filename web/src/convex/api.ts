@@ -188,6 +188,9 @@ export const api = {
     submit: makeFunctionReference<"mutation", { "comment"?: string; "orderId": Id<"orders">; "rating": number; "tags": Array<string>; "itemRatings"?: Array<{ "index": number; "rating": number }> }, any>("reviews:submit"),
     summary: makeFunctionReference<"query", { "farmId": Id<"farms"> }, any>("reviews:summary"),
   },
+  sitePhotos: {
+    auth: makeFunctionReference<"query", Record<string, never>, any>("sitePhotos:auth"),
+  },
   storefront: {
     categoryListings: makeFunctionReference<"query", { "slug": string; "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "harvestedWithinDays"?: number; "minRating"?: number; "maxDistanceKm"?: number; "lat"?: number; "lng"?: number; "subtype"?: string; "today"?: string; "subtypes"?: Array<string> }, any>("storefront:categoryListings"),
     collection: makeFunctionReference<"query", { "kind": "fresh" | "picked_today"; "today": string; "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "harvestedWithinDays"?: number; "minRating"?: number; "maxDistanceKm"?: number; "lat"?: number; "lng"?: number }, any>("storefront:collection"),

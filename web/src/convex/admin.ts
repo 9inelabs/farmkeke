@@ -153,6 +153,11 @@ export const admin = {
   search: {
     find: makeFunctionReference<"query", { "query": string }, any>("admin/search:find"),
   },
+  sitePhotos: {
+    list: makeFunctionReference<"query", Record<string, never>, any>("admin/sitePhotos:list"),
+    remove: makeFunctionReference<"mutation", { "slot": "signin" | "signup"; "reason": string }, any>("admin/sitePhotos:remove"),
+    set: makeFunctionReference<"mutation", { "slot": "signin" | "signup"; "storageId"?: Id<"_storage">; "focus": "left" | "center" | "right"; "reason": string }, any>("admin/sitePhotos:set"),
+  },
   staff: {
     alerts: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/staff:alerts"),
     approve: makeFunctionReference<"mutation", { "memberId": Id<"staffMembers">; "roleId": Id<"staffRoles">; "note"?: string }, any>("admin/staff:approve"),

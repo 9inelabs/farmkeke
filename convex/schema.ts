@@ -524,6 +524,17 @@ export default defineSchema({
     sortOrder: v.number(),
   }).index("by_active_and_sortOrder", ["active", "sortOrder"]),
 
+  // A-87 Site photos: pictures staff can change on the website without a
+  // release. One row per slot; a slot with no row shows the plain design.
+  sitePhotos: defineTable({
+    slot: v.union(v.literal("signin"), v.literal("signup")),
+    storageId: v.id("_storage"),
+    /** Which side stays in view when the photo is cropped to fit the panel */
+    focus: v.union(v.literal("left"), v.literal("center"), v.literal("right")),
+    updatedAt: v.number(),
+    updatedBy: v.id("users"),
+  }).index("by_slot", ["slot"]),
+
   // A-42 price and unit history, and the listing's moderation trail.
   listingEvents: defineTable({
     listingId: v.id("listings"),

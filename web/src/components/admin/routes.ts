@@ -25,6 +25,7 @@ export const adminRoutes = {
   categories: "/admin/catalog",
   units: "/admin/catalog/units",
   banners: "/admin/banners",
+  sitePhotos: "/admin/site-photos",
   areas: "/admin/areas",
   pickupPoints: "/admin/pickup-points",
   rules: "/admin/rules",
