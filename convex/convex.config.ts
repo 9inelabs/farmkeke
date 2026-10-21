@@ -25,6 +25,16 @@ const app = defineApp({
     EMAIL_ASSETS_URL: v.optional(v.string()),
     // Where replies to Farmkeke emails go, e.g. "Farmkeke Support <support@farmkeke.com>"
     EMAIL_REPLY_TO: v.optional(v.string()),
+    // Termii SMS (convex/lib/sms.ts). Without TERMII_API_KEY texts are only recorded.
+    TERMII_API_KEY: v.optional(v.string()),
+    // Approved Sender ID, e.g. "Farmkeke"
+    TERMII_SENDER_ID: v.optional(v.string()),
+    // Base URL from the Termii dashboard (default https://v3.api.termii.com)
+    TERMII_BASE_URL: v.optional(v.string()),
+    // "dnd" (default, reaches Do-Not-Disturb numbers) or "generic"
+    TERMII_CHANNEL: v.optional(v.string()),
+    // "false" pauses texting without removing the key
+    SMS_ENABLED: v.optional(v.string()),
   },
 });
 

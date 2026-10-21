@@ -1,6 +1,7 @@
 // Delivery for one stored notification (Phase 9): push through the Expo push
-// API (plain fetch), SMS recorded in smsLog until a provider is chosen, and
-// email through Resend. Never throws into the order flows that scheduled it.
+// API (plain fetch), SMS through Termii (recorded only until TERMII_API_KEY is
+// set; every text is logged in smsLog), and email through Resend. Never throws
+// into the order flows that scheduled it.
 import { v, type Infer } from "convex/values";
 import { internal } from "../_generated/api";
 import { env, internalAction, type ActionCtx } from "../_generated/server";
@@ -17,6 +18,7 @@ import {
   welcomeEmail,
   type Email,
 } from "../lib/emails";
+import { fitSms, sendSms, smsConfigured } from "../lib/sms";
 import { MESSAGE_EMAIL_WINDOW_MS } from "./store";
 
 const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
@@ -101,8 +103,23 @@ export const send = internalAction({
     const plan = await ctx.runQuery(internal.notifications.store.plan, args);
     if (plan === null) return null;
     if (plan.push.length > 0) await pushNow(ctx, plan.push, 0);
-    // No SMS provider yet: record what would be sent.
-    if (plan.sms) await ctx.runMutation(internal.notifications.store.logSms, { ...plan.sms, status: "recorded" });
+    // Texts go out through Termii once it's set up; until then they're only recorded.
+    if (plan.sms) {
+      if (smsConfigured()) {
+        const result = await sendSms(plan.sms.to, plan.sms.body);
+        if (result.status === "failed") console.error("SMS not sent", plan.sms.to, result.error);
+        await ctx.runMutation(internal.notifications.store.logSms, {
+          ...plan.sms,
+          body: fitSms(plan.sms.body),
+          provider: "termii",
+          ...(result.status === "sent"
+            ? { status: "sent" as const, providerReference: result.reference }
+            : { status: "failed" as const, error: result.error }),
+        });
+      } else {
+        await ctx.runMutation(internal.notifications.store.logSms, { ...plan.sms, status: "recorded" });
+      }
+    }
     if (plan.email && emailOn()) {
       // Message emails: at most one per thread every 30 minutes
       const allowed =
@@ -218,5 +235,27 @@ export const accountEmail = internalAction({
         }
         return null;
     }
+  },
+});
+
+/**
+ * Sends one test text through Termii and logs it. Internal: run it from the
+ * Convex dashboard or `npx convex run notifications/deliver:testSms '{"to":"0803..."}'`.
+ */
+export const testSms = internalAction({
+  args: { to: v.string(), body: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const body = args.body ?? "Farmkeke: this is a test message. Text updates for your orders are working.";
+    if (!smsConfigured()) return { status: "not_configured" as const };
+    const result = await sendSms(args.to, body);
+    await ctx.runMutation(internal.notifications.store.logSms, {
+      to: args.to,
+      body: fitSms(body),
+      provider: "termii",
+      ...(result.status === "sent"
+        ? { status: "sent" as const, providerReference: result.reference }
+        : { status: "failed" as const, error: result.error }),
+    });
+    return result;
   },
 });
