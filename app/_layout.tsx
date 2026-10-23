@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button, StatusScreen } from "@/components/ui";
 import { ToastHost } from "@/components/feedback/ToastHost";
+import { PushManager } from "@/features/push/PushManager";
 import { AddToCartSheet } from "@/features/shop/AddToCartSheet";
 import { AppGate } from "@/features/system/AppGate";
 import { SessionWatcher } from "@/features/system/SessionWatcher";
@@ -49,6 +50,7 @@ export default function RootLayout() {
               <Stack.Screen name="order-placed/[checkoutId]" options={{ gestureEnabled: false }} />
             </Stack>
             <SessionWatcher />
+            <PushManager />
             {/* M-19 and M-20, opened from any product card or page */}
             <AddToCartSheet />
             <ToastHost />

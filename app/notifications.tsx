@@ -6,7 +6,7 @@ import { useMutation, usePaginatedQuery } from "convex/react";
 import { router, useLocalSearchParams, type Href } from "expo-router";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bell } from "@/components/icons";
+import { Bell, Sliders } from "@/components/icons";
 import { EmptyState, ScreenHeader, Skeleton, Text } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -31,13 +31,18 @@ export default function Notifications() {
       <ScreenHeader
         title="Notifications"
         right={
-          anyUnread ? (
-            <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void markAllRead({ side })}>
-              <Text variant="label" color={colors.limeInk}>
-                Mark all read
-              </Text>
+          <View style={styles.actions}>
+            {anyUnread ? (
+              <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void markAllRead({ side })}>
+                <Text variant="label" color={colors.limeInk}>
+                  Mark all read
+                </Text>
+              </Pressable>
+            ) : null}
+            <Pressable accessibilityRole="button" accessibilityLabel="Notification settings" hitSlop={8} onPress={() => router.push({ pathname: "/settings/notifications", params: { side } })} style={styles.gear}>
+              <Sliders size={20} color={colors.forest} />
             </Pressable>
-          ) : null
+          </View>
         }
       />
       {status === "LoadingFirstPage" ? (
@@ -97,6 +102,8 @@ function timeAgo(at: number) {
 }
 
 const styles = StyleSheet.create({
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  gear: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
   screen: { flex: 1, backgroundColor: colors.white },
   list: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxl, gap: spacing.sm },
   emptyWrap: { flexGrow: 1, justifyContent: "center" },

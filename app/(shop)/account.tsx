@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { Book, Document, Edit, Grid, Headphone, Heart, Help, Info, Key, Logout, Messages, Pin } from "@/components/icons";
+import { Book, Document, Edit, Grid, Headphone, Heart, Help, Info, Key, Logout, Messages, Pin, Bell } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -87,6 +87,7 @@ export default function Account() {
 
             <ListGroup title="Account">
               <ListRow icon={Key} title="Login details" subtitle="Email and password" onPress={() => router.push("/settings/login-details")} />
+              <ListRow icon={Bell} title="Notifications" subtitle="Push, SMS and email" onPress={() => router.push("/settings/notifications")} />
             </ListGroup>
 
             <SellingEntry signedIn />

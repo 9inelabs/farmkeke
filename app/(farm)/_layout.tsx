@@ -9,6 +9,7 @@ import { ActivityIndicator, Linking, View } from "react-native";
 import { Button, OfflineBanner, StatusScreen } from "@/components/ui";
 import { SUPPORT_EMAIL } from "@/content/help";
 import { useSwitchMode } from "@/features/farmer/useSwitchMode";
+import { PushPrimer, usePrimer } from "@/features/push/PushPrimer";
 import { TabBar } from "@/features/shell/TabBar";
 import { usePrefs } from "@/store/prefs";
 import { tabTransition } from "@/theme/navigation";
@@ -17,6 +18,8 @@ import { colors } from "@/theme/tokens";
 export default function FarmTabs() {
   const farm = useQuery(api.farms.mine);
   const counts = useQuery(api.orders.farmer.counts, farm ? {} : "skip");
+  // F-12: new orders need a reply within 24 hours, so ask for push on arrival
+  const primer = usePrimer("farm", farm?.status === "active", 1200);
   const setMode = usePrefs((s) => s.setMode);
   const switchMode = useSwitchMode();
 
@@ -68,6 +71,7 @@ export default function FarmTabs() {
         <Tabs.Screen name="earnings" />
         <Tabs.Screen name="farm" />
       </Tabs>
+      <PushPrimer side="farm" visible={primer.open} onClose={primer.close} status={primer.status} />
     </View>
   );
 }

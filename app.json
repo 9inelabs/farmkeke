@@ -56,7 +56,13 @@
       ],
       "@react-native-community/datetimepicker",
       "expo-secure-store",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#1E3B16"
+        }
+      ]
     ],
     "owner": "9inelabs",
     "extra": {

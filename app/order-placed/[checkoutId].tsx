@@ -14,6 +14,7 @@ import { Stagger } from "@/components/motion/reveal";
 import { Avatar, Button, Notice, PasswordRules, Skeleton, StatusScreen, Text, TextField } from "@/components/ui";
 import { useCheckoutDraft } from "@/features/checkout/draft";
 import { plural } from "@/features/checkout/useQuote";
+import { PushPrimer, usePrimer } from "@/features/push/PushPrimer";
 import { errorCode } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
 import { displayPhone } from "@/lib/phone";
@@ -48,6 +49,8 @@ export default function OrderPlaced() {
       if (draft.checkoutId === checkoutId) draft.finish(draft.placed);
     }
   }, [toPay, placedDelivery, status, checkoutId, clearCart, draft]);
+  // M-48: after the first order, offer order updates by push
+  const primer = usePrimer("shop", status === "paid" || placedDelivery, 1400);
 
   if (summary === undefined || toPay) {
     return (
@@ -183,6 +186,7 @@ export default function OrderPlaced() {
         <Button label={`Track your ${many ? "orders" : "order"}`} size="large" pill fullWidth onPress={() => (orders.length === 1 ? router.replace({ pathname: "/order/[id]", params: { id: orders[0]!._id } }) : router.replace("/orders"))} />
         <Button label="Continue shopping" variant="ghost" fullWidth onPress={() => router.replace("/home")} />
       </View>
+      <PushPrimer side="shop" visible={primer.open} onClose={primer.close} status={primer.status} />
     </SafeAreaView>
   );
 }

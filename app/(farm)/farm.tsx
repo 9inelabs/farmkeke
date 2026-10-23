@@ -7,13 +7,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bank, Basket, Bell, Book, Calendar, ChevronRight, Document, DocumentCheck, Headphone, Messages, Receipt, Shop, Star, Truck, Wallet } from "@/components/icons";
+import { Bank, Basket, Bell, Book, Calendar, ChevronRight, Document, DocumentCheck, Headphone, Messages, Receipt, Shop, Sliders, Star, Truck, Wallet } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
 import { Avatar, Button, Skeleton, StatusBadge, Text } from "@/components/ui";
 import { Card, FarmHeader, LinkRow, Section } from "@/features/farm/ui";
 import { LEAD_TIMES } from "@/features/farmer/constants";
 import { SetupCard, setupDone } from "@/features/farmer/SetupCard";
 import { SwitchModeSheet } from "@/features/farmer/SwitchModeSheet";
+import { usePush } from "@/store/push";
 import { colors, radii, spacing } from "@/theme/tokens";
 
 export default function FarmTab() {
@@ -21,6 +22,7 @@ export default function FarmTab() {
   const rating = useQuery(api.reviews.mySummary);
   const unreadChats = useQuery(api.chat.unread, { side: "farm" }) ?? 0;
   const unreadAlerts = useQuery(api.notifications.unreadCount, { side: "farm" }) ?? 0;
+  const pushStatus = usePush((s) => s.status);
   const [switching, setSwitching] = useState(false);
   const lead = farm ? LEAD_TIMES.find((l) => l.value === farm.leadTimeHours)?.detail : undefined;
 
@@ -61,7 +63,8 @@ export default function FarmTab() {
                 <LinkRow icon={Shop} label="Business profile" onPress={() => router.push("/farm-settings/profile")} />
                 <LinkRow icon={Truck} label="Fulfilment" value={lead ? `${lead} to prepare` : undefined} onPress={() => router.push("/farm-settings/fulfilment")} />
                 <LinkRow icon={Calendar} label="Availability" value={farm ? (farm.holidayMode ? "Holiday" : `${farm.openDays.length} days a week`) : undefined} onPress={() => router.push("/farm-settings/availability")} />
-                <LinkRow icon={DocumentCheck} label="Documents" onPress={() => router.push("/farm-settings/documents")} last />
+                <LinkRow icon={DocumentCheck} label="Documents" onPress={() => router.push("/farm-settings/documents")} />
+              <LinkRow icon={Sliders} label="Alerts" value={pushStatus === "granted" ? "Push on" : pushStatus === "unavailable" ? undefined : "Push off"} onPress={() => router.push({ pathname: "/settings/notifications", params: { side: "farm" } })} last />
               </Card>
             </Section>
 
@@ -77,7 +80,7 @@ export default function FarmTab() {
               <Card style={styles.flush}>
                 <LinkRow icon={Star} label="Reviews" value={rating?.average != null ? `${rating.average.toFixed(1)} · ${rating.count}` : undefined} onPress={() => router.push("/farm/reviews")} />
                 <LinkRow icon={Messages} label="Messages" value={unreadChats > 0 ? `${unreadChats} unread` : undefined} onPress={() => router.push("/farm-messages")} />
-                <LinkRow icon={Bell} label="Notifications" value={unreadAlerts > 0 ? `${unreadAlerts} new` : undefined} onPress={() => router.push({ pathname: "/notifications", params: { side: "farm" } })} last />
+                <LinkRow icon={Bell} label="Inbox" value={unreadAlerts > 0 ? `${unreadAlerts} new` : undefined} onPress={() => router.push({ pathname: "/notifications", params: { side: "farm" } })} last />
               </Card>
             </Section>
 
