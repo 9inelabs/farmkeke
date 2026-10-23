@@ -2,8 +2,8 @@ import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft } from "@/components/icons";
-import { Segmented, Text, Wordmark } from "@/components/ui";
+import { ChevronLeft, Sprout } from "@/components/icons";
+import { Button, Segmented, Text, Wordmark } from "@/components/ui";
 import { Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -70,6 +70,17 @@ export function AuthScreen({ title, subtitle, nav = "close", tab, children, foot
             {tab !== undefined && <Segmented options={TABS} value={tab} onChange={(next) => next !== tab && router.replace(`/${next}`)} />}
             <View style={styles.form}>{children}</View>
             <View style={styles.footer}>{footer}</View>
+            {tab !== undefined ? (
+              <View style={styles.farmer}>
+                <View style={styles.orRow}>
+                  <View style={styles.rule} />
+                  <Text variant="small">or</Text>
+                  <View style={styles.rule} />
+                </View>
+                {/* Farmers log in with their phone and PIN (24 Oct 2026) */}
+                <Button label="Log in as farmer" icon={Sprout} variant="outline" size="large" pill fullWidth onPress={() => router.push("/sell/login")} />
+              </View>
+            ) : null}
           </Stagger>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -98,4 +109,7 @@ const styles = StyleSheet.create({
   form: { gap: spacing.lg, marginTop: spacing.sm },
   footer: { gap: spacing.lg, marginTop: spacing.md },
   link: { textDecorationLine: "underline", paddingVertical: spacing.xxs },
+  farmer: { gap: spacing.lg },
+  orRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  rule: { flex: 1, height: 1, backgroundColor: colors.line },
 });

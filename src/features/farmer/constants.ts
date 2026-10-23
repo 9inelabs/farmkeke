@@ -35,19 +35,19 @@ export type Season = (typeof SEASONS)[number]["value"];
 export const labelOf = <T extends { value: string | number; label: string }>(list: readonly T[], value?: T["value"]) =>
   list.find((x) => x.value === value)?.label ?? "";
 
-/** The application steps (F-03 to F-08) in order; review is step 6. */
+/**
+ * The application steps (the short form, 24 Oct 2026), after phone, code and
+ * PIN: about you and the farm, bank details, then review.
+ */
 export const STEPS: { section: Section | "review"; path: string; title: string }[] = [
-  { section: "farm", path: "/sell/apply/farm", title: "Farm details" },
-  { section: "produce", path: "/sell/apply/produce", title: "What you grow" },
-  { section: "collection", path: "/sell/apply/collection", title: "Collection details" },
-  { section: "documents", path: "/sell/apply/documents", title: "Documents" },
-  { section: "payout", path: "/sell/apply/payout", title: "Payout details" },
-  { section: "review", path: "/sell/apply/review", title: "Review and submit" },
+  { section: "farm", path: "/sell/apply/profile", title: "You and your farm" },
+  { section: "payout", path: "/sell/apply/bank", title: "Bank details" },
+  { section: "review", path: "/sell/apply/review", title: "Review" },
 ];
 
 /** Where to continue an application: the first step with something missing. */
 export function nextStepPath(problems: Partial<Record<Section, string[]>>): string {
-  return STEPS.find((s) => s.section !== "review" && (problems[s.section]?.length ?? 0) > 0)?.path ?? STEPS[5].path;
+  return STEPS.find((s) => s.section !== "review" && (problems[s.section]?.length ?? 0) > 0)?.path ?? "/sell/apply/review";
 }
 
 export const DOCUMENTS = {

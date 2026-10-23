@@ -118,7 +118,7 @@ export default function ApplicationStatus() {
               fullWidth
               onPress={() =>
                 void start({})
-                  .then(() => router.replace("/sell/apply/farm"))
+                  .then(() => router.replace("/sell/apply/profile"))
                   .catch((e: unknown) => setError(errorMessage(e)))
               }
             />

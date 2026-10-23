@@ -4,7 +4,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
-import { applicationProblems } from "../lib/application";
+import { applicationProblems, DEFAULT_COLLECTION_HOURS, DEFAULT_LEAD_TIME_HOURS } from "../lib/application";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { notify } from "../lib/notify";
@@ -77,6 +77,7 @@ export const get = query({
       .take(50);
     return {
       application: app,
+      photoUrl: app.photoStorageId ? await ctx.storage.getUrl(app.photoStorageId) : null,
       applicant: user === null ? null : { _id: user._id, name: user.name, email: user.email, phone: user.phone },
       categories: categories.filter((c) => c !== null).map((c) => c.name),
       documents,
@@ -103,17 +104,14 @@ export const approve = mutation({
       .withIndex("by_applicationId", (q) => q.eq("applicationId", app._id))
       .take(50);
     const live = docs.filter((d) => d.status !== "rejected" && d.status !== "expired");
-    const count = (kind: (typeof docs)[number]["kind"]) => live.filter((d) => d.kind === kind).length;
-    const problems = applicationProblems(app, {
-      government_id: count("government_id"),
-      farm_photo: count("farm_photo"),
-      proof_of_address: count("proof_of_address"),
-      association_letter: count("association_letter"),
-    });
+    const applicant = await ctx.db.get("users", app.userId);
+    // Older applications have no full name; the account's name stands in
+    const problems = applicationProblems({ ...app, fullName: app.fullName ?? applicant?.name });
     if (Object.keys(problems).length > 0) throw new ConvexError("Application is incomplete; request more info instead");
     const existing = await ctx.db.query("farms").withIndex("by_userId", (q) => q.eq("userId", app.userId)).unique();
     if (existing !== null) throw new ConvexError("This person already has a farm");
 
+    const collectionHours = app.collectionHours.length > 0 ? app.collectionHours : DEFAULT_COLLECTION_HOURS;
     const farmId = await ctx.db.insert("farms", {
       userId: app.userId,
       applicationId: app._id,
@@ -124,14 +122,17 @@ export const approve = mutation({
       address: app.address!,
       latitude: app.latitude,
       longitude: app.longitude,
-      farmSize: app.farmSize!,
-      farmType: app.farmType!,
+      photoStorageId: app.photoStorageId,
+      farmSize: app.farmSize,
+      farmType: app.farmType,
       categoryIds: app.categoryIds,
-      collectionAddress: app.collectionAddress!,
-      collectionHours: app.collectionHours,
-      leadTimeHours: app.leadTimeHours!,
+      // The short form doesn't ask for collection details: the farm address and
+      // usual hours until the farm confirms its own (F-14 checklist)
+      collectionAddress: app.collectionAddress ?? app.address!,
+      collectionHours: collectionHours,
+      leadTimeHours: app.leadTimeHours ?? DEFAULT_LEAD_TIME_HOURS,
       // Open on the days riders can collect
-      openDays: [...new Set(app.collectionHours.map((h) => h.day))].sort(),
+      openDays: [...new Set(collectionHours.map((h) => h.day))].sort(),
       holidayMode: false,
       bankCode: app.bankCode!,
       bankName: app.bankName!,

@@ -33,7 +33,7 @@ export default function SignIn() {
   const submit = async () => {
     const id = identifier.trim();
     const errors: typeof fieldError = {};
-    if (id.length === 0) errors.identifier = "Enter your email. Farmers can use their phone number.";
+    if (id.length === 0) errors.identifier = "Enter your email.";
     if (password.length === 0) errors.password = "Enter your password.";
     setFieldError(errors);
     setBanner(null);
@@ -103,7 +103,6 @@ export default function SignIn() {
             setFieldError((e) => ({ ...e, identifier: undefined }));
           }}
           error={fieldError.identifier}
-          helper="Farmers can use their phone number instead."
           placeholder="you@example.com"
           autoCapitalize="none"
           autoComplete="email"

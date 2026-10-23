@@ -38,6 +38,8 @@ export type ApplicationDetail = {
     userId: Id<"users">;
     status: ApplicationStatus;
     reference?: string;
+    // The short form (24 Oct 2026)
+    fullName?: string;
     farmName?: string;
     phone?: string;
     state?: string;
@@ -64,6 +66,7 @@ export type ApplicationDetail = {
     moreInfo?: { note: string; sections: ApplicationSection[] };
     rejection?: { reason: string; note: string; reapplyAfter: number };
   };
+  photoUrl: string | null;
   applicant: { _id: Id<"users">; name?: string; email?: string; phone?: string } | null;
   categories: string[];
   documents: FarmDocument[];
@@ -93,8 +96,9 @@ export type FarmDetail = {
     state: string;
     lga: string;
     address: string;
-    farmSize: string;
-    farmType: string;
+    // Older farms only; the short form doesn't ask
+    farmSize?: string;
+    farmType?: string;
     collectionAddress: string;
     collectionHours: Hours[];
     leadTimeHours: number;

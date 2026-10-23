@@ -64,8 +64,10 @@ export const mine = query({
     );
     return {
       ...app,
+      photoUrl: app.photoStorageId ? await ctx.storage.getUrl(app.photoStorageId) : null,
       documents,
-      problems: applicationProblems(app, countDocs(docs)),
+      // Older applications have no full name; the account's name stands in
+      problems: applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocs(docs)),
       expectedDecisionAt: app.submittedAt === undefined ? null : app.submittedAt + REVIEW_DAYS * 86_400_000,
     };
   },
@@ -79,7 +81,13 @@ export const start = mutation({
     const farm = await ctx.db.query("farms").withIndex("by_userId", (q) => q.eq("userId", user._id)).unique();
     if (farm !== null) throw new ConvexError({ code: "ALREADY_FARMER" });
     const latest = await latestApplication(ctx, user._id);
-    if (latest !== null && latest.status !== "rejected") return latest._id;
+    if (latest !== null && latest.status !== "rejected") {
+      // The phone verified at sign-in is the application's phone
+      if (user.phone && latest.phone !== user.phone && (EDITABLE_STATUSES as readonly string[]).includes(latest.status)) {
+        await ctx.db.patch("farmerApplications", latest._id, { phone: user.phone });
+      }
+      return latest._id;
+    }
     if (latest?.rejection && latest.rejection.reapplyAfter > Date.now()) {
       throw new ConvexError({ code: "REAPPLY_LATER", reapplyAfter: latest.rejection.reapplyAfter });
     }
@@ -88,6 +96,7 @@ export const start = mutation({
       userId: user._id,
       status: "draft",
       phone: user.phone,
+      fullName: latest?.fullName ?? user.name,
       categoryIds: [],
       seasons: [],
       collectionHours: [],
@@ -104,6 +113,45 @@ const optionalText = (value: string | undefined, max = 300) => {
   if (trimmed !== undefined && trimmed.length > max) throw new ConvexError({ code: "TOO_LONG" });
   return trimmed === "" ? undefined : trimmed;
 };
+
+/**
+ * The short form's first screen ("Let's get to know you"): the farmer's name
+ * and photo, the farm's name, and where it is. Partial saves are fine.
+ */
+export const saveProfile = mutation({
+  args: {
+    fullName: v.optional(v.string()),
+    farmName: v.optional(v.string()),
+    photoStorageId: v.optional(v.union(v.id("_storage"), v.null())),
+    state: v.optional(v.string()),
+    lga: v.optional(v.string()),
+    address: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { user, app } = await editableApplication(ctx);
+    const fullName = optionalText(args.fullName, 80);
+    let photoStorageId = app.photoStorageId;
+    if (args.photoStorageId !== undefined && args.photoStorageId !== app.photoStorageId) {
+      if (args.photoStorageId !== null) await validateImageUpload(ctx, args.photoStorageId);
+      if (app.photoStorageId) await ctx.storage.delete(app.photoStorageId);
+      photoStorageId = args.photoStorageId ?? undefined;
+    }
+    await ctx.db.patch("farmerApplications", app._id, {
+      fullName,
+      farmName: optionalText(args.farmName, 80),
+      photoStorageId,
+      state: optionalText(args.state, 60),
+      lga: optionalText(args.lga, 60),
+      address: optionalText(args.address),
+      latitude: args.latitude,
+      longitude: args.longitude,
+    });
+    // The account takes the farmer's name (accounts made by phone start without one)
+    if (fullName && user.name !== fullName) await ctx.db.patch("users", user._id, { name: fullName });
+  },
+});
 
 /** F-03 Farm details. Partial saves are fine; submit checks everything. */
 export const saveFarm = mutation({
@@ -261,7 +309,7 @@ export const submit = mutation({
     const { user, app } = await editableApplication(ctx);
     if (!args.acceptTerms) throw new ConvexError({ code: "TERMS_REQUIRED" });
     const docs = await documentsOf(ctx, app._id);
-    const problems = applicationProblems(app, countDocs(docs));
+    const problems = applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocs(docs));
     if (Object.keys(problems).length > 0) throw new ConvexError({ code: "INCOMPLETE", sections: Object.keys(problems) });
 
     // The phone becomes a way to sign in, so it must belong to one account.

@@ -13,21 +13,28 @@ type Props = Omit<TextInputProps, "style"> & {
   prefix?: string;
   /** Adds the Show / Hide toggle used on every password field. */
   password?: boolean;
+  /** "lime": always outlined in lime, as on the farmer sign-up screens. */
+  tone?: "default" | "lime";
 };
 
 export const TextField = forwardRef<TextInput, Props>(function TextField(
-  { label, helper, error, prefix, password = false, onFocus, onBlur, ...inputProps },
+  { label, helper, error, prefix, password = false, tone = "default", onFocus, onBlur, ...inputProps },
   ref,
 ) {
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
-  const borderColor = error ? colors.error : focused ? colors.lime : colors.line;
+  const lime = tone === "lime";
+  const borderColor = error ? colors.error : focused || lime ? colors.lime : colors.line;
 
   return (
     <View style={styles.wrap}>
-      {label !== undefined && <Text variant="label" style={styles.label}>{label}</Text>}
+      {label !== undefined && (
+        <Text variant="label" style={[styles.label, lime && styles.labelLime]}>
+          {label}
+        </Text>
+      )}
       <View style={styles.fieldRow}>
-      <View style={[styles.field, { borderColor, borderWidth: focused || error ? 1.5 : 1 }, focused && styles.fieldFocused]}>
+      <View style={[styles.field, lime && styles.fieldLime, { borderColor, borderWidth: focused || error || lime ? 1.5 : 1 }, focused && styles.fieldFocused]}>
         {prefix !== undefined && (
           <View style={styles.prefix}>
             <Text variant="bodyMedium">{prefix}</Text>
@@ -81,6 +88,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
   label: { color: colors.inkSoft },
+  labelLime: { color: colors.ink },
   fieldRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   field: {
     flex: 1,
@@ -92,6 +100,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   fieldFocused: { backgroundColor: colors.white },
+  fieldLime: { backgroundColor: "rgba(255,255,255,0.6)", borderRadius: radii.md + 2, minHeight: 56 },
   prefix: {
     paddingRight: spacing.md,
     marginRight: spacing.md,

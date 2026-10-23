@@ -1,161 +1,160 @@
-// F-08 Apply: review and submit (step 6 of 6). Also where F-09b resubmits.
+// Farmer sign-up: review your profile before sending it to Farmkeke. Each
+// part can be edited, and comes back here. Also where an application Farmkeke
+// asked more about is resubmitted.
 import { api } from "@convex/_generated/api";
-import type { Section } from "@convex/lib/application";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Edit, Info } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Checkbox, Text } from "@/components/ui";
-import { ApplyStep } from "@/features/farmer/ApplyStep";
-import { DOCUMENTS, FARM_SIZES, FARM_TYPES, labelOf, LEAD_TIMES, SEASONS, STEPS } from "@/features/farmer/constants";
-import { nationalPhone } from "@/features/farmer/StepFooter";
-import { useEditableApplication, type Application } from "@/features/farmer/useApplication";
+import { Bank, Call, Edit, Info, Pin, Shop, User, type IconComponent } from "@/components/icons";
+import { Avatar, Button, Checkbox, Skeleton, Text } from "@/components/ui";
+import { useEditableApplication } from "@/features/farmer/useApplication";
+import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
-import { formatHours } from "@/lib/hours";
-import { borders, colors, radii, spacing } from "@/theme/tokens";
+import { displayPhone } from "@/lib/phone";
+import { colors, radii, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
-function summary(app: Application, categories: string[]): Record<Section, string[]> {
-  const docCount = (kind: keyof typeof DOCUMENTS) =>
-    app.documents.filter((d) => d.kind === kind && d.status !== "rejected").length;
-  return {
-    farm: [
-      app.farmName ?? "",
-      nationalPhone(app.phone),
-      [app.address, app.lga, app.state].filter(Boolean).join(", "),
-      [labelOf(FARM_SIZES, app.farmSize), labelOf(FARM_TYPES, app.farmType)].filter(Boolean).join(" · "),
-    ],
-    produce: [categories.join(", "), app.mainCrops ?? "", app.seasons.map((s) => labelOf(SEASONS, s)).join(", ")],
-    collection: [
-      app.collectionAddress ?? "",
-      app.collectionHours.length ? formatHours(app.collectionHours) : "",
-      app.leadTimeHours ? `Needs ${LEAD_TIMES.find((l) => l.value === app.leadTimeHours)?.detail ?? `${app.leadTimeHours} hours`} to prepare` : "",
-    ],
-    documents: (Object.keys(DOCUMENTS) as (keyof typeof DOCUMENTS)[]).map(
-      (kind) => `${DOCUMENTS[kind].title}: ${docCount(kind)} ${docCount(kind) === 1 ? "photo" : "photos"}`,
-    ),
-    payout: [app.bankName ?? "", app.accountNumber ? `•••• ${app.accountNumber.slice(-4)}` : "", app.accountName ?? ""],
-  };
+function Line({ icon: Icon, label, value }: { icon: IconComponent; label: string; value: string | null }) {
+  return (
+    <View style={styles.line}>
+      <Icon size={18} color={colors.inkSoft} />
+      <View style={styles.flex}>
+        <Text variant="small">{label}</Text>
+        <Text variant="body" color={value ? colors.ink : colors.inkMuted} numberOfLines={2}>
+          {value || "Not added yet"}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function Section({ title, onEdit, problems, children }: { title: string; onEdit: () => void; problems: string[]; children: React.ReactNode }) {
+  return (
+    <View style={[styles.card, problems.length > 0 && styles.flagged]}>
+      <View style={styles.cardHead}>
+        <Text variant="label" style={styles.cardTitle}>
+          {title}
+        </Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${title}`} hitSlop={8} onPress={onEdit} style={styles.edit}>
+          <Edit size={14} color={colors.forest} />
+          <Text variant="label" color={colors.forest}>
+            Edit
+          </Text>
+        </Pressable>
+      </View>
+      {children}
+      {problems.map((p) => (
+        <View key={p} style={styles.problem}>
+          <Info size={14} color={colors.error} />
+          <Text variant="small" color={colors.error}>
+            {p}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 export default function Review() {
   const app = useEditableApplication();
-  const categories = useQuery(api.catalog.listCategories);
   const submit = useMutation(api.farmerApplications.submit);
   const [terms, setTerms] = useState(false);
-  const [termsError, setTermsError] = useState<string | null>(null);
-  const [banner, setBanner] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  const chosen = (categories ?? []).filter((c) => app?.categoryIds.includes(c._id)).map((c) => c.name);
-  const lines = app ? summary(app, chosen) : null;
   const incomplete = app ? Object.keys(app.problems).length > 0 : true;
 
   const send = async () => {
-    if (!terms) {
-      setTermsError("Tick the box to agree to the farmer terms.");
-      return;
-    }
+    if (!terms) return setError("Tick the box to agree to the farmer terms.");
     setBusy(true);
-    setBanner(null);
+    setError(null);
     try {
       const { reference } = await submit({ acceptTerms: true });
       router.replace({ pathname: "/sell/submitted", params: { reference } });
     } catch (e) {
       const code = errorCode(e);
-      if (code === "PHONE_TAKEN") setBanner("That phone number is already used by another Farmkeke account. Use a different number in Farm details.");
-      else if (code === "INCOMPLETE") setBanner("Some details are missing. Fix the sections marked below.");
-      else setBanner(errorMessage(e));
+      setError(code === "PHONE_TAKEN" ? "That phone number is used by another Farmkeke account." : code === "INCOMPLETE" ? "Some details are missing. Fix the parts marked in red." : errorMessage(e));
     } finally {
       setBusy(false);
     }
   };
 
+  const edit = (path: "/sell/apply/profile" | "/sell/apply/bank") => router.push({ pathname: path, params: { from: "review" } });
+
   return (
-    <ApplyStep
-      step={6}
-      intro="Check everything before you send it. You can edit any section."
-      loading={app === undefined || categories === undefined}
-      banner={banner}
+    <SellShell
+      curve="both"
+      sticker="center"
       footer={
-        <Button
-          label={app?.status === "more_info" ? "Resubmit application" : "Submit application"}
-          fullWidth
-          loading={busy}
-          disabled={incomplete}
-          onPress={() => void send()}
-        />
+        <>
+          <Checkbox label="I agree to the Farmkeke farmer terms" checked={terms} onChange={(v) => { setTerms(v); setError(null); }} />
+          <Pressable accessibilityRole="link" hitSlop={6} onPress={() => router.push("/farm-settings/terms")}>
+            <Text variant="small" color={colors.limeInk} style={styles.link}>
+              Read the farmer terms
+            </Text>
+          </Pressable>
+          {error ? (
+            <Text variant="small" color={colors.error}>
+              {error}
+            </Text>
+          ) : null}
+          <Button label={app?.status === "more_info" ? "Resubmit Application" : "Submit Application"} variant="black" size="large" fullWidth loading={busy} disabled={incomplete} onPress={() => void send()} />
+        </>
       }
     >
-      {app && lines
-        ? STEPS.slice(0, 5).map((step) => {
-            const section = step.section as Section;
-            const problems = app.problems[section] ?? [];
-            return (
-              <View key={section} style={[styles.card, problems.length > 0 && styles.cardFlagged]}>
-                <View style={styles.cardHeader}>
-                  <Text variant="bodyMedium" style={styles.flex}>
-                    {step.title}
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Edit ${step.title}`}
-                    hitSlop={8}
-                    onPress={() => router.push(step.path)}
-                    style={styles.edit}
-                  >
-                    <Edit size={14} color={colors.forest} />
-                    <Text variant="label" color={colors.forest}>
-                      Edit
-                    </Text>
-                  </Pressable>
-                </View>
-                {lines[section].filter(Boolean).map((line) => (
-                  <Text key={line} variant="caption" color={colors.ink}>
-                    {line}
-                  </Text>
-                ))}
-                {problems.map((p) => (
-                  <View key={p} style={styles.problem}>
-                    <Info size={14} color={colors.error} />
-                    <Text variant="small" color={colors.error}>
-                      {p}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            );
-          })
-        : null}
-
-      <View style={styles.terms}>
-        <Checkbox
-          label="I agree to the Farmkeke farmer terms"
-          checked={terms}
-          onChange={(v) => {
-            setTerms(v);
-            setTermsError(null);
-          }}
-        />
-        <Text variant="small" color={colors.forest} accessibilityRole="link" onPress={() => router.push("/farm-settings/terms")}>
-          Read the farmer terms
-        </Text>
-        {termsError ? (
-          <Text variant="small" color={colors.error}>
-            {termsError}
+      <SellTitle title="Review your" accent="Profile" note="Check your details. Tap Edit to change anything." />
+      {app?.status === "more_info" && app.moreInfo ? (
+        <View style={styles.admin}>
+          <Text variant="label">Farmkeke asked for more information</Text>
+          <Text variant="small" color={colors.inkSoft}>
+            {app.moreInfo.note}
           </Text>
-        ) : null}
-      </View>
-    </ApplyStep>
+        </View>
+      ) : null}
+      {app === undefined ? (
+        <>
+          <Skeleton height={220} radius={radii.lg + 2} />
+          <Skeleton height={140} radius={radii.lg + 2} />
+        </>
+      ) : (
+        <>
+          <Section title="You and your farm" onEdit={() => edit("/sell/apply/profile")} problems={app.problems.farm ?? []}>
+            <View style={styles.who}>
+              {app.photoUrl ? <Image source={{ uri: app.photoUrl }} style={styles.photo} contentFit="cover" /> : <Avatar name={app.fullName ?? "?"} size={56} />}
+              <View style={styles.flex}>
+                <Text variant="heading" numberOfLines={1}>
+                  {app.fullName || "Your name"}
+                </Text>
+                <Text variant="small">{app.farmName || "Your farm"}</Text>
+              </View>
+            </View>
+            <Line icon={User} label="Full name" value={app.fullName ?? null} />
+            <Line icon={Shop} label="Farm" value={app.farmName ?? null} />
+            <Line icon={Call} label="Phone" value={app.phone ? displayPhone(app.phone) : null} />
+            <Line icon={Pin} label="Location" value={[app.address, app.lga, app.state].filter(Boolean).join(", ") || null} />
+          </Section>
+          <Section title="Bank details" onEdit={() => edit("/sell/apply/bank")} problems={app.problems.payout ?? []}>
+            <Line icon={Bank} label="Bank" value={app.bankName && app.accountNumber ? `${app.bankName} ••${app.accountNumber.slice(-4)}` : null} />
+            <Line icon={User} label="Account name" value={app.accountName ?? null} />
+          </Section>
+        </>
+      )}
+    </SellShell>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radii.lg, borderWidth: borders.hairline, borderColor: colors.lime, padding: spacing.md, gap: 4 },
-  cardFlagged: { borderColor: colors.error, borderWidth: 1 },
-  cardHeader: { flexDirection: "row", alignItems: "center", marginBottom: spacing.xs },
-  flex: { flex: 1 },
-  edit: { flexDirection: "row", alignItems: "center", gap: 4 },
-  problem: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: 2 },
-  terms: { gap: spacing.sm },
+  flex: { flex: 1, gap: 1 },
+  card: { backgroundColor: colors.white, borderRadius: radii.lg + 2, padding: spacing.lg, gap: spacing.md, borderWidth: 1.5, borderColor: "transparent" },
+  flagged: { borderColor: colors.errorSoft },
+  cardHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardTitle: { fontFamily: fonts.semibold, fontSize: 15 },
+  edit: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.pill, backgroundColor: colors.tint },
+  who: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.surfaceSoft },
+  photo: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: colors.lime },
+  line: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  problem: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  admin: { backgroundColor: colors.pendingSoft, borderRadius: radii.lg, padding: spacing.lg, gap: 4 },
+  link: { fontFamily: fonts.semibold, textDecorationLine: "underline" },
 });

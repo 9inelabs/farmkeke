@@ -33,8 +33,10 @@ export const fonts = {
 export const type = {
   display: { fontFamily: fonts.displaySemibold, fontSize: 36, lineHeight: 42, color: colors.ink },
   displaySmall: { fontFamily: fonts.displaySemibold, fontSize: 26, lineHeight: 32, color: colors.ink },
-  // Large screen titles beside the back chevron ("< Categories")
-  screenTitle: { fontFamily: fonts.semibold, fontSize: 28, lineHeight: 34, letterSpacing: -0.3, color: colors.ink },
+  // Tab titles ("Settings & Support", "Orders")
+  screenTitle: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: colors.ink },
+  // Titles beside the back chevron ("< Account"), kept small as in the designs
+  backTitle: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, letterSpacing: -0.2, color: colors.ink },
   title: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 30, color: colors.ink },
   section: { fontFamily: fonts.semibold, fontSize: 20, lineHeight: 26, color: colors.ink },
   heading: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22, color: colors.ink },

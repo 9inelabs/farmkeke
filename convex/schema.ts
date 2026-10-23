@@ -373,7 +373,10 @@ export default defineSchema({
     userId: v.id("users"),
     status: applicationStatus,
     reference: v.optional(v.string()),
-    // F-03 Farm details
+    // F-03 Farm details. Since 24 Oct 2026 the app's short form asks only for the
+    // farmer's name and photo, the farm's name and location, and bank details.
+    fullName: v.optional(v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
     farmName: v.optional(v.string()),
     phone: v.optional(v.string()),
     state: v.optional(v.string()),
@@ -419,6 +422,15 @@ export default defineSchema({
     .index("by_applicationId", ["applicationId"])
     .index("by_userId", ["userId"]),
 
+  // Farmer sign-in by text message: one pending 6-digit code per phone
+  // (lib/phoneAuth.ts). Only a hash of the code is kept.
+  phoneCodes: defineTable({
+    phone: v.string(),
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  }).index("by_phone", ["phone"]),
+
   // Created when an application is approved. One login per farm.
   farms: defineTable({
     userId: v.id("users"),
@@ -432,8 +444,9 @@ export default defineSchema({
     address: v.string(),
     latitude: v.optional(v.number()),
     longitude: v.optional(v.number()),
-    farmSize: farmSize,
-    farmType: farmType,
+    // Older applications only; the short form doesn't ask
+    farmSize: v.optional(farmSize),
+    farmType: v.optional(farmType),
     categoryIds: v.array(v.id("categories")),
     // F-71 Fulfilment settings
     collectionAddress: v.string(),

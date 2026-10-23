@@ -94,9 +94,13 @@ export function ApplicationView({ applicationId }: { applicationId: string }) {
       <div className="grid grid-cols-[1fr_320px] gap-6 m:grid-cols-1">
         <div className="flex flex-col gap-6">
           <Panel title="Applicant">
+            {data.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- a Convex storage URL
+              <img src={data.photoUrl} alt={`${app.fullName ?? "Applicant"}'s photo`} className="mb-4 h-20 w-20 rounded-full object-cover" />
+            ) : null}
             <Facts
               items={[
-                { label: "Name", value: data.applicant?.name ?? "–" },
+                { label: "Full name", value: app.fullName ?? data.applicant?.name ?? "–" },
                 { label: "Email", value: data.applicant?.email ?? "–" },
                 { label: "Account phone", value: data.applicant?.phone ? displayPhone(data.applicant.phone) : "–" },
                 { label: "Submitted", value: app.submittedAt ? dateTime(app.submittedAt) : "Not yet" },

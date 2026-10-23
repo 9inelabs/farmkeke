@@ -97,8 +97,8 @@ export function FarmView({ farmId }: { farmId: string }) {
               items={[
                 { label: "Farm phone", value: displayPhone(farm.phone) },
                 { label: "Address", value: farm.address },
-                { label: "Size", value: FARM_SIZE[farm.farmSize] ?? farm.farmSize },
-                { label: "Type", value: FARM_TYPE[farm.farmType] ?? farm.farmType },
+                { label: "Size", value: farm.farmSize ? (FARM_SIZE[farm.farmSize] ?? farm.farmSize) : "–" },
+                { label: "Type", value: farm.farmType ? (FARM_TYPE[farm.farmType] ?? farm.farmType) : "–" },
                 { label: "Profile set up", value: farm.profileConfirmedAt ? dateTime(farm.profileConfirmedAt) : "Not yet" },
                 { label: "Collection set up", value: farm.collectionConfirmedAt ? dateTime(farm.collectionConfirmedAt) : "Not yet" },
               ]}
