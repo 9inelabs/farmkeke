@@ -7,7 +7,7 @@ import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Call, ChevronRight, Clock, CloseCircle, Eye, Help, Pin, Receipt, ShieldCheck, type IconComponent } from "@/components/icons";
+import { Call, ChevronRight, Clock, CloseCircle, Eye, Flag, Headphone, Help, Messages, Pin, Receipt, ShieldCheck, Star, type IconComponent } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
 import { Avatar, Button, ScreenHeader, StatusBadge, StatusScreen, Text, Timeline } from "@/components/ui";
 import { formatHours } from "@/lib/hours";
@@ -104,8 +104,14 @@ function Tracking({ o }: { o: OrderDetail }) {
 
           <View style={styles.card}>
             <Text variant="overline">Need help?</Text>
+            <HelpRow icon={Messages} label="Message the farmer" onPress={() => router.push({ pathname: "/order/[id]/chat", params: { id: o._id } })} />
+            {o.disputeId ? (
+              <HelpRow icon={Flag} label="View your problem report" onPress={() => router.push({ pathname: "/order/[id]/dispute", params: { id: o._id } })} />
+            ) : o.canReport ? (
+              <HelpRow icon={Flag} label="Report a problem" onPress={() => router.push({ pathname: "/order/[id]/problem", params: { id: o._id } })} />
+            ) : null}
+            <HelpRow icon={Headphone} label="Contact Farmkeke support" onPress={() => router.push({ pathname: "/support", params: { orderId: o._id } })} />
             <HelpRow icon={Help} label="Help and FAQ" onPress={() => router.push("/help")} />
-            <HelpRow icon={Call} label="Contact Farmkeke support" onPress={() => void Linking.openURL(`mailto:support@farmkeke.com?subject=${encodeURIComponent(`Order ${o.number}`)}`)} />
           </View>
         </Stagger>
       </ScrollView>
@@ -154,10 +160,15 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
   if (o.status === "completed") {
     title = "All done";
     body = `${formatNaira(o.totalKobo)} was released to ${o.farmName}. Thanks for buying direct from the farm.`;
-    action = <Button label={`Buy again from ${o.farmName}`} size="large" pill fullWidth onPress={() => router.push(`/farm/${o.farmId}`)} />;
+    action = o.reviewed ? (
+      <Button label={`Buy again from ${o.farmName}`} size="large" pill fullWidth onPress={() => router.push(`/farm/${o.farmId}`)} />
+    ) : (
+      <Button label="Rate your order" icon={Star} size="large" pill fullWidth onPress={() => router.push({ pathname: "/order/[id]/review", params: { id: o._id } })} />
+    );
   } else if (o.status === "disputed") {
     title = "We're looking into your report";
     body = "Your payment stays held while the farm replies and our team reviews it. We'll text you with the outcome.";
+    action = <Button label="Follow this case" size="large" pill fullWidth onPress={() => router.push({ pathname: "/order/[id]/dispute", params: { id: o._id } })} />;
   } else if (o.fulfilment === "delivery" && o.escrow === "none") {
     if (payToken) {
       title = "Pay your bill";
@@ -169,12 +180,12 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
     }
   } else if (pickup) {
     title = "Collect your order, then confirm";
-    body = "Check everything at the farm. Something wrong? Don't confirm; contact us first.";
+    body = "Check everything at the farm. Something wrong? Report a problem instead of confirming.";
     action = <Button label="I've collected my order" size="large" pill fullWidth disabled={!o.canConfirm} onPress={confirm} />;
     if (!o.canConfirm) hint = "Available once the farm hands it over";
   } else if (o.canConfirm) {
     title = "Check everything arrived";
-    body = "Then confirm receipt here to release payment to the farm. Something wrong? Don't confirm; contact us first.";
+    body = "Then confirm receipt here to release payment to the farm. Something wrong? Report a problem instead.";
     action = <Button label="I received everything" size="large" pill fullWidth onPress={confirm} />;
   } else if (r >= 4) {
     title = first ? `Check your ${first} when ${o.items.length > 1 ? "your order arrives" : "it arrives"}` : "Check your order when it arrives";

@@ -8,7 +8,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Box, ChevronRight, Search, ShieldCheck } from "@/components/icons";
+import { Box, ChevronRight, Messages, Search, ShieldCheck } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
 import { Button, EmptyState, ScreenHeader, Segmented, Skeleton, StatusBadge, Text } from "@/components/ui";
 import { dayMonth } from "@/features/orders/format";
@@ -26,7 +26,24 @@ export default function Orders() {
   const [tab, setTab] = useState<"active" | "past">("active");
   const [now] = useState(() => Date.now());
 
-  const header = <ScreenHeader title="My Orders" onBack={() => router.navigate("/home")} />;
+  const unreadChats = useQuery(api.chat.unread, { side: "shop" }) ?? 0;
+  const header = (
+    <ScreenHeader
+      title="My Orders"
+      onBack={() => router.navigate("/home")}
+      right={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={unreadChats > 0 ? `Messages, ${unreadChats} unread` : "Messages"}
+          onPress={() => router.push("/messages")}
+          style={styles.chatButton}
+        >
+          <Messages size={22} color={colors.forest} />
+          {unreadChats > 0 ? <View style={styles.chatDot} /> : null}
+        </Pressable>
+      }
+    />
+  );
 
   if (orders === undefined) {
     return (
@@ -184,6 +201,8 @@ const styles = StyleSheet.create({
   held: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   next: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
   nextAction: { backgroundColor: colors.tint },
+  chatButton: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
+  chatDot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.forest, borderWidth: 1.5, borderColor: colors.tint },
   findInset: { marginHorizontal: spacing.screen, marginBottom: spacing.lg },
   pastRow: { flexDirection: "row", alignItems: "center" },
   find: {

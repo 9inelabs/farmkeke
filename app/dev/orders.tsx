@@ -1,10 +1,11 @@
 // Sample orders drawn with the real order screen, to check each state in the
 // browser preview without placing orders: /dev/orders?state=out (bill, pickup,
-// delivered, declined, view). Nothing here touches the backend.
+// delivered, done, declined, problem, view). Nothing here touches the backend.
 import { router, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Chip } from "@/components/ui";
 import { OrderView } from "@/features/orders/OrderView";
+import { ProblemForm } from "@/features/orders/ProblemForm";
 import type { OrderDetail } from "@/features/orders/useOrder";
 import { colors, spacing } from "@/theme/tokens";
 
@@ -81,6 +82,7 @@ const SAMPLES: Record<string, { label: string; order: object }> = {
   delivered: { label: "Delivered", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
   done: { label: "Completed", order: { ...base, status: "completed", escrow: "released", deliveredAt: now - 5 * H, confirmedAt: now - 4 * H, releasedAt: now - 4 * H, isActive: false } },
   declined: { label: "Declined", order: { ...base, status: "declined", escrow: "refunded", declineReason: "We sold out of tomatoes this morning", hasRefund: true, isActive: false } },
+  problem: { label: "Report a problem", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
   view: { label: "View only", order: { ...base, status: "out_for_delivery", viewOnly: true, linkEmailHint: "a***@example.com" } },
 };
 
@@ -89,7 +91,7 @@ export default function OrderSamples() {
   const sample = SAMPLES[state] ?? SAMPLES.out!;
   return (
     <View style={styles.screen}>
-      <OrderView order={sample.order as unknown as OrderDetail} />
+      {state === "problem" ? <ProblemForm o={sample.order as unknown as OrderDetail} /> : <OrderView order={sample.order as unknown as OrderDetail} />}
       <View style={styles.picker}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {Object.entries(SAMPLES).map(([key, s]) => (

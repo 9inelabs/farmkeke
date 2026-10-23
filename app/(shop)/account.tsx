@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { Book, Document, Edit, Grid, Heart, Help, Info, Key, Logout, Pin } from "@/components/icons";
+import { Book, Document, Edit, Grid, Headphone, Heart, Help, Info, Key, Logout, Messages, Pin } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +23,8 @@ export default function Account() {
 
   const help = (
     <ListGroup title="Help and information">
+      <ListRow icon={Messages} title="Messages" subtitle="Your chats with farmers about orders" onPress={() => router.push("/messages")} />
+      <ListRow icon={Headphone} title="Contact support" subtitle="Message the Farmkeke team" onPress={() => router.push("/support")} />
       <ListRow icon={Help} title="Help and FAQ" subtitle="Answers about orders, delivery and payment" onPress={() => router.push("/help")} />
       <ListRow icon={Book} title="How Farmkeke works" subtitle="Ordering, pickup and how your money is held" onPress={() => router.push("/how-it-works")} />
       <ListRow icon={Document} title="Terms and policies" subtitle="Terms, privacy, refunds and disputes" onPress={() => router.push("/legal")} />

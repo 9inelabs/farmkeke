@@ -1,6 +1,7 @@
 // Photo capture and upload to Convex storage (F-06 documents, F-70 farm photo).
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 export type PhotoSource = "camera" | "library";
 
@@ -40,7 +41,9 @@ export async function preparePhoto(uri: string): Promise<string> {
  * Uploads a local file to a Convex upload URL, reporting progress (0–1).
  * Resolves with the storage id.
  */
-export function uploadFile(uploadUrl: string, uri: string, onProgress?: (fraction: number) => void): Promise<string> {
+export async function uploadFile(uploadUrl: string, uri: string, onProgress?: (fraction: number) => void): Promise<string> {
+  // In the browser preview a picked photo is a blob: or data: URL; send its bytes.
+  const body = Platform.OS === "web" ? await (await fetch(uri)).blob() : ({ uri, type: "image/jpeg", name: "photo.jpg" } as unknown as Blob);
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", uploadUrl);
@@ -58,6 +61,6 @@ export function uploadFile(uploadUrl: string, uri: string, onProgress?: (fractio
     };
     xhr.onerror = () => reject(new Error("Upload failed: network"));
     // React Native's XHR sends a local file when given { uri, type, name }.
-    xhr.send({ uri, type: "image/jpeg", name: "photo.jpg" } as unknown as Blob);
+    xhr.send(body);
   });
 }

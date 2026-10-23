@@ -7,7 +7,7 @@ import { useMutation } from "convex/react";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Check, ShieldCheck } from "@/components/icons";
 import { Button, Notice, Screen, ScreenHeader, Skeleton, Text } from "@/components/ui";
 import { useOrder } from "@/features/orders/useOrder";
@@ -55,12 +55,7 @@ export default function ConfirmReceipt() {
         o ? (
           <>
             <Button label="Confirm and release payment" variant="dark" size="large" pill fullWidth loading={busy} disabled={!all || !o.canConfirm} onPress={() => void submit()} />
-            <Button
-              label="There's a problem"
-              variant="ghost"
-              fullWidth
-              onPress={() => void Linking.openURL(`mailto:support@farmkeke.com?subject=${encodeURIComponent(`Problem with order ${o.number}`)}`)}
-            />
+            <Button label="There's a problem" variant="ghost" fullWidth onPress={() => router.replace({ pathname: "/order/[id]/problem", params: { id: o._id } })} />
           </>
         ) : undefined
       }
@@ -108,7 +103,7 @@ export default function ConfirmReceipt() {
           <View style={styles.release}>
             <ShieldCheck size={20} color={colors.forest} variant="solid" />
             <Text variant="caption" color={colors.ink} style={styles.flex}>
-              When you confirm, <Text variant="label">{formatNaira(o.totalKobo)}</Text> is released to {o.farmName}. You can't undo this, so tell us about any problem first.
+              When you confirm, <Text variant="label">{formatNaira(o.totalKobo)}</Text> is released to {o.farmName}. You can't undo this, so report any problem first.
             </Text>
           </View>
           {!all ? <Notice tone="pending">Something missing or damaged? Don't confirm. Tap "There's a problem" and we'll help.</Notice> : null}
