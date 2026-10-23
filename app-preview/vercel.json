@@ -3,7 +3,7 @@
   "installCommand": "cd .. && npm ci",
   "buildCommand": "cd .. && npx expo export --platform web --output-dir app-preview/dist",
   "outputDirectory": "dist",
-  "ignoreCommand": "cd .. && if [ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git cat-file -e \"$VERCEL_GIT_PREVIOUS_SHA^{commit}\" 2>/dev/null; then git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- app src assets package.json package-lock.json app.json babel.config.js metro.config.js app-preview; else exit 1; fi",
+  "ignoreCommand": "bash ignore-build.sh",
   "rewrites": [
     {
       "source": "/(.*)",
