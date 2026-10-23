@@ -12,6 +12,7 @@ import { BottomSheet, Button, Chip, Notice, QuantityStepper, Skeleton, Text } fr
 import { formatNaira } from "@/lib/money";
 import { useCart } from "@/store/cart";
 import { useShopUi } from "@/store/shopUi";
+import { showToast } from "@/store/toast";
 import { colors, radii, spacing } from "@/theme/tokens";
 
 export function AddToCartSheet() {
@@ -28,7 +29,6 @@ function SheetBody({ listingId, onClose }: { listingId: string; onClose: () => v
   const listing = useQuery(api.checkout.listingForCart, { listingId });
   const add = useCart((s) => s.add);
   const inCart = useCart((s) => s.lines);
-  const showAdded = useShopUi((s) => s.showAdded);
   const [unitId, setUnitId] = useState<string | null>(null);
   const [qty, setQty] = useState<number | null>(null);
 
@@ -84,7 +84,7 @@ function SheetBody({ listingId, onClose }: { listingId: string; onClose: () => v
       stock: unit.stock,
     });
     onClose();
-    showAdded(listing.name);
+    showToast({ message: `${listing.name} added to your cart`, action: { label: "View cart", href: "/cart" } });
   };
 
   return (

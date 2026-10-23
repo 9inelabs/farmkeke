@@ -17,7 +17,7 @@ import { PhotoViewer } from "@/features/shop/PhotoViewer";
 import { ProductRow } from "@/features/shop/ProductRow";
 import { useShopContext } from "@/features/shop/useShopContext";
 import { useCart, useCartSummary } from "@/store/cart";
-import { useShopUi } from "@/store/shopUi";
+import { showToast } from "@/store/toast";
 import { colors, radii, shadow, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -28,7 +28,6 @@ export default function ProductPage() {
   const viewer = useQuery(api.users.viewer);
   const saved = useQuery(api.favorites.isSaved, { listingId: id });
   const toggleSave = useMutation(api.favorites.toggle);
-  const showAdded = useShopUi((s) => s.showAdded);
   const add = useCart((s) => s.add);
   const lines = useCart((s) => s.lines);
   const { count } = useCartSummary();
@@ -107,7 +106,7 @@ export default function ProductPage() {
       stock: unit.stock,
     });
     setQty(null);
-    showAdded(product.name);
+    showToast({ message: `${product.name} added to your cart`, action: { label: "View cart", href: "/cart" } });
   };
 
   const save = async () => {

@@ -61,7 +61,8 @@ export default function LocationPrimer() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
-        <Wordmark width={227} />
+        {/* The column stretches its children; the wordmark sits centred like the copy under it. */}
+        <Wordmark width={227} style={styles.wordmark} />
         <Text variant="body" align="center" style={styles.copy}>
           We use your location to show produce that can reach you, and the farms closest to you.
         </Text>
@@ -93,6 +94,7 @@ export default function LocationPrimer() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.tint },
   content: { flex: 1, justifyContent: "center", alignItems: "stretch", paddingHorizontal: 42, gap: spacing.lg },
+  wordmark: { alignSelf: "center" },
   copy: { marginTop: spacing.xs, marginBottom: spacing.lg, paddingHorizontal: spacing.sm, alignSelf: "center" },
   select: {
     height: 58,
