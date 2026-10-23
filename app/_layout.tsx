@@ -45,6 +45,8 @@ export default function RootLayout() {
               <Stack.Screen name="(shop)" options={sectionFade} />
               <Stack.Screen name="(farm)" options={sectionFade} />
               <Stack.Screen name="(auth)" options={modalRise} />
+              {/* After paying or placing, there is no going back into checkout */}
+              <Stack.Screen name="order-placed/[checkoutId]" options={{ gestureEnabled: false }} />
             </Stack>
             <SessionWatcher />
             {/* M-19 and M-20, opened from any product card or page */}

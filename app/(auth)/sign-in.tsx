@@ -7,6 +7,7 @@ import { StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, StatusScreen, Text, TextField } from "@/components/ui";
 import { AuthScreen, AuthSwitchLink } from "@/features/auth/AuthScreen";
 import { ForgotPasswordSheet } from "@/features/auth/ForgotPasswordSheet";
+import { useGuestClaim } from "@/features/auth/useGuestClaim";
 import { closeAuth } from "@/features/auth/navigation";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { usePrefs } from "@/store/prefs";
@@ -16,6 +17,7 @@ export default function SignIn() {
   // /forgot-password lands here with the reset sheet open.
   const params = useLocalSearchParams<{ reset?: string; email?: string }>();
   const { signIn } = useAuthActions();
+  const claimGuestOrders = useGuestClaim();
   const setAccountSignedIn = usePrefs((s) => s.setAccountSignedIn);
   const passwordRef = useRef<TextInput>(null);
 
@@ -41,6 +43,7 @@ export default function SignIn() {
     try {
       await signIn("password", { flow: "signIn", identifier: id, password });
       setAccountSignedIn(true);
+      await claimGuestOrders();
       closeAuth();
     } catch (error) {
       const code = errorCode(error);

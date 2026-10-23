@@ -15,6 +15,7 @@ import { CartChangesSheet, type CartChange } from "@/features/cart/CartChangesSh
 import { useShopContext } from "@/features/shop/useShopContext";
 import { formatNaira } from "@/lib/money";
 import { quoteItems, useCart, type CartLine } from "@/store/cart";
+import { showToast } from "@/store/toast";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -25,6 +26,7 @@ export default function Cart() {
   const lines = useCart((s) => s.lines);
   const setQuantity = useCart((s) => s.setQuantity);
   const remove = useCart((s) => s.remove);
+  const restore = useCart((s) => s.restore);
   const replace = useCart((s) => s.replace);
   const { serviceAreaId } = useShopContext();
   const quote = useQuery(api.checkout.quote, lines.length > 0 ? { items: quoteItems(lines), ...(serviceAreaId ? { serviceAreaId } : {}) } : "skip");
@@ -152,7 +154,11 @@ export default function Cart() {
                           accessibilityRole="button"
                           accessibilityLabel={`Remove ${l.name}`}
                           hitSlop={8}
-                          onPress={() => remove(l)}
+                          onPress={() => {
+                            const index = lines.indexOf(l);
+                            remove(l);
+                            showToast({ message: `${l.name} removed`, tone: "info", action: { label: "Undo", onPress: () => restore(l, index) } });
+                          }}
                           style={styles.remove}
                         >
                           <View style={styles.trash}>

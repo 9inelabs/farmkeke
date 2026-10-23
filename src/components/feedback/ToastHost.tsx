@@ -132,9 +132,10 @@ export function ToastHost() {
               accessibilityRole="button"
               hitSlop={10}
               onPress={() => {
-                const href = shown.action!.href;
+                const { href, onPress } = shown.action!;
                 hide();
-                router.push(href);
+                onPress?.();
+                if (href) router.push(href);
               }}
             >
               <Text variant="label" color={colors.lime} style={styles.action}>

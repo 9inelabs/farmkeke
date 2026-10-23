@@ -1,5 +1,6 @@
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useCallback } from "react";
+import { useConvexAuth } from "convex/react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePrefs } from "@/store/prefs";
 
 /**
@@ -31,3 +32,26 @@ export function passwordRules(password: string) {
 }
 
 export const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
+/**
+ * Before a guest's first order: a guest identity on this phone (anonymous
+ * sign-in), which is what lets only this phone confirm delivery later. Does
+ * nothing when someone (guest or account) is already signed in.
+ */
+export function useEnsureIdentity() {
+  const { isAuthenticated } = useConvexAuth();
+  const { signIn } = useAuthActions();
+  const authed = useRef(isAuthenticated);
+  useEffect(() => {
+    authed.current = isAuthenticated;
+  }, [isAuthenticated]);
+  return useCallback(async () => {
+    if (authed.current) return;
+    await signIn("anonymous");
+    const started = Date.now();
+    while (!authed.current) {
+      if (Date.now() - started > 10_000) throw new Error("Couldn't start a guest session. Check your connection.");
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  }, [signIn]);
+}

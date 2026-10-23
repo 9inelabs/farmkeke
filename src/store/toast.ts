@@ -9,7 +9,8 @@ export type Toast = {
   id: number;
   message: string;
   tone: "success" | "info" | "error";
-  action?: { label: string; href: Href };
+  /** A link ("View cart") or an action ("Undo"). */
+  action?: { label: string; href?: Href; onPress?: () => void };
 };
 
 type ToastStore = {

@@ -1,4 +1,5 @@
-// M-06 Choose your area. Also opened from Home's location chip (?from=home).
+// M-06 Choose your area. Also opened from Home's location chip (?from=home)
+// and from checkout (?from=checkout); both go back where they came from.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -54,7 +55,7 @@ export default function ChooseArea() {
     const area = areas?.find((a) => a._id === selected);
     if (!area) return;
     setArea({ serviceAreaId: area._id, name: area.name, state: area.state, lga: area.lga });
-    if (from === "home" && router.canGoBack()) router.back();
+    if ((from === "home" || from === "checkout") && router.canGoBack()) router.back();
     else router.replace("/home");
   };
 

@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, PasswordRules, Text, TextField } from "@/components/ui";
 import { AuthScreen, AuthSwitchLink } from "@/features/auth/AuthScreen";
+import { useGuestClaim } from "@/features/auth/useGuestClaim";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { isEmail, passwordRules } from "@/lib/session";
 import { usePrefs } from "@/store/prefs";
@@ -13,6 +14,7 @@ import { colors, spacing } from "@/theme/tokens";
 
 export default function CreateAccount() {
   const { signIn } = useAuthActions();
+  const claimGuestOrders = useGuestClaim();
   const setAccountSignedIn = usePrefs((s) => s.setAccountSignedIn);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -38,6 +40,7 @@ export default function CreateAccount() {
     try {
       await signIn("password", { flow: "signUp", name: name.trim(), email: email.trim(), password });
       setAccountSignedIn(true);
+      await claimGuestOrders();
       router.replace({ pathname: "/account-created", params: { name: name.trim() } });
     } catch (error) {
       const code = errorCode(error);
