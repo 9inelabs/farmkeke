@@ -1,6 +1,6 @@
 // F-14 Setup checklist.
 import { router } from "expo-router";
-import { CheckCircle2, Circle, Sprout, Store, Truck, type LucideIcon } from "lucide-react-native";
+import { CheckCircle, Circle, Shop, Sprout, Truck, type IconComponent } from "@/components/icons";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Screen, ScreenHeader, Skeleton, Text } from "@/components/ui";
 import { setupDone } from "@/features/farmer/SetupCard";
@@ -9,9 +9,9 @@ import { borders, colors, radii, spacing } from "@/theme/tokens";
 
 export default function SetupChecklist() {
   const farm = useFarm();
-  const steps: { icon: LucideIcon; title: string; body: string; done: boolean; path?: string }[] = farm
+  const steps: { icon: IconComponent; title: string; body: string; done: boolean; path?: string }[] = farm
     ? [
-        { icon: Store, title: "Business profile", body: "Add a farm photo and a short description buyers will read.", done: farm.checklist.profile, path: "/farm-settings/profile" },
+        { icon: Shop, title: "Business profile", body: "Add a farm photo and a short description buyers will read.", done: farm.checklist.profile, path: "/farm-settings/profile" },
         { icon: Truck, title: "Collection settings", body: "Confirm where and when riders collect orders.", done: farm.checklist.collection, path: "/farm-settings/fulfilment" },
         { icon: Sprout, title: "First listing", body: "Photograph your produce, set a price and stock, and send it for review.", done: farm.checklist.firstListing, path: farm.checklist.firstListing ? "/listings" : "/listing/new" },
       ]
@@ -43,7 +43,7 @@ export default function SetupChecklist() {
                   <Text variant="bodyMedium">{title}</Text>
                   <Text variant="small">{body}</Text>
                 </View>
-                {done ? <CheckCircle2 size={22} color={colors.success} /> : <Circle size={22} color={colors.line} />}
+                {done ? <CheckCircle size={22} color={colors.success} /> : <Circle size={22} color={colors.line} />}
               </Pressable>
             ))}
           </>

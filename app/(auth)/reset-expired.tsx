@@ -1,7 +1,7 @@
 // M-57 Reset link expired (old, already used, or wrong).
 import { useAuthActions } from "@convex-dev/auth/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Clock } from "lucide-react-native";
+import { Clock } from "@/components/icons";
 import { useState } from "react";
 import { Button, Notice, StatusScreen } from "@/components/ui";
 import { errorMessage } from "@/lib/errors";

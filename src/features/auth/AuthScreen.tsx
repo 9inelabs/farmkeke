@@ -1,79 +1,101 @@
-import { X } from "lucide-react-native";
+import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScreenHeader, Text, Wordmark } from "@/components/ui";
-import { Reveal, Stagger } from "@/components/motion/reveal";
+import { ChevronLeft } from "@/components/icons";
+import { Segmented, Text, Wordmark } from "@/components/ui";
+import { Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 import { closeAuth } from "./navigation";
+
+type Tab = "sign-in" | "create-account";
 
 type Props = {
   title: string;
   subtitle?: string;
   /** "close" for the first screen of the modal, "back" for later steps. */
   nav?: "close" | "back";
-  backTitle?: string;
+  /** Shows the Sign in / Create account switch. */
+  tab?: Tab;
   children: ReactNode;
   footer: ReactNode;
 };
 
-/** Layout shared by the sign-in and account screens (M-50 to M-57). */
-export function AuthScreen({ title, subtitle, nav = "close", backTitle, children, footer }: Props) {
+const TABS = [
+  { value: "sign-in", label: "Sign in" },
+  { value: "create-account", label: "Create Account" },
+] as const;
+
+/**
+ * Layout shared by the sign-in and account screens (M-50 to M-57), from the
+ * "Sign In" and "Create Account" designs: Close at the top left, the
+ * centred wordmark and tagline, a centred title, then the form and its
+ * button straight under the fields.
+ */
+export function AuthScreen({ title, subtitle, nav = "close", tab, children, footer }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
-      {nav === "back" ? (
-        <ScreenHeader title={backTitle ?? ""} />
-      ) : (
-        <View style={styles.closeRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            hitSlop={10}
-            onPress={closeAuth}
-            style={styles.close}
-          >
-            <X size={18} color={colors.forest} />
-            <Text variant="label" color={colors.forest}>
-              Close
-            </Text>
-          </Pressable>
-        </View>
-      )}
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+      <View style={styles.topRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={nav === "close" ? "Close" : "Back"}
+          hitSlop={10}
+          onPress={nav === "close" ? closeAuth : () => router.back()}
+          style={styles.close}
         >
+          <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
+          <Text variant="bodyMedium">{nav === "close" ? "Close" : "Back"}</Text>
+        </Pressable>
+      </View>
+      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Stagger>
-            {nav === "close" && <Wordmark width={120} />}
+            <View style={styles.brand}>
+              <Wordmark width={112} />
+              <Text variant="small" color={colors.inkSoft} align="center">
+                ...from the farm, directly to your home
+              </Text>
+            </View>
             <View style={styles.heading}>
-              <Text variant="displaySmall" accessibilityRole="header">
+              <Text variant="displaySmall" align="center" accessibilityRole="header" style={styles.title}>
                 {title}
               </Text>
               {subtitle !== undefined && (
-                <Text variant="body" color={colors.inkSoft}>
+                <Text variant="caption" align="center">
                   {subtitle}
                 </Text>
               )}
             </View>
-            {children}
+            {tab !== undefined && <Segmented options={TABS} value={tab} onChange={(next) => next !== tab && router.replace(`/${next}`)} />}
+            <View style={styles.form}>{children}</View>
+            <View style={styles.footer}>{footer}</View>
           </Stagger>
         </ScrollView>
-        <Reveal index={4} style={styles.footer}>
-          {footer}
-        </Reveal>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/** The underlined lime "No account yet? Create one" line under the button. */
+export function AuthSwitchLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Text variant="label" color={colors.limeInk} align="center" accessibilityRole="link" onPress={onPress} style={styles.link}>
+      {label}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   fill: { flex: 1 },
-  closeRow: { flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: spacing.screen, paddingTop: spacing.md },
-  close: { flexDirection: "row", alignItems: "center", gap: spacing.xxs, minHeight: 44 },
-  content: { paddingHorizontal: spacing.screen, paddingTop: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.xl },
-  heading: { gap: spacing.sm },
-  footer: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, gap: spacing.md },
+  topRow: { flexDirection: "row", paddingHorizontal: spacing.screen - 4, paddingTop: spacing.sm },
+  close: { flexDirection: "row", alignItems: "center", gap: 2, minHeight: 44 },
+  content: { paddingHorizontal: spacing.screen, paddingTop: spacing.xs, paddingBottom: spacing.xxxl, gap: spacing.xxl },
+  brand: { alignItems: "center", gap: spacing.xxs },
+  heading: { gap: spacing.xs, marginTop: spacing.lg },
+  title: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34 },
+  form: { gap: spacing.lg, marginTop: spacing.sm },
+  footer: { gap: spacing.lg, marginTop: spacing.md },
+  link: { textDecorationLine: "underline", paddingVertical: spacing.xxs },
 });

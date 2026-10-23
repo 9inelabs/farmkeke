@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react-native";
+import type { IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Stagger } from "@/components/motion/reveal";
@@ -9,14 +9,14 @@ import { Text } from "./Text";
 type Tone = "brand" | "success" | "error" | "pending";
 
 const tones: Record<Tone, { bg: string; fg: string }> = {
-  brand: { bg: colors.tint, fg: colors.forest },
+  brand: { bg: colors.lime, fg: colors.forest },
   success: { bg: colors.successSoft, fg: colors.success },
   error: { bg: colors.errorSoft, fg: colors.error },
   pending: { bg: colors.pendingSoft, fg: colors.pendingInk },
 };
 
 type Props = {
-  icon: LucideIcon;
+  icon: IconComponent;
   tone?: Tone;
   title: string;
   message: string;
@@ -35,7 +35,7 @@ export function StatusScreen({ icon: Icon, tone = "brand", title, message, child
       <View style={styles.center}>
         <Stagger itemStyle={styles.item}>
           <View style={[styles.circle, { backgroundColor: t.bg }]}>
-            <Icon size={34} color={t.fg} strokeWidth={1.75} />
+            <Icon size={36} color={t.fg} variant="solid" />
           </View>
           <Text variant="displaySmall" align="center" accessibilityRole="header">
             {title}

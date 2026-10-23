@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { AlertTriangle, ClipboardList, Palmtree } from "lucide-react-native";
+import { Break, Clipboard, Warning } from "@/components/icons";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ListGroup, ListRow, Notice, Skeleton, StatusBadge, Text } from "@/components/ui";
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
         {farm && setupDone(farm.checklist) < 3 && <SetupCard checklist={farm.checklist} />}
         {farm?.holidayMode && (
-          <Notice tone="pending" icon={Palmtree}>
+          <Notice tone="pending" icon={Break}>
             Holiday mode is on. Buyers can't see your listings until you turn it off in Farm → Availability.
           </Notice>
         )}
@@ -60,7 +60,7 @@ export default function Dashboard() {
             {lowStock.slice(0, 5).map(({ listing, unit }) => (
               <ListRow
                 key={`${listing._id}-${unit.unitId}`}
-                icon={AlertTriangle}
+                icon={Warning}
                 title={listing.name}
                 subtitle={unit.stock === 0 ? `Sold out per ${unit.singular}` : stockLabel(unit)}
                 onPress={() => router.push(`/listing/${listing._id}`)}
@@ -81,7 +81,7 @@ export default function Dashboard() {
         </View>
 
         <EmptyState
-          icon={ClipboardList}
+          icon={Clipboard}
           title="No orders yet"
           message={
             listings !== undefined && listings.length === 0

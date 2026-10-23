@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeView } from "@/features/home/HomeView";
 import { useShopContext } from "@/features/shop/useShopContext";
+import { greeting } from "@/lib/greeting";
 import { formatNaira } from "@/lib/money";
 import { useShopUi } from "@/store/shopUi";
 import { colors } from "@/theme/tokens";
@@ -15,6 +16,9 @@ export default function Home() {
   const { today, area } = useShopContext();
   const openAdd = useShopUi((s) => s.openAdd);
   const categories = useQuery(api.catalog.listCategories);
+  const viewer = useQuery(api.users.viewer);
+  const unread = useQuery(api.notifications.unreadCount, { side: "shop" }) ?? 0;
+  const firstName = viewer && !viewer.isGuest ? viewer.name?.trim().split(/\s+/)[0] : undefined;
   const home = useQuery(api.storefront.home, { today, state: area?.state, lga: area?.lga });
   const openCategories = () => router.push("/categories");
   const categorySlug = new Map<string, { slug: string; name: string }>(categories?.map((c) => [c._id, { slug: c.slug, name: c.name }]));
@@ -22,6 +26,9 @@ export default function Home() {
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <HomeView
+        greeting={firstName ? `${greeting()}, ${firstName}` : greeting()}
+        unreadAlerts={unread}
+        onAlerts={() => router.push("/notifications")}
         areaLabel={area ? `${area.name}, ${area.state}` : "Choose your area"}
         categories={categories?.map((c) => ({ id: c._id, name: c.name, illustration: c.illustration }))}
         freshPicks={home?.freshPicks}

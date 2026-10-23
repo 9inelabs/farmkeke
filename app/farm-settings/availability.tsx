@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
-import { Palmtree } from "lucide-react-native";
+import { Break } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Switch, View } from "react-native";
 import { Button, ChipGroup, Notice, Screen, ScreenHeader, Skeleton, Text } from "@/components/ui";
@@ -76,7 +76,7 @@ export default function Availability() {
           />
           <View style={styles.holiday}>
             <View style={styles.icon}>
-              <Palmtree size={20} color={colors.forest} />
+              <Break size={20} color={colors.forest} />
             </View>
             <View style={styles.flex}>
               <Text variant="bodyMedium">Holiday mode</Text>

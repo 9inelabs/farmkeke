@@ -1,7 +1,7 @@
 // Dev-only catalogue of the shared components, for checking them against the
 // Figma frames. Not reachable in release builds.
 import { Redirect, router } from "expo-router";
-import { Home, KeyRound, LogOut, MapPin, PackageOpen, ShoppingCart, Truck } from "lucide-react-native";
+import { BoxOpen, Cart, Home, Key, Logout, Pin, Truck } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import {
@@ -68,7 +68,7 @@ export default function Gallery() {
 
       <Section title="Buttons">
         <Button label="Start Shopping" onPress={() => {}} />
-        <Button label="Add To Cart" icon={ShoppingCart} size="large" onPress={() => {}} />
+        <Button label="Add To Cart" icon={Cart} size="large" onPress={() => {}} />
         <Button label="Confirm area" variant="dark" onPress={() => {}} />
         <Button label="View Farmer" variant="secondary" onPress={() => {}} />
         <Button label="Get directions" variant="outline" onPress={() => {}} />
@@ -130,7 +130,7 @@ export default function Gallery() {
           </View>
         </View>
         <EmptyState
-          icon={PackageOpen}
+          icon={BoxOpen}
           title="No orders yet"
           message="When you order, you can follow it here, from the farm to your door."
           actionLabel="Start shopping"
@@ -144,9 +144,9 @@ export default function Gallery() {
           <Avatar name="Okafor Family Farms" size={36} />
         </View>
         <ListGroup title="Account">
-          <ListRow icon={MapPin} title="Saved addresses" subtitle="2 addresses" onPress={() => {}} />
-          <ListRow icon={KeyRound} title="Login details" subtitle="Email and password" onPress={() => {}} />
-          <ListRow icon={LogOut} title="Sign out" tone="danger" onPress={() => {}} />
+          <ListRow icon={Pin} title="Saved addresses" subtitle="2 addresses" onPress={() => {}} />
+          <ListRow icon={Key} title="Login details" subtitle="Email and password" onPress={() => {}} />
+          <ListRow icon={Logout} title="Sign out" tone="danger" onPress={() => {}} />
         </ListGroup>
         <Notice>No account needed. This phone will remember your order.</Notice>
         <Notice tone="error">That email and password don't match. Check them and try again.</Notice>

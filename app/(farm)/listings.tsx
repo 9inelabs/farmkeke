@@ -4,7 +4,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Check, Leaf, Plus, Search, Sprout } from "lucide-react-native";
+import { Check, Leaf, Plus, Search, Sprout } from "@/components/icons";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -59,7 +59,7 @@ export default function Listings() {
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <View style={styles.header}>
-        <Text variant="title" accessibilityRole="header">
+        <Text variant="screenTitle" accessibilityRole="header">
           Listings
         </Text>
         {listings && listings.length > 0 ? (

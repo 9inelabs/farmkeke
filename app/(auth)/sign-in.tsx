@@ -1,22 +1,26 @@
 // M-50 Sign in, including the wrong-details and too-many-tries states.
 import { useAuthActions } from "@convex-dev/auth/react";
-import { router } from "expo-router";
-import { Lock } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Lock } from "@/components/icons";
 import { useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, StatusScreen, Text, TextField } from "@/components/ui";
-import { AuthScreen } from "@/features/auth/AuthScreen";
+import { AuthScreen, AuthSwitchLink } from "@/features/auth/AuthScreen";
+import { ForgotPasswordSheet } from "@/features/auth/ForgotPasswordSheet";
 import { closeAuth } from "@/features/auth/navigation";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { usePrefs } from "@/store/prefs";
 import { colors, spacing } from "@/theme/tokens";
 
 export default function SignIn() {
+  // /forgot-password lands here with the reset sheet open.
+  const params = useLocalSearchParams<{ reset?: string; email?: string }>();
   const { signIn } = useAuthActions();
   const setAccountSignedIn = usePrefs((s) => s.setAccountSignedIn);
   const passwordRef = useRef<TextInput>(null);
 
-  const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState(params.email ?? "");
+  const [resetOpen, setResetOpen] = useState(params.reset === "1");
   const [password, setPassword] = useState("");
   const [fieldError, setFieldError] = useState<{ identifier?: string; password?: string }>({});
   const [banner, setBanner] = useState<string | null>(null);
@@ -62,7 +66,10 @@ export default function SignIn() {
             <Button
               label="Reset my password"
               fullWidth
-              onPress={() => router.replace({ pathname: "/forgot-password", params: { email: identifier.trim() } })}
+              onPress={() => {
+                setPaused(false);
+                setResetOpen(true);
+              }}
             />
             <Button label="Keep shopping as a guest" variant="ghost" fullWidth onPress={closeAuth} />
           </>
@@ -73,29 +80,20 @@ export default function SignIn() {
 
   return (
     <AuthScreen
-      title="Welcome back"
-      subtitle="Sign in to see your orders and saved addresses."
+      title="Welcome Back"
+      subtitle="Sign in to see your orders and saved addresses"
+      tab="sign-in"
       footer={
         <>
-          <Button label="Sign in" fullWidth loading={busy} onPress={() => void submit()} />
-          <Text variant="caption" align="center">
-            New to Farmkeke?{" "}
-            <Text
-              variant="label"
-              color={colors.forest}
-              accessibilityRole="link"
-              onPress={() => router.replace("/create-account")}
-            >
-              Create account
-            </Text>
-          </Text>
+          <Button label="Continue" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />
+          <AuthSwitchLink label="No account yet? Create one" onPress={() => router.replace("/create-account")} />
         </>
       }
     >
       {banner !== null && <Notice tone="error">{banner}</Notice>}
       <View style={styles.fields}>
         <TextField
-          label="Email"
+          label="Email Address"
           value={identifier}
           onChangeText={(t) => {
             setIdentifier(t);
@@ -134,20 +132,21 @@ export default function SignIn() {
         />
         <Text
           variant="label"
-          color={colors.forest}
+          color={colors.limeInk}
           align="right"
           accessibilityRole="link"
-          onPress={() => router.push({ pathname: "/forgot-password", params: { email: identifier.trim() } })}
+          onPress={() => setResetOpen(true)}
           style={styles.forgot}
         >
-          Forgot password?
+          Forgot Password?
         </Text>
       </View>
+      <ForgotPasswordSheet visible={resetOpen} onClose={() => setResetOpen(false)} initialEmail={identifier} />
     </AuthScreen>
   );
 }
 
 const styles = StyleSheet.create({
   fields: { gap: spacing.lg },
-  forgot: { paddingVertical: spacing.xs },
+  forgot: { paddingVertical: spacing.xxs, marginTop: -spacing.xs, marginRight: 40 },
 });

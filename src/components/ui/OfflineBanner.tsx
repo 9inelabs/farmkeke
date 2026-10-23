@@ -1,5 +1,5 @@
 import { useNetInfo } from "@react-native-community/netinfo";
-import { WifiOff } from "lucide-react-native";
+import { Offline } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { colors, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
@@ -16,7 +16,7 @@ export function OfflineBanner() {
   if (!offline) return null;
   return (
     <View style={styles.banner} accessibilityRole="alert" accessibilityLiveRegion="polite">
-      <WifiOff size={16} color={colors.white} />
+      <Offline size={16} color={colors.white} />
       <Text variant="label" color={colors.white}>
         You're offline. Showing saved items.
       </Text>

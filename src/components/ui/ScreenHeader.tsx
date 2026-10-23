@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft } from "@/components/icons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { colors, spacing } from "@/theme/tokens";
@@ -25,8 +25,8 @@ export function ScreenHeader({ title, showBack = true, onBack, right }: Props) {
         onPress={onBack ?? (() => router.back())}
         style={styles.titleRow}
       >
-        {showBack && <ChevronLeft size={24} color={colors.ink} strokeWidth={2.25} />}
-        <Text variant="title" numberOfLines={1} style={styles.title}>
+        {showBack && <ChevronLeft size={24} color={colors.ink} strokeWidth={2} />}
+        <Text variant="screenTitle" numberOfLines={1} maxFontSizeMultiplier={1.3} style={styles.title}>
           {title}
         </Text>
       </Pressable>
@@ -41,10 +41,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.screen,
-    paddingTop: spacing.md,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     gap: spacing.md,
   },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.xxs, flexShrink: 1 },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 2, flexShrink: 1, marginLeft: -4 },
   title: { flexShrink: 1 },
 });

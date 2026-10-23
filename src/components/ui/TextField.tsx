@@ -1,6 +1,6 @@
-import { AlertCircle, Eye, EyeOff } from "lucide-react-native";
+import { Eye, EyeOff, Info } from "@/components/icons";
 import { forwardRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
@@ -21,12 +21,13 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
 ) {
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
-  const borderColor = error ? colors.error : focused ? colors.forest : colors.lime;
+  const borderColor = error ? colors.error : focused ? colors.lime : colors.line;
 
   return (
     <View style={styles.wrap}>
-      {label !== undefined && <Text variant="label">{label}</Text>}
-      <View style={[styles.field, { borderColor, borderWidth: focused || error ? 1 : borders.hairline }]}>
+      {label !== undefined && <Text variant="label" style={styles.label}>{label}</Text>}
+      <View style={styles.fieldRow}>
+      <View style={[styles.field, { borderColor, borderWidth: focused || error ? 1.5 : 1 }, focused && styles.fieldFocused]}>
         {prefix !== undefined && (
           <View style={styles.prefix}>
             <Text variant="bodyMedium">{prefix}</Text>
@@ -49,6 +50,8 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
           }}
           style={styles.input}
         />
+      </View>
+        {/* The Show / Hide eye sits just outside the field, as in the sign-in design. */}
         {password && (
           <Pressable
             accessibilityRole="button"
@@ -57,16 +60,13 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
             onPress={() => setHidden((h) => !h)}
             style={styles.toggle}
           >
-            {hidden ? <Eye size={16} color={colors.forest} /> : <EyeOff size={16} color={colors.forest} />}
-            <Text variant="label" color={colors.forest}>
-              {hidden ? "Show" : "Hide"}
-            </Text>
+            {hidden ? <Eye size={22} color={colors.ink} variant="solid" /> : <EyeOff size={22} color={colors.ink} />}
           </Pressable>
         )}
       </View>
       {error ? (
         <View style={styles.message} accessibilityLiveRegion="polite">
-          <AlertCircle size={14} color={colors.error} />
+          <Info size={14} color={colors.error} />
           <Text variant="small" color={colors.error} style={styles.messageText}>
             {error}
           </Text>
@@ -80,14 +80,18 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm },
+  label: { color: colors.inkSoft },
+  fieldRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   field: {
+    flex: 1,
     minHeight: sizes.inputHeight,
-    borderRadius: radii.control,
-    backgroundColor: colors.white,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceMuted,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
   },
+  fieldFocused: { backgroundColor: colors.white },
   prefix: {
     paddingRight: spacing.md,
     marginRight: spacing.md,
@@ -100,8 +104,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     paddingVertical: spacing.md,
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {}),
   },
-  toggle: { flexDirection: "row", alignItems: "center", gap: spacing.xxs, paddingLeft: spacing.sm },
+  toggle: { width: 28, height: 44, alignItems: "center", justifyContent: "center" },
   message: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   messageText: { flexShrink: 1 },
 });

@@ -4,7 +4,7 @@ import type { Id } from "@convex/_generated/dataModel";
 import { MAX_LISTING_PHOTOS } from "@convex/lib/listing";
 import { useMutation } from "convex/react";
 import { Image } from "expo-image";
-import { ChevronLeft, ChevronRight, Lightbulb, Star, X } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Close, Lightbulb, Star } from "@/components/icons";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Notice, Text } from "@/components/ui";
@@ -109,7 +109,7 @@ export default function ListingPhotos() {
               onPress={() => setPhotos((list) => list.filter((p) => p.storageId !== photo.storageId))}
               style={styles.remove}
             >
-              <X size={14} color={colors.white} strokeWidth={3} />
+              <Close size={14} color={colors.white} strokeWidth={3} />
             </Pressable>
             <View style={styles.moveRow}>
               <Pressable accessibilityRole="button" accessibilityLabel={`Move photo ${index + 1} earlier`} disabled={index === 0} onPress={() => move(index, index - 1)} style={[styles.move, index === 0 && styles.hidden]}>

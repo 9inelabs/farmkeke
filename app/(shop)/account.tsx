@@ -2,18 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import {
-  BookOpen,
-  CircleHelp,
-  FileText,
-  Heart,
-  Info,
-  KeyRound,
-  LayoutGrid,
-  LogOut,
-  MapPin,
-  Pencil,
-} from "lucide-react-native";
+import { Book, Document, Edit, Grid, Heart, Help, Info, Key, Logout, Pin } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -34,12 +23,12 @@ export default function Account() {
 
   const help = (
     <ListGroup title="Help and information">
-      <ListRow icon={CircleHelp} title="Help and FAQ" subtitle="Answers about orders, delivery and payment" onPress={() => router.push("/help")} />
-      <ListRow icon={BookOpen} title="How Farmkeke works" subtitle="Ordering, pickup and how your money is held" onPress={() => router.push("/how-it-works")} />
-      <ListRow icon={FileText} title="Terms and policies" subtitle="Terms, privacy, refunds and disputes" onPress={() => router.push("/legal")} />
+      <ListRow icon={Help} title="Help and FAQ" subtitle="Answers about orders, delivery and payment" onPress={() => router.push("/help")} />
+      <ListRow icon={Book} title="How Farmkeke works" subtitle="Ordering, pickup and how your money is held" onPress={() => router.push("/how-it-works")} />
+      <ListRow icon={Document} title="Terms and policies" subtitle="Terms, privacy, refunds and disputes" onPress={() => router.push("/legal")} />
       <ListRow icon={Info} title="About Farmkeke" subtitle={`App version ${APP_VERSION}`} onPress={() => router.push("/about")} />
       {__DEV__ && (
-        <ListRow icon={LayoutGrid} title="Component gallery" subtitle="Development builds only" onPress={() => router.push("/dev/gallery")} />
+        <ListRow icon={Grid} title="Component gallery" subtitle="Development builds only" onPress={() => router.push("/dev/gallery")} />
       )}
     </ListGroup>
   );
@@ -71,7 +60,7 @@ export default function Account() {
                 onPress={() => router.push("/settings/edit-profile")}
                 style={styles.edit}
               >
-                <Pencil size={14} color={colors.forest} />
+                <Edit size={14} color={colors.forest} />
                 <Text variant="label" color={colors.forest}>
                   Edit
                 </Text>
@@ -80,7 +69,7 @@ export default function Account() {
 
             <ListGroup title="Shopping">
               <ListRow
-                icon={MapPin}
+                icon={Pin}
                 title="Saved addresses"
                 subtitle={
                   addresses === undefined
@@ -95,7 +84,7 @@ export default function Account() {
             </ListGroup>
 
             <ListGroup title="Account">
-              <ListRow icon={KeyRound} title="Login details" subtitle="Email and password" onPress={() => router.push("/settings/login-details")} />
+              <ListRow icon={Key} title="Login details" subtitle="Email and password" onPress={() => router.push("/settings/login-details")} />
             </ListGroup>
 
             <SellingEntry signedIn />
@@ -103,13 +92,13 @@ export default function Account() {
             {help}
 
             <ListGroup>
-              <ListRow icon={LogOut} title="Sign out" tone="danger" onPress={() => setConfirmSignOut(true)} />
+              <ListRow icon={Logout} title="Sign out" tone="danger" onPress={() => setConfirmSignOut(true)} />
             </ListGroup>
           </Stagger>
         ) : (
           <Stagger>
             <View style={styles.heading}>
-              <Text variant="title" accessibilityRole="header">
+              <Text variant="screenTitle" accessibilityRole="header">
                 Account
               </Text>
               <Text variant="caption">You're shopping as a guest.</Text>
@@ -145,7 +134,7 @@ export default function Account() {
         <Text variant="caption">Your orders and saved addresses stay in your account. You can still shop as a guest.</Text>
         <Button
           label="Sign out"
-          icon={LogOut}
+          icon={Logout}
           variant="danger"
           fullWidth
           onPress={() => {

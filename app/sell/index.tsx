@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { BadgeCheck, Banknote, Camera, FileText, IdCard, Landmark, Lock, Truck, Users, type LucideIcon } from "lucide-react-native";
+import { Bank, Camera, Cash, Document, IdCard, Lock, People, Truck, Verified, type IconComponent } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Notice, Screen, ScreenHeader, Text } from "@/components/ui";
@@ -11,18 +11,18 @@ import { nextStepPath } from "@/features/farmer/constants";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 
-const BENEFITS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: Users, title: "Reach buyers beyond your area", body: "Households across the city order from your farm on the app and farmkeke.com." },
+const BENEFITS: { icon: IconComponent; title: string; body: string }[] = [
+  { icon: People, title: "Reach buyers beyond your area", body: "Households across the city order from your farm on the app and farmkeke.com." },
   { icon: Truck, title: "We collect from your farm", body: "Farmkeke riders pick up each order at your farm gate. You don't deliver." },
   { icon: Lock, title: "Paid for every order", body: "Buyers pay before you prepare anything. Farmkeke holds the money and pays you once they confirm delivery." },
 ];
 
-const REQUIREMENTS: { icon: LucideIcon; text: string }[] = [
+const REQUIREMENTS: { icon: IconComponent; text: string }[] = [
   { icon: IdCard, text: "A government ID (National ID, voter's card, driver's licence or passport)" },
   { icon: Camera, text: "At least 3 photos of your farm" },
-  { icon: FileText, text: "Proof of the farm's address" },
-  { icon: BadgeCheck, text: "A letter or card from your farmers association" },
-  { icon: Landmark, text: "A Nigerian bank account for payouts" },
+  { icon: Document, text: "Proof of the farm's address" },
+  { icon: Verified, text: "A letter or card from your farmers association" },
+  { icon: Bank, text: "A Nigerian bank account for payouts" },
 ];
 
 export default function SellOnFarmkeke() {
@@ -116,7 +116,7 @@ export default function SellOnFarmkeke() {
               ),
             )}
           </View>
-          <Notice icon={Banknote}>
+          <Notice icon={Cash}>
             Farmkeke takes a small commission on each sale. We'll confirm the rate with you before your first listing goes live.
           </Notice>
         </View>

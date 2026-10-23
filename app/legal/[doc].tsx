@@ -1,7 +1,7 @@
 // M-93 One legal document, shown as a readable page in the app.
 // PLACEHOLDER: the text is to be supplied by Farmkeke's legal adviser.
 import { Redirect, useLocalSearchParams } from "expo-router";
-import { FileText } from "lucide-react-native";
+import { Document } from "@/components/icons";
 import { ScrollView, StyleSheet } from "react-native";
 import { Notice, Screen, ScreenHeader, Text } from "@/components/ui";
 import { LEGAL_DOCS, type LegalDoc } from "@/content/help";
@@ -16,7 +16,7 @@ export default function LegalDocument() {
     <Screen header={<ScreenHeader title={entry.title} />}>
       <ScrollView contentContainerStyle={styles.body}>
         <Text variant="small">Last updated: to be confirmed</Text>
-        <Notice icon={FileText}>
+        <Notice icon={Document}>
           The full text is being prepared by Farmkeke's legal adviser and will appear here before launch.
         </Notice>
         <Text variant="body">{entry.summary}.</Text>

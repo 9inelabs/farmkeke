@@ -5,6 +5,8 @@ export const colors = {
   forest: "#1E3B16",
   lime: "#A9D654",
   tint: "#F2F8E6",
+  // Lime deep enough to read as small text on white (links, "See all")
+  limeInk: "#6E9F24",
   white: "#FFFFFF",
   ink: "#1A1A1A",
   // Figma uses ink at 70% / 50% opacity for secondary and tertiary text
@@ -15,6 +17,10 @@ export const colors = {
   line: "#DFDFDF",
   placeholder: "#D9D9D9",
   surfaceMuted: "#F7F7F7",
+  // Grouped rows and cards on white (recent searches, cart lines)
+  surfaceSoft: "#F5F5F5",
+  // Screens with cards on them (cart): the cards are white
+  canvas: "#F8F8F8",
   stepperTrack: "#EFEEEE",
   // Scrim behind bottom sheets (Figma: #2C2C2C at 76%)
   scrim: "rgba(44, 44, 44, 0.76)",
@@ -22,6 +28,10 @@ export const colors = {
   cardFill: "rgba(242, 248, 230, 0.25)",
   success: "#2F9E44",
   error: "#D64545",
+  // "Remove" in the cart
+  danger: "#E5333A",
+  info: "#1D7FE0",
+  infoSoft: "#E8F2FD",
   pending: "#E6A23C",
   // Readable text on pendingSoft (amber on light amber)
   pendingInk: "#9A6412",

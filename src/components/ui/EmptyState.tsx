@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react-native";
+import type { IconComponent } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
@@ -6,7 +6,7 @@ import { Button } from "./Button";
 import { Text } from "./Text";
 
 type Props = {
-  icon: LucideIcon;
+  icon: IconComponent;
   title: string;
   message: string;
   actionLabel?: string;
@@ -21,8 +21,8 @@ export function EmptyState({ icon: Icon, title, message, actionLabel, onAction, 
   return (
     <View style={styles.wrap}>
       <Stagger itemStyle={styles.item}>
-        <View style={[styles.iconCircle, { backgroundColor: isError ? colors.errorSoft : colors.tint }]}>
-          <Icon size={28} color={isError ? colors.error : colors.forest} strokeWidth={1.75} />
+        <View style={[styles.iconCircle, { backgroundColor: isError ? colors.errorSoft : colors.lime }]}>
+          <Icon size={30} color={isError ? colors.error : colors.forest} variant={isError ? "line" : "solid"} />
         </View>
         <Text variant="section" align="center">
           {title}
@@ -31,7 +31,7 @@ export function EmptyState({ icon: Icon, title, message, actionLabel, onAction, 
           {message}
         </Text>
         {actionLabel !== undefined && onAction !== undefined && (
-          <Button label={actionLabel} variant="secondary" size="small" onPress={onAction} style={styles.action} />
+          <Button label={actionLabel} variant="dark" pill onPress={onAction} style={styles.action} />
         )}
       </Stagger>
     </View>
@@ -42,13 +42,13 @@ const styles = StyleSheet.create({
   wrap: { alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.xxxl },
   item: { alignSelf: "stretch", alignItems: "center" },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.sm,
   },
   message: { maxWidth: 300 },
-  action: { marginTop: spacing.md },
+  action: { marginTop: spacing.xl, height: 46, paddingHorizontal: spacing.xxl },
 });

@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { MapPin, Pencil, Plus, WifiOff } from "lucide-react-native";
+import { Edit, Offline, Pin, Plus } from "@/components/icons";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, EmptyState, Screen, ScreenHeader, Skeleton, StatusBadge, Text, useIsOffline } from "@/components/ui";
 import { ADDRESS_ICONS, ADDRESS_LABELS } from "@/features/account/addressLabels";
@@ -23,7 +23,7 @@ export default function SavedAddresses() {
     >
       {addresses === undefined ? (
         offline ? (
-          <EmptyState icon={WifiOff} title="Can't load your addresses" message="Check your mobile data or Wi-Fi, then try again." />
+          <EmptyState icon={Offline} title="Can't load your addresses" message="Check your mobile data or Wi-Fi, then try again." />
         ) : (
           <View style={styles.list}>
             <Skeleton height={96} radius={radii.lg} />
@@ -33,7 +33,7 @@ export default function SavedAddresses() {
       ) : addresses.length === 0 ? (
         <View style={styles.center}>
           <EmptyState
-            icon={MapPin}
+            icon={Pin}
             title="No saved addresses"
             message="Save where you'd like deliveries to go, and checkout gets faster."
             actionLabel="Add address"
@@ -67,7 +67,7 @@ export default function SavedAddresses() {
                   </Text>
                 </View>
                 <View style={styles.edit}>
-                  <Pencil size={14} color={colors.forest} />
+                  <Edit size={14} color={colors.forest} />
                   <Text variant="label" color={colors.forest}>
                     Edit
                   </Text>

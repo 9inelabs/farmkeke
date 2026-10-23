@@ -1,5 +1,5 @@
 // F-13 Switch mode: move between shopping and selling.
-import { ShoppingBasket, Store, type LucideIcon } from "lucide-react-native";
+import { Basket, Shop, type IconComponent } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { BottomSheet, Button, StatusBadge, Text } from "@/components/ui";
@@ -9,9 +9,9 @@ import { useSwitchMode } from "./useSwitchMode";
 
 type Mode = "shop" | "farm";
 
-const MODES: { mode: Mode; icon: LucideIcon; title: string; body: string }[] = [
-  { mode: "shop", icon: ShoppingBasket, title: "Shopping", body: "Buy fresh produce from farms near you" },
-  { mode: "farm", icon: Store, title: "Farmer mode", body: "Manage your farm, listings, orders and earnings" },
+const MODES: { mode: Mode; icon: IconComponent; title: string; body: string }[] = [
+  { mode: "shop", icon: Basket, title: "Shopping", body: "Buy fresh produce from farms near you" },
+  { mode: "farm", icon: Shop, title: "Farmer mode", body: "Manage your farm, listings, orders and earnings" },
 ];
 
 export function SwitchModeSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {

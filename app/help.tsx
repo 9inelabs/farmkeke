@@ -1,5 +1,5 @@
 // M-90 Help and FAQ.
-import { ChevronDown, ChevronUp, CircleHelp, Lock, Mail, PackageX, Search, ShoppingBasket, Truck } from "lucide-react-native";
+import { Basket, BoxRemove, ChevronDown, ChevronUp, Help as HelpIcon, Lock, Mail, Search, Truck } from "@/components/icons";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Button, EmptyState, Screen, ScreenHeader, Text } from "@/components/ui";
@@ -7,7 +7,7 @@ import { FAQ, HELP_TOPICS, SUPPORT_EMAIL, type HelpTopic } from "@/content/help"
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 
-const TOPIC_ICONS = { ordering: ShoppingBasket, delivery: Truck, payment: Lock, problem: PackageX } as const;
+const TOPIC_ICONS = { ordering: Basket, delivery: Truck, payment: Lock, problem: BoxRemove } as const;
 
 export default function Help() {
   const [search, setSearch] = useState("");
@@ -62,7 +62,7 @@ export default function Help() {
 
         <Text variant="overline">{topic ? HELP_TOPICS.find((t) => t.key === topic)?.title : "Popular questions"}</Text>
         {questions.length === 0 ? (
-          <EmptyState icon={CircleHelp} title="No answers found" message="Try other words, or email our team." />
+          <EmptyState icon={HelpIcon} title="No answers found" message="Try other words, or email our team." />
         ) : (
           <View style={styles.faq}>
             {questions.map((q, i) => {

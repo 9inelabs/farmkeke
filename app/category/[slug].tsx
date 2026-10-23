@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Sprout } from "lucide-react-native";
+import { Sprout } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

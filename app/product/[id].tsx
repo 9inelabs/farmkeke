@@ -1,10 +1,12 @@
-// M-17 Product detail: photos, price per unit, harvest date, stock, the farm,
-// delivery and pickup, then "Add to cart" (M-19). M-18 opens a photo full
-// screen. M-22 when the listing is sold out, paused or removed.
+// M-17 Product detail, from the "Product detail" design: photos with the
+// quantity stepper, price per unit, other units, the farm, delivery and
+// pickup, then "Add To Cart", which adds the chosen unit and quantity
+// straight away. M-18 opens a photo full screen. M-22 when the listing is
+// sold out, paused or removed.
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, Heart, PackageX } from "lucide-react-native";
+import { BoxRemove, Cart, ChevronLeft } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,9 +16,10 @@ import { ProductDetailView } from "@/features/product/ProductDetailView";
 import { PhotoViewer } from "@/features/shop/PhotoViewer";
 import { ProductRow } from "@/features/shop/ProductRow";
 import { useShopContext } from "@/features/shop/useShopContext";
-import { formatNaira } from "@/lib/money";
+import { useCart, useCartSummary } from "@/store/cart";
 import { useShopUi } from "@/store/shopUi";
 import { colors, radii, shadow, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 export default function ProductPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +28,11 @@ export default function ProductPage() {
   const viewer = useQuery(api.users.viewer);
   const saved = useQuery(api.favorites.isSaved, { listingId: id });
   const toggleSave = useMutation(api.favorites.toggle);
-  const openAdd = useShopUi((s) => s.openAdd);
+  const showAdded = useShopUi((s) => s.showAdded);
+  const add = useCart((s) => s.add);
+  const lines = useCart((s) => s.lines);
+  const { count } = useCartSummary();
+  const [qty, setQty] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
   const [unitId, setUnitId] = useState<string>();
   const [photo, setPhoto] = useState<number | null>(null);
@@ -52,7 +59,7 @@ export default function ProductPage() {
     const reason = product && "reason" in product ? product.reason : "removed";
     return (
       <StatusScreen
-        icon={PackageX}
+        icon={BoxRemove}
         tone="brand"
         title={name ? `${name} isn't available` : "This product isn't available"}
         message={
@@ -75,7 +82,33 @@ export default function ProductPage() {
 
   const onBreak = product.available === false;
   const unit = product.units.find((u) => u.unitId === unitId) ?? product.units.find((u) => u.stock > 0) ?? product.units[0];
-  const canBuy = !onBreak && product.inStock;
+  const canBuy = !onBreak && product.inStock && unit !== undefined && unit.stock > 0;
+  // The stepper runs from the minimum order up to what's left after what's already in the cart.
+  const min = Math.max(1, unit?.minOrder ?? 1);
+  const already = lines.find((l) => l.listingId === product.id && l.unitId === unit?.unitId)?.quantity ?? 0;
+  const room = Math.max(0, (unit?.stock ?? 0) - already);
+  const quantity = Math.min(Math.max(qty ?? min, min), Math.max(room, min));
+  const full = room < min;
+
+  const addToCart = () => {
+    if (!unit || full) return;
+    add({
+      listingId: product.id,
+      unitId: unit.unitId,
+      quantity,
+      priceKobo: unit.priceKobo,
+      name: product.name,
+      unitSingular: unit.singular,
+      unitPlural: unit.plural,
+      farmId: product.farm.id,
+      farmName: product.farm.name,
+      imageUrl: product.photos[0] ?? null,
+      minOrder: unit.minOrder,
+      stock: unit.stock,
+    });
+    setQty(null);
+    showAdded(product.name);
+  };
 
   const save = async () => {
     if (!viewer || viewer.isGuest) return setAskSignIn(true);
@@ -95,7 +128,12 @@ export default function ProductPage() {
           pickup={product.pickup}
           farm={product.farm}
           selectedUnitId={unit?.unitId}
-          onSelectUnit={setUnitId}
+          onSelectUnit={(next) => {
+            setUnitId(next);
+            setQty(null);
+          }}
+          quantity={canBuy && !full ? { value: quantity, min, max: Math.max(room, min), onChange: setQty } : undefined}
+          saved={{ value: saved === true, onToggle: () => void save() }}
           onPhotoPress={product.photos.length > 0 ? setPhoto : undefined}
           onFarmPress={() => router.push(`/farm/${product.farm.id}`)}
           deliveryNote={`${product.deliveryArea ? `To ${product.deliveryArea.name}. ` : ""}Priced after the farm accepts, then you pay one bill`}
@@ -108,38 +146,42 @@ export default function ProductPage() {
       </ScrollView>
 
       <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={back} style={styles.round}>
-          <ChevronLeft size={22} color={colors.ink} strokeWidth={2.25} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={back} style={styles.back}>
+          <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
+          <Text variant="bodyMedium">Back</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={saved ? "Remove from saved items" : "Save for later"}
-          accessibilityState={{ selected: saved === true }}
-          onPress={() => void save()}
+          accessibilityLabel={count > 0 ? `Cart, ${count} items` : "Cart"}
+          onPress={() => router.navigate("/cart")}
           style={styles.round}
         >
-          <Heart size={20} color={saved ? colors.error : colors.ink} fill={saved ? colors.error : "transparent"} />
+          <Cart size={24} color={colors.ink} />
+          {count > 0 && (
+            <View style={styles.badge}>
+              <Text variant="small" color={colors.white} maxFontSizeMultiplier={1} style={styles.badgeText}>
+                {count > 9 ? "9+" : count}
+              </Text>
+            </View>
+          )}
         </Pressable>
       </View>
 
       <View style={[styles.buyBar, { paddingBottom: insets.bottom + spacing.md }]}>
         {onBreak ? (
-          <Text variant="label" color={colors.pendingInk} style={styles.flex}>
+          <Text variant="label" color={colors.pendingInk} align="center">
             {product.farm.name} is taking a short break. Check back soon.
           </Text>
         ) : (
-          <>
-            <View style={styles.flex}>
-              <Text variant="price">{unit ? formatNaira(unit.priceKobo) : ""}</Text>
-              <Text variant="small">per {unit?.singular ?? "unit"}</Text>
-            </View>
-            <Button
-              label={canBuy ? "Add to cart" : "Sold out"}
-              disabled={!canBuy}
-              onPress={() => openAdd(product.id)}
-              style={styles.addButton}
-            />
-          </>
+          <Button
+            label={!canBuy ? "Sold out" : full ? "All in your cart" : "Add To Cart"}
+            icon={canBuy && !full ? Cart : undefined}
+            size="large"
+            pill
+            fullWidth
+            disabled={!canBuy || full}
+            onPress={addToCart}
+          />
         )}
       </View>
 
@@ -159,30 +201,53 @@ const styles = StyleSheet.create({
   loading: { padding: spacing.screen, gap: spacing.md },
   rows: { gap: spacing.xxl, paddingTop: spacing.xxl },
   similarInStatus: { marginHorizontal: -spacing.screen, alignSelf: "stretch" },
-  topBar: { position: "absolute", left: spacing.screen, right: spacing.screen, flexDirection: "row", justifyContent: "space-between" },
-  round: {
-    width: 40,
+  topBar: {
+    position: "absolute",
+    left: spacing.screen,
+    right: spacing.screen,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  back: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingLeft: spacing.sm,
+    paddingRight: spacing.md,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.85)",
+  },
+  round: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
     ...shadow.raised,
   },
+  badge: {
+    position: "absolute",
+    top: 4,
+    right: 3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.pending,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: { fontSize: 10, lineHeight: 12, fontFamily: fonts.semibold },
   buyBar: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.lg,
     paddingHorizontal: spacing.screen,
     paddingTop: spacing.md,
-    backgroundColor: colors.white,
-    borderTopWidth: 0.5,
-    borderTopColor: colors.line,
+    backgroundColor: "rgba(255,255,255,0.96)",
   },
-  flex: { flex: 1 },
-  addButton: { minWidth: 160 },
 });

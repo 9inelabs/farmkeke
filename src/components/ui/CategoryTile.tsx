@@ -1,5 +1,5 @@
 import { Image, type ImageSource } from "expo-image";
-import { Sprout } from "lucide-react-native";
+import { Sprout } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";

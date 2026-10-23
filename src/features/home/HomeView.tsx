@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Stagger } from "@/components/motion/reveal";
-import { CategoryTile, EscrowCard, LocationChip, PressableScale, ProductCard, SearchPill, Skeleton, Text } from "@/components/ui";
+import { BellButton, CategoryTile, EscrowCard, LocationChip, PressableScale, ProductCard, SearchPill, Skeleton, Text } from "@/components/ui";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { useScreenWidth } from "@/theme/useScreenSize";
@@ -19,7 +19,11 @@ export type HomeBanner = { tag: string; title: string; subtitle: string; buttonL
 export type HomeFarm = { id: string; name: string; area: string; photoUrl: string | null };
 
 type Props = {
+  /** "Good Morning, Franklyn" */
+  greeting: string;
   areaLabel: string;
+  unreadAlerts: number;
+  onAlerts: () => void;
   // `undefined` means still loading: the block shows grey placeholders.
   categories: HomeCategory[] | undefined;
   freshPicks: HomeProduct[] | undefined;
@@ -39,7 +43,7 @@ type Props = {
 };
 
 const CARD_GAP = spacing.sm + 2;
-const FARM_PHOTO = 56;
+const FARM_PHOTO = 68;
 // A category tile sits this far inside its label's width; the row starts that much early so the first tile is on the margin.
 const CATEGORY_INSET = 4;
 // Large-text settings grow the type up to this much; past it the rows would stop fitting.
@@ -99,7 +103,17 @@ export function HomeView(props: Props) {
   return (
     <ScrollView style={styles.screen} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingHorizontal: side }]}>
       <Stagger>
-        <LocationChip label={props.areaLabel} onPress={props.onChangeArea} />
+        <View style={styles.header}>
+          <Text variant="section" accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={MAX_TEXT} style={styles.greeting}>
+            {props.greeting}
+          </Text>
+          <View style={styles.headerRow}>
+            <View style={styles.shrink}>
+              <LocationChip label={props.areaLabel} onPress={props.onChangeArea} />
+            </View>
+            <BellButton unread={props.unreadAlerts} onPress={props.onAlerts} />
+          </View>
+        </View>
 
         <SearchPill mode="button" onPress={props.onSearch} />
 
@@ -239,6 +253,9 @@ const styles = StyleSheet.create({
   // Tablets and wide windows keep the content in a readable column.
   content: { width: "100%", maxWidth: 640, alignSelf: "center", paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg },
   shrink: { flexShrink: 1 },
+  header: { gap: spacing.sm },
+  greeting: { fontFamily: fonts.bold, letterSpacing: -0.2 },
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
   medium: { fontFamily: fonts.medium },
   bold: { fontFamily: fonts.bold },
   fill: { position: "absolute", left: 0, top: 0, right: 0, bottom: 0 },

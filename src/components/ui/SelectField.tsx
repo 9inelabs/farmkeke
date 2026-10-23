@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from "lucide-react-native";
+import { ChevronDown, Search } from "@/components/icons";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { fonts } from "@/theme/typography";

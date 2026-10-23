@@ -67,7 +67,7 @@ const PANELS: Panel[] = [
     progress: 2,
     button: "Skip",
     title: "At your door, or ready to collect",
-    body: [{ text: "A " }, { text: "Farmkeke", bold: true }, { text: " rider brings your order home, or you pick it up at a pickup point near you." }],
+    body: [{ text: "A " }, { text: "Farmkeke", bold: true }, { text: " rider brings your order home, or you collect it from the farm yourself." }],
     image: require("../../assets/illustrations/onboarding-delivery.jpg"),
     art: { x: -78, y: 96, width: 863, height: 863 },
   },

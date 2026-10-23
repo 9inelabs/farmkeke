@@ -2,14 +2,13 @@
 import { api } from "@convex/_generated/api";
 import { useConvex, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Bell, CheckCircle2, MapPin, Store } from "lucide-react-native";
+import { Bell, CheckCircle, Pin } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { BottomSheet, Button, Notice, Screen, ScreenHeader, Skeleton, Text, TextField } from "@/components/ui";
+import { BottomSheet, Button, Notice, Screen, ScreenHeader, Text, TextField } from "@/components/ui";
 import { errorMessage } from "@/lib/errors";
-import { formatHours } from "@/lib/hours";
 import { isEmail } from "@/lib/session";
-import { borders, colors, radii, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 
 export default function OutsideArea() {
   const params = useLocalSearchParams<{ place?: string; state?: string; latitude?: string; longitude?: string }>();
@@ -18,9 +17,7 @@ export default function OutsideArea() {
   const hasPosition = Number.isFinite(latitude) && Number.isFinite(longitude);
   const place = params.place?.trim() || "your area";
 
-  const match = useQuery(api.areas.matchLocation, hasPosition ? { latitude, longitude } : "skip");
   const viewer = useQuery(api.users.viewer);
-  const point = match?.kind === "outside" ? match.nearestPickupPoint : null;
 
   const convex = useConvex();
   const [asking, setAsking] = useState(false);
@@ -63,7 +60,7 @@ export default function OutsideArea() {
       header={<ScreenHeader title="Your area" />}
       footer={
         done ? (
-          <Notice icon={CheckCircle2}>We'll email you when delivery reaches {place}.</Notice>
+          <Notice icon={CheckCircle}>We'll email you when delivery reaches {place}.</Notice>
         ) : (
           <Button label="Notify me when you arrive" icon={Bell} fullWidth onPress={openNotify} />
         )
@@ -72,43 +69,19 @@ export default function OutsideArea() {
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.pin}>
-            <MapPin size={28} color={colors.pendingInk} />
+            <Pin size={28} color={colors.pendingInk} />
           </View>
           <Text variant="displaySmall" align="center" accessibilityRole="header">
             We don't deliver to {place} yet
           </Text>
           <Text variant="body" color={colors.inkSoft} align="center">
-            We're growing across the South-East. You can still collect from a pickup point, or we'll tell you when
-            delivery reaches you.
+            We're growing across the South-East. Leave your email and we'll tell you as soon as delivery reaches you.
           </Text>
         </View>
 
-        {hasPosition && (
-          <View style={styles.section}>
-            <Text variant="overline">Nearest pickup point</Text>
-            {match === undefined ? (
-              <Skeleton height={68} radius={radii.lg} />
-            ) : point ? (
-              <View style={styles.card}>
-                <View style={styles.cardIcon}>
-                  <Store size={20} color={colors.forest} />
-                </View>
-                <View style={styles.cardCopy}>
-                  <Text variant="bodyMedium">{point.name}</Text>
-                  <Text variant="small">
-                    {point.distanceKm} km away · {formatHours(point.hours)}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <Text variant="caption">No pickup points yet. We'll let you know when one opens near you.</Text>
-            )}
-          </View>
-        )}
-
         <Button
           label="Change area"
-          icon={MapPin}
+          icon={Pin}
           variant="ghost"
           onPress={() => router.push({ pathname: "/choose-area" })}
         />
@@ -147,23 +120,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  section: { gap: spacing.sm },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    borderWidth: borders.hairline,
-    borderColor: colors.lime,
-  },
-  cardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: colors.tint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardCopy: { flex: 1, gap: 2 },
 });

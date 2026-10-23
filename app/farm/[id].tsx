@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { BadgeCheck, Clock, MapPin, Star, Store, Truck } from "lucide-react-native";
+import { Clock, Pin, Shop, Star, Truck, Verified } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,7 +21,7 @@ export default function FarmPage() {
   if (farm === null) {
     return (
       <StatusScreen
-        icon={Store}
+        icon={Shop}
         title="This farm isn't selling right now"
         message="It may have paused its shop on Farmkeke. Other farms near you have fresh produce."
         actions={<Button label="Keep shopping" onPress={() => router.replace("/home")} />}
@@ -53,10 +53,10 @@ export default function FarmPage() {
                 <Text variant="section" numberOfLines={2} style={styles.flexShrink}>
                   {farm.name}
                 </Text>
-                {farm.verified ? <BadgeCheck size={18} color={colors.success} accessibilityLabel="Verified farm" /> : null}
+                {farm.verified ? <Verified size={18} color={colors.success} accessibilityLabel="Verified farm" /> : null}
               </View>
               <View style={styles.meta}>
-                <MapPin size={13} color={colors.inkSoft} />
+                <Pin size={13} color={colors.inkSoft} />
                 <Text variant="caption">
                   {farm.lga}, {farm.state}
                   {since ? ` · Selling since ${since}` : ""}
@@ -73,7 +73,7 @@ export default function FarmPage() {
 
           <View style={styles.ways}>
             {farm.delivery ? <Chip label="Home delivery" icon={Truck} /> : null}
-            {farm.pickup ? <Chip label="Pickup at the farm" icon={Store} /> : null}
+            {farm.pickup ? <Chip label="Pickup at the farm" icon={Shop} /> : null}
           </View>
 
           {farm.description ? (

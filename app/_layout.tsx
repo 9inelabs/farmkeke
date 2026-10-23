@@ -3,7 +3,7 @@ import { useFonts } from "expo-font";
 import { router, Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { AlertCircle, RefreshCw } from "lucide-react-native";
+import { Info, Refresh } from "@/components/icons";
 import { useEffect, type ReactNode } from "react";
 import { Linking, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -81,13 +81,13 @@ const webStyles = StyleSheet.create({
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return (
     <StatusScreen
-      icon={AlertCircle}
+      icon={Info}
       tone="error"
       title="Something went wrong"
       message="We couldn't load this page. It isn't anything you did."
       actions={
         <>
-          <Button label="Try again" icon={RefreshCw} fullWidth onPress={() => void retry()} />
+          <Button label="Try again" icon={Refresh} fullWidth onPress={() => void retry()} />
           <Button
             label="Go to Home"
             variant="ghost"

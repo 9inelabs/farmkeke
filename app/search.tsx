@@ -5,11 +5,11 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { BadgeCheck, ChevronLeft, Clock, SearchX } from "lucide-react-native";
+import { ChevronRight, Clock, SearchOff, Verified } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Avatar, CategoryTile, EmptyState, SearchPill, Skeleton, Text } from "@/components/ui";
+import { Avatar, CategoryTile, EmptyState, ScreenHeader, SearchPill, Skeleton, Text } from "@/components/ui";
 import { activeCount, FilterSheet, filterArgs, type Filters } from "@/features/shop/FilterSheet";
 import { ProductGrid } from "@/features/shop/ProductGrid";
 import { ProductRow } from "@/features/shop/ProductRow";
@@ -57,11 +57,9 @@ export default function Search() {
   };
 
   const header = (
-    <View style={styles.searchBar}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" hitSlop={8} onPress={() => router.back()}>
-        <ChevronLeft size={24} color={colors.ink} strokeWidth={2.25} />
-      </Pressable>
-      <View style={styles.flex}>
+    <View>
+      <ScreenHeader title="Search" />
+      <View style={styles.searchBar}>
         <SearchPill
           mode="input"
           value={text}
@@ -83,26 +81,37 @@ export default function Search() {
           {recent.length > 0 ? (
             <View style={styles.block}>
               <View style={styles.blockHead}>
-                <Text variant="heading">Recent searches</Text>
-                <Pressable accessibilityRole="button" hitSlop={8} onPress={clearRecent}>
-                  <Text variant="label" color={colors.forest}>
+                <Text variant="overline">Recent searches</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Clear recent searches" hitSlop={8} onPress={clearRecent}>
+                  <Text variant="bodyMedium" color={colors.limeInk}>
                     Clear
                   </Text>
                 </Pressable>
               </View>
-              {recent.map((r) => (
-                <Pressable key={r} accessibilityRole="button" onPress={() => run(r)} style={styles.recent}>
-                  <Clock size={16} color={colors.inkMuted} />
-                  <Text variant="body" style={styles.flex} numberOfLines={1}>
-                    {r}
-                  </Text>
-                </Pressable>
-              ))}
+              <View style={styles.recentCard}>
+                {recent.map((r) => (
+                  <Pressable
+                    key={r}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Search ${r} again`}
+                    onPress={() => run(r)}
+                    style={({ pressed }) => [styles.recent, pressed && styles.recentPressed]}
+                  >
+                    <Clock size={20} color={colors.inkSoft} />
+                    <Text variant="body" color={colors.inkSoft} style={styles.flex} numberOfLines={1}>
+                      {r}
+                    </Text>
+                    <ChevronRight size={18} color={colors.inkSoft} />
+                  </Pressable>
+                ))}
+              </View>
             </View>
           ) : null}
           <View style={styles.block}>
-            <Text variant="heading">Browse categories</Text>
-            <View style={styles.tiles}>
+            <Text variant="bodyMedium" color={colors.inkMuted}>
+              Browse Categories
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tileRow} contentContainerStyle={styles.tileScroll}>
               {categories?.map((c) => (
                 <CategoryTile
                   key={c._id}
@@ -111,7 +120,7 @@ export default function Search() {
                   onPress={() => router.push({ pathname: "/category/[slug]", params: { slug: c.slug, name: c.name } })}
                 />
               ))}
-            </View>
+            </ScrollView>
           </View>
           <View style={styles.popular}>
             {popular === undefined ? (
@@ -147,7 +156,7 @@ export default function Search() {
                   <Text variant="label" numberOfLines={1} style={styles.shrink}>
                     {f.name}
                   </Text>
-                  {f.verified ? <BadgeCheck size={13} color={colors.success} /> : null}
+                  {f.verified ? <Verified size={13} color={colors.success} /> : null}
                 </View>
                 <Text variant="small" numberOfLines={1}>
                   {f.lga}
@@ -172,7 +181,7 @@ export default function Search() {
           shown && shown.farms.length === 0 ? (
             <View style={styles.none}>
               <EmptyState
-                icon={SearchX}
+                icon={SearchOff}
                 title={`No results for “${query}”`}
                 message={n > 0 ? "Try fewer filters, or check the spelling." : "Check the spelling, or try a simpler word like “yam” or “tomatoes”."}
                 actionLabel={n > 0 ? "Clear filters" : "Clear search"}
@@ -210,11 +219,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   flex: { flex: 1 },
   shrink: { flexShrink: 1 },
-  searchBar: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.screen, paddingVertical: spacing.md },
-  start: { paddingBottom: spacing.xxxl, gap: spacing.xxl },
-  block: { paddingHorizontal: spacing.screen, gap: spacing.sm },
+  searchBar: { paddingHorizontal: spacing.screen, paddingBottom: spacing.md },
+  start: { paddingTop: spacing.xs, paddingBottom: spacing.xxxl, gap: spacing.xxl },
+  block: { paddingHorizontal: spacing.screen, gap: spacing.md },
   blockHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  recent: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 44 },
+  recentCard: { backgroundColor: colors.surfaceSoft, borderRadius: radii.lg + 4, paddingVertical: spacing.xs, overflow: "hidden" },
+  recent: { flexDirection: "row", alignItems: "center", gap: spacing.lg, minHeight: 54, paddingHorizontal: spacing.lg },
+  recentPressed: { backgroundColor: colors.tint },
+  tileRow: { marginHorizontal: -spacing.screen },
+  tileScroll: { gap: spacing.xxs, paddingHorizontal: spacing.screen - 4 },
   tiles: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: spacing.lg, paddingTop: spacing.sm },
   popular: { marginTop: spacing.sm },
   resultsHead: { gap: spacing.md, paddingBottom: spacing.sm },

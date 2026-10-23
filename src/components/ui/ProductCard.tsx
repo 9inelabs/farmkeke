@@ -17,10 +17,12 @@ type Props = {
   // Without a handler the card (or its add button) is drawn but doesn't respond.
   onPress?: () => void;
   onAdd?: () => void;
+  /** Three-across grids: tighter padding and type so the price isn't cut off. */
+  compact?: boolean;
 };
 
 /** Product card from the Home / Categories designs. */
-export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPress, onAdd }: Props) {
+export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPress, onAdd, compact = false }: Props) {
   const price = formatNaira(priceKobo);
   return (
     <PressableScale
@@ -28,7 +30,7 @@ export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPr
       accessibilityLabel={`${name}, ${price} per ${unit}`}
       disabled={onPress === undefined}
       onPress={onPress}
-      style={[styles.card, { width }]}
+      style={[styles.card, compact && styles.cardCompact, { width }]}
     >
       {imageUrl ? (
         <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" transition={150} />
@@ -36,17 +38,17 @@ export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPr
         <View style={styles.image} />
       )}
       <View>
-        <Text variant="label" numberOfLines={1} maxFontSizeMultiplier={1.3}>
+        <Text variant="label" numberOfLines={1} maxFontSizeMultiplier={1.3} style={compact && styles.nameCompact}>
           {name}
         </Text>
         {/* Price and unit share the row with the add button, so they can't run under it. */}
         <View style={styles.buy}>
           <View style={styles.copy}>
-            <Text variant="price" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={1.3} style={styles.price}>
+            <Text variant="price" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={1.3} style={[styles.price, compact && styles.priceCompact]}>
               {price}
             </Text>
             {/* Long units ("tray of eggs") wrap instead of being cut off */}
-            <Text variant="small" numberOfLines={2} maxFontSizeMultiplier={1.3}>
+            <Text variant="small" numberOfLines={compact ? 1 : 2} maxFontSizeMultiplier={1.3}>
               per {unit}
             </Text>
           </View>
@@ -59,7 +61,7 @@ export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPr
             onPress={onAdd}
             style={({ pressed }) => pressed && styles.pressed}
           >
-            <AddIcon width={sizes.addButton} height={sizes.addButton} />
+            <AddIcon width={compact ? 24 : sizes.addButton} height={compact ? 24 : sizes.addButton} />
           </Pressable>
         </View>
       </View>
@@ -81,5 +83,8 @@ const styles = StyleSheet.create({
   buy: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   copy: { flex: 1 },
   price: { fontSize: 16, lineHeight: 20 },
+  cardCompact: { paddingHorizontal: 6, paddingVertical: 6, gap: 6 },
+  nameCompact: { fontSize: 13 },
+  priceCompact: { fontSize: 14, lineHeight: 18 },
   pressed: { opacity: 0.7 },
 });

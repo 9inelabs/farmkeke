@@ -1,5 +1,5 @@
 // F-60 Earnings — Phase 3 shell; money moves once orders exist (Phase 6).
-import { Wallet } from "lucide-react-native";
+import { Wallet } from "@/components/icons";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, Text } from "@/components/ui";
@@ -18,7 +18,7 @@ export default function Earnings() {
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <Stagger>
-        <Text variant="title" accessibilityRole="header">
+        <Text variant="screenTitle" accessibilityRole="header">
           Earnings
         </Text>
         <View style={styles.totals}>

@@ -1,12 +1,12 @@
 // M-92 How Farmkeke works.
 import { router } from "expo-router";
-import { Bike, CheckCircle2, Lock, ShoppingCart, Sprout, type LucideIcon } from "lucide-react-native";
+import { Bike, Cart, CheckCircle, Lock, Sprout, type IconComponent } from "@/components/icons";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Screen, ScreenHeader, Text } from "@/components/ui";
 import { HOW_IT_WORKS } from "@/content/help";
 import { colors, spacing } from "@/theme/tokens";
 
-const ICONS: LucideIcon[] = [ShoppingCart, Lock, Sprout, Bike, CheckCircle2];
+const ICONS: IconComponent[] = [Cart, Lock, Sprout, Bike, CheckCircle];
 
 export default function HowItWorks() {
   return (

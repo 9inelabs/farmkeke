@@ -1,6 +1,6 @@
 // M-52 Account created.
 import { useLocalSearchParams } from "expo-router";
-import { CheckCircle2, Smartphone } from "lucide-react-native";
+import { CheckCircle, Phone } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { Button, StatusScreen, Text } from "@/components/ui";
 import { closeAuth } from "@/features/auth/navigation";
@@ -11,14 +11,14 @@ export default function AccountCreated() {
   const first = name?.trim().split(/\s+/)[0];
   return (
     <StatusScreen
-      icon={CheckCircle2}
+      icon={CheckCircle}
       tone="success"
       title={first ? `Welcome, ${first}` : "Welcome to Farmkeke"}
       message="Your account is ready. You'll stay signed in on this phone until you sign out."
       actions={<Button label="Continue shopping" fullWidth onPress={closeAuth} />}
     >
       <View style={styles.pill}>
-        <Smartphone size={14} color={colors.forest} />
+        <Phone size={14} color={colors.forest} />
         <Text variant="small" color={colors.forest}>
           Remembered on this phone
         </Text>

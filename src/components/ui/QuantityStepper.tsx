@@ -1,4 +1,4 @@
-import { Minus, Plus } from "lucide-react-native";
+import { Minus, Plus } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { Text } from "./Text";

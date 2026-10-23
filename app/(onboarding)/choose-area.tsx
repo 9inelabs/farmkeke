@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, Search, WifiOff } from "lucide-react-native";
+import { ChevronDown, Offline, Search } from "@/components/icons";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import {
@@ -97,7 +97,7 @@ export default function ChooseArea() {
 
         {loading && offline ? (
           <EmptyState
-            icon={WifiOff}
+            icon={Offline}
             title="Can't load areas right now"
             message="Check your mobile data or Wi-Fi. This list loads as soon as you're back online."
           />
@@ -137,7 +137,7 @@ export default function ChooseArea() {
           >
             Use my location
           </Text>{" "}
-          and we'll show the nearest pickup point.
+          and we'll find the farms nearest you.
         </Text>
       </ScrollView>
 

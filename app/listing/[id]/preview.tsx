@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import type { ListingStep as StepKey } from "@convex/lib/listing";
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
-import { AlertCircle, Pencil } from "lucide-react-native";
+import { Edit, Info } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -64,11 +64,11 @@ export default function ListingPreview() {
                 onPress={() => router.push({ pathname: `/listing/${listingId}/${step}`, params: { edit: "1" } })}
                 style={styles.problem}
               >
-                <AlertCircle size={16} color={colors.error} />
+                <Info size={16} color={colors.error} />
                 <Text variant="small" color={colors.error} style={styles.flex}>
                   {LISTING_STEPS.find((s) => s.key === step)?.title}: {messages.join(", ")}
                 </Text>
-                <Pencil size={14} color={colors.error} />
+                <Edit size={14} color={colors.error} />
               </Pressable>
             ))}
           </View>
@@ -89,7 +89,7 @@ export default function ListingPreview() {
                 <Button
                   key={s.key}
                   label={s.title}
-                  icon={Pencil}
+                  icon={Edit}
                   variant="secondary"
                   size="small"
                   onPress={() => router.push({ pathname: `/listing/${listingId}/${s.key}`, params: { edit: "1" } })}

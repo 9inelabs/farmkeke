@@ -51,7 +51,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Farmkeke uses your location to show produce that can reach you and the pickup points closest to you."
+          "locationWhenInUsePermission": "Farmkeke uses your location to show produce that can reach you and the farms closest to you."
         }
       ],
       "@react-native-community/datetimepicker",

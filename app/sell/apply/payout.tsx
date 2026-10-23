@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import { BANKS } from "@convex/lib/banks";
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
-import { Lock } from "lucide-react-native";
+import { Lock } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Notice, SelectField, TextField } from "@/components/ui";
 import { ApplyStep } from "@/features/farmer/ApplyStep";

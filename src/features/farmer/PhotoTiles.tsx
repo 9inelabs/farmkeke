@@ -1,6 +1,6 @@
 // Thumbnails for uploaded and uploading photos, plus the camera primer (F-06a).
 import { Image } from "expo-image";
-import { Camera, ImagePlus, RotateCcw, X } from "lucide-react-native";
+import { Camera, Close, ImageAdd, Undo } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { BottomSheet, Button, Text } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -24,7 +24,7 @@ export function UploadedTile({
       {url ? <Image source={{ uri: url }} style={styles.image} contentFit="cover" accessibilityLabel={label} /> : null}
       {onRemove !== undefined && (
         <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${label}`} hitSlop={8} onPress={onRemove} style={styles.remove}>
-          <X size={14} color={colors.white} strokeWidth={3} />
+          <Close size={14} color={colors.white} strokeWidth={3} />
         </Pressable>
       )}
     </View>
@@ -38,13 +38,13 @@ export function PendingTile({ item, onRetry, onDiscard }: { item: PendingUpload;
       {item.failed ? (
         <View style={styles.overlay}>
           <Pressable accessibilityRole="button" accessibilityLabel="Try the upload again" onPress={onRetry} style={styles.retry}>
-            <RotateCcw size={16} color={colors.forest} />
+            <Undo size={16} color={colors.forest} />
             <Text variant="small" color={colors.forest}>
               Retry
             </Text>
           </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Discard this photo" hitSlop={8} onPress={onDiscard} style={styles.remove}>
-            <X size={14} color={colors.white} strokeWidth={3} />
+            <Close size={14} color={colors.white} strokeWidth={3} />
           </Pressable>
         </View>
       ) : (
@@ -61,7 +61,7 @@ export function AddPhotoButtons({ onCamera, onLibrary, compact }: { onCamera: ()
   return (
     <View style={styles.buttons}>
       <Button label="Take photo" icon={Camera} variant="secondary" size={compact ? "small" : "default"} onPress={onCamera} />
-      <Button label="Choose from gallery" icon={ImagePlus} variant="ghost" size={compact ? "small" : "default"} onPress={onLibrary} />
+      <Button label="Choose from gallery" icon={ImageAdd} variant="ghost" size={compact ? "small" : "default"} onPress={onLibrary} />
     </View>
   );
 }

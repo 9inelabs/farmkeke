@@ -1,6 +1,6 @@
 // M-97 About.
 import * as Application from "expo-application";
-import { ExternalLink, Mail } from "lucide-react-native";
+import { External, Mail } from "@/components/icons";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { ListGroup, ListRow, Screen, ScreenHeader, Text, Wordmark } from "@/components/ui";
 import { HELLO_EMAIL, WEBSITE } from "@/content/help";
@@ -25,7 +25,7 @@ export default function About() {
           </View>
         </View>
         <ListGroup>
-          <ListRow icon={ExternalLink} title="Visit farmkeke.com" subtitle="Shop on the web" onPress={() => void Linking.openURL(WEBSITE)} />
+          <ListRow icon={External} title="Visit farmkeke.com" subtitle="Shop on the web" onPress={() => void Linking.openURL(WEBSITE)} />
           <ListRow icon={Mail} title="Email us" subtitle={HELLO_EMAIL} onPress={() => void Linking.openURL(`mailto:${HELLO_EMAIL}`)} />
         </ListGroup>
         <Text variant="small" align="center">

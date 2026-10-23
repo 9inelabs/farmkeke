@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import { useConvex } from "convex/react";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { ChevronDown } from "lucide-react-native";
+import { ChevronDown } from "@/components/icons";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -63,7 +63,7 @@ export default function LocationPrimer() {
       <View style={styles.content}>
         <Wordmark width={227} />
         <Text variant="body" align="center" style={styles.copy}>
-          We use your location to show produce that can reach you, and the pickup points closest to you.
+          We use your location to show produce that can reach you, and the farms closest to you.
         </Text>
 
         <Pressable

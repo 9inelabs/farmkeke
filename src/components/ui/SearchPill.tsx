@@ -1,4 +1,4 @@
-import { X } from "lucide-react-native";
+import { Close } from "@/components/icons";
 import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 import SearchButton from "../../../assets/icons/search-button.svg";
 import { fonts } from "@/theme/typography";
@@ -53,7 +53,7 @@ export function SearchPill(props: Props) {
       />
       {onClear && inputProps.value ? (
         <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={onClear} hitSlop={8}>
-          <X size={18} color={colors.inkSoft} />
+          <Close size={18} color={colors.inkSoft} />
         </Pressable>
       ) : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Search" onPress={onSubmit} hitSlop={6}>

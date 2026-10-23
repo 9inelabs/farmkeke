@@ -1,6 +1,6 @@
 // Summary of the F-14 setup checklist, shown on the dashboard and Farm tab.
 import { router } from "expo-router";
-import { ChevronRight } from "lucide-react-native";
+import { ChevronRight } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";

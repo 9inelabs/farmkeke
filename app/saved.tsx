@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { Heart } from "lucide-react-native";
+import { Heart } from "@/components/icons";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

@@ -1,4 +1,4 @@
-import { Check } from "lucide-react-native";
+import { Check } from "@/components/icons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { borders, colors, radii, spacing } from "@/theme/tokens";

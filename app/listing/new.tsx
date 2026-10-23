@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
-import { AlertCircle } from "lucide-react-native";
+import { Info } from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Button, StatusScreen } from "@/components/ui";
@@ -27,7 +27,7 @@ export default function NewListing() {
   if (error !== null) {
     return (
       <StatusScreen
-        icon={AlertCircle}
+        icon={Info}
         tone="error"
         title="Couldn't start a listing"
         message={error}

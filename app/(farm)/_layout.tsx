@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Redirect, Tabs } from "expo-router";
-import { Ban, Mail, ShoppingBasket } from "lucide-react-native";
+import { Ban, Basket, Mail } from "@/components/icons";
 import { useEffect } from "react";
 import { ActivityIndicator, Linking, View } from "react-native";
 import { Button, OfflineBanner, StatusScreen } from "@/components/ui";
@@ -43,7 +43,7 @@ export default function FarmTabs() {
         actions={
           <>
             <Button label="Contact support" icon={Mail} fullWidth onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Farm paused: ${farm.name}`)}`)} />
-            <Button label="Switch to shopping" icon={ShoppingBasket} variant="ghost" fullWidth onPress={() => switchMode("shop")} />
+            <Button label="Switch to shopping" icon={Basket} variant="ghost" fullWidth onPress={() => switchMode("shop")} />
           </>
         }
       />

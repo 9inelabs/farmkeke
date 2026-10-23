@@ -1,13 +1,16 @@
-// The product page from the Figma "Product detail" frame. Used for the
-// farmer's listing preview (F-25) now, and the shopper's product page (M-17)
-// in Phase 5.
+// The product page from the "Product detail" design: a big photo with the
+// quantity stepper and photo count on it, then a rounded card with the name,
+// price, units, the farm and the escrow promise. Used for the shopper's
+// product page (M-17) and the farmer's listing preview (F-25), which leaves
+// out the stepper, the heart and the farm link.
 import { Image } from "expo-image";
-import { BadgeCheck, ChevronRight, ImageIcon, Leaf, Star, Store, Truck } from "lucide-react-native";
+import { Heart, Image as ImageIcon, Leaf, Shop, Star, Truck, Verified } from "@/components/icons";
 import { useState } from "react";
 import { FlatList, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
-import { Avatar, Chip, EscrowCard, Text } from "@/components/ui";
+import { Avatar, EscrowCard, PressableScale, QuantityStepper, Text } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
-import { borders, colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, shadow, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 import { useScreenWidth } from "@/theme/useScreenSize";
 
 type Unit = { unitId: string; priceKobo: number; stock: number; minOrder: number; singular: string; plural: string };
@@ -29,7 +32,13 @@ type Props = {
   /** e.g. "To Owerri North. Priced after the farm accepts" (instead of "Available") */
   deliveryNote?: string;
   pickupNote?: string;
+  /** The stepper on the photo; left out on the farmer's preview. */
+  quantity?: { value: number; min: number; max: number; onChange: (next: number) => void };
+  saved?: { value: boolean; onToggle: () => void };
 };
+
+// The body card overlaps the photo by this much, so the photo reads as sitting behind it.
+const OVERLAP = 24;
 
 function harvestLabel(day: string): string {
   const date = new Date(`${day}T12:00:00`);
@@ -50,6 +59,8 @@ export function ProductDetailView(props: Props) {
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     setPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / width));
 
+  const photoHeight = Math.round(width * 1.02);
+
   return (
     <View>
       <View>
@@ -68,20 +79,29 @@ export function ProductDetailView(props: Props) {
                 accessibilityLabel={props.onPhotoPress ? `${props.name}, photo ${index + 1}. Open full screen` : props.name}
                 onPress={() => props.onPhotoPress?.(index)}
               >
-                <Image source={{ uri: item }} style={{ width, height: width * 0.85 }} contentFit="cover" />
+                <Image source={{ uri: item }} style={{ width, height: photoHeight }} contentFit="cover" transition={200} />
               </Pressable>
             ) : (
-              <View style={[styles.placeholder, { width, height: width * 0.85 }]}>
-                <Leaf size={40} color={colors.inkMuted} />
+              <View style={[styles.placeholder, { width, height: photoHeight }]}>
+                <Leaf size={44} color={colors.inkMuted} />
               </View>
             )
           }
         />
-        <View style={styles.photoCount}>
-          <ImageIcon size={14} color={colors.ink} />
-          <Text variant="small" color={colors.ink}>
-            {photoIndex + 1} of {photos.length} photos
-          </Text>
+        <View style={[styles.photoBar, { bottom: OVERLAP + spacing.md }]} pointerEvents="box-none">
+          {props.quantity ? (
+            <View style={styles.stepper}>
+              <QuantityStepper {...props.quantity} />
+            </View>
+          ) : (
+            <View />
+          )}
+          <View style={styles.photoCount}>
+            <ImageIcon size={16} color={colors.ink} />
+            <Text variant="label" color={colors.ink}>
+              {photoIndex + 1} of {photos.length} {photos.length === 1 ? "photo" : "photos"}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -94,15 +114,35 @@ export function ProductDetailView(props: Props) {
             </Text>
           </View>
         ) : null}
-        <Text variant="title">{props.name || "Untitled produce"}</Text>
-        {unit ? (
-          <View style={styles.priceRow}>
-            <Text variant="priceLarge">{formatNaira(unit.priceKobo)}</Text>
-            <Text variant="body" color={colors.lime}>
-              per {unit.singular}
+        <View style={styles.titleRow}>
+          <View style={styles.flex}>
+            <Text variant="title" style={styles.name}>
+              {props.name || "Untitled produce"}
             </Text>
+            {unit ? (
+              <View style={styles.priceRow}>
+                <Text variant="priceLarge" style={styles.price} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatNaira(unit.priceKobo)}
+                </Text>
+                <Text variant="bodyMedium" color={colors.limeInk} style={styles.per}>
+                  per {unit.singular}
+                </Text>
+              </View>
+            ) : null}
           </View>
-        ) : null}
+          {props.saved ? (
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={props.saved.value ? "Remove from saved items" : "Save for later"}
+              accessibilityState={{ selected: props.saved.value }}
+              onPress={props.saved.onToggle}
+              pressedScale={0.88}
+              style={styles.heart}
+            >
+              <Heart size={24} color={props.saved.value ? colors.danger : colors.ink} variant={props.saved.value ? "solid" : "line"} />
+            </PressableScale>
+          ) : null}
+        </View>
         {unit ? (
           <Text variant="small">
             {unit.stock > 0 ? `${unit.stock} ${unit.stock === 1 ? unit.singular : unit.plural} left` : "Sold out"}
@@ -112,40 +152,49 @@ export function ProductDetailView(props: Props) {
 
         {props.units.length > 1 && (
           <View style={styles.units}>
-            <Text variant="small">Other units</Text>
+            <Text variant="small" color={colors.inkSoft}>
+              Other units
+            </Text>
             <View style={styles.chips}>
-              {props.units.map((u) => (
-                <Chip
-                  key={u.unitId}
-                  label={`${u.singular} · ${formatNaira(u.priceKobo)}`}
-                  selected={u.unitId === unit?.unitId}
-                  onPress={props.onSelectUnit ? () => props.onSelectUnit?.(u.unitId) : undefined}
-                />
-              ))}
+              {props.units.map((u) => {
+                const selected = u.unitId === unit?.unitId;
+                return (
+                  <Pressable
+                    key={u.unitId}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={`${u.singular}, ${formatNaira(u.priceKobo)}`}
+                    disabled={props.onSelectUnit === undefined}
+                    onPress={() => props.onSelectUnit?.(u.unitId)}
+                    style={[styles.unit, selected && styles.unitOn]}
+                  >
+                    <Text variant="label" color={selected ? colors.limeInk : colors.inkSoft} style={styles.unitText}>
+                      {u.singular}
+                      {selected ? <Text variant="label" style={styles.unitPrice}>{` • ${formatNaira(u.priceKobo)}`}</Text> : null}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         )}
 
-        <Pressable
-          disabled={props.onFarmPress === undefined}
-          accessibilityRole={props.onFarmPress ? "button" : undefined}
-          accessibilityLabel={props.onFarmPress ? `${props.farm.name}. See the farm` : undefined}
-          onPress={props.onFarmPress}
-          style={styles.farm}
-        >
-          {props.farm.photoUrl ? (
-            <Image source={{ uri: props.farm.photoUrl }} style={styles.farmPhoto} contentFit="cover" />
-          ) : (
-            <Avatar name={props.farm.name} size={48} />
-          )}
-          <View style={styles.flex}>
-            <View style={styles.farmName}>
-              <Text variant="bodyMedium" numberOfLines={1}>
-                {props.farm.name}
-              </Text>
-              <BadgeCheck size={16} color={colors.success} />
+        <View style={styles.farm}>
+          <View>
+            {props.farm.photoUrl ? (
+              <Image source={{ uri: props.farm.photoUrl }} style={styles.farmPhoto} contentFit="cover" />
+            ) : (
+              <Avatar name={props.farm.name} size={FARM_PHOTO} />
+            )}
+            <View style={styles.verified}>
+              <Verified size={18} color={colors.success} variant="solid" />
             </View>
-            <Text variant="small">
+          </View>
+          <View style={styles.flex}>
+            <Text variant="heading" numberOfLines={1}>
+              {props.farm.name}
+            </Text>
+            <Text variant="caption" numberOfLines={1}>
               {props.farm.lga}, {props.farm.state}
             </Text>
             {props.farm.rating != null ? (
@@ -157,12 +206,18 @@ export function ProductDetailView(props: Props) {
               </View>
             ) : null}
           </View>
-          {props.onFarmPress ? <ChevronRight size={20} color={colors.inkMuted} /> : null}
-        </Pressable>
+          {props.onFarmPress ? (
+            <PressableScale accessibilityRole="button" accessibilityLabel={`View ${props.farm.name}`} onPress={props.onFarmPress} style={styles.viewFarm}>
+              <Text variant="label" color={colors.forest} style={styles.viewFarmText}>
+                View Farmer
+              </Text>
+            </PressableScale>
+          ) : null}
+        </View>
 
         <View style={styles.fulfilment}>
           <FulfilmentRow icon={Truck} label="Home delivery" available={props.delivery} note={props.deliveryNote} />
-          <FulfilmentRow icon={Store} label="Pickup at the farm" available={props.pickup} note={props.pickupNote} />
+          <FulfilmentRow icon={Shop} label="Pickup at the farm" available={props.pickup} note={props.pickupNote} />
         </View>
 
         {props.description ? (
@@ -197,21 +252,38 @@ function FulfilmentRow({ icon: Icon, label, available, note }: { icon: typeof Tr
   );
 }
 
+const FARM_PHOTO = 56;
+
 const styles = StyleSheet.create({
   placeholder: { backgroundColor: colors.placeholder, alignItems: "center", justifyContent: "center" },
-  photoCount: {
+  photoBar: {
     position: "absolute",
-    right: spacing.lg,
-    bottom: spacing.lg,
+    left: spacing.screen,
+    right: spacing.screen,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    justifyContent: "space-between",
   },
-  body: { padding: spacing.screen, gap: spacing.md, backgroundColor: colors.surfaceMuted },
+  stepper: { borderRadius: radii.pill, ...shadow.raised },
+  photoCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  body: {
+    marginTop: -OVERLAP,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.screen,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
+    gap: spacing.lg,
+    backgroundColor: colors.white,
+  },
   harvest: {
     alignSelf: "flex-start",
     flexDirection: "row",
@@ -221,23 +293,60 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
+    marginBottom: -spacing.sm,
   },
-  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm },
-  units: { gap: spacing.xs },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  name: { fontSize: 22, lineHeight: 28 },
+  priceRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm, marginTop: 2 },
+  price: { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 44, letterSpacing: -0.5, flexShrink: 1 },
+  per: { flexShrink: 0 },
+  heart: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadow.raised,
+  },
+  units: { gap: spacing.sm },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  unit: {
+    minHeight: 32,
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceSoft,
+    borderWidth: 1,
+    borderColor: colors.surfaceSoft,
+  },
+  unitOn: { backgroundColor: colors.tint, borderColor: colors.lime },
+  unitText: { fontFamily: fonts.medium },
+  unitPrice: { fontFamily: fonts.bold, color: colors.ink },
   farm: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
     backgroundColor: colors.white,
-    borderRadius: radii.control,
+    borderRadius: radii.lg + 4,
     padding: spacing.md,
+    ...shadow.raised,
   },
-  farmPhoto: { width: 48, height: 48, borderRadius: 24 },
-  farmName: { flexDirection: "row", alignItems: "center", gap: 4 },
+  farmPhoto: { width: FARM_PHOTO, height: FARM_PHOTO, borderRadius: FARM_PHOTO / 2, backgroundColor: colors.placeholder },
+  verified: { position: "absolute", right: -3, bottom: -3, backgroundColor: colors.white, borderRadius: 11, padding: 2 },
+  viewFarm: {
+    minHeight: 40,
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.pill,
+    backgroundColor: colors.tint,
+    borderWidth: 1,
+    borderColor: colors.lime,
+  },
+  viewFarmText: { fontFamily: fonts.semibold },
   rating: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   flex: { flex: 1 },
-  fulfilment: { backgroundColor: colors.white, borderRadius: radii.control, borderWidth: borders.hairline, borderColor: colors.line },
+  fulfilment: { backgroundColor: colors.white, borderRadius: radii.lg + 4, borderWidth: borders.hairline, borderColor: colors.line },
   fulfilmentRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md },
   about: { gap: spacing.xs },
 });

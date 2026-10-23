@@ -45,7 +45,7 @@ export const FAQ: { topic: HelpTopic; question: string; answer: string }[] = [
     topic: "delivery",
     question: "How does pickup work?",
     answer:
-      "Choose a Farmkeke pickup point at checkout. When your order arrives there, you'll get a pickup code. Show it at the counter and collect within the time shown.",
+      "Choose pickup at checkout. When the farm has your order ready, you'll get a 4-digit pickup code. Go to the farm, give the farmer your code, and collect your produce. There's no fee for pickup.",
   },
   {
     topic: "ordering",
@@ -69,7 +69,7 @@ export const HOW_IT_WORKS: { title: string; body: string }[] = [
   { title: "The farm prepares it", body: "Each farm accepts within 24 hours, then packs your order fresh." },
   {
     title: "A rider brings it, or you collect",
-    body: "A Farmkeke rider delivers to your door or to the pickup point you chose.",
+    body: "A Farmkeke rider delivers to your door, or you collect from the farm with your pickup code.",
   },
   {
     title: "Confirm, and the farmer is paid",

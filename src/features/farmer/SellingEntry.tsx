@@ -4,7 +4,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { ChevronRight, Clock, FileWarning, Sprout, Store, XCircle, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, Clock, CloseCircle, DocumentAlert, Shop, Sprout, type IconComponent } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ListGroup, ListRow, Text } from "@/components/ui";
@@ -31,7 +31,7 @@ export function SellingEntry({ signedIn }: { signedIn: boolean }) {
   if (farm !== null) {
     return (
       <ListGroup title="Selling">
-        <ListRow icon={Store} title="Switch to farmer mode" subtitle={farm.name} onPress={() => setSwitching(true)} />
+        <ListRow icon={Shop} title="Switch to farmer mode" subtitle={farm.name} onPress={() => setSwitching(true)} />
         <SwitchModeSheet visible={switching} onClose={() => setSwitching(false)} />
       </ListGroup>
     );
@@ -46,7 +46,7 @@ export function SellingEntry({ signedIn }: { signedIn: boolean }) {
   }
 
   const done = SECTIONS - Object.keys(application.problems).length;
-  const cards: Record<string, { icon: LucideIcon; title: string; body: string; tone: string; path: string }> = {
+  const cards: Record<string, { icon: IconComponent; title: string; body: string; tone: string; path: string }> = {
     draft: {
       icon: Sprout,
       title: "Continue your application",
@@ -62,20 +62,20 @@ export function SellingEntry({ signedIn }: { signedIn: boolean }) {
       path: "/sell/status",
     },
     more_info: {
-      icon: FileWarning,
+      icon: DocumentAlert,
       title: "Farmkeke needs more information",
       body: "Update your application and resubmit",
       tone: colors.pendingSoft,
       path: "/sell/status",
     },
     rejected: {
-      icon: XCircle,
+      icon: CloseCircle,
       title: "Application not approved",
       body: "See why, and when you can apply again",
       tone: colors.errorSoft,
       path: "/sell/status",
     },
-    approved: { icon: Store, title: "You're approved", body: "Open farmer mode", tone: colors.successSoft, path: "/sell/status" },
+    approved: { icon: Shop, title: "You're approved", body: "Open farmer mode", tone: colors.successSoft, path: "/sell/status" },
   };
   const card = cards[application.status];
   const Icon = card.icon;

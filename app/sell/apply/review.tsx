@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import type { Section } from "@convex/lib/application";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { AlertCircle, Pencil } from "lucide-react-native";
+import { Edit, Info } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Checkbox, Text } from "@/components/ui";
@@ -104,7 +104,7 @@ export default function Review() {
                     onPress={() => router.push(step.path)}
                     style={styles.edit}
                   >
-                    <Pencil size={14} color={colors.forest} />
+                    <Edit size={14} color={colors.forest} />
                     <Text variant="label" color={colors.forest}>
                       Edit
                     </Text>
@@ -117,7 +117,7 @@ export default function Review() {
                 ))}
                 {problems.map((p) => (
                   <View key={p} style={styles.problem}>
-                    <AlertCircle size={14} color={colors.error} />
+                    <Info size={14} color={colors.error} />
                     <Text variant="small" color={colors.error}>
                       {p}
                     </Text>

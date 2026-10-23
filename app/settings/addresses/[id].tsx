@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, MapPin, Trash2 } from "lucide-react-native";
+import { ChevronDown, Pin, Trash } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
@@ -169,7 +169,7 @@ export default function AddressForm() {
               onPress={() => setPicking(true)}
               style={[styles.select, errors.area !== undefined && styles.selectError]}
             >
-              <MapPin size={18} color={colors.inkMuted} />
+              <Pin size={18} color={colors.inkMuted} />
               <Text variant="body" style={styles.flex} color={area ? colors.ink : colors.inkMuted}>
                 {area ? `${area.name}, ${area.state}` : "Choose the area"}
               </Text>
@@ -183,7 +183,7 @@ export default function AddressForm() {
           </View>
           <Checkbox label="Make this my default address" checked={isDefault} onChange={setIsDefault} />
           {!isNew && (
-            <Button label="Delete address" icon={Trash2} variant="ghost" onPress={() => setConfirmDelete(true)} />
+            <Button label="Delete address" icon={Trash} variant="ghost" onPress={() => setConfirmDelete(true)} />
           )}
         </ScrollView>
       )}

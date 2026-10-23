@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { CheckCircle2, MapPin } from "lucide-react-native";
+import { CheckCircle, Pin } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, ChipGroup, Notice, SelectField, Text, TextField } from "@/components/ui";
@@ -151,13 +151,13 @@ export default function FarmDetails() {
       <View style={styles.location}>
         <Text variant="label">Farm location</Text>
         {coords ? (
-          <Notice icon={CheckCircle2}>Location saved. Riders use it to find your farm gate.</Notice>
+          <Notice icon={CheckCircle}>Location saved. Riders use it to find your farm gate.</Notice>
         ) : (
           <Text variant="small">If you're at the farm now, save its location so riders can find you. Optional.</Text>
         )}
         <Button
           label={coords ? "Update location" : "I'm at the farm: use my location"}
-          icon={MapPin}
+          icon={Pin}
           variant="secondary"
           loading={locating}
           onPress={() => void saveFarmLocation()}

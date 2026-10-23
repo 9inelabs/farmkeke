@@ -1,6 +1,6 @@
 // M-59 Sign-in prompt: shown when a guest taps something that needs an account.
 import { router } from "expo-router";
-import { UserRound } from "lucide-react-native";
+import { User } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { BottomSheet, Button, Text } from "@/components/ui";
 import { colors, spacing } from "@/theme/tokens";
@@ -22,7 +22,7 @@ export function SignInPromptSheet({ visible, onClose, title, message }: Props) {
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={styles.body}>
         <View style={styles.icon}>
-          <UserRound size={26} color={colors.forest} />
+          <User size={26} color={colors.forest} />
         </View>
         <Text variant="heading" align="center">
           {title}

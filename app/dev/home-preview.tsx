@@ -37,6 +37,9 @@ export default function HomePreview() {
     // Laid out like the real tabs: the scrolling content with the tab bar under it.
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.white }}>
       <HomeView
+        greeting="Good Morning, Franklyn"
+        unreadAlerts={1}
+        onAlerts={() => {}}
         areaLabel="New Owerri, Imo"
         categories={CATEGORIES}
         freshPicks={PRODUCTS}

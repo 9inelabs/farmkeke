@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Plus, Trash2 } from "lucide-react-native";
+import { Plus, Trash } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, SelectField, Text, TextField } from "@/components/ui";
@@ -110,7 +110,7 @@ export default function ListingPricing() {
                   hitSlop={8}
                   onPress={() => setRows((list) => list.filter((r) => r.key !== row.key))}
                 >
-                  <Trash2 size={18} color={colors.error} />
+                  <Trash size={18} color={colors.error} />
                 </Pressable>
               )}
             </View>

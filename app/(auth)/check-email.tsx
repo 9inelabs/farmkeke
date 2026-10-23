@@ -1,7 +1,7 @@
 // M-54 Check your email.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Mail, MailCheck, RefreshCw } from "lucide-react-native";
+import { Mail, MailSent, Refresh } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Linking, Platform, StyleSheet, View } from "react-native";
 import { Button, Notice, ScreenHeader, StatusScreen, Text } from "@/components/ui";
@@ -48,7 +48,7 @@ export default function CheckEmail() {
   return (
     <StatusScreen
       header={<ScreenHeader title="Forgot password" />}
-      icon={MailCheck}
+      icon={MailSent}
       title="Check your email"
       message={`We sent a reset link to ${email}. It works for 30 minutes.`}
       actions={
@@ -64,13 +64,13 @@ export default function CheckEmail() {
       <View style={styles.resend}>
         {secondsLeft > 0 ? (
           <View style={styles.wait} accessibilityLiveRegion="none">
-            <RefreshCw size={14} color={colors.inkMuted} />
+            <Refresh size={14} color={colors.inkMuted} />
             <Text variant="label" color={colors.inkMuted}>
               Resend link in {timer}
             </Text>
           </View>
         ) : (
-          <Button label="Resend link" icon={RefreshCw} variant="secondary" size="small" loading={sending} onPress={() => void resend()} />
+          <Button label="Resend link" icon={Refresh} variant="secondary" size="small" loading={sending} onPress={() => void resend()} />
         )}
       </View>
       {notice !== null && <Notice tone={notice.tone}>{notice.text}</Notice>}

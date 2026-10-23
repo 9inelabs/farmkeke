@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react-native";
+import { Bell } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import PinIcon from "../../../assets/icons/location-pin.svg";
 import SwapIcon from "../../../assets/icons/swap.svg";
@@ -48,7 +48,45 @@ export function AlertsPill({ unread, onPress }: { unread: number; onPress: () =>
   );
 }
 
+/** Home header: the bell from the Home design, with a dot while anything is unread. */
+export function BellButton({ unread, onPress }: { unread: number; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
+      hitSlop={4}
+      onPress={onPress}
+      style={({ pressed }) => [styles.bell, pressed && styles.bellPressed]}
+    >
+      <Bell size={22} color={colors.forest} />
+      {unread > 0 && <View style={styles.dot} />}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  bell: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.tint,
+    borderWidth: borders.hairline,
+    borderColor: colors.lime,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellPressed: { backgroundColor: colors.lime },
+  dot: {
+    position: "absolute",
+    top: 9,
+    right: 10,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: colors.forest,
+    borderWidth: 1.5,
+    borderColor: colors.tint,
+  },
   location: {
     alignSelf: "flex-start",
     minHeight: 40,

@@ -2,7 +2,7 @@
 import { api } from "@convex/_generated/api";
 import { useAction } from "convex/react";
 import { router } from "expo-router";
-import { FileText, Lock, Trash2, XCircle, type LucideIcon } from "lucide-react-native";
+import { CloseCircle, Document, Lock, Trash, type IconComponent } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Notice, Screen, ScreenHeader, Text, TextField } from "@/components/ui";
@@ -11,9 +11,9 @@ import { useSignOut } from "@/lib/session";
 import { usePrefs } from "@/store/prefs";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 
-const CONSEQUENCES: { icon: LucideIcon; text: string }[] = [
-  { icon: XCircle, text: "Your name, addresses and saved items are deleted." },
-  { icon: FileText, text: "Order records are kept only as long as the law requires, and no longer linked to you." },
+const CONSEQUENCES: { icon: IconComponent; text: string }[] = [
+  { icon: CloseCircle, text: "Your name, addresses and saved items are deleted." },
+  { icon: Document, text: "Order records are kept only as long as the law requires, and no longer linked to you." },
   { icon: Lock, text: "Orders still on their way are finished first; we'll delete the account once they're complete." },
 ];
 
@@ -63,7 +63,7 @@ export default function DeleteAccount() {
     >
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.icon}>
-          <Trash2 size={26} color={colors.error} />
+          <Trash size={26} color={colors.error} />
         </View>
         <Text variant="displaySmall" accessibilityRole="header">
           Delete your account?

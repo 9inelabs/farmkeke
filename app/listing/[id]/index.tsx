@@ -1,7 +1,7 @@
 // A listing's own page in farmer mode: status, F-31 staff reason, F-28 quick
 // update, F-27 edit by section, F-29 pause / out of stock / delete.
 import { router } from "expo-router";
-import { Eye, Pause, PackageX, Pencil, Play, RefreshCw, Trash2 } from "lucide-react-native";
+import { BoxRemove, Edit, Eye, Pause, Play, Refresh, Trash } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, ListGroup, ListRow, Notice, Screen, ScreenHeader, Skeleton, StatusBadge, Text } from "@/components/ui";
@@ -43,7 +43,7 @@ export default function ListingPage() {
         {listing.status === "needs_changes" && (
           <View style={styles.changes}>
             <Notice tone="pending">{`Farmkeke asked for changes: ${listing.reviewNote ?? "see the note from our team."}`}</Notice>
-            <Button label="Edit and resubmit" icon={Pencil} fullWidth onPress={() => router.push(`/listing/${listingId}/preview`)} />
+            <Button label="Edit and resubmit" icon={Edit} fullWidth onPress={() => router.push(`/listing/${listingId}/preview`)} />
           </View>
         )}
         {listing.status === "draft" && (
@@ -68,12 +68,12 @@ export default function ListingPage() {
         </View>
 
         {listing.status !== "draft" && listing.units.length > 0 && (
-          <Button label="Quick update price or stock" icon={RefreshCw} variant="secondary" fullWidth onPress={() => setQuick(true)} />
+          <Button label="Quick update price or stock" icon={Refresh} variant="secondary" fullWidth onPress={() => setQuick(true)} />
         )}
 
         <ListGroup title="Edit">
           {LISTING_STEPS.slice(0, 4).map((s) => (
-            <ListRow key={s.key} icon={Pencil} title={s.title} onPress={() => editSection(s.key)} />
+            <ListRow key={s.key} icon={Edit} title={s.title} onPress={() => editSection(s.key)} />
           ))}
           <ListRow icon={Eye} title="Preview as buyers see it" onPress={() => router.push(`/listing/${listingId}/preview`)} />
         </ListGroup>
@@ -88,9 +88,9 @@ export default function ListingPage() {
           {listing.status === "live" && <ListRow icon={Pause} title="Pause listing" subtitle="Hide it from buyers for now" onPress={() => setAction("pause")} />}
           {listing.status === "paused" && <ListRow icon={Play} title="Resume listing" subtitle="Show it to buyers again" onPress={() => setAction("resume")} />}
           {listing.status !== "draft" && !listing.outOfStock && (
-            <ListRow icon={PackageX} title="Mark as out of stock" subtitle="Sets every unit's stock to 0" onPress={() => setAction("out_of_stock")} />
+            <ListRow icon={BoxRemove} title="Mark as out of stock" subtitle="Sets every unit's stock to 0" onPress={() => setAction("out_of_stock")} />
           )}
-          <ListRow icon={Trash2} title="Delete listing" tone="danger" onPress={() => setAction("delete")} />
+          <ListRow icon={Trash} title="Delete listing" tone="danger" onPress={() => setAction("delete")} />
         </ListGroup>
       </ScrollView>
 

@@ -1,6 +1,6 @@
 // M-18 Photo viewer: the product's photos full screen, swipe between them.
 import { Image } from "expo-image";
-import { X } from "lucide-react-native";
+import { Close } from "@/components/icons";
 import { useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -42,7 +42,7 @@ export function PhotoViewer({ photos, start, name, onClose }: Props) {
             {index + 1} of {photos.length}
           </Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Close photos" hitSlop={12} onPress={onClose} style={styles.close}>
-            <X size={22} color={colors.white} />
+            <Close size={22} color={colors.white} />
           </Pressable>
         </View>
       </View>

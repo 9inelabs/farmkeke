@@ -1,4 +1,4 @@
-import { Check } from "lucide-react-native";
+import { Check } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { passwordRules } from "@/lib/session";
 import { colors, spacing } from "@/theme/tokens";

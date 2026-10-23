@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react-native";
+import type { IconComponent } from "@/components/icons";
 import { Pressable, StyleSheet } from "react-native";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
@@ -6,7 +6,7 @@ import { Text } from "./Text";
 type Props = {
   label: string;
   selected?: boolean;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   onPress?: () => void;
 };
 

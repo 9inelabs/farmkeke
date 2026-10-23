@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import Constants from "expo-constants";
-import { Download, Lock, RefreshCw, Wrench } from "lucide-react-native";
+import { Download, Lock, Refresh, Tools } from "@/components/icons";
 import { useState, type ReactNode } from "react";
 import { Linking, Platform, StyleSheet, View } from "react-native";
 import { Button, Notice, StatusScreen, Text, Wordmark } from "@/components/ui";
@@ -58,14 +58,14 @@ function Maintenance({ message, until }: { message?: string; until?: number }) {
     : "for a short while";
   return (
     <StatusScreen
-      icon={Wrench}
+      icon={Tools}
       tone="pending"
       title="We're tidying up the market"
       message={message ?? `Farmkeke is down for planned maintenance ${back}.`}
       actions={
         <Button
           label="Check again"
-          icon={RefreshCw}
+          icon={Refresh}
           variant="outline"
           fullWidth
           loading={checking}

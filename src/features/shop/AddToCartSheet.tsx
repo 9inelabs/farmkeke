@@ -5,7 +5,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Leaf } from "lucide-react-native";
+import { Leaf } from "@/components/icons";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { BottomSheet, Button, Chip, Notice, QuantityStepper, Skeleton, Text } from "@/components/ui";

@@ -1,7 +1,7 @@
 // M-20 Added to cart: a short message at the top with "View cart". Hides
 // itself after a few seconds.
 import { router } from "expo-router";
-import { CheckCircle2 } from "lucide-react-native";
+import { CheckCircle } from "@/components/icons";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
@@ -32,7 +32,7 @@ export function AddedToast() {
       style={[styles.wrap, { top: insets.top + spacing.sm }]}
     >
       <View style={styles.toast} accessibilityLiveRegion="polite" accessibilityRole="alert">
-        <CheckCircle2 size={20} color={colors.lime} strokeWidth={2.25} />
+        <CheckCircle size={20} color={colors.lime} strokeWidth={2.25} />
         <Text variant="label" color={colors.white} numberOfLines={2} style={styles.copy}>
           {name} added to your cart
         </Text>

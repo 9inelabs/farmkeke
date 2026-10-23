@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { router } from "expo-router";
-import { AlertCircle, CheckCircle2 } from "lucide-react-native";
+import { CheckCircle, Info } from "@/components/icons";
 import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Notice, Text } from "@/components/ui";
@@ -81,10 +81,10 @@ export default function Documents() {
                 <Text variant="bodyMedium">{meta.title}</Text>
                 <Text variant="small">{meta.detail}</Text>
               </View>
-              {done ? <CheckCircle2 size={20} color={colors.success} /> : null}
+              {done ? <CheckCircle size={20} color={colors.success} /> : null}
             </View>
             {rejected && !done ? (
-              <Notice tone="error" icon={AlertCircle}>
+              <Notice tone="error" icon={Info}>
                 {`Needs a new photo${rejected.note ? `: ${rejected.note}` : "."}`}
               </Notice>
             ) : null}

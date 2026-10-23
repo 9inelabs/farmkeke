@@ -1,4 +1,4 @@
-import { AlertCircle, Info, type LucideIcon } from "lucide-react-native";
+import { Info, type IconComponent } from "@/components/icons";
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
@@ -6,15 +6,15 @@ import { Text } from "./Text";
 
 type Tone = "brand" | "error" | "pending";
 
-const tones: Record<Tone, { bg: string; fg: string; border: string; icon: LucideIcon }> = {
+const tones: Record<Tone, { bg: string; fg: string; border: string; icon: IconComponent }> = {
   brand: { bg: colors.tint, fg: colors.forest, border: colors.lime, icon: Info },
-  error: { bg: colors.errorSoft, fg: colors.error, border: colors.errorSoft, icon: AlertCircle },
+  error: { bg: colors.errorSoft, fg: colors.error, border: colors.errorSoft, icon: Info },
   pending: { bg: colors.pendingSoft, fg: colors.pendingInk, border: colors.pendingSoft, icon: Info },
 };
 
 type Props = {
   tone?: Tone;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   children: ReactNode;
 };
 

@@ -1,6 +1,6 @@
 // F-09 Application submitted.
 import { router, useLocalSearchParams } from "expo-router";
-import { CheckCircle2 } from "lucide-react-native";
+import { CheckCircle } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { Button, StatusScreen, Text } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -9,7 +9,7 @@ export default function ApplicationSubmitted() {
   const { reference } = useLocalSearchParams<{ reference?: string }>();
   return (
     <StatusScreen
-      icon={CheckCircle2}
+      icon={CheckCircle}
       tone="success"
       title="Application submitted"
       message="Farmkeke usually decides within 2 working days. Check the status any time from Account."

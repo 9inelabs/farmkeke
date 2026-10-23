@@ -1,11 +1,11 @@
-import { ChevronRight, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, type IconComponent } from "@/components/icons";
 import { Children, Fragment, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { Text } from "./Text";
 
 type RowProps = {
-  icon: LucideIcon;
+  icon: IconComponent;
   title: string;
   subtitle?: string;
   onPress: () => void;

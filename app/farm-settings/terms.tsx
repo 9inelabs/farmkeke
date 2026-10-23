@@ -1,6 +1,6 @@
 // F-92 Farmer terms and policies.
 // PLACEHOLDER: the text is to be supplied by Farmkeke's legal adviser.
-import { FileText } from "lucide-react-native";
+import { Document } from "@/components/icons";
 import { ScrollView, StyleSheet } from "react-native";
 import { Notice, Screen, ScreenHeader, Text } from "@/components/ui";
 import { spacing } from "@/theme/tokens";
@@ -17,7 +17,7 @@ export default function FarmerTerms() {
   return (
     <Screen header={<ScreenHeader title="Farmer terms" />}>
       <ScrollView contentContainerStyle={styles.body}>
-        <Notice icon={FileText}>The full farmer terms are being prepared by Farmkeke's legal adviser and will appear here before launch.</Notice>
+        <Notice icon={Document}>The full farmer terms are being prepared by Farmkeke's legal adviser and will appear here before launch.</Notice>
         <Text variant="overline">In short</Text>
         {SUMMARY.map((line) => (
           <Text key={line} variant="body">

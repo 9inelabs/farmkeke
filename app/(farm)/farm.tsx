@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { BadgeCheck, BookOpen, CalendarDays, FileCheck2, FileText, Landmark, Mail, ShoppingBasket, Store, Truck } from "lucide-react-native";
+import { Bank, Basket, Book, Calendar, Document, DocumentCheck, Mail, Shop, Truck, Verified } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -52,7 +52,7 @@ export default function FarmTab() {
         {farm && setupDone(farm.checklist) < 3 && <SetupCard checklist={farm.checklist} />}
 
         <ListGroup title="Your farm">
-          <ListRow icon={Store} title="Business profile" subtitle="Name, photo, description and location" onPress={() => router.push("/farm-settings/profile")} />
+          <ListRow icon={Shop} title="Business profile" subtitle="Name, photo, description and location" onPress={() => router.push("/farm-settings/profile")} />
           <ListRow
             icon={Truck}
             title="Fulfilment settings"
@@ -64,29 +64,29 @@ export default function FarmTab() {
             onPress={() => router.push("/farm-settings/fulfilment")}
           />
           <ListRow
-            icon={CalendarDays}
+            icon={Calendar}
             title="Availability"
             subtitle={farm ? (farm.holidayMode ? "Holiday mode is on" : `Open ${farm.openDays.map((d) => DAY[d]).join(", ")}`) : "Open days and holiday mode"}
             onPress={() => router.push("/farm-settings/availability")}
           />
-          <ListRow icon={FileCheck2} title="Verification and documents" subtitle="ID, farm photos and letters" onPress={() => router.push("/farm-settings/documents")} />
+          <ListRow icon={DocumentCheck} title="Verification and documents" subtitle="ID, farm photos and letters" onPress={() => router.push("/farm-settings/documents")} />
         </ListGroup>
 
         {farm && (
-          <Notice icon={Landmark}>
+          <Notice icon={Bank}>
             {`Payouts go to ${farm.bankName} •••• ${farm.accountLast4} (${farm.accountName}). To change it, contact support; editing in the app arrives with live payments.`}
           </Notice>
         )}
 
         <ListGroup title="Help">
-          <ListRow icon={BookOpen} title="Help and guides" subtitle="How to sell well on Farmkeke" onPress={() => router.push("/farm-settings/help")} />
+          <ListRow icon={Book} title="Help and guides" subtitle="How to sell well on Farmkeke" onPress={() => router.push("/farm-settings/help")} />
           <ListRow icon={Mail} title="Contact support" subtitle="We reply within a day" onPress={() => router.push("/farm-settings/support")} />
-          <ListRow icon={FileText} title="Farmer terms and policies" subtitle="Rules for sellers" onPress={() => router.push("/farm-settings/terms")} />
+          <ListRow icon={Document} title="Farmer terms and policies" subtitle="Rules for sellers" onPress={() => router.push("/farm-settings/terms")} />
         </ListGroup>
 
-        <Button label="Switch to shopping" icon={ShoppingBasket} variant="outline" fullWidth onPress={() => setSwitching(true)} />
+        <Button label="Switch to shopping" icon={Basket} variant="outline" fullWidth onPress={() => setSwitching(true)} />
         <View style={styles.verified}>
-          <BadgeCheck size={14} color={colors.inkMuted} />
+          <Verified size={14} color={colors.inkMuted} />
           <Text variant="small">Farmer mode</Text>
         </View>
         </Stagger>

@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useAction } from "convex/react";
 import { router } from "expo-router";
-import { CheckCircle2, Trash2 } from "lucide-react-native";
+import { CheckCircle, Trash } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, ListGroup, ListRow, Notice, PasswordRules, Screen, ScreenHeader, Skeleton, Text, TextField } from "@/components/ui";
@@ -83,7 +83,7 @@ export default function LoginDetails() {
       ) : (
         <View style={styles.body}>
           {banner !== null && (
-            <Notice tone={banner.tone} icon={banner.tone === "brand" ? CheckCircle2 : undefined}>
+            <Notice tone={banner.tone} icon={banner.tone === "brand" ? CheckCircle : undefined}>
               {banner.text}
             </Notice>
           )}
@@ -138,7 +138,7 @@ export default function LoginDetails() {
           />
 
           <ListGroup>
-            <ListRow icon={Trash2} title="Delete account" tone="danger" onPress={() => router.push("/settings/delete-account")} />
+            <ListRow icon={Trash} title="Delete account" tone="danger" onPress={() => router.push("/settings/delete-account")} />
           </ListGroup>
         </View>
       )}

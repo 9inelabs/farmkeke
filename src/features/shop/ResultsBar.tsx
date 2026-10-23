@@ -1,5 +1,5 @@
 // "24 products · Filter" row above category and search results.
-import { SlidersHorizontal } from "lucide-react-native";
+import { Sliders } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
@@ -16,7 +16,7 @@ export function ResultsBar({ summary, active, onFilter }: { summary: string; act
         onPress={onFilter}
         style={[styles.button, active > 0 && styles.on]}
       >
-        <SlidersHorizontal size={16} color={colors.forest} />
+        <Sliders size={16} color={colors.forest} />
         <Text variant="label" color={colors.forest}>
           {active > 0 ? `Filter (${active})` : "Filter"}
         </Text>

@@ -1,11 +1,11 @@
 // M-51 Create account, including the already-registered state.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { router } from "expo-router";
-import { UserRound } from "lucide-react-native";
+import { User } from "@/components/icons";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, PasswordRules, Text, TextField } from "@/components/ui";
-import { AuthScreen } from "@/features/auth/AuthScreen";
+import { AuthScreen, AuthSwitchLink } from "@/features/auth/AuthScreen";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { isEmail, passwordRules } from "@/lib/session";
 import { usePrefs } from "@/store/prefs";
@@ -54,24 +54,21 @@ export default function CreateAccount() {
 
   return (
     <AuthScreen
-      title="Create your account"
+      title="Setup Your Account"
       subtitle="Save addresses, see every order in one place, and check out faster."
+      tab="create-account"
       footer={
         <>
-          <Button label="Create account" fullWidth loading={busy} onPress={() => void submit()} />
-          <Text variant="caption" align="center">
-            Already have an account?{" "}
-            <Text variant="label" color={colors.forest} accessibilityRole="link" onPress={() => router.replace("/sign-in")}>
-              Sign in
-            </Text>
-          </Text>
+          <Button label="Continue" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />
+          <AuthSwitchLink label="Already have an account? Sign In" onPress={() => router.replace("/sign-in")} />
         </>
       }
     >
       {banner !== null && <Notice tone="error">{banner}</Notice>}
       <View style={styles.fields}>
         <TextField
-          label="Full name"
+          label="Full Name"
+          placeholder="John Okafor"
           value={name}
           onChangeText={(t) => {
             setName(t);
@@ -86,7 +83,8 @@ export default function CreateAccount() {
         />
         <TextField
           ref={emailRef}
-          label="Email"
+          label="Email Address"
+          placeholder="you@example.com"
           value={email}
           onChangeText={(t) => {
             setEmail(t);
@@ -109,7 +107,7 @@ export default function CreateAccount() {
             onPress={() => router.replace("/sign-in")}
             style={styles.taken}
           >
-            <UserRound size={16} color={colors.forest} />
+            <User size={16} color={colors.forest} />
             <Text variant="label" color={colors.forest} style={styles.takenText}>
               Is this you?
             </Text>

@@ -1,31 +1,28 @@
-import { Image, type ImageSource } from "expo-image";
-import { ClipboardList, LayoutDashboard, Sprout, Store, Wallet, type LucideIcon } from "lucide-react-native";
+import { Cart, Clipboard, Dashboard, Grid, Home, Orders, Shop, Sprout, User, Wallet, type IconComponent } from "@/components/icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/ui";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
-type TabMeta = { label: string; icon: ImageSource; size: [number, number] } | { label: string; lucide: LucideIcon };
+type TabMeta = { label: string; icon: IconComponent };
 
-// Shopping tabs use the designer's icons (assets/icons/tab-*@2x/@3x.png),
-// tinted per state. Farmer tabs have no designed icons yet, so they use line
-// icons at the same weight.
+// Line icons from the Home design; the chosen tab turns solid.
 const ICONS: Record<string, TabMeta> = {
-  home: { label: "Home", icon: require("../../../assets/icons/tab-home.png"), size: [18, 19] },
-  categories: { label: "Categories", icon: require("../../../assets/icons/tab-categories.png"), size: [21, 21] },
-  cart: { label: "Cart", icon: require("../../../assets/icons/tab-cart.png"), size: [20, 20] },
-  orders: { label: "Orders", icon: require("../../../assets/icons/tab-orders.png"), size: [18, 18] },
-  account: { label: "Account", icon: require("../../../assets/icons/tab-account.png"), size: [16, 21] },
-  dashboard: { label: "Dashboard", lucide: LayoutDashboard },
-  sales: { label: "Orders", lucide: ClipboardList },
-  listings: { label: "Listings", lucide: Sprout },
-  earnings: { label: "Earnings", lucide: Wallet },
-  farm: { label: "Farm", lucide: Store },
+  home: { label: "Home", icon: Home },
+  categories: { label: "Categories", icon: Grid },
+  cart: { label: "Cart", icon: Cart },
+  orders: { label: "Orders", icon: Orders },
+  account: { label: "Account", icon: User },
+  dashboard: { label: "Dashboard", icon: Dashboard },
+  sales: { label: "Orders", icon: Clipboard },
+  listings: { label: "Listings", icon: Sprout },
+  earnings: { label: "Earnings", icon: Wallet },
+  farm: { label: "Farm", icon: Shop },
 };
 
 // Icons sit in a box of one height so every label lines up.
-const ICON_BOX = 22;
+const ICON_BOX = 26;
 // Inactive icons and labels, as in the Home design
 const INACTIVE = "rgba(0, 0, 0, 0.3)";
 
@@ -64,16 +61,7 @@ export function TabBar({ state, navigation, badges = {} }: Props) {
             style={styles.tab}
           >
             <View style={styles.icon}>
-              {"lucide" in meta ? (
-                <meta.lucide size={21} color={tint} strokeWidth={focused ? 2.25 : 1.75} />
-              ) : (
-                <Image
-                  source={meta.icon}
-                  tintColor={tint}
-                  style={{ width: meta.size[0], height: meta.size[1] }}
-                  contentFit="contain"
-                />
-              )}
+              <meta.icon size={24} color={tint} variant={focused ? "solid" : "line"} />
               {badge !== undefined && badge > 0 && (
                 <View style={styles.badge}>
                   <Text variant="small" color={colors.ink} maxFontSizeMultiplier={1} style={styles.badgeText}>

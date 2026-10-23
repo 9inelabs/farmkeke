@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { UserRound } from "lucide-react-native";
+import { User } from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { BottomSheet, Button, Text } from "@/components/ui";
@@ -47,7 +47,7 @@ export function SessionWatcher() {
     <BottomSheet visible={expired} onClose={() => setExpired(false)}>
       <View style={styles.body}>
         <View style={styles.icon}>
-          <UserRound size={26} color={colors.forest} />
+          <User size={26} color={colors.forest} />
         </View>
         <Text variant="heading" align="center">
           You've been signed out

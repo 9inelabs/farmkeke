@@ -1,6 +1,6 @@
 // F-26 Listing submitted: live now (trusted farm) or under review.
 import { router, useLocalSearchParams } from "expo-router";
-import { CheckCircle2, Clock } from "lucide-react-native";
+import { CheckCircle, Clock } from "@/components/icons";
 import { Button, StatusScreen } from "@/components/ui";
 
 export default function ListingSubmitted() {
@@ -8,7 +8,7 @@ export default function ListingSubmitted() {
   const live = status === "live";
   return (
     <StatusScreen
-      icon={live ? CheckCircle2 : Clock}
+      icon={live ? CheckCircle : Clock}
       tone={live ? "success" : "pending"}
       title={live ? "Your listing is live" : "Sent for review"}
       message={

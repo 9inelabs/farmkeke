@@ -1,7 +1,7 @@
 // F-24 Add listing: fulfilment (and F-27 edit).
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
-import { Check, Store, Truck, type LucideIcon } from "lucide-react-native";
+import { Check, Shop, Truck, type IconComponent } from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui";
@@ -62,9 +62,9 @@ export default function ListingFulfilment() {
         onPress={() => setDelivery((v) => !v)}
       />
       <Option
-        icon={Store}
-        title="Pickup at a Farmkeke pickup point"
-        body="The rider drops it at a pickup point; the buyer collects it within 2 days."
+        icon={Shop}
+        title="Pickup at your farm"
+        body="The buyer collects it from your farm. They give you a 4-digit code, and you enter it when you hand the order over."
         selected={pickup}
         onPress={() => setPickup((v) => !v)}
       />
@@ -72,7 +72,7 @@ export default function ListingFulfilment() {
   );
 }
 
-function Option({ icon: Icon, title, body, selected, onPress }: { icon: LucideIcon; title: string; body: string; selected: boolean; onPress: () => void }) {
+function Option({ icon: Icon, title, body, selected, onPress }: { icon: IconComponent; title: string; body: string; selected: boolean; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={onPress} style={[styles.card, selected && styles.cardOn]}>
       <View style={styles.icon}>

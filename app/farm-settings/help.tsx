@@ -1,5 +1,5 @@
 // F-90 Help and guides (articles; video guides later).
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { ChevronDown, ChevronUp } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Screen, ScreenHeader, Text } from "@/components/ui";

@@ -1,17 +1,21 @@
-import type { LucideIcon } from "lucide-react-native";
+import type { IconComponent } from "@/components/icons";
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
 import { PressableScale } from "./PressableScale";
 import { Text } from "./Text";
 
-type Variant = "primary" | "dark" | "secondary" | "outline" | "ghost" | "danger";
+type Variant = "primary" | "dark" | "black" | "secondary" | "outline" | "ghost" | "danger";
 
 type Props = {
   label: string;
   onPress?: () => void;
   variant?: Variant;
   size?: "default" | "large" | "small";
-  icon?: LucideIcon;
+  icon?: IconComponent;
+  /** Icon after the label ("Checkout →"). */
+  iconRight?: IconComponent;
+  /** Fully rounded ends, for floating actions (Checkout, Add to cart). */
+  pill?: boolean;
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
@@ -23,6 +27,8 @@ const palette: Record<Variant, { bg: string; fg: string; border?: string }> = {
   // Lime fill with dark text: the main call to action in every Figma frame
   primary: { bg: colors.lime, fg: colors.forest },
   dark: { bg: colors.forest, fg: colors.white },
+  // Form submits on the sign-in and account screens
+  black: { bg: colors.ink, fg: colors.white },
   secondary: { bg: colors.tint, fg: colors.forest, border: colors.lime },
   outline: { bg: colors.white, fg: colors.forest, border: colors.forest },
   ghost: { bg: "transparent", fg: colors.forest },
@@ -35,6 +41,8 @@ export function Button({
   variant = "primary",
   size = "default",
   icon: Icon,
+  iconRight: IconRight,
+  pill = false,
   loading = false,
   disabled = false,
   fullWidth = false,
@@ -59,7 +67,7 @@ export function Button({
         {
           height,
           backgroundColor: bg,
-          borderRadius: size === "small" ? radii.pill : radii.control,
+          borderRadius: size === "small" || pill ? radii.pill : radii.control,
           paddingHorizontal: size === "small" ? spacing.lg : spacing.xxl,
         },
         border !== undefined && { borderColor: border, borderWidth: variant === "outline" ? 1 : borders.hairline },
@@ -72,10 +80,11 @@ export function Button({
         <ActivityIndicator color={fg} />
       ) : (
         <View style={styles.content}>
-          {Icon !== undefined && <Icon size={size === "small" ? 16 : 20} color={fg} strokeWidth={2} />}
+          {Icon !== undefined && <Icon size={size === "small" ? 16 : 20} color={fg} />}
           <Text variant="button" color={fg} numberOfLines={1}>
             {label}
           </Text>
+          {IconRight !== undefined && <IconRight size={size === "small" ? 16 : 20} color={fg} />}
         </View>
       )}
     </PressableScale>

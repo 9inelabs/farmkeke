@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { Redirect, router } from "expo-router";
-import { Clock, FileWarning, Mail, PartyPopper, XCircle } from "lucide-react-native";
+import { Celebrate, Clock, CloseCircle, DocumentAlert, Mail } from "@/components/icons";
 import { useState } from "react";
 import { Linking, StyleSheet, View } from "react-native";
 import { Button, Notice, Screen, ScreenHeader, Skeleton, StatusScreen, Text } from "@/components/ui";
@@ -64,7 +64,7 @@ export default function ApplicationStatus() {
       >
         <View style={styles.body}>
           <View style={[styles.icon, { backgroundColor: colors.pendingSoft }]}>
-            <FileWarning size={28} color={colors.pendingInk} />
+            <DocumentAlert size={28} color={colors.pendingInk} />
           </View>
           <Text variant="displaySmall" accessibilityRole="header">
             We need a bit more
@@ -84,7 +84,7 @@ export default function ApplicationStatus() {
     return (
       <StatusScreen
         header={header}
-        icon={PartyPopper}
+        icon={Celebrate}
         tone="success"
         title="You're approved"
         message="Welcome to Farmkeke. Switch to farmer mode to finish setting up your farm, then add your first listing."
@@ -106,7 +106,7 @@ export default function ApplicationStatus() {
   return (
     <StatusScreen
       header={header}
-      icon={XCircle}
+      icon={CloseCircle}
       tone="error"
       title="Not approved this time"
       message={app.rejection?.reason ?? "Your application wasn't approved."}

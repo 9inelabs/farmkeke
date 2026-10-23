@@ -1,5 +1,6 @@
-// Two-column grid of product cards for categories, search, farm pages and
-// saved items. Cards fill the screen's width; "+" opens the add-to-cart sheet.
+// Grid of product cards for categories, search, farm pages and saved items:
+// two columns, or three on the Categories tab. Cards fill the screen's width;
+// "+" opens the add-to-cart sheet.
 import { router } from "expo-router";
 import type { ReactElement } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
@@ -19,10 +20,12 @@ export type GridItem = {
 };
 
 const GAP = spacing.md;
+const GAP_3 = spacing.sm;
 
-export function useCardWidth() {
+export function useCardWidth(columns: 2 | 3 = 2) {
   const width = useScreenWidth();
-  return Math.floor((width - spacing.screen * 2 - GAP) / 2);
+  const gap = columns === 3 ? GAP_3 : GAP;
+  return Math.floor((width - spacing.screen * 2 - gap * (columns - 1)) / columns);
 }
 
 type Props = {
@@ -31,19 +34,22 @@ type Props = {
   empty?: ReactElement | null;
   footer?: ReactElement | null;
   onEndReached?: () => void;
+  columns?: 2 | 3;
 };
 
-export function ProductGrid({ items, header, empty, footer, onEndReached }: Props) {
-  const card = useCardWidth();
+export function ProductGrid({ items, header, empty, footer, onEndReached, columns = 2 }: Props) {
+  const card = useCardWidth(columns);
+  const gap = columns === 3 ? GAP_3 : GAP;
   const openAdd = useShopUi((s) => s.openAdd);
 
   return (
     <FlatList
       data={items ?? []}
       keyExtractor={(i) => i.id}
-      numColumns={2}
-      columnWrapperStyle={styles.row}
-      contentContainerStyle={styles.content}
+      key={columns}
+      numColumns={columns}
+      columnWrapperStyle={{ gap }}
+      contentContainerStyle={[styles.content, { gap }]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={header}
@@ -52,8 +58,8 @@ export function ProductGrid({ items, header, empty, footer, onEndReached }: Prop
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
         items === undefined ? (
-          <View style={[styles.row, styles.loading]}>
-            {[0, 1, 2, 3].map((i) => (
+          <View style={[styles.loading, { gap }]}>
+            {Array.from({ length: columns * 2 }, (_, i) => (
               <Skeleton key={i} width={card} height={card + 64} radius={radii.lg} />
             ))}
           </View>
@@ -69,6 +75,7 @@ export function ProductGrid({ items, header, empty, footer, onEndReached }: Prop
             unit={item.unit}
             imageUrl={item.imageUrl}
             width={card}
+            compact={columns === 3}
             onPress={() => router.push(`/product/${item.id}`)}
             onAdd={item.inStock === false ? undefined : () => openAdd(item.id)}
           />
@@ -78,7 +85,7 @@ export function ProductGrid({ items, header, empty, footer, onEndReached }: Prop
                 Sold out
               </Text>
             </View>
-          ) : item.freshness ? (
+          ) : item.freshness && columns === 2 ? (
             <View style={styles.tag}>
               <Text variant="small" color={colors.forest} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
                 {item.freshness}
@@ -92,9 +99,8 @@ export function ProductGrid({ items, header, empty, footer, onEndReached }: Prop
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: GAP },
-  row: { gap: GAP },
-  loading: { flexWrap: "wrap" },
+  content: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl },
+  loading: { flexDirection: "row", flexWrap: "wrap" },
   tag: {
     position: "absolute",
     top: spacing.md + 2,
