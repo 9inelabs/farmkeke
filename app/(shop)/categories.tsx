@@ -48,7 +48,7 @@ export default function Categories() {
       </ScrollView>
       {current !== undefined && (
         <View style={styles.titleRow}>
-          <Text variant="section" accessibilityRole="header" style={styles.title}>
+          <Text variant="heading" accessibilityRole="header" style={styles.title}>
             {current.name}
           </Text>
           <Pressable
@@ -94,6 +94,6 @@ const styles = StyleSheet.create({
   tilesRow: { marginHorizontal: -spacing.screen },
   tiles: { gap: spacing.xxs, paddingHorizontal: spacing.screen - 4 },
   titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
-  title: { fontFamily: fonts.bold, flexShrink: 1 },
+  title: { fontFamily: fonts.semibold, flexShrink: 1 },
   empty: { paddingTop: spacing.xxxl },
 });
