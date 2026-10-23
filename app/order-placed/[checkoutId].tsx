@@ -113,8 +113,9 @@ export default function OrderPlaced() {
               <Receipt size={24} color={colors.pendingInk} />
               <View style={styles.flex}>
                 <Text variant="bodyMedium">Your bill is ready: {formatNaira(summary.totalKobo)}</Text>
-                <Text variant="small">Delivery included. Pay it from your order before it runs out.</Text>
+                <Text variant="small">Delivery included. Pay before it runs out, or the order is cancelled.</Text>
               </View>
+              <Button label="Pay" size="small" onPress={() => router.push({ pathname: "/pay/[token]", params: { token: summary.payToken! } })} />
             </View>
           ) : null}
 
@@ -179,7 +180,7 @@ export default function OrderPlaced() {
         </Stagger>
       </ScrollView>
       <View style={styles.footer}>
-        <Button label={`Track your ${many ? "orders" : "order"}`} size="large" pill fullWidth onPress={() => router.replace("/orders")} />
+        <Button label={`Track your ${many ? "orders" : "order"}`} size="large" pill fullWidth onPress={() => (orders.length === 1 ? router.replace({ pathname: "/order/[id]", params: { id: orders[0]!._id } }) : router.replace("/orders"))} />
         <Button label="Continue shopping" variant="ghost" fullWidth onPress={() => router.replace("/home")} />
       </View>
     </SafeAreaView>
