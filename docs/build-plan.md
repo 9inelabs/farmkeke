@@ -1,6 +1,6 @@
 # Farmkeke mobile app: build plan
 
-Status: approved 9 Oct 2026. Phases 1–4 done (see `docs/reports/`). Design pass next, batch by batch.
+Status: approved 9 Oct 2026. Phases 1–4 done (see `docs/reports/`). The rest of the app is built in the batches in section 7 (from 23 Oct 2026).
 
 Sources: `assets/new assets/Documentation/` (PRD and Screen Inventory & Build Plan). Screen IDs (M-, F-, A-) below are from the Screen Inventory.
 
@@ -193,3 +193,22 @@ Each phase ends with a report in `docs/reports/NN-phase-name.md` (per CLAUDE.md)
 - New app icon
 - Illustrations for Herbs & Spices, Legumes & Nuts and Dairy
 - Resend key (Phase 2), Google Maps key (Phase 6), Paystack test keys (Phase 7), Firebase and SMS provider (Phase 9)
+
+## 7. Remaining work (from 23 Oct 2026)
+
+The backend for phases 5 to 9 was built for the website and the Admin Portal (reports 05 to 16), so the app work is mostly screens on top of existing Convex functions. Since then, three decisions changed the flows (report 16):
+
+- **Home delivery:** checkout takes no payment. The farm accepts, staff price the delivery, the shopper pays one bill within 12 hours, and then the rider collects.
+- **Pickup:** it happens at the farm, and is paid at checkout. The farmer enters the shopper's 4-digit code to hand the order over; the shopper has 3 days to collect.
+- **Removed:** there are no delivery time slots (the shopper writes a note for the rider instead), and no pickup points. That retires M-36, M-37 and M-38.
+
+Every batch is pushed to `main`, ends with a report in `docs/reports/`, and can be checked in the browser preview (`app-preview/`, deployed by Vercel).
+
+| Batch | Screens | Notes |
+| --- | --- | --- |
+| A. Storefront | M-10 wiring, M-11 to M-22, M-86 | Search, filters, product, add to cart, farm profile, saved items |
+| B. Cart and checkout | M-30 to M-35, M-39, M-41 to M-47, M-49 | Delivery bill flow, pickup at the farm, Paystack in an in-app browser |
+| C. Orders | M-60 to M-66, M-71, M-72, bill payment | Tracking, pay the bill, pickup code, confirm receipt, refunds |
+| D. After-sale | M-67 to M-69, M-73 to M-75, M-87, M-91 | Problem reports, chat, reviews, inbox, support |
+| E. Farmer orders and money | F-10 live data, F-11, F-40 to F-49, F-60 to F-63, F-80, F-83 | Accept and decline, hand-over, pickup code entry, earnings, payouts, reviews |
+| F. Notifications | M-48, M-88, F-12, F-75 | Expo push tokens and deep links, preferences |

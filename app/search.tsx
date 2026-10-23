@@ -1,0 +1,238 @@
+// M-13 Search: recent searches, categories and popular produce before typing.
+// M-14 Results: matching farms and products, with filter and sort (M-16).
+// M-15 No results: say so, suggest categories, and offer to clear.
+import { api } from "@convex/_generated/api";
+import { useQuery } from "convex/react";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
+import { BadgeCheck, ChevronLeft, Clock, SearchX } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Avatar, CategoryTile, EmptyState, SearchPill, Skeleton, Text } from "@/components/ui";
+import { activeCount, FilterSheet, filterArgs, type Filters } from "@/features/shop/FilterSheet";
+import { ProductGrid } from "@/features/shop/ProductGrid";
+import { ProductRow } from "@/features/shop/ProductRow";
+import { ResultsBar } from "@/features/shop/ResultsBar";
+import { useShopContext } from "@/features/shop/useShopContext";
+import { useSearches } from "@/store/searches";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
+
+const PAGE = 24;
+
+export default function Search() {
+  const params = useLocalSearchParams<{ q?: string }>();
+  const { today } = useShopContext();
+  const [text, setText] = useState(params.q ?? "");
+  const [query, setQuery] = useState(params.q ?? "");
+  const [filters, setFilters] = useState<Filters>({});
+  const [limit, setLimit] = useState(PAGE);
+  const [showFilters, setShowFilters] = useState(false);
+  const recent = useSearches((s) => s.recent);
+  const remember = useSearches((s) => s.remember);
+  const clearRecent = useSearches((s) => s.clear);
+
+  // Search as you type, a moment after typing stops
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setQuery(text.trim());
+      setLimit(PAGE);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [text]);
+
+  const searching = query.length > 0;
+  const results = useQuery(api.storefront.search, searching ? { text: query, today, limit, ...filterArgs(filters) } : "skip");
+  const [last, setLast] = useState<typeof results>(undefined);
+  if (results !== undefined && results !== last) setLast(results);
+  const shown = searching ? (results ?? last) : undefined;
+
+  const popular = useQuery(api.storefront.popular, searching ? "skip" : { today, limit: 10 });
+  const categories = useQuery(api.catalog.listCategories);
+
+  const run = (t: string) => {
+    setText(t);
+    setQuery(t.trim());
+    remember(t);
+  };
+
+  const header = (
+    <View style={styles.searchBar}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Back" hitSlop={8} onPress={() => router.back()}>
+        <ChevronLeft size={24} color={colors.ink} strokeWidth={2.25} />
+      </Pressable>
+      <View style={styles.flex}>
+        <SearchPill
+          mode="input"
+          value={text}
+          onChangeText={setText}
+          onSubmit={() => run(text)}
+          onClear={() => (setText(""), setQuery(""))}
+          autoFocus={!params.q}
+        />
+      </View>
+    </View>
+  );
+
+  // M-13: before typing
+  if (!searching) {
+    return (
+      <SafeAreaView edges={["top"]} style={styles.screen}>
+        {header}
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.start}>
+          {recent.length > 0 ? (
+            <View style={styles.block}>
+              <View style={styles.blockHead}>
+                <Text variant="heading">Recent searches</Text>
+                <Pressable accessibilityRole="button" hitSlop={8} onPress={clearRecent}>
+                  <Text variant="label" color={colors.forest}>
+                    Clear
+                  </Text>
+                </Pressable>
+              </View>
+              {recent.map((r) => (
+                <Pressable key={r} accessibilityRole="button" onPress={() => run(r)} style={styles.recent}>
+                  <Clock size={16} color={colors.inkMuted} />
+                  <Text variant="body" style={styles.flex} numberOfLines={1}>
+                    {r}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          <View style={styles.block}>
+            <Text variant="heading">Browse categories</Text>
+            <View style={styles.tiles}>
+              {categories?.map((c) => (
+                <CategoryTile
+                  key={c._id}
+                  name={c.name}
+                  illustration={c.illustration}
+                  onPress={() => router.push({ pathname: "/category/[slug]", params: { slug: c.slug, name: c.name } })}
+                />
+              ))}
+            </View>
+          </View>
+          <View style={styles.popular}>
+            {popular === undefined ? (
+              <Skeleton height={200} radius={radii.lg} />
+            ) : (
+              <ProductRow title="Popular right now" items={popular} />
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  const n = activeCount(filters);
+  const resultsHeader = (
+    <View style={styles.resultsHead}>
+      {shown ? (
+        <ResultsBar
+          summary={`${shown.total} ${shown.total === 1 ? "product" : "products"} for “${query}”`}
+          active={n}
+          onFilter={() => setShowFilters(true)}
+        />
+      ) : (
+        <Skeleton height={20} width={200} />
+      )}
+      {shown && shown.farms.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.farmRow} contentContainerStyle={styles.farms}>
+          {shown.farms.map((f) => (
+            <Pressable key={f.id} accessibilityRole="button" onPress={() => router.push(`/farm/${f.id}`)} style={styles.farm}>
+              {f.photoUrl ? <Image source={{ uri: f.photoUrl }} style={styles.farmPhoto} /> : <Avatar name={f.name} size={36} />}
+              <View style={styles.farmCopy}>
+                <View style={styles.farmName}>
+                  <Text variant="label" numberOfLines={1} style={styles.shrink}>
+                    {f.name}
+                  </Text>
+                  {f.verified ? <BadgeCheck size={13} color={colors.success} /> : null}
+                </View>
+                <Text variant="small" numberOfLines={1}>
+                  {f.lga}
+                  {f.matchCount > 0 ? ` · ${f.matchCount} matching` : ""}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
+    </View>
+  );
+
+  return (
+    <SafeAreaView edges={["top"]} style={styles.screen}>
+      {header}
+      <ProductGrid
+        items={shown?.items}
+        header={resultsHeader}
+        onEndReached={() => shown?.hasMore && setLimit((l) => l + PAGE)}
+        empty={
+          shown && shown.farms.length === 0 ? (
+            <View style={styles.none}>
+              <EmptyState
+                icon={SearchX}
+                title={`No results for “${query}”`}
+                message={n > 0 ? "Try fewer filters, or check the spelling." : "Check the spelling, or try a simpler word like “yam” or “tomatoes”."}
+                actionLabel={n > 0 ? "Clear filters" : "Clear search"}
+                onAction={() => (n > 0 ? setFilters({}) : (setText(""), setQuery("")))}
+              />
+              <View style={styles.tiles}>
+                {categories?.slice(0, 4).map((c) => (
+                  <CategoryTile
+                    key={c._id}
+                    name={c.name}
+                    illustration={c.illustration}
+                    onPress={() => router.push({ pathname: "/category/[slug]", params: { slug: c.slug, name: c.name } })}
+                  />
+                ))}
+              </View>
+            </View>
+          ) : null
+        }
+      />
+      <FilterSheet
+        visible={showFilters}
+        value={filters}
+        onClose={() => setShowFilters(false)}
+        onApply={(f) => {
+          setFilters(f);
+          setLimit(PAGE);
+          setShowFilters(false);
+        }}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.white },
+  flex: { flex: 1 },
+  shrink: { flexShrink: 1 },
+  searchBar: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.screen, paddingVertical: spacing.md },
+  start: { paddingBottom: spacing.xxxl, gap: spacing.xxl },
+  block: { paddingHorizontal: spacing.screen, gap: spacing.sm },
+  blockHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  recent: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 44 },
+  tiles: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: spacing.lg, paddingTop: spacing.sm },
+  popular: { marginTop: spacing.sm },
+  resultsHead: { gap: spacing.md, paddingBottom: spacing.sm },
+  farmRow: { marginHorizontal: -spacing.screen },
+  farms: { gap: spacing.sm, paddingHorizontal: spacing.screen },
+  farm: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    paddingRight: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: borders.hairline,
+    borderColor: colors.line,
+    maxWidth: 240,
+  },
+  farmPhoto: { width: 36, height: 36, borderRadius: 18 },
+  farmCopy: { flexShrink: 1 },
+  farmName: { flexDirection: "row", alignItems: "center", gap: 4 },
+  none: { paddingTop: spacing.xxl, gap: spacing.xxl },
+});

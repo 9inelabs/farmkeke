@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import { X } from "lucide-react-native";
+import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 import SearchButton from "../../../assets/icons/search-button.svg";
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
@@ -10,7 +11,7 @@ type Props =
   // Tappable pill that opens the search screen (Home)
   | { mode: "button"; onPress?: () => void }
   // Live input (Search screen)
-  | ({ mode: "input"; onSubmit?: () => void } & Omit<TextInputProps, "style">);
+  | ({ mode: "input"; onSubmit?: () => void; /** Shows a clear button while there is text */ onClear?: () => void } & Omit<TextInputProps, "style">);
 
 /** Figma search pill with the round lime search button. */
 export function SearchPill(props: Props) {
@@ -37,7 +38,7 @@ export function SearchPill(props: Props) {
     );
   }
 
-  const { mode: _mode, onSubmit, ...inputProps } = props;
+  const { mode: _mode, onSubmit, onClear, ...inputProps } = props;
   return (
     <View style={styles.pill}>
       <TextInput
@@ -50,6 +51,11 @@ export function SearchPill(props: Props) {
         {...inputProps}
         style={[styles.flex, styles.input]}
       />
+      {onClear && inputProps.value ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={onClear} hitSlop={8}>
+          <X size={18} color={colors.inkSoft} />
+        </Pressable>
+      ) : null}
       <Pressable accessibilityRole="button" accessibilityLabel="Search" onPress={onSubmit} hitSlop={6}>
         {button}
       </Pressable>
@@ -71,5 +77,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   flex: { flex: 1 },
-  input: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink, paddingVertical: 0 },
+  input: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: colors.ink,
+    paddingVertical: 0,
+    // The pill is the field's outline; no second browser focus ring inside it
+    ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {}),
+  },
 });

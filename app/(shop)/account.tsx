@@ -6,6 +6,7 @@ import {
   BookOpen,
   CircleHelp,
   FileText,
+  Heart,
   Info,
   KeyRound,
   LayoutGrid,
@@ -90,6 +91,7 @@ export default function Account() {
                 }
                 onPress={() => router.push("/settings/addresses")}
               />
+              <ListRow icon={Heart} title="Saved items" subtitle="Produce you saved for later" onPress={() => router.push("/saved")} />
             </ListGroup>
 
             <ListGroup title="Account">

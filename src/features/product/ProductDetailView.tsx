@@ -2,9 +2,9 @@
 // farmer's listing preview (F-25) now, and the shopper's product page (M-17)
 // in Phase 5.
 import { Image } from "expo-image";
-import { BadgeCheck, ImageIcon, Leaf, Store, Truck } from "lucide-react-native";
+import { BadgeCheck, ChevronRight, ImageIcon, Leaf, Star, Store, Truck } from "lucide-react-native";
 import { useState } from "react";
-import { FlatList, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { FlatList, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { Avatar, Chip, EscrowCard, Text } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
@@ -20,9 +20,15 @@ type Props = {
   harvestedOn?: string;
   delivery: boolean;
   pickup: boolean;
-  farm: { name: string; lga: string; state: string; photoUrl: string | null };
+  farm: { name: string; lga: string; state: string; photoUrl: string | null; rating?: number | null; ratingCount?: number };
   selectedUnitId?: string;
   onSelectUnit?: (unitId: string) => void;
+  // Shopper's page (M-17); the farmer's preview (F-25) leaves these out
+  onPhotoPress?: (index: number) => void;
+  onFarmPress?: () => void;
+  /** e.g. "To Owerri North. Priced after the farm accepts" (instead of "Available") */
+  deliveryNote?: string;
+  pickupNote?: string;
 };
 
 function harvestLabel(day: string): string {
@@ -54,9 +60,16 @@ export function ProductDetailView(props: Props) {
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={onScroll}
           keyExtractor={(_, i) => String(i)}
-          renderItem={({ item }) =>
+          renderItem={({ item, index }) =>
             item ? (
-              <Image source={{ uri: item }} style={{ width, height: width * 0.85 }} contentFit="cover" accessibilityLabel={props.name} />
+              <Pressable
+                disabled={props.onPhotoPress === undefined}
+                accessibilityRole={props.onPhotoPress ? "imagebutton" : undefined}
+                accessibilityLabel={props.onPhotoPress ? `${props.name}, photo ${index + 1}. Open full screen` : props.name}
+                onPress={() => props.onPhotoPress?.(index)}
+              >
+                <Image source={{ uri: item }} style={{ width, height: width * 0.85 }} contentFit="cover" />
+              </Pressable>
             ) : (
               <View style={[styles.placeholder, { width, height: width * 0.85 }]}>
                 <Leaf size={40} color={colors.inkMuted} />
@@ -113,7 +126,13 @@ export function ProductDetailView(props: Props) {
           </View>
         )}
 
-        <View style={styles.farm}>
+        <Pressable
+          disabled={props.onFarmPress === undefined}
+          accessibilityRole={props.onFarmPress ? "button" : undefined}
+          accessibilityLabel={props.onFarmPress ? `${props.farm.name}. See the farm` : undefined}
+          onPress={props.onFarmPress}
+          style={styles.farm}
+        >
           {props.farm.photoUrl ? (
             <Image source={{ uri: props.farm.photoUrl }} style={styles.farmPhoto} contentFit="cover" />
           ) : (
@@ -129,12 +148,21 @@ export function ProductDetailView(props: Props) {
             <Text variant="small">
               {props.farm.lga}, {props.farm.state}
             </Text>
+            {props.farm.rating != null ? (
+              <View style={styles.rating}>
+                <Star size={12} color={colors.pending} fill={colors.pending} />
+                <Text variant="small" color={colors.ink}>
+                  {props.farm.rating.toFixed(1)} ({props.farm.ratingCount ?? 0} reviews)
+                </Text>
+              </View>
+            ) : null}
           </View>
-        </View>
+          {props.onFarmPress ? <ChevronRight size={20} color={colors.inkMuted} /> : null}
+        </Pressable>
 
         <View style={styles.fulfilment}>
-          <FulfilmentRow icon={Truck} label="Delivery" available={props.delivery} />
-          <FulfilmentRow icon={Store} label="Pickup" available={props.pickup} />
+          <FulfilmentRow icon={Truck} label="Home delivery" available={props.delivery} note={props.deliveryNote} />
+          <FulfilmentRow icon={Store} label="Pickup at the farm" available={props.pickup} note={props.pickupNote} />
         </View>
 
         {props.description ? (
@@ -152,13 +180,16 @@ export function ProductDetailView(props: Props) {
   );
 }
 
-function FulfilmentRow({ icon: Icon, label, available }: { icon: typeof Truck; label: string; available: boolean }) {
+function FulfilmentRow({ icon: Icon, label, available, note }: { icon: typeof Truck; label: string; available: boolean; note?: string }) {
   return (
     <View style={styles.fulfilmentRow}>
       <Icon size={18} color={available ? colors.forest : colors.inkMuted} />
-      <Text variant="label" color={available ? colors.ink : colors.inkMuted} style={styles.flex}>
-        {label}
-      </Text>
+      <View style={styles.flex}>
+        <Text variant="label" color={available ? colors.ink : colors.inkMuted}>
+          {label}
+        </Text>
+        {available && note ? <Text variant="small">{note}</Text> : null}
+      </View>
       <Text variant="small" color={available ? colors.success : colors.inkMuted}>
         {available ? "Available" : "Not offered"}
       </Text>
@@ -204,6 +235,7 @@ const styles = StyleSheet.create({
   },
   farmPhoto: { width: 48, height: 48, borderRadius: 24 },
   farmName: { flexDirection: "row", alignItems: "center", gap: 4 },
+  rating: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   flex: { flex: 1 },
   fulfilment: { backgroundColor: colors.white, borderRadius: radii.control, borderWidth: borders.hairline, borderColor: colors.line },
   fulfilmentRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md },

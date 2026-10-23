@@ -1,27 +1,23 @@
-// M-10 Home. The layout is HomeView; this route gives it live data.
-// Search, product pages, farm pages and the cart aren't built yet, so those
-// parts are drawn but don't open anything until their screens exist.
+// M-10 Home. The layout is HomeView; this route gives it live data and opens
+// search, categories, products, farms and the add-to-cart sheet.
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeView } from "@/features/home/HomeView";
+import { useShopContext } from "@/features/shop/useShopContext";
 import { formatNaira } from "@/lib/money";
-import { usePrefs } from "@/store/prefs";
+import { useShopUi } from "@/store/shopUi";
 import { colors } from "@/theme/tokens";
 
-// The phone's own date, "YYYY-MM-DD": what "Picked Today" means for this shopper.
-const localDay = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
 export default function Home() {
-  const area = usePrefs((s) => s.area);
-  const [today] = useState(localDay);
+  const { today, area } = useShopContext();
+  const openAdd = useShopUi((s) => s.openAdd);
   const categories = useQuery(api.catalog.listCategories);
   const home = useQuery(api.storefront.home, { today, state: area?.state, lga: area?.lga });
   const openCategories = () => router.push("/categories");
+  const categorySlug = new Map<string, { slug: string; name: string }>(categories?.map((c) => [c._id, { slug: c.slug, name: c.name }]));
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
@@ -43,9 +39,17 @@ export default function Home() {
         }
         farms={home?.farms}
         onChangeArea={() => router.push({ pathname: "/choose-area", params: { from: "home" } })}
-        onCategory={openCategories}
+        onSearch={() => router.push("/search")}
+        onCategory={(c) => {
+          const cat = categorySlug.get(c.id);
+          if (cat) router.push({ pathname: "/category/[slug]", params: cat });
+        }}
         onSeeAllFresh={openCategories}
         onSeeAllPicked={openCategories}
+        onProduct={(p) => router.push(`/product/${p.id}`)}
+        onAddToCart={(p) => openAdd(p.id)}
+        onBanner={home?.banner ? () => router.push(`/product/${home.banner!.listing.id}`) : undefined}
+        onFarm={(f) => router.push(`/farm/${f.id}`)}
       />
     </SafeAreaView>
   );

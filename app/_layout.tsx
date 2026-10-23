@@ -9,6 +9,8 @@ import { Linking, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button, StatusScreen } from "@/components/ui";
+import { AddedToast } from "@/features/shop/AddedToast";
+import { AddToCartSheet } from "@/features/shop/AddToCartSheet";
 import { AppGate } from "@/features/system/AppGate";
 import { SessionWatcher } from "@/features/system/SessionWatcher";
 import { convex, secureTokenStorage } from "@/lib/convex";
@@ -45,6 +47,9 @@ export default function RootLayout() {
               <Stack.Screen name="(auth)" options={modalRise} />
             </Stack>
             <SessionWatcher />
+            {/* M-19 and M-20, opened from any product card or page */}
+            <AddToCartSheet />
+            <AddedToast />
           </AppGate>
         </ConvexAuthProvider>
       </SafeAreaProvider>

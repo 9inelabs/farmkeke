@@ -2,10 +2,12 @@ import { Tabs } from "expo-router";
 import { View } from "react-native";
 import { OfflineBanner } from "@/components/ui";
 import { TabBar } from "@/features/shell/TabBar";
+import { useCartSummary } from "@/store/cart";
 import { tabTransition } from "@/theme/navigation";
 import { colors } from "@/theme/tokens";
 
 export default function ShopTabs() {
+  const { count } = useCartSummary();
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
       <Tabs
@@ -13,7 +15,7 @@ export default function ShopTabs() {
         tabBar={(props) => (
           <>
             <OfflineBanner />
-            <TabBar state={props.state} navigation={props.navigation} />
+            <TabBar state={props.state} navigation={props.navigation} badges={{ cart: count }} />
           </>
         )}
       >
