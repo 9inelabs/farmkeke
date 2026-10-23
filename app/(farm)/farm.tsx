@@ -1,95 +1,97 @@
-// Farm tab: the farm's settings, help, and Switch to shopping (F-13).
+// Farm tab: the farm's profile and settings, money, buyers, help, and
+// Switch to shopping (F-13).
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Bank, Basket, Book, Calendar, Document, DocumentCheck, Mail, Shop, Truck, Verified } from "@/components/icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Avatar, Button, ListGroup, ListRow, Notice, Skeleton, StatusBadge, Text } from "@/components/ui";
+import { Bank, Basket, Bell, Book, Calendar, ChevronRight, Document, DocumentCheck, Headphone, Messages, Receipt, Shop, Star, Truck, Wallet } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
+import { Avatar, Button, Skeleton, StatusBadge, Text } from "@/components/ui";
+import { Card, FarmHeader, LinkRow, Section } from "@/features/farm/ui";
 import { LEAD_TIMES } from "@/features/farmer/constants";
 import { SetupCard, setupDone } from "@/features/farmer/SetupCard";
 import { SwitchModeSheet } from "@/features/farmer/SwitchModeSheet";
-import { formatHours } from "@/lib/hours";
 import { colors, radii, spacing } from "@/theme/tokens";
-
-const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function FarmTab() {
   const farm = useQuery(api.farms.mine);
+  const rating = useQuery(api.reviews.mySummary);
+  const unreadChats = useQuery(api.chat.unread, { side: "farm" }) ?? 0;
+  const unreadAlerts = useQuery(api.notifications.unreadCount, { side: "farm" }) ?? 0;
   const [switching, setSwitching] = useState(false);
+  const lead = farm ? LEAD_TIMES.find((l) => l.value === farm.leadTimeHours)?.detail : undefined;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Stagger>
-        {farm ? (
-          <View style={styles.profile}>
-            {farm.photoUrl ? (
-              <Image source={{ uri: farm.photoUrl }} style={styles.photo} contentFit="cover" accessibilityLabel={`${farm.name} photo`} />
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <FarmHeader title="Farm" />
+        <View style={styles.content}>
+          <Stagger>
+            {farm ? (
+              <Card onPress={() => router.push("/farm-settings/profile")}>
+                <View style={styles.profile}>
+                  {farm.photoUrl ? <Image source={{ uri: farm.photoUrl }} style={styles.photo} contentFit="cover" accessibilityLabel={`${farm.name} photo`} /> : <Avatar name={farm.name} size={60} />}
+                  <View style={styles.flex}>
+                    <Text variant="heading" numberOfLines={1}>
+                      {farm.name}
+                    </Text>
+                    <Text variant="small">
+                      {farm.lga}, {farm.state}
+                    </Text>
+                    <View style={styles.badges}>
+                      <StatusBadge label="Verified" tone="success" />
+                      {farm.trusted ? <StatusBadge label="Trusted" tone="brand" /> : null}
+                      {farm.holidayMode ? <StatusBadge label="On holiday" tone="pending" /> : null}
+                    </View>
+                  </View>
+                  <ChevronRight size={18} color={colors.inkMuted} />
+                </View>
+              </Card>
             ) : (
-              <Avatar name={farm.name} size={56} />
+              <Skeleton height={96} radius={radii.lg + 4} />
             )}
-            <View style={styles.flex}>
-              <Text variant="heading" numberOfLines={1}>
-                {farm.name}
-              </Text>
-              <Text variant="small">
-                {farm.lga}, {farm.state}
-              </Text>
-              <View style={styles.badges}>
-                <StatusBadge label="Verified farm" tone="success" />
-                {farm.trusted && <StatusBadge label="Trusted" tone="brand" />}
-              </View>
-            </View>
-          </View>
-        ) : (
-          <Skeleton height={72} radius={radii.lg} />
-        )}
 
-        {farm && setupDone(farm.checklist) < 3 && <SetupCard checklist={farm.checklist} />}
+            {farm && setupDone(farm.checklist) < 3 ? <SetupCard checklist={farm.checklist} /> : null}
 
-        <ListGroup title="Your farm">
-          <ListRow icon={Shop} title="Business profile" subtitle="Name, photo, description and location" onPress={() => router.push("/farm-settings/profile")} />
-          <ListRow
-            icon={Truck}
-            title="Fulfilment settings"
-            subtitle={
-              farm
-                ? `${formatHours(farm.collectionHours)} · ${LEAD_TIMES.find((l) => l.value === farm.leadTimeHours)?.detail ?? ""} to prepare`
-                : "When riders collect"
-            }
-            onPress={() => router.push("/farm-settings/fulfilment")}
-          />
-          <ListRow
-            icon={Calendar}
-            title="Availability"
-            subtitle={farm ? (farm.holidayMode ? "Holiday mode is on" : `Open ${farm.openDays.map((d) => DAY[d]).join(", ")}`) : "Open days and holiday mode"}
-            onPress={() => router.push("/farm-settings/availability")}
-          />
-          <ListRow icon={DocumentCheck} title="Verification and documents" subtitle="ID, farm photos and letters" onPress={() => router.push("/farm-settings/documents")} />
-        </ListGroup>
+            <Section title="Settings">
+              <Card style={styles.flush}>
+                <LinkRow icon={Shop} label="Business profile" onPress={() => router.push("/farm-settings/profile")} />
+                <LinkRow icon={Truck} label="Fulfilment" value={lead ? `${lead} to prepare` : undefined} onPress={() => router.push("/farm-settings/fulfilment")} />
+                <LinkRow icon={Calendar} label="Availability" value={farm ? (farm.holidayMode ? "Holiday" : `${farm.openDays.length} days a week`) : undefined} onPress={() => router.push("/farm-settings/availability")} />
+                <LinkRow icon={DocumentCheck} label="Documents" onPress={() => router.push("/farm-settings/documents")} last />
+              </Card>
+            </Section>
 
-        {farm && (
-          <Notice icon={Bank}>
-            {`Payouts go to ${farm.bankName} •••• ${farm.accountLast4} (${farm.accountName}). To change it, contact support; editing in the app arrives with live payments.`}
-          </Notice>
-        )}
+            <Section title="Money">
+              <Card style={styles.flush}>
+                <LinkRow icon={Bank} label="Payout account" value={farm ? `${farm.bankName} ••${farm.accountLast4}` : undefined} onPress={() => router.push("/farm/payout-account")} />
+                <LinkRow icon={Wallet} label="Payouts" onPress={() => router.push("/payouts")} />
+                <LinkRow icon={Receipt} label="Activity" onPress={() => router.push("/farm/transactions")} last />
+              </Card>
+            </Section>
 
-        <ListGroup title="Help">
-          <ListRow icon={Book} title="Help and guides" subtitle="How to sell well on Farmkeke" onPress={() => router.push("/farm-settings/help")} />
-          <ListRow icon={Mail} title="Contact support" subtitle="We reply within a day" onPress={() => router.push("/farm-settings/support")} />
-          <ListRow icon={Document} title="Farmer terms and policies" subtitle="Rules for sellers" onPress={() => router.push("/farm-settings/terms")} />
-        </ListGroup>
+            <Section title="Buyers">
+              <Card style={styles.flush}>
+                <LinkRow icon={Star} label="Reviews" value={rating?.average != null ? `${rating.average.toFixed(1)} · ${rating.count}` : undefined} onPress={() => router.push("/farm/reviews")} />
+                <LinkRow icon={Messages} label="Messages" value={unreadChats > 0 ? `${unreadChats} unread` : undefined} onPress={() => router.push("/farm-messages")} />
+                <LinkRow icon={Bell} label="Notifications" value={unreadAlerts > 0 ? `${unreadAlerts} new` : undefined} onPress={() => router.push({ pathname: "/notifications", params: { side: "farm" } })} last />
+              </Card>
+            </Section>
 
-        <Button label="Switch to shopping" icon={Basket} variant="outline" fullWidth onPress={() => setSwitching(true)} />
-        <View style={styles.verified}>
-          <Verified size={14} color={colors.inkMuted} />
-          <Text variant="small">Farmer mode</Text>
+            <Section title="Help">
+              <Card style={styles.flush}>
+                <LinkRow icon={Book} label="Guides" onPress={() => router.push("/farm-settings/help")} />
+                <LinkRow icon={Headphone} label="Contact support" onPress={() => router.push("/farm-settings/support")} />
+                <LinkRow icon={Document} label="Farmer terms" onPress={() => router.push("/farm-settings/terms")} last />
+              </Card>
+            </Section>
+
+            <Button label="Switch to shopping" icon={Basket} variant="outline" pill fullWidth onPress={() => setSwitching(true)} />
+          </Stagger>
         </View>
-        </Stagger>
       </ScrollView>
       <SwitchModeSheet visible={switching} onClose={() => setSwitching(false)} />
     </SafeAreaView>
@@ -97,11 +99,12 @@ export default function FarmTab() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { padding: spacing.screen, gap: spacing.xl, paddingBottom: spacing.xxxl },
-  profile: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  photo: { width: 56, height: 56, borderRadius: 28 },
+  screen: { flex: 1, backgroundColor: colors.canvas },
   flex: { flex: 1, gap: 2 },
-  badges: { flexDirection: "row", gap: spacing.xs, marginTop: 4 },
-  verified: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs },
+  scroll: { paddingBottom: spacing.xxxl },
+  content: { paddingHorizontal: spacing.screen, paddingTop: spacing.sm, gap: spacing.xl },
+  profile: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  photo: { width: 60, height: 60, borderRadius: 30 },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: 4 },
+  flush: { padding: 0, gap: 0, overflow: "hidden" },
 });

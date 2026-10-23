@@ -355,11 +355,17 @@ function HelpRow({ icon: Icon, label, onPress }: { icon: IconComponent; label: s
 // ---------------------------------------------------------------------------
 // M-71 Order declined or expired
 
+// The backend keeps the farm's reason as a code
+const DECLINED_BECAUSE: Record<string, string> = {
+  out_of_stock: "The farm ran out of what you ordered.",
+  cannot_deliver_in_time: "The farm couldn't prepare it in time.",
+};
+
 function Ended({ o }: { o: OrderDetail }) {
   const title = o.status === "declined" ? `${o.farmName} couldn't take this order` : o.status === "expired" ? `${o.farmName} didn't accept in time` : o.cancelReason === "bill_not_paid" ? "The bill wasn't paid in time" : "This order was cancelled";
   const reason =
-    o.status === "declined" && o.declineReason
-      ? `The farm said: “${o.declineReason}”.`
+    o.status === "declined" && o.declineReason && DECLINED_BECAUSE[o.declineReason]
+      ? DECLINED_BECAUSE[o.declineReason]
       : o.status === "expired"
         ? "Farms have 24 hours to accept an order. This one ran out of time."
         : "";

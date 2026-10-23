@@ -1,9 +1,9 @@
-// M-87 Notifications for the shopping side: newest first, unread marked with
+// M-87 Notifications (and F-11 for farmers, ?side=farm): newest first, unread marked with
 // a dot. Tapping one marks it read and opens what it's about.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery } from "convex/react";
-import { router, type Href } from "expo-router";
+import { router, useLocalSearchParams, type Href } from "expo-router";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Bell } from "@/components/icons";
@@ -14,7 +14,9 @@ import { fonts } from "@/theme/typography";
 const PAGE = 20;
 
 export default function Notifications() {
-  const { results, status, loadMore } = usePaginatedQuery(api.notifications.list, { side: "shop" }, { initialNumItems: PAGE });
+  const params = useLocalSearchParams<{ side?: string }>();
+  const side = params.side === "farm" ? "farm" : "shop";
+  const { results, status, loadMore } = usePaginatedQuery(api.notifications.list, { side }, { initialNumItems: PAGE });
   const markRead = useMutation(api.notifications.markRead);
   const markAllRead = useMutation(api.notifications.markAllRead);
   const anyUnread = results.some((n) => !n.read);
@@ -30,7 +32,7 @@ export default function Notifications() {
         title="Notifications"
         right={
           anyUnread ? (
-            <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void markAllRead({ side: "shop" })}>
+            <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void markAllRead({ side })}>
               <Text variant="label" color={colors.limeInk}>
                 Mark all read
               </Text>
@@ -52,7 +54,7 @@ export default function Notifications() {
           onEndReached={() => status === "CanLoadMore" && loadMore(PAGE)}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
-            <EmptyState icon={Bell} title="Nothing new yet" message="Order updates, bills and pickup codes will show up here." />
+            <EmptyState icon={Bell} title="Nothing new yet" message={side === "farm" ? "New orders, payouts and reviews will show up here." : "Order updates, bills and pickup codes will show up here."} />
           }
           renderItem={({ item: n }) => (
             <Pressable

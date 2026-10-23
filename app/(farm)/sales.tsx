@@ -1,29 +1,16 @@
-// F-40 Orders (farmer) — Phase 3 shell; orders arrive in Phase 6.
-import { Clipboard } from "@/components/icons";
-import { StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { EmptyState, Text } from "@/components/ui";
-import { spacing } from "@/theme/tokens";
+// F-40 Orders. The layout is OrdersView; this route gives it live data.
+import { api } from "@convex/_generated/api";
+import { useQuery } from "convex/react";
+import { useState } from "react";
+import { OrdersView } from "@/features/farm/OrdersView";
+import type { FarmTab } from "@/features/farm/status";
+import { useNow } from "@/lib/useNow";
 
 export default function FarmOrders() {
-  return (
-    <SafeAreaView edges={["top"]} style={styles.screen}>
-      <Text variant="screenTitle" accessibilityRole="header" style={styles.title}>
-        Orders
-      </Text>
-      <View style={styles.center}>
-        <EmptyState
-          icon={Clipboard}
-          title="No orders yet"
-          message="New orders show here. You'll have 24 hours to accept or decline each one."
-        />
-      </View>
-    </SafeAreaView>
-  );
+  const [tab, setTab] = useState<FarmTab>("new");
+  const counts = useQuery(api.orders.farmer.counts);
+  const orders = useQuery(api.orders.farmer.list, { tab });
+  const unreadChats = useQuery(api.chat.unread, { side: "farm" }) ?? 0;
+  const now = useNow();
+  return <OrdersView tab={tab} onTab={setTab} counts={counts} orders={orders} unreadChats={unreadChats} now={now} />;
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  title: { paddingHorizontal: spacing.screen, paddingTop: spacing.screen },
-  center: { flex: 1, justifyContent: "center" },
-});

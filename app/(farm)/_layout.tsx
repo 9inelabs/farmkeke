@@ -16,6 +16,7 @@ import { colors } from "@/theme/tokens";
 
 export default function FarmTabs() {
   const farm = useQuery(api.farms.mine);
+  const counts = useQuery(api.orders.farmer.counts, farm ? {} : "skip");
   const setMode = usePrefs((s) => s.setMode);
   const switchMode = useSwitchMode();
 
@@ -53,11 +54,11 @@ export default function FarmTabs() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
       <Tabs
-        screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.white }, ...tabTransition }}
+        screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.canvas }, ...tabTransition }}
         tabBar={(props) => (
           <>
             <OfflineBanner />
-            <TabBar state={props.state} navigation={props.navigation} />
+            <TabBar state={props.state} navigation={props.navigation} badges={{ sales: counts?.new }} />
           </>
         )}
       >

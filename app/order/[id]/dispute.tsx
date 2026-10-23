@@ -171,6 +171,7 @@ export default function Dispute() {
           authorName: m.from === "staff" ? (m.authorName ?? "Farmkeke support") : m.from === "farmer" ? d.farmName : null,
         })).reverse()}
         loading={false}
+        startAtTop
         header={header}
         canSend={d.canMessage}
         closedNote="This case is closed. If something's still not right, contact support."

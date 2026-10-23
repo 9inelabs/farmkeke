@@ -2,7 +2,7 @@
 // case (M-69) and support (M-91). Newest messages sit at the bottom; older
 // ones load as you scroll up. Photos open full screen.
 import { Image } from "expo-image";
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check, ImageAdd, Send } from "@/components/icons";
@@ -36,6 +36,8 @@ type Props = {
   /** Shown above the first message (an order summary, the case details) */
   header?: ReactElement | null;
   empty?: string;
+  /** Open on the header (case details) instead of the newest message */
+  startAtTop?: boolean;
   canSend: boolean;
   closedNote?: string;
   placeholder?: string;
@@ -52,6 +54,8 @@ export function ChatThread(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ photos: string[]; start: number } | null>(null);
   const attachments = useAttachments(props.generateUploadUrl, props.maxPhotos);
+  const list = useRef<FlatList<ChatMessage>>(null);
+  const opened = useRef(false);
   const ready = (text.trim().length > 0 || attachments.ids.length > 0) && !attachments.uploading && !attachments.failed;
 
   const send = async () => {
@@ -117,8 +121,15 @@ export function ChatThread(props: Props) {
   return (
     <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <FlatList
+        ref={list}
         inverted
         data={props.messages}
+        // Inverted: the end of the list is the top of the screen
+        onContentSizeChange={() => {
+          if (!props.startAtTop || opened.current) return;
+          opened.current = true;
+          list.current?.scrollToEnd({ animated: false });
+        }}
         keyExtractor={(m) => m._id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}

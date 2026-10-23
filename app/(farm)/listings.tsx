@@ -6,9 +6,10 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Check, Leaf, Plus, Search, Sprout } from "@/components/icons";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Chip, EmptyState, Skeleton, StatusBadge, Text } from "@/components/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Text } from "@/components/ui";
+import { TabStrip } from "@/features/farm/ui";
 import { ConfirmActionSheet, type ListingAction } from "@/features/listings/ConfirmActionSheet";
 import { priceSummary, STATUS_BADGE, TABS, tabOf, type ListingTab } from "@/features/listings/status";
 import { fonts } from "@/theme/typography";
@@ -107,19 +108,15 @@ export default function Listings() {
             </View>
           </View>
           <View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-              {TABS.map((t) => (
-                <Chip
-                  key={t.key}
-                  label={`${t.label} · ${counts[t.key]}`}
-                  selected={tab === t.key}
-                  onPress={() => {
-                    setTab(t.key);
-                    setSelected([]);
-                  }}
-                />
-              ))}
-            </ScrollView>
+            <TabStrip
+              tabs={TABS}
+              value={tab}
+              counts={counts}
+              onChange={(t) => {
+                setTab(t);
+                setSelected([]);
+              }}
+            />
           </View>
           <FlatList
             data={visible}
@@ -185,13 +182,13 @@ export default function Listings() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, backgroundColor: colors.canvas },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.screen,
-    paddingTop: spacing.screen,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
   },
   headerActions: { flexDirection: "row", gap: spacing.xs },
@@ -201,15 +198,13 @@ const styles = StyleSheet.create({
   search: {
     height: 46,
     borderRadius: radii.pill,
-    borderWidth: borders.hairline,
-    borderColor: colors.inkSoft,
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
   searchInput: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
-  tabs: { paddingHorizontal: spacing.screen, gap: spacing.sm, paddingBottom: spacing.sm },
   list: { padding: spacing.screen, paddingTop: spacing.sm, gap: spacing.sm, paddingBottom: 120 },
   empty: { marginTop: spacing.xxl },
   row: {
@@ -217,11 +212,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     padding: spacing.sm,
-    borderRadius: radii.lg,
-    borderWidth: borders.hairline,
-    borderColor: colors.line,
+    borderRadius: radii.lg + 2,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
-  rowSelected: { borderColor: colors.forest, backgroundColor: colors.tint },
+  rowSelected: { borderColor: colors.lime, backgroundColor: colors.tint },
   thumb: { width: 68, height: 68, borderRadius: radii.md },
   thumbEmpty: { backgroundColor: colors.placeholder, alignItems: "center", justifyContent: "center" },
   flex: { flex: 1, gap: 4 },

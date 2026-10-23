@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Keyboard, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -32,6 +32,23 @@ export function BottomSheet({ visible, onClose, children, dismissible = true, ha
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(visible);
   const progress = useSharedValue(0);
+  // Sheets with a text field rise above the keyboard
+  const keyboard = useSharedValue(0);
+  useEffect(() => {
+    if (!mounted) return;
+    const ios = Platform.OS === "ios";
+    const show = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow", (e) => {
+      keyboard.value = withTiming(Math.max(0, e.endCoordinates.height - insets.bottom), { duration: ios ? e.duration || 250 : 160 });
+    });
+    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", (e) => {
+      keyboard.value = withTiming(0, { duration: ios ? e.duration || 250 : 160 });
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+      keyboard.value = 0;
+    };
+  }, [mounted, keyboard, insets.bottom]);
 
   useEffect(() => {
     const easing = Easing.out(Easing.cubic);
@@ -47,7 +64,7 @@ export function BottomSheet({ visible, onClose, children, dismissible = true, ha
 
   const scrimStyle = useAnimatedStyle(() => ({ opacity: Math.min(progress.value, 1) }));
   const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(progress.value, [0, 1], [480, 0]) }],
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [480, 0]) - keyboard.value }],
   }));
 
   if (!mounted) return null;

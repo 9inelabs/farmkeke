@@ -81,7 +81,7 @@ const SAMPLES: Record<string, { label: string; order: object }> = {
   },
   delivered: { label: "Delivered", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
   done: { label: "Completed", order: { ...base, status: "completed", escrow: "released", deliveredAt: now - 5 * H, confirmedAt: now - 4 * H, releasedAt: now - 4 * H, isActive: false } },
-  declined: { label: "Declined", order: { ...base, status: "declined", escrow: "refunded", declineReason: "We sold out of tomatoes this morning", hasRefund: true, isActive: false } },
+  declined: { label: "Declined", order: { ...base, status: "declined", escrow: "refunded", declineReason: "out_of_stock", hasRefund: true, isActive: false } },
   problem: { label: "Report a problem", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
   view: { label: "View only", order: { ...base, status: "out_for_delivery", viewOnly: true, linkEmailHint: "a***@example.com" } },
 };
