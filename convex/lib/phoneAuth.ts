@@ -1,36 +1,26 @@
 // Farmers sign up with their phone and a texted code, then log in with their
-// phone and a 4-digit PIN (24 Oct 2026). Through Convex Auth's
+// phone and a 4-digit PIN (24 Oct 2026), through Convex Auth's
 // signIn("phone-code", …):
-//   { flow: "send", phone }          texts a 6-digit code (signs nobody in)
-//   { flow: "verify", phone, code }  signs in (see phoneAuth.useCode for whom)
-//   { flow: "setPin", pin }          sets the PIN, within 30 minutes of a code
-//   { flow: "pin", phone, pin }      logs in; 5 wrong tries pause it for a while
-// Texts go through Termii (lib/sms.ts). Without a Termii key, codes are only
-// written to the Convex logs when AUTH_DEV_LOG_EMAILS is "true"; otherwise
-// sending fails with SMS_UNAVAILABLE.
+//   { flow: "verify", phone, code }       signs in (see phoneAuth.useCode for whom)
+//   { flow: "verify", phone, code, pin }  the same, and sets the PIN: sign-up
+//                                         and Forgot PIN
+//   { flow: "setPin", pin }               sets the PIN, within 30 minutes of a code
+//   { flow: "pin", phone, pin }           logs in; 5 wrong tries pause it for a while
+// Texting the code (phoneAuth.sendCode) and checking it before the PIN step
+// (phoneAuth.checkCode) aren't sign-in calls: one that signs nobody in would
+// sign out whoever is on the phone.
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { getAuthUserId, modifyAccountCredentials, retrieveAccount } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
 import { Scrypt } from "lucia";
 import { internal } from "../_generated/api";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
-import { env } from "../_generated/server";
 import { PHONE_PROVIDER } from "../phoneAuth";
+import { codeHash as hash } from "./codeHash";
 import { normalizeNigerianPhone } from "./phone";
-import { sendSms, smsConfigured } from "./sms";
 
 const PIN_WINDOW_MS = 30 * 60_000;
 
-async function hash(code: string, phone: string) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${phone}:${code}`));
-  return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function sixDigits() {
-  const n = new Uint32Array(1);
-  crypto.getRandomValues(n);
-  return String(n[0]! % 1_000_000).padStart(6, "0");
-}
 
 function phoneOf(value: unknown) {
   const phone = normalizeNigerianPhone(String(value ?? ""));
@@ -56,34 +46,21 @@ export const PhoneCode = ConvexCredentials<DataModel>({
   },
   authorize: async (params, ctx): Promise<{ userId: Id<"users"> } | null> => {
     switch (params.flow) {
-      case "send": {
-        const phone = phoneOf(params.phone);
-        const devLog = env.AUTH_DEV_LOG_EMAILS === "true";
-        if (!smsConfigured() && !devLog) throw new ConvexError({ code: "SMS_UNAVAILABLE" });
-        const code = sixDigits();
-        await ctx.runMutation(internal.phoneAuth.issueCode, { phone, codeHash: await hash(code, phone) });
-        if (smsConfigured()) {
-          const sent = await sendSms(phone, `Your Farmkeke code is ${code}. It expires in 10 minutes. Don't share it with anyone.`);
-          if (sent.status === "failed") {
-            console.error("Sign-up code not sent", sent.error);
-            throw new ConvexError({ code: "SMS_FAILED" });
-          }
-        } else {
-          console.log(`[dev] Farmkeke code for ${phone}: ${code}`);
-        }
-        return null;
-      }
-
       case "verify": {
         const phone = phoneOf(params.phone);
         const code = String(params.code ?? "").replace(/\D/g, "");
         if (code.length !== 6) throw new ConvexError({ code: "INVALID_CODE" });
+        const pin = params.pin === undefined ? null : String(params.pin);
+        const problem = pin === null ? null : pinProblem(pin);
+        if (problem) throw new ConvexError({ code: problem });
         const found: { userId: Id<"users"> } | { error: "INVALID_CODE"; attemptsLeft: number } = await ctx.runMutation(internal.phoneAuth.useCode, {
           phone,
           codeHash: await hash(code, phone),
           currentUserId: await getAuthUserId(ctx),
         });
         if ("error" in found) throw new ConvexError({ code: found.error, attemptsLeft: found.attemptsLeft });
+        // The code just proved the phone, so the PIN is set in the same step
+        if (pin !== null) await modifyAccountCredentials(ctx, { provider: PHONE_PROVIDER, account: { id: phone, secret: pin } });
         return { userId: found.userId };
       }
 

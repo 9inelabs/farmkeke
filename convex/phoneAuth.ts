@@ -5,14 +5,20 @@
 //   farmer's "phone-code" auth account (same hashing and lockout as passwords).
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { action, env, internalMutation, internalQuery, query } from "./_generated/server";
 import { getViewer } from "./lib/auth";
+import { codeHash } from "./lib/codeHash";
+import { normalizeNigerianPhone } from "./lib/phone";
 import { hitLimit } from "./lib/rateLimit";
+import { sendSms, smsConfigured } from "./lib/sms";
 
 export const PHONE_PROVIDER = "phone-code";
 const CODE_TTL_MS = 10 * 60_000;
 const MAX_TRIES = 5;
 const HOUR = 3_600_000;
+// After the code checks out, time to choose a PIN before it's used to sign in
+const PIN_STEP_MS = 30 * 60_000;
 
 /** Stores a fresh code for the phone (replacing any earlier one). */
 export const issueCode = internalMutation({
@@ -25,6 +31,80 @@ export const issueCode = internalMutation({
       .take(10);
     for (const row of old) await ctx.db.delete("phoneCodes", row._id);
     await ctx.db.insert("phoneCodes", { phone: args.phone, codeHash: args.codeHash, expiresAt: Date.now() + CODE_TTL_MS, attempts: 0 });
+    return null;
+  },
+});
+
+function sixDigits() {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return String(n[0]! % 1_000_000).padStart(6, "0");
+}
+
+/**
+ * Sign-up and Forgot PIN, step 1: texts a 6-digit code. Not a sign-in call,
+ * so whoever is signed in on the phone (a guest with orders) stays signed in
+ * until the PIN step. Without Termii, codes are only written to the Convex
+ * logs when AUTH_DEV_LOG_EMAILS is "true"; otherwise this fails with SMS_UNAVAILABLE.
+ */
+export const sendCode = action({
+  args: { phone: v.string() },
+  handler: async (ctx, args): Promise<null> => {
+    const phone = normalizeNigerianPhone(args.phone);
+    if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
+    const devLog = env.AUTH_DEV_LOG_EMAILS === "true";
+    if (!smsConfigured() && !devLog) throw new ConvexError({ code: "SMS_UNAVAILABLE" });
+    const code = sixDigits();
+    await ctx.runMutation(internal.phoneAuth.issueCode, { phone, codeHash: await codeHash(code, phone) });
+    if (smsConfigured()) {
+      const sent = await sendSms(phone, `Your Farmkeke code is ${code}. It expires in 10 minutes. Don't share it with anyone.`);
+      if (sent.status === "failed") {
+        console.error("Sign-up code not sent", sent.error);
+        throw new ConvexError({ code: "SMS_FAILED" });
+      }
+    } else {
+      console.log(`[dev] Farmkeke code for ${phone}: ${code}`);
+    }
+    return null;
+  },
+});
+
+/**
+ * Sign-up and Forgot PIN, step 2: is this the code? Wrong tries count as
+ * they do when signing in. A right code isn't used up: the PIN step signs
+ * in with it (flow "verify" with a pin), so it stays good for 30 minutes.
+ */
+export const checkCode = action({
+  args: { phone: v.string(), code: v.string() },
+  handler: async (ctx, args): Promise<null> => {
+    const phone = normalizeNigerianPhone(args.phone);
+    if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
+    const code = args.code.replace(/\D/g, "");
+    if (code.length !== 6) throw new ConvexError({ code: "INVALID_CODE" });
+    const r: { error: "INVALID_CODE"; attemptsLeft: number } | null = await ctx.runMutation(internal.phoneAuth.peekCode, {
+      phone,
+      codeHash: await codeHash(code, phone),
+    });
+    if (r !== null) throw new ConvexError({ code: r.error, attemptsLeft: r.attemptsLeft });
+    return null;
+  },
+});
+
+export const peekCode = internalMutation({
+  args: { phone: v.string(), codeHash: v.string() },
+  // A wrong code is returned, not thrown: a throw would roll back the count of tries
+  handler: async (ctx, args): Promise<{ error: "INVALID_CODE"; attemptsLeft: number } | null> => {
+    const row = await ctx.db
+      .query("phoneCodes")
+      .withIndex("by_phone", (q) => q.eq("phone", args.phone))
+      .first();
+    if (row === null || row.expiresAt < Date.now()) throw new ConvexError({ code: "CODE_EXPIRED" });
+    if (row.attempts >= MAX_TRIES) throw new ConvexError({ code: "TOO_MANY_ATTEMPTS" });
+    if (row.codeHash !== args.codeHash) {
+      await ctx.db.patch("phoneCodes", row._id, { attempts: row.attempts + 1 });
+      return { error: "INVALID_CODE", attemptsLeft: MAX_TRIES - row.attempts - 1 };
+    }
+    await ctx.db.patch("phoneCodes", row._id, { expiresAt: Math.max(row.expiresAt, Date.now() + PIN_STEP_MS) });
     return null;
   },
 });

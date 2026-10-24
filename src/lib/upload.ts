@@ -28,11 +28,37 @@ export async function shouldExplainCamera(): Promise<boolean> {
   return !permission.granted && permission.canAskAgain;
 }
 
+const MAX_WIDTH = 1600;
+
+/** The browser preview: draw the photo onto a canvas at most 1600px wide, as JPEG. */
+async function preparePhotoWeb(uri: string): Promise<string> {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Couldn't read that photo"));
+    img.src = uri;
+  });
+  const scale = Math.min(1, MAX_WIDTH / image.naturalWidth);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.naturalWidth * scale);
+  canvas.height = Math.round(image.naturalHeight * scale);
+  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.7));
+  if (!blob) throw new Error("Couldn't read that photo");
+  return URL.createObjectURL(blob);
+}
+
 /** Shrinks a photo to at most 1600px wide as JPEG, so uploads stay quick on mobile data. */
 export async function preparePhoto(uri: string): Promise<string> {
-  const context = ImageManipulator.ImageManipulator.manipulate(uri);
-  context.resize({ width: 1600, height: null });
-  const image = await context.renderAsync();
+  // The manipulator's browser version can't resize to a width alone (it
+  // reads a missing height as 0), so the preview resizes on a canvas.
+  if (Platform.OS === "web") return await preparePhotoWeb(uri);
+  let image = await ImageManipulator.ImageManipulator.manipulate(uri).renderAsync();
+  if (image.width > MAX_WIDTH) {
+    const context = ImageManipulator.ImageManipulator.manipulate(uri);
+    context.resize({ width: MAX_WIDTH });
+    image = await context.renderAsync();
+  }
   const result = await image.saveAsync({ format: ImageManipulator.SaveFormat.JPEG, compress: 0.7 });
   return result.uri;
 }

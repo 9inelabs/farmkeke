@@ -1,8 +1,10 @@
 // The farmer's phone sign-in from the app (convex/lib/phoneAuth.ts): send a
-// code, check it (signs in), set the PIN, and log in with phone and PIN.
+// code, check it, then sign in with the code and the new PIN together, and
+// log in later with phone and PIN.
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useAction, useConvex } from "convex/react";
+import { useCallback } from "react";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { usePrefs } from "@/store/prefs";
 
@@ -41,42 +43,47 @@ export function maskedPhone(phone: string): string {
   return local.length === 11 ? `${local.slice(0, 4)} *** ${local.slice(7)}` : phone;
 }
 
+/** The last 10 digits, so 0803…, +234803… and 234803… compare equal. */
+const sameNumber = (a: string, b: string) => a.replace(/\D/g, "").slice(-10) === b.replace(/\D/g, "").slice(-10);
+
 export function usePhoneAuth() {
   const { signIn } = useAuthActions();
-  const { isAuthenticated } = useConvexAuth();
+  const convex = useConvex();
+  const sendCode = useAction(api.phoneAuth.sendCode);
+  const checkCode = useAction(api.phoneAuth.checkCode);
   const setAccountSignedIn = usePrefs((s) => s.setAccountSignedIn);
-  const authed = useRef(isAuthenticated);
-  useEffect(() => {
-    authed.current = isAuthenticated;
-  }, [isAuthenticated]);
 
-  // Setting the PIN needs the new session's token in place
-  const waitForSession = useCallback(async () => {
-    const started = Date.now();
-    while (!authed.current) {
-      if (Date.now() - started > 10_000) throw new Error("Couldn't sign in. Check your connection.");
-      await new Promise((r) => setTimeout(r, 50));
-    }
-  }, []);
+  // The next screens need the new session in place: wait until the server
+  // sees this phone's account (a guest session on the phone counts as
+  // signed in already, so the auth state alone can't tell)
+  const waitForSession = useCallback(
+    async (phone: string) => {
+      const started = Date.now();
+      for (;;) {
+        const mine = await convex.query(api.phoneAuth.mine, {}).catch(() => null);
+        if (mine?.phone && sameNumber(mine.phone, phone) && mine.hasPin) return;
+        if (Date.now() - started > 15_000) throw new Error("Couldn't sign in. Check your connection.");
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    },
+    [convex],
+  );
+
+  const signInWith = useCallback(
+    async (phone: string, params: Record<string, string>) => {
+      await signIn("phone-code", { phone, ...params });
+      setAccountSignedIn(true);
+      await waitForSession(phone);
+    },
+    [signIn, setAccountSignedIn, waitForSession],
+  );
 
   return {
-    send: useCallback((phone: string) => signIn("phone-code", { flow: "send", phone }), [signIn]),
-    verify: useCallback(
-      async (phone: string, code: string) => {
-        await signIn("phone-code", { flow: "verify", phone, code });
-        setAccountSignedIn(true);
-        await waitForSession();
-      },
-      [signIn, setAccountSignedIn, waitForSession],
-    ),
-    setPin: useCallback((pin: string) => signIn("phone-code", { flow: "setPin", pin }), [signIn]),
-    login: useCallback(
-      async (phone: string, pin: string) => {
-        await signIn("phone-code", { flow: "pin", phone, pin });
-        setAccountSignedIn(true);
-        await waitForSession();
-      },
-      [signIn, setAccountSignedIn, waitForSession],
-    ),
+    send: useCallback((phone: string) => sendCode({ phone }), [sendCode]),
+    /** Is this the code? Doesn't sign in; the PIN step does. */
+    check: useCallback((phone: string, code: string) => checkCode({ phone, code }), [checkCode]),
+    /** Signs in with the checked code and sets the PIN. */
+    verify: useCallback((phone: string, code: string, pin: string) => signInWith(phone, { flow: "verify", code, pin }), [signInWith]),
+    login: useCallback((phone: string, pin: string) => signInWith(phone, { flow: "pin", pin }), [signInWith]),
   };
 }

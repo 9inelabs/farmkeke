@@ -1,6 +1,7 @@
 // Farmer sign-up: "Let's get to know you!" The farmer's photo and full name,
-// the farm's name, and where the farm is: chosen by hand (state, LGA and an
-// address or landmark) or found from the phone's location.
+// the farm's name, and where the farm is: "Select location" to choose it by
+// hand (state, LGA and an address or landmark), or "Search location
+// automatically" to fill it in from where the phone is now.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -16,6 +17,7 @@ import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorMessage } from "@/lib/errors";
 import { pickPhotos, preparePhoto, uploadFile } from "@/lib/upload";
+import { whereIs } from "@/lib/whereIs";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -41,6 +43,7 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [found, setFound] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -81,22 +84,36 @@ export default function Profile() {
         return;
       }
       const { coords } = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      const [found] = await Location.reverseGeocodeAsync({ latitude: coords.latitude, longitude: coords.longitude }).catch(() => []);
+      const at = await whereIs(coords.latitude, coords.longitude);
       const next: Place = {
-        state: matchState(found?.region) ?? place.state,
-        lga: found?.subregion ?? found?.district ?? found?.city ?? place.lga,
-        address: [found?.streetNumber, found?.street ?? found?.name].filter(Boolean).join(" ") || place.address,
+        state: matchState(at.region) ?? place.state,
+        lga: (at.lga ?? place.lga).replace(/\s+Local Government Area$/i, ""),
+        address: at.address ?? place.address,
         latitude: coords.latitude,
         longitude: coords.longitude,
       };
       setPlace(next);
-      // Let the farmer check what was found, and add a landmark
-      setSheet(true);
+      if (next.state && next.lga.trim() && next.address.trim()) {
+        setFound(true);
+      } else {
+        // Found where, but not all of what riders need: fill in the rest by hand
+        setErrors((e) => ({ ...e, place: "We found your spot. Add the missing details." }));
+        setSheet(true);
+      }
     } catch {
       setErrors((e) => ({ ...e, place: "We couldn't find your location. Choose it yourself instead." }));
     } finally {
       setLocating(false);
     }
+  };
+
+  // Chosen by hand: a different state or LGA means the phone's position isn't the farm's
+  const chosen = (p: Place) => {
+    const moved = p.state !== place.state || p.lga !== place.lga;
+    setPlace(moved ? { ...p, latitude: undefined, longitude: undefined } : p);
+    if (moved) setFound(false);
+    setSheet(false);
+    setErrors((e) => ({ ...e, place: "" }));
   };
 
   const submit = async () => {
@@ -157,11 +174,11 @@ export default function Profile() {
           <Text variant="body" color={summary ? colors.ink : colors.inkMuted} numberOfLines={1} style={styles.flex}>
             {summary ?? "Select location"}
           </Text>
-          <ChevronDown size={18} color={colors.inkMuted} />
+          {found ? <Pin size={18} color={colors.forest} variant="solid" /> : <ChevronDown size={18} color={colors.inkMuted} />}
         </Pressable>
         <Button label="Search location automatically" icon={Pin} variant="primary" pill fullWidth loading={locating} onPress={() => void findMe()} />
         <Text variant="small" color={colors.inkMuted} align="center">
-          Only Farmkeke and your riders see the exact location
+          {found ? "Found from your location. Tap it to add a landmark." : "Only Farmkeke and your riders see the exact location"}
         </Text>
         {errors.place ? (
           <Text variant="small" color={colors.error} align="center">
@@ -175,7 +192,7 @@ export default function Profile() {
         </Text>
       ) : null}
 
-      <LocationSheet visible={sheet} place={place} onClose={() => setSheet(false)} onDone={(p) => { setPlace(p); setSheet(false); setErrors((e) => ({ ...e, place: "" })); }} />
+      <LocationSheet visible={sheet} place={place} onClose={() => setSheet(false)} onDone={chosen} />
     </SellShell>
   );
 }

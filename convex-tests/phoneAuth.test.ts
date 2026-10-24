@@ -93,3 +93,21 @@ test("PINs: four digits, not repeated or a straight run", () => {
   for (const weak of ["0000", "7777", "1234", "6789", "4321"]) expect(pinProblem(weak)).toBe("WEAK_PIN");
   for (const ok of ["2580", "1357", "9024"]) expect(pinProblem(ok)).toBeNull();
 });
+
+test("checking a code before the PIN step counts wrong tries and keeps a right code", async () => {
+  const t = convexTest(schema, modules);
+  await issue(t);
+  const peek = (codeHash: string) => t.mutation(internal.phoneAuth.peekCode, { phone: PHONE, codeHash });
+  expect(await peek("bad")).toEqual({ error: "INVALID_CODE", attemptsLeft: 4 });
+  expect(await peek("good")).toBeNull();
+  // Still good for the PIN step, even after the 10 minutes a code normally lasts
+  vi.advanceTimersByTime(20 * 60_000);
+  expect(await peek("good")).toBeNull();
+  expect((await use(t)).hasPin).toBe(false);
+  // Used up by signing in
+  await expect(peek("good")).rejects.toThrow(/CODE_EXPIRED/);
+
+  await issue(t);
+  for (let i = 0; i < 5; i++) await peek("bad");
+  await expect(peek("good")).rejects.toThrow(/TOO_MANY_ATTEMPTS/);
+});

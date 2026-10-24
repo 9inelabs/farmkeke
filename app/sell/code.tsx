@@ -1,10 +1,11 @@
-// Farmer sign-up, step 2: the 6-digit code texted to the phone. It signs the
-// farmer in; then they set a PIN for logging in later.
+// Farmer sign-up, step 2: the 6-digit code texted to the phone. Once it
+// checks out, the PIN step signs the farmer in with it and sets the PIN.
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Text } from "@/components/ui";
 import { CodeBoxes } from "@/features/sell/CodeBoxes";
+import { pendingCode } from "@/features/sell/pendingCode";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { maskedPhone, phoneAuthMessage, usePhoneAuth } from "@/features/sell/usePhoneAuth";
 import { showToast } from "@/store/toast";
@@ -15,7 +16,7 @@ const RESEND_AFTER = 30;
 
 export default function CodeStep() {
   const { phone = "", mode } = useLocalSearchParams<{ phone?: string; mode?: string }>();
-  const { send, verify } = usePhoneAuth();
+  const { send, check } = usePhoneAuth();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,7 +33,8 @@ export default function CodeStep() {
     setBusy(true);
     setError(null);
     try {
-      await verify(phone, value);
+      await check(phone, value);
+      pendingCode.set({ phone, code: value });
       router.replace({ pathname: "/sell/pin", params: { mode: mode === "reset" ? "reset" : "signup" } });
     } catch (e) {
       setError(phoneAuthMessage(e));

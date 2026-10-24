@@ -67,6 +67,7 @@ import type * as lib_orders from "../lib/orders.js";
 import type * as lib_passwordProvider from "../lib/passwordProvider.js";
 import type * as lib_paystack from "../lib/paystack.js";
 import type * as lib_permissions from "../lib/permissions.js";
+import type * as lib_codeHash from "../lib/codeHash.js";
 import type * as lib_phone from "../lib/phone.js";
 import type * as lib_phoneAuth from "../lib/phoneAuth.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
@@ -170,6 +171,7 @@ declare const fullApi: ApiFromModules<{
   "lib/passwordProvider": typeof lib_passwordProvider;
   "lib/paystack": typeof lib_paystack;
   "lib/permissions": typeof lib_permissions;
+  "lib/codeHash": typeof lib_codeHash;
   "lib/phone": typeof lib_phone;
   "lib/phoneAuth": typeof lib_phoneAuth;
   "lib/rateLimit": typeof lib_rateLimit;

@@ -1,20 +1,23 @@
-// Farmer sign-up, step 3: choose a 4-digit PIN (then confirm it). Logging in
-// later is the phone number and this PIN, with no text message.
-import { useLocalSearchParams } from "expo-router";
+// Farmer sign-up, step 3: choose a 4-digit PIN (then confirm it). Saving it
+// signs the farmer in, with the code from step 2, and moves on to the
+// application. Logging in later is the phone number and this PIN.
+import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Lock } from "@/components/icons";
 import { Button, Text } from "@/components/ui";
 import { useAfterFarmerSignIn } from "@/features/sell/afterSignIn";
 import { CodeBoxes, type CodeBoxesHandle } from "@/features/sell/CodeBoxes";
+import { pendingCode } from "@/features/sell/pendingCode";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { phoneAuthMessage, usePhoneAuth } from "@/features/sell/usePhoneAuth";
+import { errorCode } from "@/lib/errors";
 import { showToast } from "@/store/toast";
 import { colors, spacing } from "@/theme/tokens";
 
 export default function PinStep() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
-  const { setPin } = usePhoneAuth();
+  const { verify } = usePhoneAuth();
   const after = useAfterFarmerSignIn();
   const [first, setFirst] = useState<string | null>(null);
   const [pin, setPinValue] = useState("");
@@ -38,12 +41,28 @@ export default function PinStep() {
       setPinValue("");
       return;
     }
+    const proved = pendingCode.get();
+    if (proved === null) {
+      // The page was reloaded since the code: prove the number again
+      showToast({ message: "Confirm your number again", tone: "info" });
+      router.replace({ pathname: "/sell/phone", params: mode === "reset" ? { mode: "reset" } : {} });
+      return;
+    }
     setBusy(true);
     try {
-      await setPin(value);
+      await verify(proved.phone, proved.code, value);
+      pendingCode.set(null);
       showToast({ message: mode === "reset" ? "New PIN saved" : "PIN saved" });
       await after();
     } catch (e) {
+      const code = errorCode(e);
+      if (code === "CODE_EXPIRED" || code === "TOO_MANY_ATTEMPTS" || code === "INVALID_CODE") {
+        // The code ran out while choosing the PIN: back for a new one
+        pendingCode.set(null);
+        showToast({ message: "That code has expired. We'll send a new one.", tone: "info" });
+        router.replace({ pathname: "/sell/phone", params: mode === "reset" ? { mode: "reset" } : {} });
+        return;
+      }
       setError(phoneAuthMessage(e));
       setFirst(null);
       setPinValue("");
