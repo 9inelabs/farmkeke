@@ -117,7 +117,19 @@ function BandPhoto({ scene, onPhoto }: { scene: FarmerScene; onPhoto: (on: boole
   if (photo === null) return null;
   return (
     <>
-      <Image source={{ uri: photo.url }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={photo.focus} transition={250} accessible={false} />
+      <Image
+        source={{ uri: photo.url }}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        // The point staff chose by dragging in the Admin Portal (older backends send only focus)
+        contentPosition={
+          typeof photo.x === "number" && typeof photo.y === "number"
+            ? { left: `${photo.x}%`, top: `${photo.y}%` }
+            : photo.focus
+        }
+        transition={250}
+        accessible={false}
+      />
       {/* Darker at the top, so Back reads on any photo */}
       <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.08)", "rgba(0,0,0,0)"]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
     </>

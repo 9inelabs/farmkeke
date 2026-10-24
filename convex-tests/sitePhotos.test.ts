@@ -117,3 +117,24 @@ test("the app's farmer sign-up screens each take their own photo", async () => {
     "signin", "signup", "farmer_intro", "farmer_phone", "farmer_code", "farmer_pin", "farmer_profile", "farmer_bank", "farmer_review", "farmer_submitted", "farmer_login",
   ]);
 });
+
+test("a dragged position is saved, clamped to 0–100, and read by the app and the portal", async () => {
+  const t = convexTest(schema, modules);
+  const { catalog } = await seed(t);
+  const storageId = await store(t);
+  await as(t, catalog).mutation(api.admin.sitePhotos.set, { slot: "farmer_phone", storageId, focusX: 12.34, focusY: 140, reason: "test" });
+  expect((await t.query(api.sitePhotos.farmerSignup, {})).phone).toMatchObject({ x: 12.3, y: 100, focus: "left" });
+  // Moving it again without a new photo keeps the photo
+  await as(t, catalog).mutation(api.admin.sitePhotos.set, { slot: "farmer_phone", focusX: 80, focusY: 20, reason: "move" });
+  expect((await t.query(api.sitePhotos.farmerSignup, {})).phone).toMatchObject({ x: 80, y: 20, focus: "right" });
+  const list = await as(t, catalog).query(api.admin.sitePhotos.list, {});
+  expect(list.find((r: any) => r.slot === "farmer_phone")!.photo).toMatchObject({ x: 80, y: 20 });
+});
+
+test("photos saved with left / middle / right only are centred top to bottom", async () => {
+  const t = convexTest(schema, modules);
+  const { catalog } = await seed(t);
+  const storageId = await store(t);
+  await as(t, catalog).mutation(api.admin.sitePhotos.set, { slot: "signin", storageId, focus: "right", reason: "old way" });
+  expect((await t.query(api.sitePhotos.auth, {})).signin).toMatchObject({ focus: "right", x: 100, y: 50 });
+});

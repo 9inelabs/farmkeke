@@ -30,3 +30,18 @@ export const farmerSlot = (scene: FarmerScene) => `farmer_${scene}` as Slot;
 
 /** Every slot, website first, for the Admin Portal */
 export const ALL_SLOTS: Slot[] = [...SLOTS, ...FARMER_SCENES.map(farmerSlot)];
+
+const FOCUS_X: Record<Focus, number> = { left: 0, center: 50, right: 100 };
+const clampPct = (n: number) => Math.min(100, Math.max(0, Math.round(n * 10) / 10));
+
+/** The point to keep in view, in % (0 to 100) across and down the photo. */
+export function photoPosition(row: { focus: Focus; focusX?: number; focusY?: number }) {
+  return { x: clampPct(row.focusX ?? FOCUS_X[row.focus]), y: clampPct(row.focusY ?? 50) };
+}
+
+/** Left / middle / right closest to a point, for app builds that only read `focus`. */
+export function focusFromX(x: number): Focus {
+  return x < 34 ? "left" : x > 66 ? "right" : "center";
+}
+
+export { clampPct };

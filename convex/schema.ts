@@ -546,6 +546,13 @@ export default defineSchema({
     storageId: v.id("_storage"),
     /** Which side stays in view when the photo is cropped to fit the panel */
     focus: v.union(v.literal("left"), v.literal("center"), v.literal("right")),
+    /**
+     * The exact point to keep in view, in % of the photo (0 = left/top,
+     * 100 = right/bottom), set by dragging the photo in the Admin Portal.
+     * Older rows don't have it: they use `focus` (and the middle, top to bottom).
+     */
+    focusX: v.optional(v.number()),
+    focusY: v.optional(v.number()),
     updatedAt: v.number(),
     updatedBy: v.id("users"),
   }).index("by_slot", ["slot"]),

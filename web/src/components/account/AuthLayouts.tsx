@@ -21,7 +21,12 @@ export function safeNext(raw: string | null | undefined): string | undefined {
   return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") ? raw : undefined;
 }
 
-export type PanelPhoto = { url: string; focus: "left" | "center" | "right" };
+/** x, y: the point kept in view, in % of the photo (older backends send only focus). */
+export type PanelPhoto = { url: string; focus: "left" | "center" | "right"; x?: number; y?: number };
+
+const FOCUS_X = { left: 0, center: 50, right: 100 } as const;
+/** CSS object-position for a site photo. */
+export const photoPosition = (p: PanelPhoto) => `${p.x ?? FOCUS_X[p.focus]}% ${p.y ?? 50}%`;
 
 export function AuthSplit({ children, side }: { children: ReactNode; side: "signin" | "signup" }) {
   return (
@@ -73,7 +78,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
             sizes="50vw"
             unoptimized={photo.url.startsWith("blob:")}
             className="object-cover"
-            style={{ objectPosition: `${photo.focus} center` }}
+            style={{ objectPosition: photoPosition(photo) }}
           />
           {/* Forest wash: darker at the top and bottom, where the words sit */}
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,42,14,0.82)_0%,rgba(20,42,14,0.35)_38%,rgba(20,42,14,0.45)_62%,rgba(20,42,14,0.88)_100%)]" />

@@ -4278,6 +4278,42 @@
                 {
                   "type": "literal",
                   "value": "signup"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_intro"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_phone"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_code"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_pin"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_login"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_profile"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_bank"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_review"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_submitted"
                 }
               ]
             },
@@ -4313,6 +4349,42 @@
                 {
                   "type": "literal",
                   "value": "signup"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_intro"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_phone"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_code"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_pin"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_login"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_profile"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_bank"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_review"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_submitted"
                 }
               ]
             },
@@ -4343,7 +4415,19 @@
                 }
               ]
             },
-            "optional": false
+            "optional": true
+          },
+          "focusX": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "focusY": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
           },
           "reason": {
             "fieldType": {
