@@ -86,3 +86,34 @@ test("only staff with content.manage can change photos, and only images are acce
   await expect(as(t, s.catalog).mutation(api.admin.sitePhotos.set, { slot: "signup", focus: "left", reason: "x" })).rejects.toThrow(/PHOTO_REQUIRED/);
   expect((await t.query(api.sitePhotos.auth, {})).signup).toBeNull();
 });
+
+test("the app's farmer sign-up screens each take their own photo", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const staff = as(t, s.catalog);
+
+  const none = await t.query(api.sitePhotos.farmerSignup, {});
+  // Convex returns object keys sorted
+  expect(Object.keys(none).sort()).toEqual(["bank", "code", "intro", "login", "phone", "pin", "profile", "review", "submitted"]);
+  expect(Object.values(none).every((p) => p === null)).toBe(true);
+
+  const field = await store(t);
+  const basket = await store(t);
+  await staff.mutation(api.admin.sitePhotos.set, { slot: "farmer_phone", storageId: field, focus: "center", reason: "Field at sunrise" });
+  await staff.mutation(api.admin.sitePhotos.set, { slot: "farmer_bank", storageId: basket, focus: "left", reason: "Harvest basket" });
+  const shown = await t.query(api.sitePhotos.farmerSignup, {});
+  expect(shown.phone?.url).toEqual(expect.any(String));
+  expect(shown.bank?.focus).toBe("left");
+  // Each slot keeps its own file (convex-test gives every file the same URL)
+  const rows = await t.run(async (ctx) => await ctx.db.query("sitePhotos").collect());
+  expect(Object.fromEntries(rows.map((r) => [r.slot, r.storageId]))).toEqual({ farmer_phone: field, farmer_bank: basket });
+  expect(shown.code).toBeNull();
+
+  // The website's panels are separate slots
+  expect(await t.query(api.sitePhotos.auth, {})).toEqual({ signin: null, signup: null });
+  // Staff see every slot: the website's two, then the app's nine
+  const list = await staff.query(api.admin.sitePhotos.list, {});
+  expect(list.map((r) => r.slot)).toEqual([
+    "signin", "signup", "farmer_intro", "farmer_phone", "farmer_code", "farmer_pin", "farmer_profile", "farmer_bank", "farmer_review", "farmer_submitted", "farmer_login",
+  ]);
+});

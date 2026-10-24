@@ -1,6 +1,7 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { slotValidator as sitePhotoSlot } from "./lib/sitePhotos";
 
 // Money is stored as integer kobo (₦1 = 100 kobo) everywhere.
 
@@ -540,7 +541,8 @@ export default defineSchema({
   // A-87 Site photos: pictures staff can change on the website without a
   // release. One row per slot; a slot with no row shows the plain design.
   sitePhotos: defineTable({
-    slot: v.union(v.literal("signin"), v.literal("signup")),
+    // The website's sign-in and sign-up panels, and the app's farmer sign-up screens
+    slot: sitePhotoSlot,
     storageId: v.id("_storage"),
     /** Which side stays in view when the photo is cropped to fit the panel */
     focus: v.union(v.literal("left"), v.literal("center"), v.literal("right")),

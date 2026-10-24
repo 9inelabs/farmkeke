@@ -2,17 +2,21 @@
 // band with Back or Close, a light sheet with a big curved top corner, the
 // tilted "Sell on farmkeke" sticker on its edge, a title whose last word is
 // grey, a short line under it, the content, and the main button at the foot.
+// Each screen's band shows the photo staff set for it in the Admin Portal
+// (Site photos); without one, it stays lime.
+import { api } from "@convex/_generated/api";
+import type { FarmerScene } from "@convex/lib/sitePhotos";
+import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import type { ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft } from "@/components/icons";
 import { Text, Wordmark } from "@/components/ui";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
-import { SELL_IMAGES, type SellScene } from "./images";
 
 const BAND = 96;
 // A photo gets a taller band so the scene shows
@@ -58,24 +62,22 @@ type Props = {
   sticker?: "left" | "center" | "right" | "none";
   /** Keep the footer at the bottom of the screen instead of after the content */
   pinFooter?: boolean;
-  /** Which screen this is, for its header photo (images.ts) */
-  scene?: SellScene;
+  /** Which screen this is, for its header photo (Admin Portal, Site photos) */
+  scene?: FarmerScene;
 };
 
 export function SellShell({ children, footer, back = "back", onBack, curve = "left", sticker = "center", pinFooter = false, scene }: Props) {
-  const photo = scene ? SELL_IMAGES[scene] : undefined;
+  const [photo, setPhoto] = useState(false);
   const insets = useSafeAreaInsets();
   const leave = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace("/home")));
   const stickerPos = sticker === "left" ? { left: "22%" as const } : sticker === "right" ? { right: spacing.screen } : { alignSelf: "center" as const };
   return (
     <View style={styles.screen}>
       <View style={[styles.band, { paddingTop: insets.top + spacing.md, height: insets.top + (photo ? PHOTO_BAND : BAND) + CURVE }]}>
-        {photo ? (
-          <>
-            <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
-            {/* Darker at the top, so Back reads on any photo */}
-            <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.08)", "rgba(0,0,0,0)"]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
-          </>
+        {scene ? (
+          <Quiet>
+            <BandPhoto scene={scene} onPhoto={setPhoto} />
+          </Quiet>
         ) : null}
         <Pressable accessibilityRole="button" accessibilityLabel={back === "close" ? "Close" : "Back"} hitSlop={10} onPress={leave} style={styles.back}>
           <ChevronLeft size={18} color={photo ? colors.white : colors.ink} strokeWidth={2.4} />
@@ -105,6 +107,32 @@ export function SellShell({ children, footer, back = "back", onBack, curve = "le
       </KeyboardAvoidingView>
     </View>
   );
+}
+
+/** The scene's photo, cropped to the band, with a fade so Back reads on it. */
+function BandPhoto({ scene, onPhoto }: { scene: FarmerScene; onPhoto: (on: boolean) => void }) {
+  const photos = useQuery(api.sitePhotos.farmerSignup);
+  const photo = photos?.[scene] ?? null;
+  useEffect(() => onPhoto(photo !== null), [photo, onPhoto]);
+  if (photo === null) return null;
+  return (
+    <>
+      <Image source={{ uri: photo.url }} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={photo.focus} transition={250} accessible={false} />
+      {/* Darker at the top, so Back reads on any photo */}
+      <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.08)", "rgba(0,0,0,0)"]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
+    </>
+  );
+}
+
+/** If the photos can't be loaded (an older backend), the band just stays lime. */
+class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
 
 const styles = StyleSheet.create({

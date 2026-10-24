@@ -155,8 +155,8 @@ export const admin = {
   },
   sitePhotos: {
     list: makeFunctionReference<"query", Record<string, never>, any>("admin/sitePhotos:list"),
-    remove: makeFunctionReference<"mutation", { "slot": "signin" | "signup"; "reason": string }, any>("admin/sitePhotos:remove"),
-    set: makeFunctionReference<"mutation", { "slot": "signin" | "signup"; "storageId"?: Id<"_storage">; "focus": "left" | "center" | "right"; "reason": string }, any>("admin/sitePhotos:set"),
+    remove: makeFunctionReference<"mutation", { "slot": "signin" | "signup" | "farmer_intro" | "farmer_phone" | "farmer_code" | "farmer_pin" | "farmer_login" | "farmer_profile" | "farmer_bank" | "farmer_review" | "farmer_submitted"; "reason": string }, any>("admin/sitePhotos:remove"),
+    set: makeFunctionReference<"mutation", { "slot": "signin" | "signup" | "farmer_intro" | "farmer_phone" | "farmer_code" | "farmer_pin" | "farmer_login" | "farmer_profile" | "farmer_bank" | "farmer_review" | "farmer_submitted"; "storageId"?: Id<"_storage">; "focus": "left" | "center" | "right"; "reason": string }, any>("admin/sitePhotos:set"),
   },
   staff: {
     alerts: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/staff:alerts"),

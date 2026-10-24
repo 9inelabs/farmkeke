@@ -1,9 +1,11 @@
 "use client";
 
 // A-87 Site photos: staff upload, replace or remove the photo beside the
-// website's sign-in and sign-up forms. The preview is the real panel, scaled
-// down, so what you see here is what shoppers see. Changes show on the site
-// straight away; without a photo the panel is plain forest green.
+// website's sign-in and sign-up forms, and the header photo of each screen in
+// the app's farmer sign-up. The website preview is the real panel, scaled
+// down; the app preview is the top of the phone screen. Changes show
+// straight away; without a photo the website panel is plain forest green and
+// the app's header is plain lime.
 import { useMutation, useQuery } from "convex/react";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
@@ -14,17 +16,30 @@ import { Button } from "@/components/ui/Button";
 import { admin } from "@/convex/admin";
 import type { Id } from "@/convex/api";
 
-type Slot = "signin" | "signup";
+type WebSlot = "signin" | "signup";
+type AppSlot = "farmer_intro" | "farmer_phone" | "farmer_code" | "farmer_pin" | "farmer_profile" | "farmer_bank" | "farmer_review" | "farmer_submitted" | "farmer_login";
+type Slot = WebSlot | AppSlot;
 type Focus = PanelPhoto["focus"];
 type Row = {
   slot: Slot;
   photo: { url: string | null; focus: Focus; updatedAt: number; updatedByName: string | null } | null;
 };
 
-const SLOTS: Record<Slot, { title: string; where: string }> = {
+const SLOTS: Record<Slot, { title: string; where: string; heading?: [string, string] }> = {
   signin: { title: "Sign-in page", where: "Beside the sign-in form at /signin" },
   signup: { title: "Sign-up page", where: "Beside the create-account form at /signup" },
+  // The app's farmer sign-up, in the order a farmer meets the screens
+  farmer_intro: { title: "Sell on Farmkeke", where: "The first screen, before applying", heading: ["Sell Straight to", "Households"] },
+  farmer_phone: { title: "Phone number", where: "Step 1: the farmer enters their number", heading: ["Input your Phone", "Number"] },
+  farmer_code: { title: "Verification code", where: "Step 2: the code texted to them", heading: ["Enter Verification", "Code"] },
+  farmer_pin: { title: "Create PIN", where: "Step 3: the 4-digit PIN for logging in", heading: ["Create your", "PIN"] },
+  farmer_profile: { title: "About you", where: "Step 4: photo, name, farm and location", heading: ["Let's get to know you!", ""] },
+  farmer_bank: { title: "Bank details", where: "Step 5: where earnings are paid", heading: ["Add your Bank", "Details"] },
+  farmer_review: { title: "Review", where: "Step 6: check and submit", heading: ["Review your", "Profile"] },
+  farmer_submitted: { title: "Application sent", where: "After submitting", heading: ["Application", "Sent"] },
+  farmer_login: { title: "Farmer log in", where: "Logging in with phone and PIN", heading: ["Log in as a", "Farmer"] },
 };
+const isApp = (slot: Slot): slot is AppSlot => slot.startsWith("farmer_");
 const FOCUS: Array<[Focus, string]> = [
   ["left", "Left"],
   ["center", "Middle"],
@@ -43,23 +58,40 @@ export function SitePhotosView() {
     <>
       <PageHeader
         title="Site photos"
-        description="The photos beside the sign-in and sign-up forms on the website. Changes show on the site straight away. Without a photo, the panel is plain green."
+        description="The photos on the website's sign-in and sign-up pages, and at the top of each screen of the app's farmer sign-up. Changes show straight away."
       />
       {done ? (
         <div className="mb-4">
           <Notice tone="ok">{done}</Notice>
         </div>
       ) : null}
+      <h2 className="h3 mb-1">Website</h2>
+      <p className="sm mb-4">Beside the sign-in and sign-up forms. Without a photo, the panel is plain green.</p>
       <div className="grid grid-cols-2 gap-5 max-[1100px]:grid-cols-1">
-        {rows.map((r) => (
-          <SlotCard key={r.slot} row={r} onDone={setDone} />
-        ))}
+        {rows
+          .filter((r) => !isApp(r.slot))
+          .map((r) => (
+            <SlotCard key={r.slot} row={r} onDone={setDone} />
+          ))}
       </div>
       <p className="sm mt-5">
         Use a sharp photo at least 1200 pixels wide, as a JPG or PNG under 10 MB. Tall or square photos fit best. The
         headline sits at the top and short cards at the bottom, so photos with calm areas there read well. Only use
         photos you have the right to use, such as your own or ones from Unsplash.
       </p>
+
+      <h2 className="h3 mt-10 mb-1">App: farmer sign-up</h2>
+      <p className="sm mb-4">
+        The photo across the top of each screen a farmer sees while signing up. Use a different farm scene for each.
+        Without a photo, the top is plain lime. Wide photos fit best; the top part of the photo shows.
+      </p>
+      <div className="grid grid-cols-3 gap-5 max-[1300px]:grid-cols-2 max-[800px]:grid-cols-1">
+        {rows
+          .filter((r) => isApp(r.slot))
+          .map((r) => (
+            <SlotCard key={r.slot} row={r} onDone={setDone} />
+          ))}
+      </div>
     </>
   );
 }
@@ -112,17 +144,25 @@ function SlotCard({ row, onDone }: { row: Row; onDone: (msg: string) => void }) 
       title={title}
       description={where}
       actions={
-        saved && !pending ? <span className="badge b-ok">Photo on</span> : !saved && !pending ? <span className="badge b-grey">Plain green</span> : null
+        saved && !pending ? (
+          <span className="badge b-ok">Photo on</span>
+        ) : !saved && !pending ? (
+          <span className="badge b-grey">{isApp(row.slot) ? "Plain lime" : "Plain green"}</span>
+        ) : null
       }
     >
-      {/* The real panel at a third of its size */}
-      <div className="mx-auto w-full max-w-[400px] overflow-hidden rounded-2xl shadow-[inset_0_0_0_1px_var(--color-line)]">
-        <div className="aspect-[4/5] w-full overflow-hidden">
-          <div className="size-[300%] origin-top-left scale-[calc(1/3)]">
-            <AuthPanel side={row.slot} photo={preview} className="size-full" />
+      {isApp(row.slot) ? (
+        <AppHeaderPreview photo={preview} heading={SLOTS[row.slot].heading ?? ["", ""]} />
+      ) : (
+        // The real panel at a third of its size
+        <div className="mx-auto w-full max-w-[400px] overflow-hidden rounded-2xl shadow-[inset_0_0_0_1px_var(--color-line)]">
+          <div className="aspect-[4/5] w-full overflow-hidden">
+            <div className="size-[300%] origin-top-left scale-[calc(1/3)]">
+              <AuthPanel side={row.slot} photo={preview} className="size-full" />
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {pending ? <p className="sm mt-3 text-center">Preview. Save to put it on the site.</p> : null}
       {saved && !pending ? (
         <p className="sm mt-3 text-center">
@@ -207,7 +247,7 @@ function SlotCard({ row, onDone }: { row: Row; onDone: (msg: string) => void }) 
         open={dialog === "save"}
         onClose={() => setDialog(null)}
         title={`Save the ${title.toLowerCase()} photo?`}
-        description="It shows on the website straight away."
+        description={isApp(row.slot) ? "It shows in the app straight away." : "It shows on the website straight away."}
         label="Note"
         optional
         confirmLabel="Save photo"
@@ -228,7 +268,7 @@ function SlotCard({ row, onDone }: { row: Row; onDone: (msg: string) => void }) 
         open={dialog === "remove"}
         onClose={() => setDialog(null)}
         title={`Remove the ${title.toLowerCase()} photo?`}
-        description="The panel goes back to plain green. The photo file is deleted."
+        description={isApp(row.slot) ? "The top of the screen goes back to plain lime. The photo file is deleted." : "The panel goes back to plain green. The photo file is deleted."}
         confirmLabel="Remove photo"
         variant="danger"
         onConfirm={async (reason) => {
@@ -238,5 +278,37 @@ function SlotCard({ row, onDone }: { row: Row; onDone: (msg: string) => void }) 
         }}
       />
     </Panel>
+  );
+}
+
+/**
+ * The top of the app screen, at phone width: the photo band with its fade,
+ * Back, the curved sheet and its sticker, and the screen's title.
+ */
+function AppHeaderPreview({ photo, heading }: { photo: PanelPhoto | null; heading: [string, string] }) {
+  const position = photo?.focus === "left" ? "left top" : photo?.focus === "right" ? "right top" : "center top";
+  return (
+    <div className="mx-auto w-full max-w-[300px] overflow-hidden rounded-[22px] bg-[#F8F8F8] shadow-[inset_0_0_0_1px_var(--color-line)]">
+      <div className="relative h-[150px] bg-[#A9D654]">
+        {photo ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- a local preview or a Convex storage URL */}
+            <img src={photo.url} alt="" className="absolute inset-0 size-full object-cover" style={{ objectPosition: position }} />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/10 to-transparent" />
+          </>
+        ) : null}
+        <span className={`relative block px-4 pt-3 text-[13px] font-semibold ${photo ? "text-white" : "text-[#1A1A1A]"}`}>‹ Back</span>
+      </div>
+      <div className="relative -mt-[46px] rounded-tl-[46px] bg-[#F8F8F8] px-4 pb-5 pt-7 text-center">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 -rotate-[5deg] rounded-full bg-white px-2.5 py-0.5 text-[8px] font-bold shadow">
+          Sell on farmkeke
+        </span>
+        <p className="text-[15px] font-bold leading-tight text-[#1A1A1A]">
+          {heading[0]} <span className="text-[#5F5F5F]">{heading[1]}</span>
+        </p>
+        <div className="mx-auto mt-3 h-8 w-full rounded-lg border border-[#A9D654] bg-white" />
+        <div className="mx-auto mt-2 h-8 w-full rounded-lg bg-[#1A1A1A]" />
+      </div>
+    </div>
   );
 }

@@ -1,12 +1,13 @@
 // A-87 Site photos: staff upload, replace or remove the photos on the
-// website's sign-in and sign-up pages. Replacing or removing a photo deletes
+// website's sign-in and sign-up pages, and the header photos of the app's
+// farmer sign-up screens. Replacing or removing a photo deletes
 // the old file. Every change goes in the audit log.
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
-import { focusValidator, SLOTS, slotValidator, type Slot } from "../lib/sitePhotos";
+import { ALL_SLOTS, focusValidator, slotValidator, type Slot } from "../lib/sitePhotos";
 import { validateImageUpload } from "../lib/uploads";
 
 const bySlot = (ctx: MutationCtx, slot: Slot) =>
@@ -21,7 +22,7 @@ export const list = query({
   handler: async (ctx) => {
     await requireStaff(ctx, "content.manage");
     return await Promise.all(
-      SLOTS.map(async (slot) => {
+      ALL_SLOTS.map(async (slot) => {
         const row = await ctx.db
           .query("sitePhotos")
           .withIndex("by_slot", (q) => q.eq("slot", slot))
