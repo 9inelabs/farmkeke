@@ -54,7 +54,9 @@ export default function CodeStep() {
   };
 
   return (
-    <SellShell curve="right" sticker="left" footer={<Button label="Verify" variant="black" size="large" fullWidth loading={busy} disabled={code.length !== 6} onPress={() => void submit()} />}>
+    <SellShell
+      scene="code"
+      curve="right" sticker="left" footer={<Button label="Verify" variant="black" size="large" fullWidth loading={busy} disabled={code.length !== 6} onPress={() => void submit()} />}>
       <SellTitle title="Enter Verification" accent="Code" note={`A verification code has been sent to ${maskedPhone(phone)}`} />
       <CodeBoxes length={6} value={code} onChange={(v) => { setCode(v); setError(null); }} onFilled={(v) => void submit(v)} error={error !== null} autoFocus label="Verification code" />
       <View style={styles.resend}>

@@ -18,6 +18,7 @@ export default function ApplicationSubmitted() {
   };
   return (
     <SellShell
+      scene="submitted"
       back="close"
       onBack={home}
       curve="both"

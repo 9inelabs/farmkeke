@@ -32,6 +32,7 @@ export default function PhoneStep() {
 
   return (
     <SellShell
+      scene="phone"
       curve="left"
       sticker="center"
       footer={<Button label="Get Verification Code" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />}

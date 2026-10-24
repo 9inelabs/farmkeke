@@ -84,6 +84,7 @@ export default function Review() {
 
   return (
     <SellShell
+      scene="review"
       curve="both"
       sticker="center"
       footer={

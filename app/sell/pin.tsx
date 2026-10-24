@@ -54,6 +54,7 @@ export default function PinStep() {
 
   return (
     <SellShell
+      scene="pin"
       curve="left"
       sticker="right"
       onBack={confirming ? () => { setFirst(null); setPinValue(""); } : undefined}

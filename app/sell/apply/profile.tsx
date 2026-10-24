@@ -122,6 +122,7 @@ export default function Profile() {
 
   return (
     <SellShell
+      scene="profile"
       curve="right"
       sticker="right"
       footer={<Button label={from === "review" ? "Save changes" : "Set Bank Details"} variant="black" size="large" fullWidth loading={busy || app === undefined} disabled={uploading} onPress={() => void submit()} />}

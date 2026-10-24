@@ -86,6 +86,7 @@ export default function BankDetails() {
 
   return (
     <SellShell
+      scene="bank"
       curve="left"
       sticker="center"
       footer={<Button label={from === "review" ? "Save changes" : "Review Profile"} variant="black" size="large" fullWidth loading={busy || app === undefined} onPress={() => void submit()} />}

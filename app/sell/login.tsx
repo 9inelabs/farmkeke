@@ -39,6 +39,7 @@ export default function FarmerLogin() {
 
   return (
     <SellShell
+      scene="login"
       curve="left"
       sticker="center"
       footer={

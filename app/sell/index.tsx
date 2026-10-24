@@ -60,6 +60,7 @@ export default function SellOnFarmkeke() {
 
   return (
     <SellShell
+      scene="intro"
       back="close"
       curve="both"
       sticker="none"
