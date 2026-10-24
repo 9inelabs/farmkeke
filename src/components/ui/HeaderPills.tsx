@@ -48,7 +48,7 @@ export function AlertsPill({ unread, onPress }: { unread: number; onPress: () =>
   );
 }
 
-/** Home header: the bell from the Home design, with a dot while anything is unread. */
+/** The bell in the Home and farm Dashboard headers, with a red count of unread notifications ("99+" past 98, as the backend caps the count at 99). */
 export function BellButton({ unread, onPress }: { unread: number; onPress: () => void }) {
   return (
     <Pressable
@@ -59,7 +59,13 @@ export function BellButton({ unread, onPress }: { unread: number; onPress: () =>
       style={({ pressed }) => [styles.bell, pressed && styles.bellPressed]}
     >
       <Bell size={22} color={colors.forest} />
-      {unread > 0 && <View style={styles.dot} />}
+      {unread > 0 && (
+        <View style={styles.count} pointerEvents="none">
+          <Text variant="small" color={colors.white} maxFontSizeMultiplier={1} style={styles.countText}>
+            {unread >= 99 ? "99+" : unread}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -76,17 +82,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bellPressed: { backgroundColor: colors.lime },
-  dot: {
+  count: {
     position: "absolute",
-    top: 9,
-    right: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: colors.forest,
-    borderWidth: 1.5,
-    borderColor: colors.tint,
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    backgroundColor: colors.badge,
+    borderWidth: 2,
+    borderColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  countText: { fontSize: 11, lineHeight: 13, fontFamily: fonts.bold },
   location: {
     alignSelf: "flex-start",
     minHeight: 40,
