@@ -11,6 +11,9 @@ import { BottomSheet, Button, Text } from "@/components/ui";
 import { usePrefs } from "@/store/prefs";
 import { colors, spacing } from "@/theme/tokens";
 
+// How long "signed out" must last before it counts as a real sign-out.
+const SIGNED_OUT_GRACE_MS = 3000;
+
 export function SessionWatcher() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const status = useQuery(api.users.sessionStatus);
@@ -36,12 +39,29 @@ export function SessionWatcher() {
   }, [status, signOut]);
 
   // Signed out without choosing to (useSignOut clears the flag first).
+  // The auth state blinks to "signed out" for a moment while signing in, while
+  // switching from a guest to an account, and while the token refreshes. So
+  // only tell the person once they've stayed signed out for a few seconds.
+  const latest = useRef({ isLoading, isAuthenticated });
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && accountSignedIn) {
-      setAccountSignedIn(false);
-      setExpired(true);
-    }
+    latest.current = { isLoading, isAuthenticated };
+  }, [isLoading, isAuthenticated]);
+  useEffect(() => {
+    if (isLoading || isAuthenticated || !accountSignedIn) return;
+    const timer = setTimeout(() => {
+      const now = latest.current;
+      if (!now.isLoading && !now.isAuthenticated) {
+        setAccountSignedIn(false);
+        setExpired(true);
+      }
+    }, SIGNED_OUT_GRACE_MS);
+    return () => clearTimeout(timer);
   }, [isLoading, isAuthenticated, accountSignedIn, setAccountSignedIn]);
+
+  // Signed back in (or the blink passed) while the sheet was up: close it.
+  useEffect(() => {
+    if (isAuthenticated && viewer && !viewer.isGuest) setExpired(false);
+  }, [isAuthenticated, viewer]);
 
   return (
     <BottomSheet visible={expired} onClose={() => setExpired(false)}>
