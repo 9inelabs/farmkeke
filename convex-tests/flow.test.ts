@@ -486,3 +486,57 @@ test("live Paystack path: start, signed webhook, payout transfer, refund", async
   expect(attempt.saveCard).toBeUndefined();
   vi.unstubAllGlobals();
 });
+
+test("in-app Paystack: bill return link, checking while the page is open", async () => {
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_secret";
+  const calls: { url: string; body: any }[] = [];
+  let txAmount = 0;
+  let txStatus = "abandoned";
+  vi.stubGlobal("fetch", async (url: string, init?: { body?: string }) => {
+    const body = init?.body ? JSON.parse(init.body) : undefined;
+    calls.push({ url, body });
+    const ok = (data: unknown) => new Response(JSON.stringify({ status: true, message: "ok", data }), { status: 200 });
+    if (url.endsWith("/transaction/initialize")) {
+      txAmount = body.amount;
+      return ok({ authorization_url: "https://checkout.paystack.com/abc", access_code: "abc", reference: body.reference });
+    }
+    if (url.includes("/transaction/verify/")) {
+      const reference = decodeURIComponent(url.split("/transaction/verify/")[1]);
+      return ok({ reference, status: txStatus, amount: txAmount, currency: "NGN", channel: "card", paid_at: new Date().toISOString(), gateway_response: "Declined", customer: { email: "x@y.z" } });
+    }
+    return new Response(JSON.stringify({ status: false, message: "unexpected" }), { status: 400 });
+  });
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const shopper = as(t, s.account);
+  const lastAttempt = async () => await t.run(async (ctx) => (await ctx.db.query("paymentAttempts").collect()).at(-1)!);
+
+  // A bill paid in the app goes back to the bill's own screen, which works for whoever paid it
+  const bill = await placeDelivery(t, s, s.guest, { quantity: 1, email: "g@example.com" });
+  await billDelivery(t, s, bill.orders[0]!.orderId, 120000);
+  const token = await t.run(async (ctx) => (await ctx.db.get(bill.checkoutId))!.payToken!);
+  await shopper.action(api.payments.checkout.start, { checkoutId: bill.checkoutId, method: "card", returnTo: "app", payToken: token });
+  const init = calls.filter((c) => c.url.endsWith("/transaction/initialize")).at(-1)!;
+  expect(init.body.callback_url).toContain(`/paystack/return?checkoutId=${bill.checkoutId}&payToken=${token}`);
+
+  // Paystack calls a page nobody has finished "abandoned": that never settles from a check
+  await shopper.action(api.payments.checkout.verify, { checkoutId: bill.checkoutId, payToken: token, open: true });
+  await shopper.action(api.payments.checkout.verify, { checkoutId: bill.checkoutId, payToken: token });
+  expect((await lastAttempt()).status).toBe("opened");
+  // A declined card while the page is still open can be retried there: not settled yet
+  txStatus = "failed";
+  expect(await shopper.action(api.payments.checkout.verify, { checkoutId: bill.checkoutId, payToken: token, open: true })).toEqual({ status: "awaiting_payment", paid: false });
+  expect((await lastAttempt()).status).toBe("opened");
+  // Paid on the page: the check while it's open settles it
+  txStatus = "success";
+  expect(await shopper.action(api.payments.checkout.verify, { checkoutId: bill.checkoutId, payToken: token, open: true })).toEqual({ status: "paid", paid: true });
+
+  const reference = (await lastAttempt()).reference;
+  const page = await t.fetch(`/paystack/return?checkoutId=${bill.checkoutId}&payToken=${token}&reference=${reference}`);
+  const html = await page.text();
+  expect(html).toContain(`farmkeke://pay/${token}?reference=${reference}`);
+  expect(html).toContain("Payment received");
+  const pickupPage = await (await t.fetch(`/paystack/return?checkoutId=${bill.checkoutId}&reference=${reference}`)).text();
+  expect(pickupPage).toContain(`farmkeke://checkout/pay/${bill.checkoutId}?reference=${reference}`);
+  vi.unstubAllGlobals();
+});

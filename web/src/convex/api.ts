@@ -167,7 +167,7 @@ export const api = {
       get: makeFunctionReference<"query", { "checkoutId": string }, any>("payments/checkout:get"),
       markPaidTest: makeFunctionReference<"mutation", { "checkoutId": Id<"checkouts">; "payToken"?: string }, any>("payments/checkout:markPaidTest"),
       start: makeFunctionReference<"action", { "checkoutId": Id<"checkouts">; "method": "card" | "bank_transfer" | "ussd" | "saved_card"; "saveCard"?: boolean; "savedCardId"?: Id<"savedCards">; "returnTo"?: "web" | "app"; "payToken"?: string }, any>("payments/checkout:start"),
-      verify: makeFunctionReference<"action", { "checkoutId": Id<"checkouts">; "payToken"?: string }, any>("payments/checkout:verify"),
+      verify: makeFunctionReference<"action", { "checkoutId": Id<"checkouts">; "payToken"?: string; "open"?: boolean }, any>("payments/checkout:verify"),
     },
     config: {
       get: makeFunctionReference<"query", Record<string, never>, any>("payments/config:get"),

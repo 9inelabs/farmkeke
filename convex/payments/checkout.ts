@@ -224,7 +224,7 @@ export const start = action({
 
     const callbackUrl =
       returnTo === "app"
-        ? `${env.CONVEX_SITE_URL}/paystack/return?checkoutId=${args.checkoutId}`
+        ? `${env.CONVEX_SITE_URL}/paystack/return?checkoutId=${args.checkoutId}${args.payToken ? `&payToken=${encodeURIComponent(args.payToken)}` : ""}`
         : args.payToken
           ? `${websiteUrl()}/pay/${encodeURIComponent(args.payToken)}`
           : `${websiteUrl()}/checkout/pay/${args.checkoutId}`;
@@ -284,9 +284,15 @@ export const openAttempts = internalMutation({
   },
 });
 
-/** M-46 "Check again": asks Paystack about open attempts. */
+/**
+ * M-44 and M-46: asks Paystack about open attempts. Paystack reports a page
+ * nobody has finished yet as "abandoned", so that never settles here (an
+ * expired checkout abandons its attempts). With `open` (the app checking
+ * while the Paystack page is still showing) only a success counts, as a
+ * declined card can still be retried on that page.
+ */
 export const verify = action({
-  args: { checkoutId: v.id("checkouts"), payToken: v.optional(v.string()) },
+  args: { checkoutId: v.id("checkouts"), payToken: v.optional(v.string()), open: v.optional(v.boolean()) },
   handler: async (ctx, args): Promise<{ status: string; paid: boolean }> => {
     const open: { status: string; references: string[] } = await ctx.runMutation(
       internal.payments.checkout.openAttempts,
@@ -298,7 +304,7 @@ export const verify = action({
         const tx = await paystack<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
         if (!tx.ok) continue;
         // Still on the payment page: leave it open.
-        if (!["success", "failed", "abandoned", "reversed"].includes(tx.data.status)) continue;
+        if (!(args.open ? ["success"] : ["success", "failed", "reversed"]).includes(tx.data.status)) continue;
         const settled: { checkoutStatus: string | null } = await ctx.runMutation(
           internal.payments.checkout.settleCharge,
           chargeArgs(tx.data),

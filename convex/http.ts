@@ -57,11 +57,12 @@ const str = (v: unknown) => (typeof v === "string" && v.length > 0 ? v : undefin
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 
 /** Asks Paystack about one reference and applies the answer. */
-async function verifyReference(ctx: ActionCtx, reference: string) {
+async function verifyReference(ctx: ActionCtx, reference: string): Promise<boolean> {
   const tx = await paystack<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
   if (tx.ok && ["success", "failed", "abandoned", "reversed"].includes(tx.data.status)) {
     await ctx.runMutation(internal.payments.checkout.settleCharge, chargeArgs(tx.data));
   }
+  return tx.ok && tx.data.status === "success";
 }
 
 /**
@@ -133,9 +134,12 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const checkoutId = url.searchParams.get("checkoutId") ?? "";
+    const payToken = url.searchParams.get("payToken");
     const reference = url.searchParams.get("reference") ?? url.searchParams.get("trxref") ?? "";
-    if (reference && paymentsLive()) await verifyReference(ctx, reference);
-    const appLink = `farmkeke://checkout/pay/${encodeURIComponent(checkoutId)}${reference ? `?reference=${encodeURIComponent(reference)}` : ""}`;
+    const paid = reference && paymentsLive() ? await verifyReference(ctx, reference) : false;
+    // Back to the screen the payment started on: a bill's pay link works for whoever paid it
+    const screen = payToken ? `pay/${encodeURIComponent(payToken)}` : `checkout/pay/${encodeURIComponent(checkoutId)}`;
+    const appLink = `farmkeke://${screen}${reference ? `?reference=${encodeURIComponent(reference)}` : ""}`;
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Payment · Farmkeke</title>
@@ -147,8 +151,8 @@ h1{font-size:20px;color:#1E3B16;margin:0 0 8px}p{font-size:15px;line-height:22px
 a.btn{display:block;background:#A9D654;color:#1E3B16;font-weight:600;text-decoration:none;padding:14px;border-radius:17px}
 </style></head><body><main>
 <p class="mark"><span>farm</span>keke</p>
-<h1>Back to Farmkeke</h1>
-<p>Taking you back to the app to see your order…</p>
+<h1>${paid ? "Payment received" : "Back to Farmkeke"}</h1>
+<p>Taking you back to the app${paid ? " to see your order" : ""}…</p>
 <a class="btn" href="${escapeHtml(appLink)}">Open Farmkeke</a>
 </main><script>window.location.replace(${JSON.stringify(appLink)});</script></body></html>`;
     return new Response(html, {

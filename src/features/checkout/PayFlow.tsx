@@ -4,7 +4,10 @@
 // which works for whoever has it, e.g. someone paying for a family member).
 // - Live: payments/checkout.start opens a Paystack transaction, shown in an
 //   in-app browser. Paystack's return page sends the shopper back to
-//   farmkeke://checkout/pay/<id>?reference=…, which closes the browser.
+//   farmkeke://checkout/pay/<id>?reference=… (a bill: farmkeke://pay/<token>),
+//   which closes the browser. While the page is open the app also checks
+//   with Paystack every few seconds, and closes the page itself once the
+//   payment lands, in case the browser won't hand the link back.
 // - Test: "Pay now (test)" calls payments/checkout.markPaidTest.
 // The checkout query is live, so a webhook marking it paid moves the screen
 // on by itself; `verify` asks Paystack directly while we wait.
@@ -13,16 +16,18 @@ import type { Id } from "@convex/_generated/dataModel";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Bank, Card as CardIcon, Clock, Lock, Phone, Refresh, ShieldCheck, Warning, type IconComponent } from "@/components/icons";
 import { Button, Notice, ScreenHeader, Skeleton, StatusScreen, Text } from "@/components/ui";
 import { useCheckoutDraft } from "@/features/checkout/draft";
+import { paySession } from "@/features/checkout/paySession";
 import { dayTime } from "@/features/orders/format";
 import { useEnsureIdentity } from "@/lib/session";
 import { errorCode } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
+import { showToast } from "@/store/toast";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -63,16 +68,21 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
   const [method, setMethod] = useState<Method>("card");
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   const config = checkout?.payments;
   const paid = checkout?.status === "paid";
   // Someone else's bill: stay here and say thank you (their orders aren't ours to show)
   const paidElsewhere = paid && isBill && checkout?.isOwner === false;
   const firstOrder = checkout?.orders[0]?._id;
+  // Paid while this screen was open, rather than opened on a bill paid before
+  const sawUnpaid = useRef(false);
+  if (checkout?.status === "awaiting_payment") sawUnpaid.current = true;
   useEffect(() => {
     if (!paid || paidElsewhere) return;
     if (isBill) {
       // A paid bill: back to the order it was for
+      showToast({ message: sawUnpaid.current ? "Payment received" : "This bill is already paid" });
       if (firstOrder) router.replace({ pathname: "/order/[id]", params: { id: firstOrder } });
       else router.replace("/orders");
       return;
@@ -104,6 +114,13 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
   }, [phase, awaitingPayment, check]);
 
   const last = checkout?.lastAttempt ?? null;
+  // Cancelled on Paystack's page: its return page says so, so no waiting for an answer
+  const cancelled = last?.status === "abandoned";
+  useEffect(() => {
+    if (phase !== "confirming" || !cancelled) return;
+    setPhase("auto");
+    setNote("The payment wasn't finished. You haven't been charged.");
+  }, [phase, cancelled]);
   const pendingTransfer = (last?.status === "opened" || last?.status === "started") && (last.method === "bank_transfer" || last.method === "ussd");
   const view: "choose" | "confirming" | "awaiting" | "failed" =
     phase === "choose"
@@ -134,6 +151,7 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
     if (opening || !config) return;
     setOpening(true);
     setError(null);
+    setNote(null);
     setMethod(m);
     try {
       // Paying from a bill's link on a phone that isn't signed in: a guest session to pay with
@@ -149,10 +167,55 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
         setPhase("confirming");
         return;
       }
-      const result = await WebBrowser.openAuthSessionAsync(r.authorizationUrl, `farmkeke://checkout/pay/${checkoutIdStr}`);
-      // Back with a reference: check the payment. Closed early: a card wasn't paid, but a transfer may already be on its way.
-      setPhase(result.type === "success" ? "confirming" : m === "card" ? "choose" : "awaiting");
-      if (result.type !== "success") void check();
+      // Where Paystack's return page sends the shopper: the screen this payment started on
+      const returnLink = payToken ? `farmkeke://pay/${encodeURIComponent(payToken)}` : `farmkeke://checkout/pay/${encodeURIComponent(checkoutIdStr)}`;
+      const end = paySession.begin();
+      // While Paystack is showing: once the payment lands, close the page ourselves
+      let landed = false;
+      const watch = setInterval(() => {
+        verify({ checkoutId: id, payToken, open: true }).then(
+          (v) => {
+            if (!v.paid || landed) return;
+            landed = true;
+            try {
+              WebBrowser.dismissAuthSession();
+            } catch {
+              // Android can't close it from here; the screen behind has already moved on
+            }
+          },
+          () => undefined,
+        );
+      }, 5000);
+      let result: WebBrowser.WebBrowserAuthSessionResult;
+      try {
+        result = await WebBrowser.openAuthSessionAsync(r.authorizationUrl, returnLink, {
+          // iOS: no "wants to use paystack.co to sign in" prompt; a payment needs no shared cookies
+          preferEphemeralSession: true,
+          // Android: the page opens over the app, so the link back closes it
+          createTask: false,
+          showTitle: true,
+          toolbarColor: colors.white,
+          controlsColor: colors.forest,
+        });
+      } finally {
+        clearInterval(watch);
+        end();
+      }
+      if (result.type === "success" || landed) {
+        setPhase("confirming");
+        return;
+      }
+      // Closed before Paystack sent them back: it may still have gone through
+      const now = await verify({ checkoutId: id, payToken }).catch(() => null);
+      if (now?.paid) return;
+      if (m === "card") {
+        // Back to choosing; a declined card shows M-45 with Paystack's reason
+        setPhase("auto");
+        setNote("The payment wasn't finished. You haven't been charged.");
+      } else {
+        // A transfer or USSD may already be on its way
+        setPhase("awaiting");
+      }
     } catch (e) {
       const code = errorCode(e);
       setError(
@@ -265,7 +328,15 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
         actions={
           <>
             <Button label={`Try again with ${METHODS.find((x) => x.id === (last?.method ?? method))?.label.toLowerCase() ?? "card"}`} variant="dark" size="large" pill fullWidth loading={opening} onPress={() => void begin((last?.method as Method) ?? method)} />
-            <Button label="Change payment method" variant="ghost" fullWidth onPress={() => setPhase("choose")} />
+            <Button
+              label="Change payment method"
+              variant="ghost"
+              fullWidth
+              onPress={() => {
+                setNote(null);
+                setPhase("choose");
+              }}
+            />
           </>
         }
       />
@@ -361,7 +432,7 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
         ) : (
           <Notice tone="pending">Paying in the app isn't switched on yet. Your cart is saved; please try again a little later.</Notice>
         )}
-        {error !== null && <Notice tone="error">{error}</Notice>}
+        {error !== null ? <Notice tone="error">{error}</Notice> : note !== null ? <Notice tone="pending">{note}</Notice> : null}
       </ScrollView>
       <View style={styles.footer}>
         <Button
