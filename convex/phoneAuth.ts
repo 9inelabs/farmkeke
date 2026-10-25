@@ -17,14 +17,21 @@ export const PHONE_PROVIDER = "phone-code";
 const CODE_TTL_MS = 10 * 60_000;
 const MAX_TRIES = 5;
 const HOUR = 3_600_000;
+// Texts across all numbers per hour: a script cycling through numbers can't
+// run up the SMS bill (SMS pumping). Real sign-ups are far below this.
+export const MAX_CODES_PER_HOUR = 300;
 // After the code checks out, time to choose a PIN before it's used to sign in
 const PIN_STEP_MS = 30 * 60_000;
+// Wrong PINs in a row before PIN log-in locks. Four digits are only 10,000
+// guesses, so the hourly sign-in limit alone isn't enough.
+export const PIN_MAX_FAILURES = 5;
 
 /** Stores a fresh code for the phone (replacing any earlier one). */
 export const issueCode = internalMutation({
   args: { phone: v.string(), codeHash: v.string() },
   handler: async (ctx, args) => {
     await hitLimit(ctx, `phone-code:${args.phone}`, 5, HOUR);
+    await hitLimit(ctx, "phone-code:all", MAX_CODES_PER_HOUR, HOUR);
     const old = await ctx.db
       .query("phoneCodes")
       .withIndex("by_phone", (q) => q.eq("phone", args.phone))
@@ -203,7 +210,7 @@ export const pinGate = internalQuery({
   },
 });
 
-/** The phone account behind a number (for sign-in tries left), and whether it's blocked. */
+/** The phone account behind a number, and whether it's blocked or its PIN is locked. */
 export const accountFor = internalQuery({
   args: { phone: v.string() },
   handler: async (ctx, args) => {
@@ -213,7 +220,57 @@ export const accountFor = internalQuery({
       .unique();
     if (account === null) return null;
     const user = await ctx.db.get("users", account.userId);
-    return { accountId: account._id, blocked: user?.blockedAt !== undefined };
+    return { accountId: account._id, blocked: user?.blockedAt !== undefined, locked: user?.pinLockedAt !== undefined };
+  },
+});
+
+/** A wrong PIN: counts it, and locks PIN log-in at the fifth in a row. */
+export const pinFailed = internalMutation({
+  args: { accountId: v.id("authAccounts") },
+  handler: async (ctx, args): Promise<{ locked: boolean; attemptsLeft: number }> => {
+    const account = await ctx.db.get("authAccounts", args.accountId);
+    const user = account === null ? null : await ctx.db.get("users", account.userId);
+    if (user === null) return { locked: false, attemptsLeft: PIN_MAX_FAILURES };
+    const failures = (user.pinFailures ?? 0) + 1;
+    const locked = failures >= PIN_MAX_FAILURES;
+    await ctx.db.patch("users", user._id, { pinFailures: failures, ...(locked ? { pinLockedAt: Date.now() } : {}) });
+    return { locked, attemptsLeft: Math.max(0, PIN_MAX_FAILURES - failures) };
+  },
+});
+
+/** The right PIN, or a new one set with a texted code: the count starts again. */
+export const pinCleared = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+    if (user !== null && (user.pinFailures !== undefined || user.pinLockedAt !== undefined)) {
+      await ctx.db.patch("users", user._id, { pinFailures: undefined, pinLockedAt: undefined });
+    }
+    return null;
+  },
+});
+
+/** For confirmItsYou (lib/reauth.ts): the signed-in person's PIN log-in and password log-in, if any. */
+export const credentialsOf = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getViewer(ctx);
+    if (user === null || user.isAnonymous) return null;
+    const phoneAccount = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id).eq("provider", PHONE_PROVIDER))
+      .unique();
+    const passwordAccount = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id).eq("provider", "password"))
+      .unique();
+    const hasPin = phoneAccount !== null && phoneAccount.secret !== undefined;
+    return {
+      phone: hasPin ? phoneAccount.providerAccountId : null,
+      accountId: hasPin ? phoneAccount._id : null,
+      email: passwordAccount?.providerAccountId ?? null,
+      locked: user.pinLockedAt !== undefined,
+    };
   },
 });
 

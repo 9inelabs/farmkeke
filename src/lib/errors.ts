@@ -18,6 +18,9 @@ export function errorData<T extends object>(error: unknown): Partial<T> {
 const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: "That email and password don't match. Check them and try again.",
   WRONG_PASSWORD: "That password isn't right.",
+  WRONG_PIN: "That PIN isn't right.",
+  PIN_LOCKED: "Too many wrong PINs, so your PIN is locked. Set a new one with Forgot PIN.",
+  CONFIRM_REQUIRED: "Enter your PIN or password to confirm.",
   TOO_MANY_ATTEMPTS: "Too many tries. Wait a few minutes, or reset your password.",
   EMAIL_TAKEN: "This email already has an account.",
   INVALID_EMAIL: "Enter a full email address, like name@example.com.",

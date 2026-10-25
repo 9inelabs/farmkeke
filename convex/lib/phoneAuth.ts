@@ -59,8 +59,11 @@ export const PhoneCode = ConvexCredentials<DataModel>({
           currentUserId: await getAuthUserId(ctx),
         });
         if ("error" in found) throw new ConvexError({ code: found.error, attemptsLeft: found.attemptsLeft });
-        // The code just proved the phone, so the PIN is set in the same step
-        if (pin !== null) await modifyAccountCredentials(ctx, { provider: PHONE_PROVIDER, account: { id: phone, secret: pin } });
+        // The code just proved the phone, so the PIN is set in the same step (and unlocks it)
+        if (pin !== null) {
+          await modifyAccountCredentials(ctx, { provider: PHONE_PROVIDER, account: { id: phone, secret: pin } });
+          await ctx.runMutation(internal.phoneAuth.pinCleared, { userId: found.userId });
+        }
         return { userId: found.userId };
       }
 
@@ -76,25 +79,34 @@ export const PhoneCode = ConvexCredentials<DataModel>({
           throw new ConvexError({ code: "VERIFY_AGAIN" });
         }
         await modifyAccountCredentials(ctx, { provider: PHONE_PROVIDER, account: { id: gate.phone, secret: pin } });
+        await ctx.runMutation(internal.phoneAuth.pinCleared, { userId });
         return { userId };
       }
 
       case "pin": {
         const phone = phoneOf(params.phone);
         const pin = String(params.pin ?? "");
-        const found: { accountId: Id<"authAccounts">; blocked: boolean } | null = await ctx.runQuery(internal.phoneAuth.accountFor, { phone });
+        const found: { accountId: Id<"authAccounts">; blocked: boolean; locked: boolean } | null = await ctx.runQuery(internal.phoneAuth.accountFor, { phone });
         if (found === null) throw new ConvexError({ code: "INVALID_CREDENTIALS" });
         if (found.blocked) throw new ConvexError({ code: "BLOCKED" });
+        // Five wrong PINs in a row: only a new PIN, set with a texted code, opens it again
+        if (found.locked) throw new ConvexError({ code: "PIN_LOCKED" });
+        let user: Doc<"users">;
         try {
-          const { user }: { user: Doc<"users"> } = await retrieveAccount(ctx, { provider: PHONE_PROVIDER, account: { id: phone, secret: pin } });
-          return { userId: user._id };
+          ({ user } = await retrieveAccount(ctx, { provider: PHONE_PROVIDER, account: { id: phone, secret: pin } }));
         } catch (error) {
           if (error instanceof ConvexError) throw error;
           const reason = error instanceof Error ? error.message : "";
           if (reason === "TooManyFailedAttempts") throw new ConvexError({ code: "TOO_MANY_ATTEMPTS" });
-          const attemptsLeft: number = await ctx.runQuery(internal.accountsInternal.signInAttemptsLeft, { accountId: found.accountId, now: Date.now() });
-          throw new ConvexError(attemptsLeft < 1 ? { code: "TOO_MANY_ATTEMPTS" } : { code: "INVALID_CREDENTIALS", attemptsLeft });
+          const counted: { locked: boolean; attemptsLeft: number } = await ctx.runMutation(internal.phoneAuth.pinFailed, { accountId: found.accountId });
+          if (counted.locked) throw new ConvexError({ code: "PIN_LOCKED" });
+          const hourly: number = await ctx.runQuery(internal.accountsInternal.signInAttemptsLeft, { accountId: found.accountId, now: Date.now() });
+          if (hourly < 1) throw new ConvexError({ code: "TOO_MANY_ATTEMPTS" });
+          // Tries before the PIN locks
+          throw new ConvexError({ code: "INVALID_CREDENTIALS", attemptsLeft: Math.min(hourly, counted.attemptsLeft) });
         }
+        await ctx.runMutation(internal.phoneAuth.pinCleared, { userId: user._id });
+        return { userId: user._id };
       }
 
       default:

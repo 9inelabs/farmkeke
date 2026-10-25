@@ -6,6 +6,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { getViewer } from "./lib/auth";
 import { ENDED } from "./lib/orders";
+import { hitLimit } from "./lib/rateLimit";
 
 export const PASSWORD_PROVIDER = "password";
 // Failed sign-ins allowed per account per hour (refills gradually). M-50.
@@ -55,6 +56,22 @@ export const signInAttemptsLeft = internalQuery({
     if (limit === null) return MAX_FAILED_SIGN_INS_PER_HOUR;
     const refill = ((args.now - limit.lastAttemptTime) * MAX_FAILED_SIGN_INS_PER_HOUR) / 3_600_000;
     return Math.floor(Math.min(MAX_FAILED_SIGN_INS_PER_HOUR, limit.attemptsLeft + refill));
+  },
+});
+
+/**
+ * Reset emails per address per hour, so the reset forms can't be used to
+ * flood someone's inbox. False once the limit is reached.
+ */
+export const allowResetEmail = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args): Promise<boolean> => {
+    try {
+      await hitLimit(ctx, `reset-email:${args.email}`, 5, 3_600_000);
+      return true;
+    } catch {
+      return false;
+    }
   },
 });
 

@@ -8,6 +8,7 @@ import { bankName } from "../lib/banks";
 import { notify } from "../lib/notify";
 import { paymentsLive, paystack } from "../lib/paystack";
 import { hitLimit } from "../lib/rateLimit";
+import { confirmItsYou } from "../lib/reauth";
 
 const LOOKUP_LIMIT = { max: 10, windowMs: 10 * 60_000 };
 
@@ -102,9 +103,17 @@ export const applyPayoutAccount = internalMutation({
 
 /** F-62: change where released money goes; the name is checked with the bank. */
 export const savePayoutAccount = action({
-  args: { accountNumber: v.string(), bankCode: v.string(), accountName: v.optional(v.string()) },
+  args: {
+    accountNumber: v.string(),
+    bankCode: v.string(),
+    accountName: v.optional(v.string()),
+    // The farmer's PIN or password: someone holding an unlocked phone can't
+    // send the farm's money elsewhere
+    secret: v.optional(v.string()),
+  },
   handler: async (ctx, args): Promise<{ bankName: string; accountName: string; accountLast4: string; verified: boolean }> => {
     const number = checkInput(args.accountNumber, args.bankCode);
+    await confirmItsYou(ctx, args.secret);
     const gate: { live: boolean } = await ctx.runMutation(internal.payments.bank.lookupGate, {});
     const resolved = await resolve(number, args.bankCode, gate.live);
     const accountName = resolved.accountName ?? args.accountName ?? "";

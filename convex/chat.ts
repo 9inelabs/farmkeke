@@ -8,6 +8,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireUser } from "./lib/auth";
 import { notify } from "./lib/notify";
+import { hitLimit } from "./lib/rateLimit";
 import { recordReplyMinutes, replyNoteFor, replyTimeMinutes } from "./lib/shop";
 import { validateImageUpload } from "./lib/uploads";
 
@@ -92,7 +93,9 @@ async function conversationRow(ctx: QueryCtx, c: Doc<"conversations">, side: Sid
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireUser(ctx);
+    const user = await requireUser(ctx);
+    // Upload links per hour, so storage can't be filled with junk
+    await hitLimit(ctx, `chat-upload:${user._id}`, 60, 3_600_000);
     return await ctx.storage.generateUploadUrl();
   },
 });

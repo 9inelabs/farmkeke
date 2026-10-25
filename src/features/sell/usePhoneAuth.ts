@@ -15,6 +15,7 @@ const MESSAGES: Record<string, string> = {
   RATE_LIMITED: "Too many codes for this number. Wait an hour and try again.",
   CODE_EXPIRED: "That code has expired. Ask for a new one.",
   TOO_MANY_ATTEMPTS: "Too many wrong tries. Wait a little, then try again.",
+  PIN_LOCKED: "Too many wrong PINs, so PIN log-in is locked. Tap Forgot PIN to set a new one with a code.",
   PHONE_TAKEN: "This number belongs to another account. Sign out first, then log in as a farmer.",
   BLOCKED: "This account can't be used. Contact support@farmkeke.com.",
   PIN_FORMAT: "Your PIN is 4 digits.",

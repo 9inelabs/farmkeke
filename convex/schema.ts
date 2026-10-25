@@ -231,6 +231,10 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
+    // Farmer PIN log-in: wrong PINs in a row, and when 5 of them locked it
+    // (until a new PIN is set with a texted code)
+    pinFailures: v.optional(v.number()),
+    pinLockedAt: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     // Before the Admin Portal: the staff role set from the CLI. Replaced by
     // staffMembers + staffRoles; admin/setup.migrateLegacyStaff copies it over.

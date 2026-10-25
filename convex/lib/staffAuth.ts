@@ -214,6 +214,7 @@ export async function staffAuthorize(params: Params, ctx: Ctx): Promise<Authoriz
       if (found === null || member === null || member.userId !== found.userId || member.status === "deactivated") {
         return null;
       }
+      if (!(await ctx.runMutation(internal.accountsInternal.allowResetEmail, { email }))) return null;
       await signInViaProvider(ctx, staffLink, { accountId: found.accountId, params: { email } });
       return null;
     }

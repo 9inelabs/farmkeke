@@ -71,6 +71,7 @@ import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_phone from "../lib/phone.js";
 import type * as lib_phoneAuth from "../lib/phoneAuth.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
+import type * as lib_reauth from "../lib/reauth.js";
 import type * as lib_restock from "../lib/restock.js";
 import type * as lib_settings from "../lib/settings.js";
 import type * as lib_shop from "../lib/shop.js";
@@ -175,6 +176,7 @@ declare const fullApi: ApiFromModules<{
   "lib/phone": typeof lib_phone;
   "lib/phoneAuth": typeof lib_phoneAuth;
   "lib/rateLimit": typeof lib_rateLimit;
+  "lib/reauth": typeof lib_reauth;
   "lib/restock": typeof lib_restock;
   "lib/settings": typeof lib_settings;
   "lib/shop": typeof lib_shop;

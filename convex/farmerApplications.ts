@@ -8,6 +8,7 @@ import { bankName } from "./lib/banks";
 import { nextCounter } from "./lib/counters";
 import { notify } from "./lib/notify";
 import { normalizeNigerianPhone } from "./lib/phone";
+import { hitLimit } from "./lib/rateLimit";
 import { validateImageUpload } from "./lib/uploads";
 import { requireOpeningHours } from "./lib/validate";
 import { documentKind, farmSize, farmType, openingHours, season } from "./schema";
@@ -257,7 +258,9 @@ export const savePayout = mutation({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireAccount(ctx);
+    const user = await requireAccount(ctx);
+    // Upload links per hour, so storage can't be filled with junk
+    await hitLimit(ctx, `farm-upload:${user._id}`, 120, 3_600_000);
     return await ctx.storage.generateUploadUrl();
   },
 });

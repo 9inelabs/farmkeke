@@ -169,6 +169,8 @@ export const FarmkekePassword: ConvexCredentialsConfig = ConvexCredentials<DataM
         // Unknown emails get the same "check your email" result, so the form
         // can't be used to find out who has an account.
         if (found === null) return null;
+        // At most 5 emails an hour to one address; the form looks the same either way
+        if (!(await ctx.runMutation(internal.accountsInternal.allowResetEmail, { email }))) return null;
         // Phase 5: `returnTo: "web"` (W-42a) sends the link to the website
         const fromWeb = params.returnTo === "web";
         await signInViaProvider(ctx, passwordReset, {
