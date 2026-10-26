@@ -304,7 +304,7 @@ export const recordStep = mutation({
             moved,
             "out_for_delivery",
             `Order ${order.number} is on its way`,
-            rider ? `${rider.name} (${rider.phone}) is bringing your order.` : "A Farmkeke rider is bringing your order.",
+            `${rider ? `${rider.name} (${rider.phone}) is` : "A Farmkeke rider is"} bringing your order. Once you have it, confirm receipt in the app.`,
           );
         }
         break;

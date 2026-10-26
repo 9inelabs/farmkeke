@@ -82,7 +82,7 @@ function Checklist({ order }: { order: OrderDetail }) {
       const code = errorCode(e);
       setError(
         code === "NOT_DELIVERED_YET"
-          ? "This order hasn't been marked delivered yet. You can confirm once it arrives."
+          ? "This order isn't on its way yet. You can confirm once the rider brings it."
           : code === "NOT_FOUND"
             ? "Only the account or device that placed this order can confirm it."
             : "We couldn't confirm right now. Check your connection and try again.",

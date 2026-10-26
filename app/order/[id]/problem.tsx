@@ -26,7 +26,7 @@ export default function ReportProblem() {
       "other-phone": "Only the account or phone that placed this order can report a problem with it. Contact support and we'll help.",
       reported: "You've already reported a problem with this order. Follow the case to see where it's up to.",
       completed: "You've confirmed this order, so the payment has gone to the farm. Contact support and we'll help.",
-      "not-yet": "You can report a problem once your order has been delivered or collected.",
+      "not-yet": "You can report a problem once the rider is bringing your order, or once you've collected it.",
     }[why];
     return (
       <StatusScreen

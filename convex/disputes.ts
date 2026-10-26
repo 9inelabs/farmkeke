@@ -9,7 +9,7 @@ import { getViewer, requireFarmer, requireUser } from "./lib/auth";
 import { nextCounter } from "./lib/counters";
 import { disputeRow, disputeView, REASON_LABELS } from "./lib/disputes";
 import { notify, notifyConsumer, notifyFarm, notifyStaff } from "./lib/notify";
-import { transition } from "./lib/orders";
+import { deliveredByShopper, shopperCanConfirm, transition } from "./lib/orders";
 import { hitLimit } from "./lib/rateLimit";
 import { getRules, HOUR } from "./lib/settings";
 import { validateImageUpload } from "./lib/uploads";
@@ -66,7 +66,8 @@ export const generateUploadUrl = mutation({
 });
 
 /**
- * M-67 / W-53: report a problem with a delivered or collected order.
+ * M-67 / W-53: report a problem with a delivered or collected order, or one
+ * the rider is bringing (the shopper has it, or it never came).
  * Phase 5: reasons "short" and "other", and `itemQuantities` (affected units
  * per chosen item, in itemIndexes order). The amount at stake is the value of
  * the affected units; the delivery fee is never part of it.
@@ -89,7 +90,7 @@ export const open = mutation({
     if (order.status === "completed" || order.confirmedAt !== undefined) {
       throw new ConvexError({ code: "ALREADY_CONFIRMED" });
     }
-    if (order.status !== "delivered" && order.status !== "collected") {
+    if (!shopperCanConfirm(order)) {
       throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
     }
     const note = cleanText(args.note, true);
@@ -142,8 +143,10 @@ export const open = mutation({
     // The report opens the case thread (W-54)
     await ctx.db.insert("disputeMessages", { disputeId, authorId: user._id, as: "consumer", body: note, photoIds: args.photoIds });
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
+    // Reported while the rider is bringing it: the delivery ends here
+    const arrived = await deliveredByShopper(ctx, order, actor, "The shopper reported a problem on delivery");
     // Escrow stays held; the order can't be confirmed or released while disputed.
-    const disputed = await transition(ctx, order, "disputed", actor, { disputeId }, REASON_LABELS[args.reason]);
+    const disputed = await transition(ctx, arrived, "disputed", actor, { disputeId }, REASON_LABELS[args.reason]);
 
     await notifyFarm(
       ctx,

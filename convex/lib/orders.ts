@@ -72,6 +72,20 @@ export async function transition(
   return { ...order, ...patch, status: to };
 }
 
+/**
+ * The shopper can say an order reached them: once it's been delivered or
+ * collected, or while the rider is bringing it (they don't have to wait for
+ * staff to mark it delivered).
+ */
+export const shopperCanConfirm = (o: Doc<"orders">) =>
+  o.status === "delivered" || o.status === "collected" || o.status === "out_for_delivery";
+
+/** Out for delivery → delivered, on the shopper's word. Staff do the same from Dispatch. */
+export async function deliveredByShopper(ctx: MutationCtx, order: Doc<"orders">, actor: Actor, note: string) {
+  if (order.status !== "out_for_delivery") return order;
+  return await transition(ctx, order, "delivered", actor, { deliveredAt: Date.now() }, note);
+}
+
 export async function ledger(
   ctx: MutationCtx,
   order: Doc<"orders">,

@@ -1,7 +1,7 @@
 "use client";
 
-// W-53 Report a problem (disputes.open). Only for a delivered or collected
-// order, from the account or device that placed it. Photos upload through
+// W-53 Report a problem (disputes.open). Only for an order that's on its way,
+// delivered or collected, from the account or device that placed it. Photos upload through
 // disputes.generateUploadUrl. Each choice is its own reason, and the units
 // affected per item go as itemQuantities, so the amount at stake is the value
 // of those units (never the delivery fee).
@@ -47,7 +47,7 @@ function CantReport({ orderId, why }: { orderId: string; why: "other-device" | "
     "other-device": "Only the account or device that placed this order can report a problem with it. Contact support and we'll help.",
     reported: "You've already reported a problem with this order. Follow the case to see where it's up to.",
     completed: "You've confirmed this order, so the payment has gone to the farm. Contact support and we'll help.",
-    "not-yet": "You can report a problem once your order has been delivered or collected.",
+    "not-yet": "You can report a problem once the rider is bringing your order, or once you've collected it.",
   }[why];
   return (
     <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">

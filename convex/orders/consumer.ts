@@ -8,7 +8,17 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/
 import { getViewer, requireAccount, requireUser } from "../lib/auth";
 import { isOutOfStock } from "../lib/listing";
 import { farmIsOpen, isShopListing } from "../lib/listingCounts";
-import { collectFromView, isActive, orderCore, orderRow, pickupPointView, releaseOrder, transition } from "../lib/orders";
+import {
+  collectFromView,
+  deliveredByShopper,
+  isActive,
+  orderCore,
+  orderRow,
+  pickupPointView,
+  releaseOrder,
+  shopperCanConfirm,
+  transition,
+} from "../lib/orders";
 import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY, HOUR } from "../lib/settings";
 
@@ -58,7 +68,7 @@ async function billView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) 
 
 async function consumerView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) {
   const core = await orderCore(ctx, order);
-  const canConfirm = !viewOnly && (order.status === "delivered" || order.status === "collected");
+  const canConfirm = !viewOnly && shopperCanConfirm(order);
   return {
     ...core,
     bill: await billView(ctx, order, viewOnly),
@@ -179,7 +189,10 @@ export const placedSummary = query({
   },
 });
 
-/** M-65 / W-52 "I received everything": completes the order and releases the money. */
+/**
+ * M-65 / W-52 "I received everything": completes the order and releases the
+ * money. While the rider is still bringing it, this also marks it delivered.
+ */
 export const confirmReceipt = mutation({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
@@ -187,12 +200,13 @@ export const confirmReceipt = mutation({
     const order = await ctx.db.get("orders", args.orderId);
     // Guests: only the identity (device) that placed the order can confirm.
     if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
-    if (order.status !== "delivered" && order.status !== "collected") {
+    if (!shopperCanConfirm(order)) {
       throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
     }
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
+    const arrived = await deliveredByShopper(ctx, order, actor, "The shopper confirmed it arrived");
     const now = Date.now();
-    const completed = await transition(ctx, order, "completed", actor, { confirmedAt: now, endedAt: now });
+    const completed = await transition(ctx, arrived, "completed", actor, { confirmedAt: now, endedAt: now });
     // A staff hold (A-62) keeps the money until it's lifted.
     if (completed.escrow === "held" && !completed.escrowHold) await releaseOrder(ctx, completed, actor);
     await ctx.scheduler.runAfter(DAY, internal.reviews.remind, { orderId: order._id });

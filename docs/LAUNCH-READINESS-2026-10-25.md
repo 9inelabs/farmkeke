@@ -42,14 +42,10 @@ No input needed for items 1 to 4. Item 5 needs a decision.
 
 4. **The iOS encryption question on every upload.** Add `"infoPlist": { "ITSAppUsesNonExemptEncryption": false }` under `ios` in `app.json`. The app only uses standard HTTPS, so this is the correct answer, and App Store Connect stops asking.
 
-5. **Nobody outside the office can mark a delivery "Delivered".**
-   - Only staff can, in Admin Portal → Dispatch. The rider has no app.
-   - The shopper's "I received everything" stays locked until it's marked, so the farm isn't paid until someone in the office acts.
-   - Options:
-     - **(a)** Let the shopper confirm once the order is out for delivery. This also marks it delivered. Recommended.
-     - **(b)** Text the rider a "Delivered" link when they're assigned.
-     - **(c)** Both.
-   - Pick one and I'll build it.
+5. ~~**Nobody outside the office can mark a delivery "Delivered".**~~ Done on 26 Oct (option a).
+   - Once the rider has the order, the shopper can tap "I received everything". That marks it delivered, completes it and pays the farm.
+   - The shopper can also report a problem at that point, for example if the rider never came.
+   - Staff can still mark it delivered in Admin Portal → Dispatch.
 
 ## 2. Blockers outside the code: setup
 

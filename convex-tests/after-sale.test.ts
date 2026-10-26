@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
-import { deliver, paidOrder } from "./orderFlow";
+import { deliver, handOver, paidOrder } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -326,4 +326,46 @@ test("account deletion waits for orders in progress, then finishes", async () =>
   expect(await t.run(async (ctx) => (await ctx.db.query("favorites").collect()).length)).toBe(0);
   // The order record stays for accounting
   expect(await t.run(async (ctx) => await ctx.db.get(orderId))).not.toBeNull();
+});
+
+test("the shopper marks a delivery received while the rider is bringing it, or reports a problem then", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const guest = as(t, s.guest);
+  const read = async (id: any) => await t.run(async (ctx) => (await ctx.db.get(id))!);
+
+  // Not before the rider has it
+  const orderId = await paidOrder(t, s, s.guest, "delivery");
+  expect((await guest.query(api.orders.consumer.get, { orderId }))!.canConfirm).toBe(false);
+  await expect(guest.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow(/NOT_DELIVERED_YET/);
+
+  // Out for delivery: confirming marks it delivered and completes it in one go
+  await handOver(t, s, orderId);
+  expect((await read(orderId)).status).toBe("out_for_delivery");
+  const view = (await guest.query(api.orders.consumer.get, { orderId }))!;
+  expect(view.canConfirm).toBe(true);
+  expect(view.canReport).toBe(true);
+  // Someone else still can't
+  await expect(as(t, s.account).mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow(/NOT_FOUND/);
+  await guest.mutation(api.orders.consumer.confirmReceipt, { orderId });
+  const done = await read(orderId);
+  expect(done.status).toBe("completed");
+  expect(done.deliveredAt).toBeDefined();
+  expect(done.confirmedAt).toBeDefined();
+  expect(done.escrow).toBe("released");
+  const events = await t.run(async (ctx) => await ctx.db.query("orderEvents").withIndex("by_orderId", (q) => q.eq("orderId", orderId)).collect());
+  const delivered = events.find((e) => e.kind === "delivered")!;
+  expect(delivered.actorKind).toBe("guest");
+  expect(delivered.note).toBe("The shopper confirmed it arrived");
+  // Staff can't mark it delivered after that
+  await expect(as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" })).rejects.toThrow(/WRONG_STATUS/);
+
+  // A problem reported while it's out for delivery: delivered, then disputed, money held
+  const second = await paidOrder(t, s, s.guest, "delivery");
+  await handOver(t, s, second);
+  await guest.mutation(api.disputes.open, { orderId: second, itemIndexes: [], note: "The rider never came", photoIds: [], reason: "not_received" });
+  const disputed = await read(second);
+  expect(disputed.status).toBe("disputed");
+  expect(disputed.deliveredAt).toBeDefined();
+  expect(disputed.escrow).toBe("held");
 });

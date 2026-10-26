@@ -183,6 +183,11 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
     body = "Check everything at the farm. Something wrong? Report a problem instead of confirming.";
     action = <Button label="I've collected my order" size="large" pill fullWidth disabled={!o.canConfirm} onPress={confirm} />;
     if (!o.canConfirm) hint = "Available once the farm hands it over";
+  } else if (o.canConfirm && o.status === "out_for_delivery") {
+    // The shopper marks it delivered themselves by confirming
+    title = `${rider ?? "The rider"} is bringing your order`;
+    body = "When it's in your hands, check everything, then confirm here. That marks it delivered and releases payment to the farm. Something wrong? Report a problem instead.";
+    action = <Button label="I received everything" size="large" pill fullWidth onPress={confirm} />;
   } else if (o.canConfirm) {
     title = "Check everything arrived";
     body = "Then confirm receipt here to release payment to the farm. Something wrong? Report a problem instead.";
@@ -191,7 +196,7 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
     title = first ? `Check your ${first} when ${o.items.length > 1 ? "your order arrives" : "it arrives"}` : "Check your order when it arrives";
     body = `Once ${rider ?? "the rider"} hands ${o.items.length > 1 ? "everything" : "it"} over, confirm receipt here to release payment to the farm.`;
     action = <Button label="I received everything" size="large" pill fullWidth disabled />;
-    hint = "Available once the order is delivered";
+    hint = "Available once your order is on its way";
   } else {
     title = r <= 1 ? `Waiting for ${o.farmName} to accept` : `${o.farmName} is getting your order ready`;
     body = "We'll text you when it's on its way. Your payment stays held until you confirm delivery.";

@@ -37,7 +37,7 @@ export default function ConfirmReceipt() {
       const code = errorCode(e);
       setError(
         code === "NOT_DELIVERED_YET"
-          ? "This order hasn't been marked delivered yet. You can confirm once it arrives."
+          ? "This order isn't on its way yet. You can confirm once the rider brings it."
           : code === "NOT_FOUND"
             ? "Only the account or phone that placed this order can confirm it."
             : "We couldn't confirm right now. Check your connection and try again.",
@@ -107,7 +107,7 @@ export default function ConfirmReceipt() {
             </Text>
           </View>
           {!all ? <Notice tone="pending">Something missing or damaged? Don't confirm. Tap "There's a problem" and we'll help.</Notice> : null}
-          {!o.canConfirm ? <Notice>You can confirm once the order has been {o.fulfilment === "pickup" ? "handed over" : "delivered"}.</Notice> : null}
+          {!o.canConfirm ? <Notice>You can confirm once {o.fulfilment === "pickup" ? "the order has been handed over" : "the rider is bringing your order"}.</Notice> : null}
           {error ? <Notice tone="error">{error}</Notice> : null}
         </>
       )}

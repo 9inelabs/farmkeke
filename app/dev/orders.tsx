@@ -70,7 +70,7 @@ const base = {
 const pickupFarm = { farmName: "Okafor Family Farms", address: "Km 4 Owerri–Aba Road", lga: "Owerri North", state: "Imo", hours: [1, 2, 3, 4, 5, 6].map((day) => ({ day, opens: "08:00", closes: "17:00" })), phone: "+2348030000000", collectWithinDays: 3 };
 
 const SAMPLES: Record<string, { label: string; order: object }> = {
-  out: { label: "Out for delivery", order: { ...base, status: "out_for_delivery", outForDeliveryAt: now - H, rider: { name: "Chinedu Okeke", phone: "+2348039998877" } } },
+  out: { label: "Out for delivery", order: { ...base, status: "out_for_delivery", outForDeliveryAt: now - H, rider: { name: "Chinedu Okeke", phone: "+2348039998877" }, canConfirm: true, canReport: true } },
   bill: {
     label: "Bill ready",
     order: { ...base, status: "preparing", escrow: "none", paid: false, paidAt: null, bill: { ...base.bill, state: "ready_to_pay", payBy: now + 11 * H, payToken: "sample-token-0000000000000000000000000" } },
