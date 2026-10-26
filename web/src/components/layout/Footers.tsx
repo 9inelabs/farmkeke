@@ -6,7 +6,7 @@ import { routes } from "@/lib/routes";
 
 // Contact email shown in footers. Placeholder until the real inbox is set up
 // (see farmkeke-docs/pending-backend/README.md).
-export const CONTACT_EMAIL = "hello@farmkeke.com";
+export const CONTACT_EMAIL = "info@farmkeke.com";
 
 type Col = { title: string; links: Array<{ href: string; label: string }> };
 

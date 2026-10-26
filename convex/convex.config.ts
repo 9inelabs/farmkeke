@@ -20,6 +20,9 @@ const app = defineApp({
     PAYMENTS_TEST_STEP: v.optional(v.string()),
     // Where Paystack returns website shoppers, e.g. "https://farmkeke.com"
     WEBSITE_URL: v.optional(v.string()),
+    // Where staff email links open the Admin Portal, e.g. "https://admin.farmkeke.com".
+    // Unset: WEBSITE_URL + /admin, which the website redirects to the admin host.
+    ADMIN_URL: v.optional(v.string()),
     // Optional folder for email images (holds wordmark.png). Unset: emails use
     // this deployment's GET /email/wordmark.png route.
     EMAIL_ASSETS_URL: v.optional(v.string()),

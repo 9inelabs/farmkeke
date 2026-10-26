@@ -2291,10 +2291,12 @@ export function farmReviewEmail(p: FarmRef & { number: string; rating: number; c
 
 // ===========================================================================
 // Admin Portal staff emails (A-01, A-02, A-89): sign-in codes, password
-// links, applications and role changes. Links go to farmkeke.com/admin.
+// links, applications and role changes. Links go to env ADMIN_URL (e.g.
+// https://admin.farmkeke.com), or the website's /admin, which the website
+// sends on to the admin host once it has one.
 // ===========================================================================
 
-const adminUrl = (path = "") => `${siteUrl()}/admin${path}`;
+const adminUrl = (path = "") => `${envValue(env.ADMIN_URL) ?? `${siteUrl()}/admin`}${path}`;
 export const adminLinks = {
   home: () => adminUrl(),
   signIn: () => adminUrl("/signin"),

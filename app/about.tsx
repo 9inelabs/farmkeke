@@ -3,7 +3,7 @@ import * as Application from "expo-application";
 import { External, Mail } from "@/components/icons";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { ListGroup, ListRow, Screen, ScreenHeader, Text, Wordmark } from "@/components/ui";
-import { HELLO_EMAIL, WEBSITE } from "@/content/help";
+import { INFO_EMAIL, WEBSITE } from "@/content/help";
 import { APP_VERSION } from "@/features/system/AppGate";
 import { colors, radii, spacing } from "@/theme/tokens";
 
@@ -26,7 +26,7 @@ export default function About() {
         </View>
         <ListGroup>
           <ListRow icon={External} title="Visit farmkeke.com" subtitle="Shop on the web" onPress={() => void Linking.openURL(WEBSITE)} />
-          <ListRow icon={Mail} title="Email us" subtitle={HELLO_EMAIL} onPress={() => void Linking.openURL(`mailto:${HELLO_EMAIL}`)} />
+          <ListRow icon={Mail} title="Email us" subtitle={INFO_EMAIL} onPress={() => void Linking.openURL(`mailto:${INFO_EMAIL}`)} />
         </ListGroup>
         <Text variant="small" align="center">
           Made in Owerri, Nigeria

@@ -17,6 +17,7 @@ import { TextArea, TextField } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { admin } from "@/convex/admin";
 import type { AdminMe } from "@/convex/returns/admin";
+import { adminPath, portalPath } from "@/lib/adminHost";
 import { dateTime } from "@/lib/format";
 import { AdminShell } from "./AdminShell";
 import { StaffProvider } from "./context";
@@ -32,7 +33,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
   const toSignIn = me?.state === "signed_out" || me?.state === "verify";
 
   useEffect(() => {
-    if (toSignIn) router.replace(adminRoutes.signIn(pathname));
+    if (toSignIn) router.replace(adminRoutes.signIn(adminPath(portalPath(pathname))));
   }, [toSignIn, pathname, router]);
 
   if (me === undefined || toSignIn) return <PortalSkeleton />;

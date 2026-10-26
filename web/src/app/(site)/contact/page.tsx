@@ -97,7 +97,7 @@ export default function ContactPage() {
               <li className="flex gap-2.5">
                 <Mail aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />
                 <span>
-                  <a href="mailto:hello@farmkeke.com">hello@farmkeke.com</a> for partnerships and press
+                  <a href="mailto:info@farmkeke.com">info@farmkeke.com</a> for partnerships and press
                 </span>
               </li>
             </ul>

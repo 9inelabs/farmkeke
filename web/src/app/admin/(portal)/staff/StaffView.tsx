@@ -6,6 +6,7 @@ import { adminRoutes } from "@/components/admin/routes";
 import { DataTable, FilterTabs, MemberBadge, PageHeader, Panel, TableSkeleton, type Column } from "@/components/admin/ui";
 import { admin } from "@/convex/admin";
 import type { MemberRow } from "@/convex/returns/admin";
+import { ADMIN_HOST } from "@/lib/adminHost";
 import { dateTime } from "@/lib/format";
 
 type Tab = "applications" | "team" | "ended";
@@ -44,7 +45,7 @@ export function StaffView() {
     <>
       <PageHeader
         title="Staff and applications"
-        description="People apply from farmkeke.com/admin/apply. Approve them with a role, ask for more information, or reject them."
+        description={`People apply from ${ADMIN_HOST ?? "farmkeke.com/admin"}/apply. Approve them with a role, ask for more information, or reject them.`}
       />
       <FilterTabs
         label="Show"

@@ -284,6 +284,14 @@ test("staff emails render with portal links", async () => {
   const invite = staffPasswordLinkEmail({ to: "a@b.com", link, invite: true, minutes: 60 });
   expect(invite.subject).toBe("Set up your Farmkeke admin account");
   expect(invite.html).toContain("Founder");
+  // With the admin host set, links go straight there
+  vi.stubEnv("ADMIN_URL", "https://admin.farmkeke.com/");
+  try {
+    expect(adminLinks.setPassword("a@b.com", "abc")).toBe("https://admin.farmkeke.com/set-password?email=a%40b.com&code=abc");
+    expect(adminLinks.home()).toBe("https://admin.farmkeke.com");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 // ---------------------------------------------------------------------------

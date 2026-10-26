@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { admin } from "@/convex/admin";
 import type { StaffAlert } from "@/convex/returns/admin";
+import { adminPath, portalPath } from "@/lib/adminHost";
 import { dateTime } from "@/lib/format";
 
 export function AlertsView() {
@@ -19,7 +20,8 @@ export function AlertsView() {
 
   const open = async (a: StaffAlert) => {
     if (a.readAt === undefined) await markRead({ notificationId: a._id });
-    if (a.href.startsWith("/admin")) router.push(a.href);
+    // Staff alert links are stored as /admin/… paths
+    if (a.href.startsWith("/admin")) router.push(adminPath(portalPath(a.href)));
   };
 
   return (

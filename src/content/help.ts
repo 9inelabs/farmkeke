@@ -86,5 +86,5 @@ export const LEGAL_DOCS = {
 export type LegalDoc = keyof typeof LEGAL_DOCS;
 
 export const SUPPORT_EMAIL = "support@farmkeke.com";
-export const HELLO_EMAIL = "hello@farmkeke.com";
+export const INFO_EMAIL = "info@farmkeke.com";
 export const WEBSITE = "https://farmkeke.com";

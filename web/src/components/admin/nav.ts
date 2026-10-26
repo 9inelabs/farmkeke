@@ -31,6 +31,7 @@ import {
   UserCog,
   type LucideIcon,
 } from "lucide-react";
+import { adminPath, portalPath } from "@/lib/adminHost";
 import { adminRoutes } from "./routes";
 
 export type Badge =
@@ -112,7 +113,8 @@ export function visibleNav(can: (p: string) => boolean): NavGroup[] {
 }
 
 /** The nav item a path belongs to (longest matching prefix). */
-export function activeHref(pathname: string, groups: NavGroup[]): string | null {
+export function activeHref(rawPathname: string, groups: NavGroup[]): string | null {
+  const pathname = adminPath(portalPath(rawPathname));
   let best: string | null = null;
   for (const g of groups) {
     for (const i of g.items) {
