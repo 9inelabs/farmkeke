@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: spacing.lg },
   paper: { backgroundColor: colors.white, borderRadius: radii.lg + 6, padding: spacing.xl, gap: spacing.md },
   head: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  number: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 32, color: colors.ink },
+  number: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 27, color: colors.ink },
   tag: { paddingHorizontal: spacing.sm, height: 26, borderRadius: 13, backgroundColor: colors.tint, justifyContent: "center" },
   meta: { flexDirection: "row", gap: spacing.md },
   tear: { borderTopWidth: 1.5, borderStyle: "dashed", borderColor: colors.line, marginVertical: spacing.xs },

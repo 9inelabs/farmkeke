@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   filled: { borderColor: colors.inkMuted, backgroundColor: colors.white },
   active: { borderColor: colors.lime, backgroundColor: colors.white },
   error: { borderColor: colors.error },
-  digit: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.ink },
+  digit: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.ink },
   dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.ink },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });

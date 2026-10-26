@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: spacing.sm },
   summary: { flexDirection: "row", alignItems: "center", gap: spacing.xl, backgroundColor: colors.white, borderRadius: radii.lg + 8, padding: spacing.xl },
   score: { alignItems: "center", gap: spacing.xs },
-  average: { fontFamily: fonts.displayBold, fontSize: 44, lineHeight: 50, color: colors.ink },
+  average: { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 41, color: colors.ink },
   stars: { flexDirection: "row", gap: 2 },
   bars: { flex: 1, gap: 6 },
   barRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },

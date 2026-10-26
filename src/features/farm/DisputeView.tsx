@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   stack: { gap: spacing.md },
   hero: { backgroundColor: colors.forest, borderRadius: radii.lg + 10, padding: spacing.xl, gap: spacing.xs, overflow: "hidden" },
   glow: { position: "absolute", right: -50, top: -70, width: 170, height: 170, borderRadius: 85, backgroundColor: "rgba(169,214,84,0.14)" },
-  heroTitle: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.white },
+  heroTitle: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.white },
   heroBadges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
   held: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },

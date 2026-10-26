@@ -57,6 +57,8 @@ function drawn(shapes: readonly Shape[], solidShapes: readonly Shape[] = shapes)
   return Icon as unknown as IconComponent;
 }
 
+// Android's back arrow (Material); iPhone uses ChevronLeft
+export const ArrowLeft = drawn([["M20 12H4.5M10.5 5.5 4 12l6.5 6.5", "s"]]);
 export const Close = drawn([["M6.5 6.5l11 11M17.5 6.5l-11 11", "s"]]);
 export const Check = drawn([["M5 12.5l4.5 4.5L19 7.5", "s"]]);
 export const Circle = drawn([["M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10Z", "s"]]);

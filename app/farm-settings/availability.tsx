@@ -8,6 +8,7 @@ import { ScrollView, StyleSheet, Switch, View } from "react-native";
 import { Button, ChipGroup, Notice, Screen, ScreenHeader, Skeleton, Text } from "@/components/ui";
 import { useFarm } from "@/features/farmer/useFarm";
 import { errorMessage } from "@/lib/errors";
+import { androidUi } from "@/theme/platform";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 
 const DAYS = [
@@ -85,8 +86,10 @@ export default function Availability() {
             <Switch
               value={holiday}
               onValueChange={setHoliday}
-              trackColor={{ true: colors.forest, false: colors.line }}
-              thumbColor={colors.white}
+              // iPhone: a lime track and white knob; Android (Material): forest track, lime knob
+              trackColor={{ true: androidUi ? colors.forest : colors.lime, false: colors.line }}
+              thumbColor={androidUi ? (holiday ? colors.lime : "#F4F4F4") : colors.white}
+              ios_backgroundColor={colors.line}
               accessibilityLabel="Holiday mode"
             />
           </View>

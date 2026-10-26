@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   image: { width: "100%", aspectRatio: 1, borderRadius: radii.sm, backgroundColor: colors.placeholder },
   buy: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   copy: { flex: 1 },
-  price: { fontSize: 16, lineHeight: 20 },
+  price: { fontSize: 15, lineHeight: 19 },
   cardCompact: { paddingHorizontal: 6, paddingVertical: 6, gap: 6 },
   nameCompact: { fontSize: 13 },
   priceCompact: { fontSize: 14, lineHeight: 18 },

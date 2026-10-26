@@ -2,8 +2,8 @@ import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft, Sprout } from "@/components/icons";
-import { Button, Segmented, Text, Wordmark } from "@/components/ui";
+import { Sprout } from "@/components/icons";
+import { BackIcon, Button, Segmented, Text, Wordmark } from "@/components/ui";
 import { Stagger } from "@/components/motion/reveal";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -44,7 +44,7 @@ export function AuthScreen({ title, subtitle, nav = "close", tab, children, foot
           onPress={nav === "close" ? closeAuth : () => router.back()}
           style={styles.close}
         >
-          <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
+          <BackIcon />
           <Text variant="bodyMedium">{nav === "close" ? "Close" : "Back"}</Text>
         </Pressable>
       </View>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.screen, paddingTop: spacing.xs, paddingBottom: spacing.xxxl, gap: spacing.xxl },
   brand: { alignItems: "center", gap: spacing.xxs },
   heading: { gap: spacing.xs, marginTop: spacing.lg },
-  title: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34 },
+  title: { fontFamily: fonts.displayBold, fontSize: 24, lineHeight: 29 },
   form: { gap: spacing.lg, marginTop: spacing.sm },
   footer: { gap: spacing.lg, marginTop: spacing.md },
   link: { textDecorationLine: "underline", paddingVertical: spacing.xxs },

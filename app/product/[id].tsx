@@ -6,11 +6,11 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { BoxRemove, Cart, ChevronLeft } from "@/components/icons";
+import { BoxRemove, Cart } from "@/components/icons";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Skeleton, StatusScreen, Text } from "@/components/ui";
+import { BackIcon, Button, Skeleton, StatusScreen, Text } from "@/components/ui";
 import { SignInPromptSheet } from "@/features/auth/SignInPromptSheet";
 import { ProductDetailView } from "@/features/product/ProductDetailView";
 import { PhotoViewer } from "@/features/shop/PhotoViewer";
@@ -146,7 +146,7 @@ export default function ProductPage() {
 
       <View style={[styles.topBar, { top: insets.top + spacing.sm }]} pointerEvents="box-none">
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={back} style={styles.back}>
-          <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
+          <BackIcon />
           <Text variant="bodyMedium">Back</Text>
         </Pressable>
         <Pressable

@@ -296,9 +296,9 @@ const styles = StyleSheet.create({
     marginBottom: -spacing.sm,
   },
   titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  name: { fontSize: 22, lineHeight: 28 },
+  name: { fontSize: 19, lineHeight: 24 },
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm, marginTop: 2 },
-  price: { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 44, letterSpacing: -0.5, flexShrink: 1 },
+  price: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 37, letterSpacing: -0.5, flexShrink: 1 },
   per: { flexShrink: 0 },
   heart: {
     width: 52,

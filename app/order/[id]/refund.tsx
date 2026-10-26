@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   bold: { fontFamily: fonts.bold },
   body: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: spacing.md },
   hero: { backgroundColor: colors.forest, borderRadius: radii.lg + 8, padding: spacing.xl, gap: spacing.xs },
-  amount: { fontFamily: fonts.displayBold, fontSize: 38, lineHeight: 46, color: colors.white, letterSpacing: -0.5 },
+  amount: { fontFamily: fonts.displayBold, fontSize: 31, lineHeight: 38, color: colors.white, letterSpacing: -0.5 },
   pill: { alignSelf: "flex-start", marginTop: spacing.sm, backgroundColor: colors.lime, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
   row: { flexDirection: "row", justifyContent: "space-between", gap: spacing.md, paddingVertical: spacing.sm },

@@ -1,6 +1,7 @@
 import { ChevronRight, type IconComponent } from "@/components/icons";
 import { Children, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { androidUi, ripple } from "@/theme/platform";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { Text } from "./Text";
@@ -23,9 +24,10 @@ export function ListRow({ icon: Icon, title, subtitle, onPress, tone = "default"
       accessibilityRole="button"
       accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      android_ripple={ripple}
+      style={({ pressed }) => [styles.row, pressed && !androidUi && styles.pressed]}
     >
-      <Icon size={20} color={danger ? colors.error : colors.inkSoft} />
+      <Icon size={19} color={danger ? colors.error : colors.inkSoft} />
       <View style={styles.copy}>
         <Text variant="body" color={danger ? colors.error : colors.ink} style={styles.title}>
           {title}
@@ -70,15 +72,15 @@ export function ListGroup({ title, children, tone = "grey", badge }: { title?: s
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.lg, minHeight: 52, paddingVertical: spacing.sm },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.lg, minHeight: 48, paddingVertical: spacing.sm - 1 },
   pressed: { backgroundColor: "rgba(0,0,0,0.035)" },
   copy: { flex: 1, gap: 1 },
-  title: { fontFamily: fonts.regular, fontSize: 16 },
+  title: { fontFamily: fonts.regular, fontSize: 14.5 },
   groupWrap: { gap: spacing.sm },
   label: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: 2 },
   labelText: { fontFamily: fonts.medium },
   badge: { backgroundColor: colors.danger, borderRadius: radii.pill, paddingHorizontal: 8, paddingVertical: 1 },
   badgeText: { fontSize: 10, lineHeight: 14, fontFamily: fonts.semibold },
-  group: { borderRadius: radii.lg + 6, backgroundColor: colors.surfaceSoft, overflow: "hidden", paddingVertical: spacing.xs },
+  group: { borderRadius: radii.lg + 2, backgroundColor: colors.surfaceSoft, overflow: "hidden", paddingVertical: spacing.xs },
   groupWhite: { backgroundColor: colors.white },
 });

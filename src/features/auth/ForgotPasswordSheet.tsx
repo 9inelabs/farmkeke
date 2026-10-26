@@ -90,6 +90,6 @@ export function ForgotPasswordSheet({ visible, onClose, initialEmail }: Props) {
 const styles = StyleSheet.create({
   close: { flexDirection: "row", alignItems: "center", alignSelf: "center", gap: spacing.xxs, minHeight: 44, marginTop: spacing.sm },
   heading: { gap: spacing.xs, marginBottom: spacing.sm },
-  title: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 32 },
+  title: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 27 },
   button: { marginTop: spacing.sm, marginBottom: spacing.md },
 });

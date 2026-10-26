@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   codeRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   digits: { flex: 1, flexDirection: "row", gap: spacing.sm },
   digit: { flex: 1, maxWidth: 58, height: 64, borderRadius: radii.md + 2, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
-  digitText: { fontFamily: fonts.displayBold, fontSize: 32, lineHeight: 38, color: colors.forest },
+  digitText: { fontFamily: fonts.displayBold, fontSize: 27, lineHeight: 32, color: colors.forest },
   qr: { padding: 6, borderRadius: radii.md, backgroundColor: colors.white },
   rider: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs },

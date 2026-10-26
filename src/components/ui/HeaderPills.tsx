@@ -58,7 +58,7 @@ export function BellButton({ unread, onPress }: { unread: number; onPress: () =>
       onPress={onPress}
       style={({ pressed }) => [styles.bell, pressed && styles.bellPressed]}
     >
-      <Bell size={22} color={colors.forest} />
+      <Bell size={19} color={colors.forest} />
       {unread > 0 && (
         <View style={styles.count} pointerEvents="none">
           <Text variant="small" color={colors.white} maxFontSizeMultiplier={1} style={styles.countText}>
@@ -72,9 +72,9 @@ export function BellButton({ unread, onPress }: { unread: number; onPress: () =>
 
 const styles = StyleSheet.create({
   bell: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
+    width: 38,
+    height: 38,
+    borderRadius: radii.md - 1,
     backgroundColor: colors.tint,
     borderWidth: borders.hairline,
     borderColor: colors.lime,
@@ -86,20 +86,20 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -6,
     right: -6,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    paddingHorizontal: 5,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
     backgroundColor: colors.badge,
     borderWidth: 2,
     borderColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
   },
-  countText: { fontSize: 11, lineHeight: 13, fontFamily: fonts.bold },
+  countText: { fontSize: 10, lineHeight: 12, fontFamily: fonts.bold },
   location: {
     alignSelf: "flex-start",
-    minHeight: 40,
+    minHeight: 34,
     maxWidth: "100%",
     borderRadius: radii.md,
     backgroundColor: colors.forest,
@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     borderColor: colors.lime,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
   },
-  locationLabel: { flexShrink: 1, fontFamily: fonts.bold },
+  locationLabel: { flexShrink: 1, fontFamily: fonts.semibold },
   alerts: {
     height: 38,
     borderRadius: radii.pill,

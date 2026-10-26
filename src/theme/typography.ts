@@ -30,32 +30,36 @@ export const fonts = {
 // Montserrat is for large display headings (onboarding, success and empty
 // states); Inter is for screen titles, section titles and everything else,
 // matching the Figma frames.
+// A compact scale (26 Oct 2026): small, quiet section labels and modest
+// headings, like the cleanest banking apps, so screens read as calm and
+// uncluttered. Body text stays at 14 for comfortable reading.
 export const type = {
-  display: { fontFamily: fonts.displaySemibold, fontSize: 36, lineHeight: 42, color: colors.ink },
-  displaySmall: { fontFamily: fonts.displaySemibold, fontSize: 26, lineHeight: 32, color: colors.ink },
+  display: { fontFamily: fonts.displaySemibold, fontSize: 28, lineHeight: 34, color: colors.ink },
+  displaySmall: { fontFamily: fonts.displaySemibold, fontSize: 21, lineHeight: 27, color: colors.ink },
   // Tab titles ("Settings & Support", "Orders")
-  screenTitle: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: colors.ink },
-  // Titles beside the back chevron ("< Account"), kept small as in the designs
-  backTitle: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, letterSpacing: -0.2, color: colors.ink },
-  title: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 30, color: colors.ink },
-  section: { fontFamily: fonts.semibold, fontSize: 20, lineHeight: 26, color: colors.ink },
-  heading: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22, color: colors.ink },
-  body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.ink },
-  bodyMedium: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 21, color: colors.ink },
-  label: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 18, color: colors.ink },
-  caption: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
-  small: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 15, color: colors.inkMuted },
+  screenTitle: { fontFamily: fonts.semibold, fontSize: 20, lineHeight: 26, letterSpacing: -0.2, color: colors.ink },
+  // Titles beside the back chevron ("< Account")
+  backTitle: { fontFamily: fonts.semibold, fontSize: 16, lineHeight: 22, letterSpacing: -0.1, color: colors.ink },
+  title: { fontFamily: fonts.semibold, fontSize: 19, lineHeight: 25, color: colors.ink },
+  // Section labels above cards ("Fresh Picks", "Needs your reply")
+  section: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  heading: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.ink },
+  bodyMedium: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.ink },
+  label: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 17, color: colors.ink },
+  caption: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
+  small: { fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15, color: colors.inkMuted },
   overline: {
     fontFamily: fonts.medium,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 14,
     letterSpacing: 0.4,
     textTransform: "uppercase",
     color: colors.inkMuted,
   },
-  price: { fontFamily: fonts.bold, fontSize: 17, lineHeight: 21, color: colors.forest },
-  priceLarge: { fontFamily: fonts.bold, fontSize: 32, lineHeight: 38, color: colors.ink },
-  button: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 19 },
+  price: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 19, color: colors.forest },
+  priceLarge: { fontFamily: fonts.bold, fontSize: 26, lineHeight: 32, color: colors.ink },
+  button: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 18 },
 } satisfies Record<string, TextStyle>;
 
 export type TypeVariant = keyof typeof type;

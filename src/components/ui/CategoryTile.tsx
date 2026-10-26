@@ -60,6 +60,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tileSelected: { backgroundColor: colors.lime },
-  art: { width: 40, height: 40 },
+  art: { width: 36, height: 36 },
   label: { alignSelf: "stretch", fontFamily: fonts.medium },
 });

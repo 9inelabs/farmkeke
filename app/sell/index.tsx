@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   icon: { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center", marginTop: 2 },
   benefitTitle: { fontFamily: fonts.semibold },
   sellRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 2 },
-  sellOn: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 22, color: colors.ink },
+  sellOn: { fontFamily: fonts.displayBold, fontSize: 15, lineHeight: 21, color: colors.ink },
   links: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: spacing.sm, marginTop: 2 },
   link: { textDecorationLine: "underline", fontFamily: fonts.medium },
 });

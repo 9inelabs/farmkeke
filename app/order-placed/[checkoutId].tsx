@@ -7,6 +7,7 @@ import { api } from "@convex/_generated/api";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
+import { successFeedback } from "@/lib/haptics";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Check, CheckCircle, Info, Receipt, ShieldCheck } from "@/components/icons";
@@ -49,6 +50,11 @@ export default function OrderPlaced() {
       if (draft.checkoutId === checkoutId) draft.finish(draft.placed);
     }
   }, [toPay, placedDelivery, status, checkoutId, clearCart, draft]);
+  // A success buzz on iPhone, once, when the order has gone through
+  const done = status === "paid" || placedDelivery;
+  useEffect(() => {
+    if (done) successFeedback();
+  }, [done]);
   // M-48: after the first order, offer order updates by push
   const primer = usePrimer("shop", status === "paid" || placedDelivery, 1400);
 

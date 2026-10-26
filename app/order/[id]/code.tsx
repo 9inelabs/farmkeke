@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: spacing.lg, alignItems: "stretch" },
   digits: { flexDirection: "row", justifyContent: "center", gap: spacing.md, marginTop: spacing.sm },
   digit: { width: 66, height: 84, borderRadius: radii.lg, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
-  digitText: { fontFamily: fonts.displayBold, fontSize: 44, lineHeight: 52, color: colors.forest },
+  digitText: { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 43, color: colors.forest },
   qr: { alignSelf: "center", padding: spacing.lg, borderRadius: radii.lg + 8, backgroundColor: colors.white },
   note: { flexDirection: "row", gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: "rgba(255,255,255,0.08)" },
   where: { gap: 2, padding: spacing.md, borderRadius: radii.md, backgroundColor: "rgba(255,255,255,0.08)" },

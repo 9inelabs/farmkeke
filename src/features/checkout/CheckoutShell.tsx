@@ -6,9 +6,8 @@ import { router } from "expo-router";
 import { useEffect, type ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronLeft } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
-import { Text } from "@/components/ui";
+import { BackIcon, Text } from "@/components/ui";
 import { useCart } from "@/store/cart";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -39,7 +38,7 @@ export function CheckoutShell({ step, title, subtitle, children, footer }: Props
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/cart"))}
           style={styles.back}
         >
-          <ChevronLeft size={22} color={colors.ink} strokeWidth={2} />
+          <BackIcon />
           <Text variant="bodyMedium">{step === 1 ? "Cart" : STEPS[step - 2]}</Text>
         </Pressable>
         <Text variant="label" color={colors.inkSoft}>

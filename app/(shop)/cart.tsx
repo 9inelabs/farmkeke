@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   thumb: { width: 60, height: 60, borderRadius: radii.md, backgroundColor: colors.placeholder },
   stepper: { marginTop: spacing.xs },
   right: { alignSelf: "stretch", alignItems: "flex-end", justifyContent: "space-between" },
-  lineTotal: { fontFamily: fonts.medium, fontSize: 20, lineHeight: 26 },
+  lineTotal: { fontFamily: fonts.medium, fontSize: 17, lineHeight: 22 },
   remove: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   trash: { width: 24, height: 24, borderRadius: 7, backgroundColor: colors.danger, alignItems: "center", justifyContent: "center" },
   subtotal: {

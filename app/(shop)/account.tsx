@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   guestHead: { gap: 2 },
   signCard: { backgroundColor: colors.white, borderRadius: radii.lg + 6, padding: spacing.md, paddingTop: spacing.lg, gap: 4 },
-  signTitle: { fontFamily: fonts.semibold, fontSize: 18, lineHeight: 24, color: colors.ink, paddingHorizontal: 2 },
+  signTitle: { fontFamily: fonts.semibold, fontSize: 16, lineHeight: 21, color: colors.ink, paddingHorizontal: 2 },
   signButtons: { flexDirection: "row", gap: spacing.xs, marginTop: spacing.md, padding: 4, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.line },
   signBtn: { flex: 1, height: 50, borderRadius: radii.md + 2, alignItems: "center", justifyContent: "center" },
   signIn: { backgroundColor: colors.lime },
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   sell: { gap: spacing.md },
   sellRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  sellOn: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 22, color: colors.ink },
+  sellOn: { fontFamily: fonts.displayBold, fontSize: 15, lineHeight: 21, color: colors.ink },
   center: { alignSelf: "center" },
   underline: { textDecorationLine: "underline", fontFamily: fonts.semibold },
 });

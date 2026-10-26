@@ -249,5 +249,5 @@ const styles = StyleSheet.create({
   locationBlock: { gap: spacing.md },
   select: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 56, borderRadius: radii.md + 2, borderWidth: 1, borderColor: "rgba(169,214,84,0.6)", backgroundColor: colors.white, paddingHorizontal: spacing.lg },
   selectError: { borderColor: colors.error },
-  sheetTitle: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 26, color: colors.ink, marginBottom: spacing.xs },
+  sheetTitle: { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 22, color: colors.ink, marginBottom: spacing.xs },
 });

@@ -9,13 +9,14 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ban, Bike, Call, Chat, ChevronLeft, Clock, Document, Flag, Headphone, Pin, ShieldCheck, Truck } from "@/components/icons";
+import { ArrowLeft, Ban, Bike, Call, Chat, ChevronLeft, Clock, Document, Flag, Headphone, Pin, ShieldCheck, Truck } from "@/components/icons";
 import { Button, StatusBadge, Text, Timeline, type TimelineStep } from "@/components/ui";
 import { dayTime } from "@/features/orders/format";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
 import { displayPhone } from "@/lib/phone";
 import { showToast } from "@/store/toast";
+import { androidUi } from "@/theme/platform";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { CodeSheet, DeclineSheet, HandoverSheet } from "./OrderSheets";
@@ -157,7 +158,7 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <View style={styles.top}>
-        <RoundButton icon={ChevronLeft} label="Back" onPress={() => router.back()} />
+        <RoundButton icon={androidUi ? ArrowLeft : ChevronLeft} label="Back" onPress={() => router.back()} />
         <Text variant="label" style={styles.topTitle} numberOfLines={1}>
           Order
         </Text>
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
   endedIcon: { backgroundColor: colors.surfaceSoft },
   next: { backgroundColor: colors.forest, borderRadius: radii.lg + 10, padding: spacing.xl, gap: 4, overflow: "hidden" },
   glow: { position: "absolute", right: -50, top: -70, width: 170, height: 170, borderRadius: 85, backgroundColor: "rgba(169,214,84,0.14)" },
-  nextTitle: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.white },
+  nextTitle: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.white },
   stages: { flexDirection: "row", gap: 6, marginTop: spacing.lg },
   stage: { flex: 1, gap: 6 },
   stageLabel: { fontSize: 11 },
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
   barDone: { backgroundColor: colors.lime },
   barNow: { backgroundColor: "rgba(169,214,84,0.55)" },
   cardHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
-  earn: { fontFamily: fonts.displayBold, fontSize: 32, lineHeight: 40, color: colors.ink, letterSpacing: -0.4 },
+  earn: { fontFamily: fonts.displayBold, fontSize: 27, lineHeight: 34, color: colors.ink, letterSpacing: -0.4 },
   rule: { height: 1, backgroundColor: colors.surfaceSoft, marginVertical: spacing.xs },
   item: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: 2 },
   thumb: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.placeholder },

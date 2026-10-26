@@ -1,4 +1,5 @@
 export { Avatar, initials } from "./Avatar";
+export { BackIcon } from "./BackIcon";
 export { BottomSheet } from "./BottomSheet";
 export { Button } from "./Button";
 export { CategoryTile } from "./CategoryTile";

@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   sampleIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
   sampleTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   copy: { gap: spacing.xs, paddingHorizontal: spacing.sm, alignItems: "center" },
-  title: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.ink, textAlign: "center" },
+  title: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.ink, textAlign: "center" },
 });
 
 /**

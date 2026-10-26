@@ -70,14 +70,14 @@ export const borders = {
 } as const;
 
 export const sizes = {
-  buttonHeight: 48,
-  buttonHeightLarge: 54,
-  inputHeight: 56,
-  searchHeight: 52,
-  chipHeight: 36,
-  categoryTile: 63,
+  buttonHeight: 42,
+  buttonHeightLarge: 48,
+  inputHeight: 50,
+  searchHeight: 46,
+  chipHeight: 32,
+  categoryTile: 56,
   addButton: 28,
-  tabBarHeight: 64,
+  tabBarHeight: 58,
   headerIconHit: 44,
 } as const;
 

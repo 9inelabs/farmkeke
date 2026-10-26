@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   semibold: { fontFamily: fonts.semibold },
   body: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxl, gap: spacing.lg },
   amount: { backgroundColor: colors.forest, borderRadius: radii.lg + 8, padding: spacing.xl, gap: spacing.xs },
-  amountText: { fontFamily: fonts.displayBold, fontSize: 38, lineHeight: 46, color: colors.white, letterSpacing: -0.5 },
+  amountText: { fontFamily: fonts.displayBold, fontSize: 31, lineHeight: 38, color: colors.white, letterSpacing: -0.5 },
   held: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
   methods: { gap: spacing.sm },
   billCard: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },

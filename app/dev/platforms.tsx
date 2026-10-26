@@ -1,13 +1,14 @@
 // Preview only: the same Farmkeke screens drawn the iPhone way and the
 // Android way, side by side, to decide on platform-specific touches before
 // building them. /dev/platforms?s=home | settings | dialog &os=ios | android
-// (one phone per page: the web preview is one phone wide)
+// (one phone per page: the web preview is one phone wide). The tab bar and
+// header are the app's real ones; add &ui=android to draw them the Android way.
 import { useLocalSearchParams } from "expo-router";
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
-import { Bell, ChevronLeft, Grid, Home, Lock, Orders, Cart, User, type IconComponent } from "@/components/icons";
-import { ListGroup, ListRow, Text } from "@/components/ui";
+import { Bell, Lock, User } from "@/components/icons";
+import { ListGroup, ListRow, ScreenHeader, Text } from "@/components/ui";
 import { HomeView, type HomeProduct } from "@/features/home/HomeView";
 import { TabBar } from "@/features/shell/TabBar";
 import { colors, spacing } from "@/theme/tokens";
@@ -99,61 +100,6 @@ function ToggleRow({ os, title, subtitle, on }: { os: OS; title: string; subtitl
 // ---------------------------------------------------------------------------
 // The Android (Material) versions of the shared pieces
 
-const ArrowBack = ({ size = 24, color = colors.ink }: { size?: number; color?: string }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24">
-    <Path d="M20 12H5M11 5l-7 7 7 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-  </Svg>
-);
-
-const TABS: { name: string; label: string; icon: IconComponent }[] = [
-  { name: "home", label: "Home", icon: Home },
-  { name: "categories", label: "Categories", icon: Grid },
-  { name: "cart", label: "Cart", icon: Cart },
-  { name: "orders", label: "Orders", icon: Orders },
-  { name: "account", label: "Account", icon: User },
-];
-
-/** Material 3 navigation bar: the chosen tab's icon sits in a soft pill. */
-function AndroidTabBar({ active = "home", cart = 3 }: { active?: string; cart?: number }) {
-  return (
-    <View style={styles.mBar}>
-      {TABS.map((t) => {
-        const on = t.name === active;
-        return (
-          <View key={t.name} style={styles.mTab}>
-            <View style={[styles.mPill, on && styles.mPillOn]}>
-              <t.icon size={22} color={on ? colors.forest : "rgba(0,0,0,0.55)"} variant={on ? "solid" : "line"} />
-              {t.name === "cart" && cart > 0 ? (
-                <View style={styles.mBadge}>
-                  <Text style={styles.mBadgeText}>{cart}</Text>
-                </View>
-              ) : null}
-            </View>
-            <Text style={[styles.mLabel, on && styles.mLabelOn]}>{t.label}</Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-function Header({ os, title }: { os: OS; title: string }) {
-  if (os === "ios") {
-    return (
-      <View style={styles.header}>
-        <ChevronLeft size={20} color={colors.ink} strokeWidth={2.2} />
-        <Text variant="backTitle">{title}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={[styles.header, styles.headerAndroid]}>
-      <ArrowBack />
-      <Text style={styles.titleAndroid}>{title}</Text>
-    </View>
-  );
-}
-
 /** iOS switch: a round thumb on a pill. */
 function IosSwitch({ on }: { on: boolean }) {
   return (
@@ -202,15 +148,12 @@ function HomeScreen({ os }: { os: OS }) {
           onSeeAllPicked={() => {}}
         />
       </View>
-      {os === "ios" ? (
-        <View style={styles.iosTabs}>
-          <TabBar state={{ index: 0, routes: ROUTES }} navigation={{ emit: () => ({ defaultPrevented: true }), navigate: () => {} }} badges={{ cart: 3 }} />
-          {/* A real iPhone adds this space for the home indicator */}
-          <View style={styles.iosInset} />
-        </View>
-      ) : (
-        <AndroidTabBar />
-      )}
+      {/* The app's real tab bar: Material on Android (open with ?ui=android) */}
+      <View style={styles.iosTabs}>
+        <TabBar state={{ index: 0, routes: ROUTES }} navigation={{ emit: () => ({ defaultPrevented: true }), navigate: () => {} }} badges={{ cart: 3 }} />
+        {/* A real phone adds this space for the home indicator or gesture bar */}
+        <View style={[styles.iosInset, os === "android" && styles.androidInset]} />
+      </View>
     </View>
   );
 }
@@ -218,7 +161,7 @@ function HomeScreen({ os }: { os: OS }) {
 function SettingsScreen({ os, pressed }: { os: OS; pressed?: boolean }) {
   return (
     <View style={[styles.flex, styles.page]}>
-      <Header os={os} title="Notifications" />
+      <ScreenHeader title="Notifications" />
       <View style={styles.body}>
         <ListGroup title="Alerts" tone="white">
           <ToggleRow os={os} title="Order updates" subtitle="Accepted, on its way, ready" on />
@@ -313,6 +256,7 @@ const styles = StyleSheet.create({
   stage: { flex: 1, alignItems: "center", paddingTop: 20, backgroundColor: "#E4E7DF" },
   iosTabs: { backgroundColor: colors.white },
   iosInset: { height: 22, backgroundColor: colors.white },
+  androidInset: { height: 14, backgroundColor: "#F4F7EE" },
   toggleRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.lg, minHeight: 60, paddingVertical: spacing.sm },
   screen: { width: W, height: H, backgroundColor: colors.white, overflow: "hidden" },
   screenIos: { borderRadius: 48 },
@@ -332,19 +276,8 @@ const styles = StyleSheet.create({
   homePill: { width: 134, height: 5, borderRadius: 3, backgroundColor: "#111" },
   homePillAndroid: { width: 100, height: 4, backgroundColor: "#555" },
 
-  header: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: spacing.screen, paddingVertical: spacing.md, minHeight: 56, backgroundColor: colors.canvas },
-  headerAndroid: { gap: 20, paddingHorizontal: 16, minHeight: 64 },
-  titleAndroid: { fontFamily: fonts.semibold, fontSize: 21, color: colors.ink },
   body: { paddingHorizontal: spacing.screen, gap: spacing.lg, paddingTop: spacing.sm },
 
-  mBar: { flexDirection: "row", height: 92, paddingTop: 12, paddingBottom: 28, backgroundColor: "#F6F8F1", marginBottom: 0 },
-  mTab: { flex: 1, alignItems: "center", gap: 4 },
-  mPill: { width: 60, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  mPillOn: { backgroundColor: "#DCEFB7" },
-  mLabel: { fontFamily: fonts.medium, fontSize: 12, color: "rgba(0,0,0,0.6)" },
-  mLabelOn: { fontFamily: fonts.semibold, color: colors.forest },
-  mBadge: { position: "absolute", top: 2, left: 34, minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
-  mBadgeText: { fontFamily: fonts.semibold, fontSize: 10, color: colors.ink },
 
   iSwitch: { width: 51, height: 31, borderRadius: 16, backgroundColor: "#E5E5EA", padding: 2 },
   iSwitchOn: { backgroundColor: colors.lime },

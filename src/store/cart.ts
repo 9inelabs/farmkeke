@@ -3,6 +3,7 @@
 // api.checkout.quote, which reports price or stock changes (M-32). Each farm
 // in the cart becomes its own order at checkout.
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { tapFeedback } from "@/lib/haptics";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -46,7 +47,8 @@ export const useCart = create<Cart>()(
   persist(
     (set) => ({
       lines: [],
-      add: (line) =>
+      add: (line) => {
+        tapFeedback();
         set((s) => {
           const existing = s.lines.find((l) => same(l, line));
           if (existing) {
@@ -58,7 +60,8 @@ export const useCart = create<Cart>()(
           }
           if (s.lines.length >= MAX_LINES) return s;
           return { lines: [...s.lines, line] };
-        }),
+        });
+      },
       setQuantity: (key, quantity) =>
         set((s) => ({
           lines: quantity <= 0 ? s.lines.filter((l) => !same(l, key)) : s.lines.map((l) => (same(l, key) ? { ...l, quantity } : l)),

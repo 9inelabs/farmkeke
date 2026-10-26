@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl, gap: spacing.md },
   hero: { backgroundColor: colors.forest, borderRadius: radii.lg + 10, padding: spacing.xl, gap: 2, overflow: "hidden" },
   glow: { position: "absolute", right: -60, top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(169,214,84,0.14)" },
-  amount: { fontFamily: fonts.displayBold, fontSize: 36, lineHeight: 44, color: colors.white, letterSpacing: -0.6 },
+  amount: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 37, color: colors.white, letterSpacing: -0.6 },
   badges: { flexDirection: "row", gap: spacing.xs, marginTop: spacing.sm },
   facts: { flexDirection: "row", gap: spacing.md },
   rule: { height: 1, backgroundColor: colors.surfaceSoft, marginVertical: spacing.xs },

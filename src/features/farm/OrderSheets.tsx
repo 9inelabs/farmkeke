@@ -253,6 +253,6 @@ const styles = StyleSheet.create({
   digitFilled: { backgroundColor: colors.tint },
   digitActive: { borderColor: colors.lime, backgroundColor: colors.white },
   digitError: { borderColor: colors.error },
-  digitText: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 36, color: colors.forest },
+  digitText: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 31, color: colors.forest },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });

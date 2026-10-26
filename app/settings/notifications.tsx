@@ -6,6 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import { AlertSettingsView } from "@/features/push/AlertSettingsView";
 import { askForPush, openPushSettings } from "@/features/push/push";
 import { usePush } from "@/store/push";
+import { tapFeedback } from "@/lib/haptics";
 import { showToast } from "@/store/toast";
 
 export default function NotificationSettings() {
@@ -28,6 +29,7 @@ export default function NotificationSettings() {
       prefs={prefs}
       status={status}
       onToggle={(alert, channel, on) => {
+        tapFeedback();
         setPreference({ alert, channel, on, side }).catch(() => showToast({ message: "That didn't save. Try again.", tone: "error" }));
       }}
       onEnablePush={() => {

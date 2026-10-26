@@ -1,8 +1,9 @@
 import { router } from "expo-router";
-import { ChevronLeft } from "@/components/icons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { androidUi } from "@/theme/platform";
 import { colors, spacing } from "@/theme/tokens";
+import { BackIcon } from "./BackIcon";
 import { Text } from "./Text";
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
   subtitle?: string;
 };
 
-/** Back chevron and a small title on the left (a larger title on tab roots), optional action on the right. */
+/** Back mark (chevron on iPhone, arrow on Android) and a small title on the left (a larger title on tab roots), optional action on the right. */
 export function ScreenHeader({ title, showBack = true, onBack, right, subtitle }: Props) {
   return (
     <View style={styles.row}>
@@ -28,7 +29,7 @@ export function ScreenHeader({ title, showBack = true, onBack, right, subtitle }
           onPress={onBack ?? (() => router.back())}
           style={styles.titleRow}
         >
-          {showBack && <ChevronLeft size={20} color={colors.ink} strokeWidth={2.2} />}
+          {showBack && <BackIcon />}
           <Text variant={showBack ? "backTitle" : "screenTitle"} numberOfLines={1} maxFontSizeMultiplier={1.3} style={styles.title}>
             {title}
           </Text>
@@ -56,7 +57,8 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   left: { flexShrink: 1, gap: 2 },
-  subtitle: { marginLeft: 20 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, marginLeft: -4 },
+  subtitle: { marginLeft: androidUi ? 32 : 20 },
+  // Material puts more room between the arrow and the title
+  titleRow: { flexDirection: "row", alignItems: "center", gap: androidUi ? 14 : 4, flexShrink: 1, marginLeft: -4 },
   title: { flexShrink: 1 },
 });

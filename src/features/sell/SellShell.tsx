@@ -13,8 +13,7 @@ import { router } from "expo-router";
 import { Component, useEffect, useState, type ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft } from "@/components/icons";
-import { Text, Wordmark } from "@/components/ui";
+import { BackIcon, Text, Wordmark } from "@/components/ui";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -80,7 +79,7 @@ export function SellShell({ children, footer, back = "back", onBack, curve = "le
           </Quiet>
         ) : null}
         <Pressable accessibilityRole="button" accessibilityLabel={back === "close" ? "Close" : "Back"} hitSlop={10} onPress={leave} style={styles.back}>
-          <ChevronLeft size={18} color={photo ? colors.white : colors.ink} strokeWidth={2.4} />
+          <BackIcon color={photo ? colors.white : colors.ink} />
           <Text style={[styles.backText, photo ? styles.backOnPhoto : null]}>{back === "close" ? "Close" : "Back"}</Text>
         </Pressable>
       </View>
@@ -152,7 +151,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   band: { backgroundColor: colors.lime, paddingHorizontal: spacing.screen, overflow: "hidden" },
   back: { flexDirection: "row", alignItems: "center", gap: 2, alignSelf: "flex-start", marginLeft: -4 },
-  backText: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22, color: colors.ink },
+  backText: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 19, color: colors.ink },
   backOnPhoto: { color: colors.white, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
   sheet: { flex: 1, backgroundColor: colors.canvas },
   stickerSlot: { position: "absolute", top: -12, zIndex: 2 },
@@ -172,7 +171,7 @@ const styles = StyleSheet.create({
   footerInline: { marginTop: spacing.md, gap: spacing.sm },
   footerPinned: { paddingHorizontal: spacing.screen + 4, paddingTop: spacing.sm, gap: spacing.sm },
   titleWrap: { alignItems: "center", gap: 4, marginBottom: spacing.xs },
-  title: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, color: colors.ink, textAlign: "center" },
+  title: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.ink, textAlign: "center" },
   accent: { color: "#5F5F5F" },
   note: { maxWidth: 300 },
 });
