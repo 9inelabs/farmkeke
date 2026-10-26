@@ -9,7 +9,8 @@ import { StyleSheet, View } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Bell, Lock, User } from "@/components/icons";
 import { ListGroup, ListRow, ScreenHeader, Text } from "@/components/ui";
-import { HomeView, type HomeProduct } from "@/features/home/HomeView";
+import { HomeView } from "@/features/home/HomeView";
+import { SAMPLE_SECTIONS } from "@/features/home/samples";
 import { TabBar } from "@/features/shell/TabBar";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -17,11 +18,6 @@ import { fonts } from "@/theme/typography";
 type OS = "ios" | "android";
 const noop = () => {};
 
-const PRODUCTS: HomeProduct[] = [
-  { id: "1", name: "Fresh tomatoes", priceKobo: 4_500_00, unit: "basket", imageUrl: null },
-  { id: "2", name: "Yam tubers", priceKobo: 5_500_00, unit: "tuber", imageUrl: null },
-  { id: "3", name: "Oshombo Pepper", priceKobo: 6_000_00, unit: "basket", imageUrl: null },
-];
 const CATEGORIES = [
   { id: "1", name: "Vegetables", illustration: "vegetables" },
   { id: "2", name: "Fruits", illustration: "fruits" },
@@ -139,13 +135,11 @@ function HomeScreen({ os }: { os: OS }) {
           onAlerts={() => {}}
           areaLabel="New Owerri, Imo"
           categories={CATEGORIES}
-          freshPicks={PRODUCTS}
-          pickedToday={PRODUCTS}
+          sections={SAMPLE_SECTIONS}
           banner={{ tag: "Harvest of the week", title: "New-Season yam from Okigwe", subtitle: "From ₦3,200 per tuber • Bello Harvest", buttonLabel: "Shop Yam", imageUrl: null }}
           farms={FARMS}
           onChangeArea={() => {}}
-          onSeeAllFresh={() => {}}
-          onSeeAllPicked={() => {}}
+          onSeeAll={() => {}}
         />
       </View>
       {/* The app's real tab bar: Material on Android (open with ?ui=android) */}

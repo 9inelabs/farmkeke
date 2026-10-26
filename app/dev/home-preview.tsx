@@ -3,15 +3,11 @@
 // Not reachable in release builds.
 import { Redirect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HomeView, type HomeProduct } from "@/features/home/HomeView";
+import { HomeView } from "@/features/home/HomeView";
+import { SAMPLE_SECTIONS } from "@/features/home/samples";
 import { TabBar } from "@/features/shell/TabBar";
 import { colors } from "@/theme/tokens";
 
-const PRODUCTS: HomeProduct[] = [
-  { id: "1", name: "Fresh tomatoes", priceKobo: 4_500_00, unit: "basket", imageUrl: null },
-  { id: "2", name: "Yam tubers", priceKobo: 5_500_00, unit: "tuber", imageUrl: null },
-  { id: "3", name: "Oshombo Pepper", priceKobo: 6_000_00, unit: "basket", imageUrl: null },
-];
 
 const CATEGORIES = [
   { id: "1", name: "Vegetables", illustration: "vegetables" },
@@ -42,8 +38,7 @@ export default function HomePreview() {
         onAlerts={() => {}}
         areaLabel="New Owerri, Imo"
         categories={CATEGORIES}
-        freshPicks={PRODUCTS}
-        pickedToday={PRODUCTS}
+          sections={SAMPLE_SECTIONS}
         banner={{
           tag: "Harvest of the week",
           title: "New-Season yam from Okigwe",
@@ -53,8 +48,7 @@ export default function HomePreview() {
         }}
         farms={FARMS}
         onChangeArea={() => {}}
-        onSeeAllFresh={() => {}}
-        onSeeAllPicked={() => {}}
+          onSeeAll={() => {}}
       />
       <TabBar state={{ index: 0, routes: ROUTES }} navigation={{ emit: () => ({ defaultPrevented: true }), navigate: () => {} }} badges={{ cart: 3 }} />
     </SafeAreaView>

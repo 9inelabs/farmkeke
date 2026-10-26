@@ -162,7 +162,10 @@ test("filters and sorts: rating, distance, harvested, subtype, nearest, top rate
   // Home farm rows carry rating, product count and distance
   const home = await t.query(api.storefront.home, { today: TODAY, ...OWERRI });
   expect(home.farms[0]).toMatchObject({ name: "Okafor Farms", area: "Owerri North", rating: 5, ratingCount: 2, productCount: 3 });
-  expect(home.pickedToday.map((i: any) => i.freshness)).toEqual(["Harvested today"]);
+  // Home's rows come in order; Fresh Picks is the only one with See all
+  expect(home.sections[0]).toMatchObject({ key: "fresh", title: "Fresh Picks", seeAll: true });
+  expect(home.sections.filter((r: any) => r.seeAll).map((r: any) => r.key)).toEqual(["fresh"]);
+  expect(home.sections.every((r: any) => r.items.length > 0 && r.items.length <= 10)).toBe(true);
   // Categories with counts
   const cats = await t.query(api.catalog.listCategoriesWithCounts, {});
   expect(cats.map((c: any) => [c.slug, c.productCount])).toEqual([["vegetables", 5], ["fruits", 1]]);

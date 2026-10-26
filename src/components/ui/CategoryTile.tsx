@@ -1,5 +1,5 @@
 import { Image, type ImageSource } from "expo-image";
-import { Sprout } from "@/components/icons";
+import { Sprout, type IconComponent } from "@/components/icons";
 import { StyleSheet, View } from "react-native";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -22,10 +22,12 @@ type Props = {
   illustration: string;
   selected?: boolean;
   onPress: () => void;
+  /** An icon instead of an illustration (the "All" tile) */
+  icon?: IconComponent;
 };
 
 /** Illustrated category tile (Home row, Categories, Search). */
-export function CategoryTile({ name, illustration, selected = false, onPress }: Props) {
+export function CategoryTile({ name, illustration, selected = false, onPress, icon: Icon }: Props) {
   const art = ART[illustration];
   return (
     <PressableScale
@@ -36,7 +38,9 @@ export function CategoryTile({ name, illustration, selected = false, onPress }: 
       style={styles.wrap}
     >
       <View style={[styles.tile, selected && styles.tileSelected]}>
-        {art !== undefined ? (
+        {Icon !== undefined ? (
+          <Icon size={26} color={colors.forest} variant={selected ? "solid" : "line"} />
+        ) : art !== undefined ? (
           <Image source={art} style={styles.art} contentFit="contain" />
         ) : (
           <Sprout size={28} color={colors.forest} strokeWidth={1.75} />

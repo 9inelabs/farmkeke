@@ -24,8 +24,21 @@ export type FarmSummary = {
   matchCount?: number;
 };
 
+/** One of Home's product rows (convex/lib/homeSections.ts), in page order. */
+export type HomeSectionKey = "fresh" | "near" | "almost_gone" | "best_sellers" | "top_rated" | "buy_again" | "great_value";
+export type HomeSection = {
+  key: HomeSectionKey;
+  title: string;
+  /** Only Fresh Picks has "See all" */
+  seeAll: boolean;
+  /** Up to 10; Almost Gone cards also say how many are left */
+  items: (ListingSummary & { left?: number })[];
+};
+
 /** storefront.home */
 export type StorefrontHome = {
+  /** 26 Oct 2026: Home's product rows. Older deployments don't send it. */
+  sections?: HomeSection[];
   banner: {
     tag: string;
     title: string;

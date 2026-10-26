@@ -20,7 +20,8 @@ export default function Home() {
   const unread = useQuery(api.notifications.unreadCount, { side: "shop" }) ?? 0;
   const firstName = viewer && !viewer.isGuest ? viewer.name?.trim().split(/\s+/)[0] : undefined;
   const home = useQuery(api.storefront.home, { today, state: area?.state, lga: area?.lga });
-  const openCategories = () => router.push("/categories");
+  // Fresh Picks' "See all": the Categories tab, showing every product
+  const openAllProducts = () => router.navigate({ pathname: "/categories", params: { c: "all", at: String(Date.now()) } });
   const categorySlug = new Map<string, { slug: string; name: string }>(categories?.map((c) => [c._id, { slug: c.slug, name: c.name }]));
 
   return (
@@ -31,8 +32,7 @@ export default function Home() {
         onAlerts={() => router.push("/notifications")}
         areaLabel={area ? `${area.name}, ${area.state}` : "Choose your area"}
         categories={categories?.map((c) => ({ id: c._id, name: c.name, illustration: c.illustration }))}
-        freshPicks={home?.freshPicks}
-        pickedToday={home?.pickedToday}
+        sections={home?.sections}
         banner={
           home === undefined
             ? undefined
@@ -51,8 +51,7 @@ export default function Home() {
           const cat = categorySlug.get(c.id);
           if (cat) router.push({ pathname: "/category/[slug]", params: cat });
         }}
-        onSeeAllFresh={openCategories}
-        onSeeAllPicked={openCategories}
+        onSeeAll={openAllProducts}
         onProduct={(p) => router.push(`/product/${p.id}`)}
         onAddToCart={(p) => openAdd(p.id)}
         onBanner={home?.banner ? () => router.push(`/product/${home.banner!.listing.id}`) : undefined}

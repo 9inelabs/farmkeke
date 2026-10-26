@@ -1,6 +1,7 @@
 // M-10 Home, following the Figma "Home Dashboard" design: area chip, search,
-// escrow promise, categories, Fresh Picks, Picked Today, the featured banner
-// and Farmers Near You. The layout is fluid: blocks fill the screen's width,
+// escrow promise, categories, the product rows (Fresh Picks, Near You, Almost
+// Gone, Best Sellers This Week, Top-Rated Farms, Buy Again or Great Value;
+// see convex/lib/homeSections.ts), the featured banner and Farmers Near You. The layout is fluid: blocks fill the screen's width,
 // the rows scroll sideways, and text follows the phone's font size.
 // This file only draws: the route (app/(shop)/home.tsx) supplies the data.
 import { Image } from "expo-image";
@@ -12,11 +13,14 @@ import { BellButton, CategoryTile, EscrowCard, LocationChip, PressableScale, Pro
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { useScreenWidth } from "@/theme/useScreenSize";
+import { AlmostGoneRow } from "./AlmostGoneRow";
 
 export type HomeCategory = { id: string; name: string; illustration: string };
 export type HomeProduct = { id: string; name: string; priceKobo: number; unit: string; imageUrl: string | null };
 export type HomeBanner = { tag: string; title: string; subtitle: string; buttonLabel: string; imageUrl: string | null };
 export type HomeFarm = { id: string; name: string; area: string; photoUrl: string | null };
+/** One product row, as storefront.home sends it. */
+export type HomeSection = { key: string; title: string; seeAll: boolean; items: (HomeProduct & { left?: number })[] };
 
 type Props = {
   /** "Good Morning, Franklyn" */
@@ -26,16 +30,15 @@ type Props = {
   onAlerts: () => void;
   // `undefined` means still loading: the block shows grey placeholders.
   categories: HomeCategory[] | undefined;
-  freshPicks: HomeProduct[] | undefined;
-  pickedToday: HomeProduct[] | undefined;
+  sections: HomeSection[] | undefined;
   banner: HomeBanner | null | undefined;
   farms: HomeFarm[] | undefined;
   // A part with no handler is drawn but doesn't respond to taps.
   onChangeArea: () => void;
   onSearch?: () => void;
   onCategory?: (category: HomeCategory) => void;
-  onSeeAllFresh?: () => void;
-  onSeeAllPicked?: () => void;
+  /** Fresh Picks' "See all" (the only row with one) */
+  onSeeAll?: () => void;
   onProduct?: (product: HomeProduct) => void;
   onAddToCart?: (product: HomeProduct) => void;
   onBanner?: () => void;
@@ -97,62 +100,11 @@ export function HomeView(props: Props) {
     );
   };
 
-  const showPickedToday = props.pickedToday === undefined || props.pickedToday.length > 0;
   const showFarms = props.farms === undefined || props.farms.length > 0;
 
-  return (
-    <ScrollView style={styles.screen} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingHorizontal: side }]}>
-      <Stagger>
-        <View style={styles.header}>
-          <Text variant="section" accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={MAX_TEXT} style={styles.greeting}>
-            {props.greeting}
-          </Text>
-          <View style={styles.headerRow}>
-            <View style={styles.shrink}>
-              <LocationChip label={props.areaLabel} onPress={props.onChangeArea} />
-            </View>
-            <BellButton unread={props.unreadAlerts} onPress={props.onAlerts} />
-          </View>
-        </View>
-
-        <SearchPill mode="button" onPress={props.onSearch} />
-
-        <EscrowCard />
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={row.style} contentContainerStyle={[styles.categories, { paddingHorizontal: side - CATEGORY_INSET }]}>
-          {props.categories === undefined
-            ? [0, 1, 2, 3, 4].map((i) => (
-                <View key={i} style={styles.categoryLoading}>
-                  <Skeleton width={sizes.categoryTile} height={sizes.categoryTile} radius={radii.lg} />
-                </View>
-              ))
-            : props.categories.map((c) => (
-                <CategoryTile key={c.id} name={c.name} illustration={c.illustration} onPress={() => props.onCategory?.(c)} />
-              ))}
-        </ScrollView>
-
-        <View style={styles.section}>
-          {section("Fresh Picks", props.onSeeAllFresh)}
-          {productRow(
-            props.freshPicks,
-            <View style={styles.emptyRow}>
-              <Text variant="label" color={colors.forest}>
-                Fresh produce is on its way
-              </Text>
-              <Text variant="small">Farms near you are setting up their stalls. Their produce will show up here.</Text>
-            </View>,
-          )}
-        </View>
-
-        {/* Only when something was harvested today */}
-        {showPickedToday && (
-          <View style={styles.section}>
-            {section("Picked Today", props.onSeeAllPicked)}
-            {productRow(props.pickedToday, null)}
-          </View>
-        )}
-
-        {props.banner === undefined ? (
+  const banner = (
+    <>
+      {props.banner === undefined ? (
           <Skeleton height={170} radius={BANNER_RADIUS} />
         ) : props.banner === null ? null : (
           <View style={styles.banner}>
@@ -201,6 +153,76 @@ export function HomeView(props: Props) {
             )}
           </View>
         )}
+    </>
+  );
+
+  return (
+    <ScrollView style={styles.screen} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingHorizontal: side }]}>
+      <Stagger>
+        <View style={styles.header}>
+          <Text variant="section" accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={MAX_TEXT} style={styles.greeting}>
+            {props.greeting}
+          </Text>
+          <View style={styles.headerRow}>
+            <View style={styles.shrink}>
+              <LocationChip label={props.areaLabel} onPress={props.onChangeArea} />
+            </View>
+            <BellButton unread={props.unreadAlerts} onPress={props.onAlerts} />
+          </View>
+        </View>
+
+        <SearchPill mode="button" onPress={props.onSearch} />
+
+        <EscrowCard />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={row.style} contentContainerStyle={[styles.categories, { paddingHorizontal: side - CATEGORY_INSET }]}>
+          {props.categories === undefined
+            ? [0, 1, 2, 3, 4].map((i) => (
+                <View key={i} style={styles.categoryLoading}>
+                  <Skeleton width={sizes.categoryTile} height={sizes.categoryTile} radius={radii.lg} />
+                </View>
+              ))
+            : props.categories.map((c) => (
+                <CategoryTile key={c.id} name={c.name} illustration={c.illustration} onPress={() => props.onCategory?.(c)} />
+              ))}
+        </ScrollView>
+
+        {props.sections === undefined ? (
+          <View style={styles.section}>
+            {section("Fresh Picks")}
+            {productRow(undefined, null)}
+          </View>
+        ) : props.sections.length === 0 ? (
+          <View style={styles.section}>
+            {section("Fresh Picks")}
+            <View style={styles.emptyRow}>
+              <Text variant="label" color={colors.forest}>
+                Fresh produce is on its way
+              </Text>
+              <Text variant="small">Farms near you are setting up their stalls. Their produce will show up here.</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* The rows, in order; the banner sits after the second */}
+        {(props.sections ?? []).map((row, i, rows) => (
+          <View key={row.key} style={styles.section}>
+            {row.key === "almost_gone" ? (
+              <AlmostGoneRow
+                products={row.items.map((p) => ({ ...p, left: p.left ?? 1 }))}
+                onProduct={props.onProduct && ((p) => props.onProduct?.(p))}
+                onAdd={props.onAddToCart && ((p) => props.onAddToCart?.(p))}
+              />
+            ) : (
+              <>
+                {section(row.title, row.seeAll ? props.onSeeAll : undefined)}
+                {productRow(row.items, null)}
+              </>
+            )}
+            {i === Math.min(1, rows.length - 1) ? banner : null}
+          </View>
+        ))}
+        {props.sections === undefined || props.sections.length === 0 ? banner : null}
 
         {showFarms && (
           <View style={styles.farmsSection}>

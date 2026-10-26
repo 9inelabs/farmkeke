@@ -17,6 +17,8 @@ export const routes = {
   // Shop (W-01 to W-07)
   shop: "/shop",
   categories: "/shop/categories",
+  /** Every product, newest first (Fresh Picks "See all") */
+  allProducts: "/shop/all",
   category: (slug: string) => `/shop/category/${slug}`,
   search: (text?: string) => (text ? `/shop/search?q=${encodeURIComponent(text)}` : "/shop/search"),
   product: (id: string) => `/shop/product/${id}`,

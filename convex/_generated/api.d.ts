@@ -61,6 +61,7 @@ import type * as lib_disputes from "../lib/disputes.js";
 import type * as lib_email from "../lib/email.js";
 import type * as lib_emails from "../lib/emails.js";
 import type * as lib_geo from "../lib/geo.js";
+import type * as lib_homeSections from "../lib/homeSections.js";
 import type * as lib_listing from "../lib/listing.js";
 import type * as lib_listingCounts from "../lib/listingCounts.js";
 import type * as lib_notify from "../lib/notify.js";
@@ -166,6 +167,7 @@ declare const fullApi: ApiFromModules<{
   "lib/email": typeof lib_email;
   "lib/emails": typeof lib_emails;
   "lib/geo": typeof lib_geo;
+  "lib/homeSections": typeof lib_homeSections;
   "lib/listing": typeof lib_listing;
   "lib/listingCounts": typeof lib_listingCounts;
   "lib/notify": typeof lib_notify;

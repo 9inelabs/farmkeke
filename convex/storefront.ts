@@ -10,6 +10,23 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { farmDistanceKm, shopperPoint } from "./lib/geo";
 import { farmIsOpen, isShopListing, readCount, subtypeKey } from "./lib/listingCounts";
+import { getViewer } from "./lib/auth";
+import {
+  almostGone,
+  arrange,
+  BOUGHT,
+  bestSellers,
+  buyAgain,
+  candidateOf,
+  countsAsSale,
+  freshPicks,
+  greatValue,
+  nearYou,
+  SECTION_TITLES,
+  topRated,
+  weekStart,
+  type Candidate,
+} from "./lib/homeSections";
 import { getRules } from "./lib/settings";
 import {
   checkFilters,
@@ -48,12 +65,23 @@ async function buyableCards(shop: ShopReader, listings: Doc<"listings">[], limit
   return cards;
 }
 
-/** M-10 / W-01 Home: Fresh Picks, Picked Today, the featured banner and nearby farms. */
+// Home's pool: the newest live listings each row picks from
+const HOME_POOL = 300;
+// Recent orders read for Best Sellers This Week
+const WEEK_ORDERS = 400;
+// The shopper's own orders read for Buy Again
+const MY_ORDERS = 50;
+
+/**
+ * M-10 / W-01 Home: the product rows (lib/homeSections.ts), the featured
+ * banner and nearby farms. `freshPicks` and `pickedToday` stay for older
+ * clients; `sections` is what Home draws, in order.
+ */
 export const home = query({
   args: {
     // The shopper's date, "YYYY-MM-DD" (queries can't read the clock).
     today: v.string(),
-    // The shopper's chosen area, for "Farmers Near You".
+    // The shopper's chosen area, for "Near You" and "Farmers Near You".
     state: v.optional(v.string()),
     lga: v.optional(v.string()),
     // Phase 3c: the shopper's position, for farm distances
@@ -64,25 +92,62 @@ export const home = query({
     const from = shopperPoint(args.lat, args.lng);
     const shop = shopReader(ctx, { today: args.today, from });
 
-    // Fresh Picks: the newest live listings.
-    const freshPicks = await buyableCards(
-      shop,
-      await ctx.db
-        .query("listings")
-        .withIndex("by_status_and_submittedAt", (q) => q.eq("status", "live"))
-        .order("desc")
-        .take(SCAN),
-    );
+    // Every row picks from the same buyable pool
+    const listings = await ctx.db
+      .query("listings")
+      .withIndex("by_status_and_submittedAt", (q) => q.eq("status", "live"))
+      .order("desc")
+      .take(HOME_POOL);
+    const pool: Candidate[] = [];
+    for (const listing of listings) {
+      const e = await shop.entry(listing);
+      const c = e === null ? null : candidateOf(e);
+      if (c !== null) pool.push(c);
+    }
 
-    // Picked Today: live listings harvested on the shopper's date.
-    const pickedToday = await buyableCards(
-      shop,
-      await ctx.db
-        .query("listings")
-        .withIndex("by_status_and_harvestedOn", (q) => q.eq("status", "live").eq("harvestedOn", args.today))
+    // Paid orders per listing in the last 7 days
+    const since = weekStart(args.today);
+    const sold = new Map<Id<"listings">, number>();
+    for (const o of await ctx.db.query("orders").order("desc").take(WEEK_ORDERS)) {
+      if (o._creationTime < since) break;
+      if (!countsAsSale(o)) continue;
+      for (const id of new Set(o.items.map((i) => i.listingId))) sold.set(id, (sold.get(id) ?? 0) + 1);
+    }
+
+    // What this shopper has had before, most recent first
+    const viewer = await getViewer(ctx);
+    const bought: Id<"listings">[] = [];
+    if (viewer !== null) {
+      const mine = await ctx.db
+        .query("orders")
+        .withIndex("by_userId", (q) => q.eq("userId", viewer._id))
         .order("desc")
-        .take(SCAN),
-    );
+        .take(MY_ORDERS);
+      for (const o of mine) {
+        if (!BOUGHT.has(o.status)) continue;
+        for (const item of o.items) if (!bought.includes(item.listingId)) bought.push(item.listingId);
+      }
+    }
+    const again = buyAgain(pool, bought);
+
+    const rows = arrange([
+      { key: "fresh", list: freshPicks(pool) },
+      { key: "near", list: nearYou(pool, { state: args.state, lga: args.lga }, from !== null) },
+      { key: "almost_gone", list: almostGone(pool) },
+      { key: "best_sellers", list: bestSellers(pool, sold) },
+      { key: "top_rated", list: topRated(pool) },
+      again.length > 0 ? { key: "buy_again", list: again, keepRepeats: true } : { key: "great_value", list: greatValue(pool) },
+    ]);
+    const sections = [];
+    for (const row of rows) {
+      const items = [];
+      for (const c of row.items) {
+        const card = await shop.card(c.listing, c);
+        items.push(row.key === "almost_gone" ? { ...card, left: c.left } : card);
+      }
+      sections.push({ key: row.key, title: SECTION_TITLES[row.key], seeAll: row.key === "fresh", items });
+    }
+    const freshPicksCards = sections.find((r) => r.key === "fresh")?.items ?? [];
 
     // Featured banner (A-86): the first active one whose listing can be bought.
     let banner = null;
@@ -106,12 +171,12 @@ export const home = query({
       .query("farms")
       .withIndex("by_status", (q) => q.eq("status", "active"))
       .take(100);
-    const rows = await Promise.all(
+    const farmRows = await Promise.all(
       active
         .filter((farm) => !farm.holidayMode && (args.state === undefined || farm.state === args.state))
         .map((farm) => shop.farmRow(farm)),
     );
-    const farms = rows
+    const farms = farmRows
       .sort(
         (a, b) =>
           Number(b.lga === args.lga) - Number(a.lga === args.lga) ||
@@ -119,7 +184,7 @@ export const home = query({
       )
       .slice(0, 12);
 
-    return { freshPicks, pickedToday, banner, farms };
+    return { freshPicks: freshPicksCards, pickedToday: [] as typeof freshPicksCards, sections, banner, farms };
   },
 });
 

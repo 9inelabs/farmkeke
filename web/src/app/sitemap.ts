@@ -10,6 +10,7 @@ const STATIC: Array<{ path: string; priority: number; changeFrequency: "daily" |
   { path: routes.home, priority: 1, changeFrequency: "weekly" },
   { path: routes.shop, priority: 0.9, changeFrequency: "daily" },
   { path: routes.categories, priority: 0.8, changeFrequency: "weekly" },
+  { path: routes.allProducts, priority: 0.8, changeFrequency: "daily" },
   { path: routes.sell, priority: 0.6, changeFrequency: "monthly" },
   { path: routes.howItWorks, priority: 0.6, changeFrequency: "monthly" },
   { path: routes.escrow, priority: 0.6, changeFrequency: "monthly" },
