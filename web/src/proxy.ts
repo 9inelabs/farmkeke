@@ -1,4 +1,4 @@
-// The Admin Portal's own host (lib/adminHost.ts). With NEXT_PUBLIC_ADMIN_HOST
+// The Admin Portal's own host (lib/adminHost.ts, set in next.config.ts). With one
 // set:
 //   admin.farmkeke.com/orders  → rewritten to the app/admin/orders route
 //   admin.farmkeke.com/admin/… → redirected to the same page without /admin

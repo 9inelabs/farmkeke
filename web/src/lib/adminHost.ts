@@ -1,5 +1,6 @@
-// Where the Admin Portal lives. With NEXT_PUBLIC_ADMIN_HOST set (production:
-// "admin.farmkeke.com") the portal sits at the root of that host
+// Where the Admin Portal lives. With an admin host (next.config.ts: env
+// NEXT_PUBLIC_ADMIN_HOST, or admin.farmkeke.com on Vercel production builds)
+// the portal sits at the root of that host
 // (admin.farmkeke.com/orders): proxy.ts rewrites its requests to the
 // app/admin routes and sends farmkeke.com/admin there. Unset (local dev,
 // preview deployments) it stays at /admin on the same host.
@@ -9,8 +10,17 @@
 // otherwise). During a rewritten render the router can report either form,
 // so code that reads the pathname goes through portalPath() first.
 
-/** The portal's own hostname, e.g. "admin.farmkeke.com", or null. */
-export const ADMIN_HOST = process.env.NEXT_PUBLIC_ADMIN_HOST?.trim().toLowerCase() || null;
+/**
+ * The portal's own hostname, e.g. "admin.farmkeke.com", or null. Forgiving of
+ * how it was typed: "https://admin.farmkeke.com/" works too.
+ */
+export const ADMIN_HOST =
+  (process.env.FARMKEKE_ADMIN_HOST ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^[a-z]+:\/\//, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/:\d+$/, "") || null;
 
 /** What portal paths start with in the browser. */
 export const ADMIN_BASE = ADMIN_HOST ? "" : "/admin";

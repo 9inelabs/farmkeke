@@ -1,8 +1,15 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+// The Admin Portal's own host (src/lib/adminHost.ts, src/proxy.ts):
+// NEXT_PUBLIC_ADMIN_HOST when it's set, otherwise admin.farmkeke.com on Vercel
+// production builds. Preview and local builds keep the portal at /admin.
+// Read when the site is built, so a change needs a redeploy.
+const adminHost = process.env.NEXT_PUBLIC_ADMIN_HOST?.trim() || (process.env.VERCEL_ENV === "production" ? "admin.farmkeke.com" : "");
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  env: { FARMKEKE_ADMIN_HOST: adminHost },
   partialPrefetching: true,
   // web/ sits inside the mobile app's repo, which has its own lockfile.
   turbopack: {
