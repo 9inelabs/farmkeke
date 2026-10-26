@@ -32,7 +32,8 @@ export default function Home() {
         onAlerts={() => router.push("/notifications")}
         areaLabel={area ? `${area.name}, ${area.state}` : "Choose your area"}
         categories={categories?.map((c) => ({ id: c._id, name: c.name, illustration: c.illustration }))}
-        sections={home?.sections}
+        // An older backend sends only Fresh Picks
+        sections={home === undefined ? undefined : (home.sections ?? [{ key: "fresh", title: "Fresh Picks", seeAll: true, items: home.freshPicks }])}
         banner={
           home === undefined
             ? undefined
