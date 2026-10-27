@@ -1,7 +1,7 @@
 {
   "title": "Privacy policy",
   "nav": "Privacy policy",
-  "draft": true,
+  "draft": false,
   "description": "What personal information Farmkeke collects, why, who we share it with, how long we keep it, and your rights.",
   "short": "**In short:** we collect what we need to sell, deliver and protect your orders. We share it only with the farm, the rider and the companies that help us run Farmkeke. We never sell your information. You can see, correct or delete it.",
   "sections": [
@@ -38,7 +38,7 @@
           ]
         },
         {
-          "p": "**When you apply to sell (farmers):** your name, phone number, farm name, address and location, farm details and crops, collection address and hours, photos of a government ID, of your farm and of proof of address, a farmers association letter, and your bank account details for payouts."
+          "p": "**When you apply to sell (farmers):** your name, phone number, farm name, address and location, your National Identification Number (NIN), photos of your farm, your collection days and hours, and your bank account details for payouts. Your 4-digit PIN is stored only in a scrambled (hashed) form that we cannot read."
         },
         {
           "p": "**Farmkeke riders:** name, phone number, photo, address, a government ID type, number and photo, vehicle and plate number, a guarantor's name, phone, address and relationship, and bank details."
@@ -189,5 +189,5 @@
       "id": "s13"
     }
   ],
-  "updated": "21 October 2026"
+  "updated": "27 October 2026"
 }

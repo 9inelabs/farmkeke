@@ -1,7 +1,7 @@
 {
   "title": "Cookie policy",
   "nav": "Cookie policy",
-  "draft": true,
+  "draft": false,
   "description": "The small files and saved data the Farmkeke website keeps in your browser, what each is for, and how to manage them.",
   "short": "**In short:** the website only saves what it needs to work: signing you in, your cart, your delivery area and your checkout details. We do not use advertising or analytics cookies.",
   "sections": [
@@ -75,5 +75,5 @@
       "id": "s6"
     }
   ],
-  "updated": "21 October 2026"
+  "updated": "27 October 2026"
 }

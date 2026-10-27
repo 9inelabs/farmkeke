@@ -1,7 +1,7 @@
 {
   "title": "Terms of use",
   "nav": "Terms of use",
-  "draft": true,
+  "draft": false,
   "description": "The rules for buying fresh produce on Farmkeke, on the website and in the app.",
   "short": "**In short:** Farmkeke connects you with verified farms. You pay through Farmkeke, we hold your money until you confirm your order arrived, and Farmkeke riders deliver it. These terms explain the rules for everyone who shops with us.",
   "sections": [
@@ -201,5 +201,5 @@
       "id": "s15"
     }
   ],
-  "updated": "21 October 2026"
+  "updated": "27 October 2026"
 }

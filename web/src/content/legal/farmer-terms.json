@@ -1,15 +1,15 @@
 {
   "title": "Farmer terms",
   "nav": "Farmer terms",
-  "draft": true,
+  "draft": false,
   "description": "The rules for farmers who sell on Farmkeke: applying, listing, orders, payouts, commission and problem reports.",
-  "short": "**In short:** you sell your own produce at your own prices. The buyer pays Farmkeke before you pack, and we pay you as soon as they confirm. You accept orders within 24 hours, keep listings honest, and reply to problem reports within 12 hours. Farmkeke keeps a 5% commission on the products you sell.",
+  "short": "**In short:** you sell your own produce at your own prices, and sign in to farmer mode with your phone number and a 4-digit PIN. The buyer pays Farmkeke before you hand the order over, and we pay you as soon as they confirm it arrived. You accept orders within 24 hours, keep listings honest, and reply to problem reports within 12 hours. Farmkeke keeps a 5% commission on the products you sell.",
   "sections": [
     {
       "title": "About these terms",
       "blocks": [
         {
-          "p": "These terms apply to farmers who sell on Farmkeke, run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. They add to our [Terms of use](/legal/terms) and [Privacy policy](/legal/privacy). You accept them when you submit your application in the Farmkeke app."
+          "p": "These terms apply to farmers who sell on Farmkeke, run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. They add to our [Terms of use](/legal/terms), [Privacy policy](/legal/privacy) and [Acceptable use policy](/legal/acceptable-use). You accept them when you submit your application in the Farmkeke app."
         },
         {
           "p": "You sell to shoppers as an independent seller. You are not an employee, agent or partner of Farmkeke."
@@ -22,14 +22,28 @@
       "blocks": [
         {
           "ul": [
-            "Apply in the Farmkeke app under **Account → Sell on Farmkeke**. You must be at least 18 years old.",
-            "We ask for your farm's details and location, the produce you grow, your collection address and hours, a photo of a government ID (NIN slip, voter's card, driver's licence or international passport), at least 3 farm photos, proof of address, a letter from your farmers association or cooperative, and a bank account in your or your farm's name.",
+            "Apply in the Farmkeke app: tap **Sell on Farmkeke** on the Account tab. You must be at least 18 years old.",
+            "First, verify your phone number with a code we text you, and choose a 4-digit PIN.",
+            "We then ask for your full name, your farm's name and location (state, LGA and address or nearest landmark), your National Identification Number (NIN), photos of your farm, and a bank account in your or your farm's name. We check the account name with the bank.",
             "Everything you give us must be true and up to date. We check every application and may call you or visit your farm. We aim to decide within 2 working days.",
             "We may ask for more information, approve your application, or decline it. If we decline it, we tell you why and when you can apply again."
           ]
         }
       ],
       "id": "s2"
+    },
+    {
+      "title": "Signing in and keeping your account safe",
+      "id": "s2a",
+      "blocks": [
+        {
+          "ul": [
+            "You sign in to farmer mode with your phone number and your 4-digit PIN. Keep your PIN secret. Farmkeke staff will never ask for it.",
+            "After 5 wrong PINs in a row, signing in with your PIN is locked. To unlock it, tap **Forgot PIN** and set a new PIN with a code we text to your phone.",
+            "To change the bank account your earnings are paid into, you must enter your PIN. We text you whenever it changes. If you did not make a change, contact support straight away."
+          ]
+        }
+      ]
     },
     {
       "title": "Your listings",
@@ -72,8 +86,9 @@
             "Accept or decline each order within **24 hours**. We remind you when 4 hours are left. If you do not answer in time, the order is cancelled and the shopper gets a full refund.",
             "Only accept orders you can fulfil. Frequent declines, or orders left to expire, may lead to a review of your farm.",
             "Prepare and pack the order carefully, then mark it ready in the app.",
-            "**Home delivery:** a Farmkeke rider collects the order from you. Hand it over only once the app shows that the shopper has paid.",
+            "**Home delivery:** a Farmkeke rider collects the order from you. Hand it over only once the app shows that the shopper has paid, then confirm the handover in the app.",
             "**Pickup:** the shopper collects from your collection address within 3 days. Hand the order over only after you enter the shopper's correct 4-digit code in the app.",
+            "Set your collection days and hours in the app. Until you do, we show Monday to Saturday, 8am to 5pm.",
             "Turn on holiday mode when you cannot take orders. Your listings are hidden until you turn it off."
           ]
         }
@@ -85,7 +100,8 @@
       "blocks": [
         {
           "ul": [
-            "Shoppers pay Farmkeke. We hold the money until the shopper confirms that the order arrived, or until we resolve a problem report.",
+            "Shoppers pay Farmkeke. We hold the money until the shopper confirms that the order arrived, or until we resolve a problem report. Shoppers can confirm as soon as the rider is bringing their order, or once they have collected a pickup order.",
+            "If the shopper neither confirms nor reports a problem within 24 hours of delivery, we remind them, and our team may release the payment to you after checking the delivery records.",
             "Farmkeke keeps a commission of **5% of the product total** of each completed order. Delivery fees go to Farmkeke to pay for delivery and are not part of your earnings. If we change the commission rate, we tell you at least 30 days before.",
             "When an order's money is released, we send your earnings to your registered bank account by Paystack transfer, usually the same day. Your earnings and payouts show in the app.",
             "Your bank account must be a valid Nigerian account in your or your farm's name. Payments sent to a wrong account you gave us may not be recoverable.",
@@ -165,5 +181,5 @@
       "id": "s12"
     }
   ],
-  "updated": "21 October 2026"
+  "updated": "27 October 2026"
 }
