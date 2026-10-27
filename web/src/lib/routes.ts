@@ -68,4 +68,4 @@ export const routes = {
   sessionExpired: "/session-expired",
 } as const;
 
-export type LegalDoc = "refunds" | "terms" | "privacy" | "farmer-terms" | "cookies";
+export type LegalDoc = "refunds" | "terms" | "privacy" | "farmer-terms" | "cookies" | "delivery" | "acceptable-use";

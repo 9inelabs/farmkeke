@@ -1,0 +1,105 @@
+{
+  "title": "Acceptable use policy",
+  "nav": "Acceptable use",
+  "draft": false,
+  "updated": "27 October 2026",
+  "description": "What can be sold on Farmkeke, and how shoppers, farmers and visitors must use the website and app.",
+  "short": "**In short:** Farmkeke is for buying and selling genuine farm produce, paid for through Farmkeke. No unsafe or illegal products, no payments outside Farmkeke, no fraud, abuse or misuse of the service. If someone breaks these rules, we can remove content, hold payouts and suspend or close accounts.",
+  "sections": [
+    {
+      "title": "About this policy",
+      "blocks": [
+        {
+          "p": "This policy applies to everyone who uses the Farmkeke website (farmkeke.com) or app: shoppers, farmers and visitors. Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. It adds to our [Terms of use](/legal/terms) and [Farmer terms](/legal/farmer-terms)."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "What can be sold",
+      "blocks": [
+        {
+          "p": "Only approved farms can sell on Farmkeke. They may list produce they grow or raise themselves, or produce from their own cooperative, described honestly with their own photos. New and edited listings are checked by our team before they go live."
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "What may not be sold",
+      "blocks": [
+        {
+          "ul": [
+            "produce that is spoiled, contaminated or unsafe to eat",
+            "anything treated with banned chemicals, or harvested before the safe waiting period after spraying",
+            "protected or endangered wild animals or plants, or bushmeat that is illegal to sell",
+            "processed or packaged foods that need NAFDAC registration but do not have it",
+            "alcohol, tobacco, drugs, medicines, weapons, or anything that is not farm produce",
+            "counterfeit, stolen or misdescribed goods",
+            "anything else that is illegal to sell in Nigeria"
+          ]
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "Payments",
+      "blocks": [
+        {
+          "ul": [
+            "Every order made on Farmkeke must be paid through Farmkeke. Never pay, or ask anyone to pay, a farmer directly, in cash or by bank transfer for a Farmkeke order.",
+            "Do not use a card, bank account or Farmkeke account that is not yours, or that you are not allowed to use.",
+            "Do not make false problem reports or payment chargebacks.",
+            "Do not use Farmkeke to move money for any purpose other than buying and selling produce, including money laundering or any kind of fraud."
+          ]
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "How you must behave",
+      "blocks": [
+        {
+          "ul": [
+            "Give true information about yourself, your farm, your address and your bank account.",
+            "Be honest and respectful in reviews and chats. Do not post anything false, abusive, hateful, obscene, or private about someone else.",
+            "Do not write, buy or ask for fake reviews.",
+            "Do not harass shoppers, farmers, riders or our staff.",
+            "Use other people's contact details only for their Farmkeke order, and never share them."
+          ]
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "Protecting the service",
+      "blocks": [
+        {
+          "ul": [
+            "Do not copy, scrape or resell our content or data.",
+            "Do not try to break, overload or get around the security of our website, app or systems, or access accounts or data that are not yours.",
+            "Do not use Farmkeke for anything unlawful, including offences under the Cybercrimes (Prohibition, Prevention, etc.) Act."
+          ]
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "What we do if this policy is broken",
+      "blocks": [
+        {
+          "p": "Depending on what happened, we may remove a listing, review or message; cancel and refund an order; hold a farmer's payout while we investigate; suspend or close an account or farm; and report the matter to the police or other authorities. Where we can, we tell the person why and give them a chance to respond."
+        }
+      ],
+      "id": "s7"
+    },
+    {
+      "title": "Reporting a problem",
+      "blocks": [
+        {
+          "p": "If you see something on Farmkeke that breaks this policy, or a farmer or shopper asks you to pay outside Farmkeke, tell us at [support@farmkeke.com](mailto:support@farmkeke.com) or through the [contact page](/contact)."
+        }
+      ],
+      "id": "s8"
+    }
+  ]
+}

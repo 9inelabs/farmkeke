@@ -9,10 +9,10 @@
       "title": "Who we are",
       "blocks": [
         {
-          "p": "Farmkeke is run by [Company legal name] (RC [RC number]), [Registered address], Owerri, Imo State, Nigeria. We are the data controller for the personal information described here, under the Nigeria Data Protection Act 2023 (NDPA) and the rules of the Nigeria Data Protection Commission (NDPC)."
+          "p": "Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. We are the data controller for the personal information described here, under the Nigeria Data Protection Act 2023 (NDPA) and the rules of the Nigeria Data Protection Commission (NDPC)."
         },
         {
-          "p": "Our Data Protection Officer is [DPO name]. You can reach them at [privacy@farmkeke.com](mailto:privacy@farmkeke.com)."
+          "p": "You can reach our Data Protection Officer at [privacy@farmkeke.com](mailto:privacy@farmkeke.com)."
         },
         {
           "p": "This policy covers shoppers (with an account or as a guest), farmers, Farmkeke riders and visitors to our website and app."
@@ -183,7 +183,7 @@
       "title": "Contact us",
       "blocks": [
         {
-          "p": "Data protection questions: [privacy@farmkeke.com](mailto:privacy@farmkeke.com). Anything else: [support@farmkeke.com](mailto:support@farmkeke.com). Post: [Company legal name], [Registered address], Owerri, Imo State, Nigeria."
+          "p": "Data protection questions: [privacy@farmkeke.com](mailto:privacy@farmkeke.com). Anything else: [support@farmkeke.com](mailto:support@farmkeke.com). The data controller is Farmhaul Technologies Ltd (RC 9920885), which runs Farmkeke."
         }
       ],
       "id": "s13"

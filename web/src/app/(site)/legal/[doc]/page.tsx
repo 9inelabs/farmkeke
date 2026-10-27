@@ -1,7 +1,7 @@
-// W-87 Legal: terms of use, privacy, refunds and disputes, farmer terms and
-// cookies. A document marked draft shows a notice that it is awaiting approval
+// W-87 Legal: terms of use, privacy, refunds and disputes, delivery,
+// acceptable use, farmer terms and cookies. A document marked draft shows a notice that it is awaiting approval
 // and is not yet in force.
-import { ChevronRight, Cookie, File, Info, Lock, Mail, RefreshCw, Sprout, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ChevronRight, Cookie, File, Info, Lock, Mail, RefreshCw, ShieldCheck, Sprout, TriangleAlert, Truck, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,7 +9,9 @@ import { OnThisPage, PrintButton } from "@/components/site/LegalClient";
 import { FadeUp } from "@/lib/motion";
 import { routes, type LegalDoc } from "@/lib/routes";
 
+import acceptableUse from "@/content/legal/acceptable-use.json";
 import cookies from "@/content/legal/cookies.json";
+import delivery from "@/content/legal/delivery.json";
 import farmerTerms from "@/content/legal/farmer-terms.json";
 import privacy from "@/content/legal/privacy.json";
 import refunds from "@/content/legal/refunds.json";
@@ -21,11 +23,13 @@ const DOCS: Record<LegalDoc, LegalContent & { icon: LucideIcon }> = {
   terms: { ...(terms as LegalContent), icon: File },
   privacy: { ...(privacy as LegalContent), icon: Lock },
   refunds: { ...(refunds as LegalContent), icon: RefreshCw },
+  delivery: { ...(delivery as LegalContent), icon: Truck },
+  "acceptable-use": { ...(acceptableUse as LegalContent), icon: ShieldCheck },
   "farmer-terms": { ...(farmerTerms as LegalContent), icon: Sprout },
   cookies: { ...(cookies as LegalContent), icon: Cookie },
 };
 
-const ORDER: LegalDoc[] = ["terms", "privacy", "refunds", "farmer-terms", "cookies"];
+const ORDER: LegalDoc[] = ["terms", "privacy", "refunds", "delivery", "acceptable-use", "farmer-terms", "cookies"];
 const isDoc = (d: string): d is LegalDoc => (ORDER as string[]).includes(d);
 
 export function generateStaticParams() {

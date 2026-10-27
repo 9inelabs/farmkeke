@@ -1,0 +1,108 @@
+{
+  "title": "Delivery policy",
+  "nav": "Delivery policy",
+  "draft": false,
+  "updated": "27 October 2026",
+  "description": "Where Farmkeke delivers, how delivery is priced and timed, and what happens when your order arrives.",
+  "short": "**In short:** a Farmkeke rider brings your order from the farm to your door, inside our delivery areas. You pay for delivery only after the farm accepts your order, and the rider only collects it once you've paid. Check everything when it arrives, then confirm in the app.",
+  "sections": [
+    {
+      "title": "About this policy",
+      "blocks": [
+        {
+          "p": "This policy explains how home delivery and farm pickup work on the Farmkeke website (farmkeke.com) and app. Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. It adds to our [Terms of use](/legal/terms) and [Refund and dispute policy](/legal/refunds)."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "Where we deliver",
+      "blocks": [
+        {
+          "p": "We deliver within our delivery areas, which are currently in and around Owerri, Imo State. At checkout you pick your area and enter your address, landmark and any directions for the rider. If your address is outside our areas, you can still order for pickup at the farm."
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "How a delivery order works",
+      "blocks": [
+        {
+          "ul": [
+            "You place your order without paying. If your cart has produce from several farms, each farm gets its own order.",
+            "Each farm has **24 hours** to accept. If a farm declines or does not answer, that order is cancelled and you pay nothing for it.",
+            "Once the farm accepts, we arrange a rider and price the delivery. We send you one bill by email, text and in the app.",
+            "You have **12 hours** to pay the bill. We remind you after 6 hours. If it is not paid in time, the order is cancelled and you are not charged.",
+            "The rider collects your order from the farm only after it has been paid for, then brings it to you."
+          ]
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "Delivery times",
+      "blocks": [
+        {
+          "p": "You choose a delivery day and time window at checkout. Because farms have up to 24 hours to accept, the earliest delivery is usually the next day. Orders from different farms may arrive separately, in the window you chose. If we cannot make your window, we contact you to agree another time."
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Delivery fees",
+      "blocks": [
+        {
+          "ul": [
+            "Delivery fees are set per order, based on where the produce is coming from and going to, and how much there is.",
+            "The fee is shown on your bill before you pay. You never pay a delivery fee you have not seen.",
+            "Delivery fees pay for Farmkeke riders and are paid to Farmkeke, not to the farm.",
+            "If a paid order is cancelled before it reaches you, you are refunded in full. For a part refund after delivery, the delivery fee is not refunded, because the delivery took place."
+          ]
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "When your order arrives",
+      "blocks": [
+        {
+          "ul": [
+            "Keep your phone on. The rider may call you when they are close.",
+            "Check every item when you receive it. Fresh produce is natural and can vary in size, colour and ripeness.",
+            "If everything is right, tap **I received everything** in the app or on the website. You can do this as soon as the rider is on the way, and confirming also marks the order delivered. Confirming releases the payment to the farm and cannot be undone.",
+            "If something is missing, damaged or wrong, do not confirm. Tap **Report a problem** on your order, add photos, and we will sort it out under our [Refund and dispute policy](/legal/refunds).",
+            "If the rider cannot reach you, we contact you to arrange another time."
+          ]
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "Picking up at the farm",
+      "blocks": [
+        {
+          "p": "Instead of delivery, you can collect your order at the farm. Pickup orders are paid at checkout. When your order is ready, we send you the farm's address, its opening hours and your 4-digit pickup code. Give the code only to the farmer when you collect. You have **3 days** to collect; after that, please contact support."
+        }
+      ],
+      "id": "s7"
+    },
+    {
+      "title": "Lost, late or damaged deliveries",
+      "blocks": [
+        {
+          "p": "If your order does not arrive, arrives late, or is damaged on the way, report it from your order page or contact support. Your payment stays held while we look into it, and we refund you for anything that did not reach you in good condition."
+        }
+      ],
+      "id": "s8"
+    },
+    {
+      "title": "Contact us",
+      "blocks": [
+        {
+          "p": "Questions about a delivery: [support@farmkeke.com](mailto:support@farmkeke.com) or the [contact page](/contact)."
+        }
+      ],
+      "id": "s9"
+    }
+  ]
+}

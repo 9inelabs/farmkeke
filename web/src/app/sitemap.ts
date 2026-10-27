@@ -23,6 +23,8 @@ const STATIC: Array<{ path: string; priority: number; changeFrequency: "daily" |
   { path: routes.legal("privacy"), priority: 0.3, changeFrequency: "monthly" },
   { path: routes.legal("farmer-terms"), priority: 0.3, changeFrequency: "monthly" },
   { path: routes.legal("cookies"), priority: 0.3, changeFrequency: "monthly" },
+  { path: routes.legal("delivery"), priority: 0.3, changeFrequency: "monthly" },
+  { path: routes.legal("acceptable-use"), priority: 0.3, changeFrequency: "monthly" },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

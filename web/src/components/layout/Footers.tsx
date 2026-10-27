@@ -42,6 +42,8 @@ const SITE_COLUMNS: Col[] = [
       { href: routes.legal("terms"), label: "Terms of use" },
       { href: routes.legal("privacy"), label: "Privacy policy" },
       { href: routes.legal("refunds"), label: "Refund and dispute policy" },
+      { href: routes.legal("delivery"), label: "Delivery policy" },
+      { href: routes.legal("acceptable-use"), label: "Acceptable use policy" },
       { href: routes.contact, label: "Contact" },
     ],
   },
@@ -76,6 +78,8 @@ const SHOP_COLUMNS: Col[] = [
       { href: routes.legal("terms"), label: "Terms of use" },
       { href: routes.legal("privacy"), label: "Privacy policy" },
       { href: routes.legal("refunds"), label: "Refund and dispute policy" },
+      { href: routes.legal("delivery"), label: "Delivery policy" },
+      { href: routes.legal("acceptable-use"), label: "Acceptable use policy" },
     ],
   },
 ];
@@ -110,7 +114,7 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
       </div>
       <div className="mt-10 flex justify-between gap-3 pt-5 shadow-[inset_0_1px_0_var(--color-line-soft)] m:mt-7 m:flex-col m:gap-1 m:pt-4">
         <span className="cap">
-          © <CopyrightYear /> Farmkeke. All rights reserved.
+          © <CopyrightYear /> Farmhaul Technologies Ltd (RC 9920885). Farmkeke is a brand of Farmhaul Technologies Ltd.
         </span>
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <CookieSettingsButton className="cap border-0 bg-transparent p-0 hover:text-ink" />

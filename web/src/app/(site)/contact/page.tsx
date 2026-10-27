@@ -88,7 +88,7 @@ export default function ContactPage() {
             <ul className="m-0 mt-3.5 flex list-none flex-col gap-3 p-0 text-sm text-ink-3 m:mt-2.5 m:gap-2.5 m:text-[13px]">
               <li className="flex gap-2.5">
                 <MapPin aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />
-                <span>[Office address], Owerri, Imo State</span>
+                <span>Owerri, Imo State, Nigeria</span>
               </li>
               <li className="flex gap-2.5">
                 <Clock aria-hidden size={18} strokeWidth={2} className="flex-none text-forest" />

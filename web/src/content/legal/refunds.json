@@ -2,7 +2,7 @@
   "title": "Refund and dispute policy",
   "nav": "Refund and dispute policy",
   "draft": false,
-  "updated": "17 October 2026",
+  "updated": "27 October 2026",
   "description": "How Farmkeke protects your payment, what happens if a farm doesn't accept, how to report a problem, and how refunds are paid.",
   "short": "**In short:** Farmkeke holds your payment until you confirm your order. If something goes wrong, report it before confirming, and we'll make it right.",
   "sections": [
@@ -13,7 +13,7 @@
           "p": "When you pay for an order, Farmkeke holds the money. The farm is paid only after you confirm that your order arrived as expected, or after a problem report is resolved."
         },
         {
-          "p": "You can confirm receipt only once your order is marked delivered or collected. Pickup orders wait at the farm for 3 days once they are ready."
+          "p": "You can confirm receipt once the rider is bringing your order, or once you have collected a pickup order. Pickup orders wait at the farm for 3 days once they are ready."
         }
       ],
       "id": "s1"

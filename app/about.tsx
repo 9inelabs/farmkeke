@@ -29,7 +29,7 @@ export default function About() {
           <ListRow icon={Mail} title="Email us" subtitle={INFO_EMAIL} onPress={() => void Linking.openURL(`mailto:${INFO_EMAIL}`)} />
         </ListGroup>
         <Text variant="small" align="center">
-          Made in Owerri, Nigeria
+          Made in Owerri, Nigeria{"\n"}Farmkeke is a brand of Farmhaul Technologies Ltd (RC 9920885)
         </Text>
       </ScrollView>
     </Screen>

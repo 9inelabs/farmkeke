@@ -9,10 +9,10 @@
       "title": "About these terms",
       "blocks": [
         {
-          "p": "These terms apply when you use the Farmkeke website (farmkeke.com) or the Farmkeke app. Farmkeke is run by [Company legal name] (RC [RC number]), [Registered address], Owerri, Imo State, Nigeria (“Farmkeke”, “we”, “us”)."
+          "p": "These terms apply when you use the Farmkeke website (farmkeke.com) or the Farmkeke app. Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria (“Farmkeke”, “we”, “us”)."
         },
         {
-          "p": "By browsing, creating an account or placing an order, you agree to these terms. Our [Refund and dispute policy](/legal/refunds), [Privacy policy](/legal/privacy) and [Cookie policy](/legal/cookies) also apply. Farmers who sell on Farmkeke also agree to the [Farmer terms](/legal/farmer-terms)."
+          "p": "By browsing, creating an account or placing an order, you agree to these terms. Our [Refund and dispute policy](/legal/refunds), [Delivery policy](/legal/delivery), [Acceptable use policy](/legal/acceptable-use), [Privacy policy](/legal/privacy) and [Cookie policy](/legal/cookies) also apply. Farmers who sell on Farmkeke also agree to the [Farmer terms](/legal/farmer-terms)."
         }
       ],
       "id": "s1"
@@ -106,7 +106,7 @@
       "title": "Confirming receipt and our payment protection",
       "blocks": [
         {
-          "p": "Your money stays with Farmkeke until you confirm that your order arrived as expected. You can confirm once the order is marked delivered or collected. Confirming releases the payment to the farm and cannot be undone, so check everything first."
+          "p": "Your money stays with Farmkeke until you confirm that your order arrived as expected. You can confirm once the rider is bringing your order, or once you have collected a pickup order. Confirming releases the payment to the farm and cannot be undone, so check everything first."
         },
         {
           "p": "If something is wrong, report it from your order page **before** you confirm. See the [Refund and dispute policy](/legal/refunds). If you neither confirm nor report a problem within 24 hours of delivery, we remind you, and our team may release the payment to the farm after checking the delivery records."
@@ -195,7 +195,7 @@
       "title": "Contact us",
       "blocks": [
         {
-          "p": "Email [support@farmkeke.com](mailto:support@farmkeke.com), use the [contact page](/contact), or write to [Company legal name], [Registered address], Owerri, Imo State, Nigeria."
+          "p": "Email [support@farmkeke.com](mailto:support@farmkeke.com) or use the [contact page](/contact). Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885)."
         }
       ],
       "id": "s15"

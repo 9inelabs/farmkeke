@@ -21,6 +21,8 @@ export type Email = { to: string; subject: string; html: string; text: string };
 /** The default website. Links use env WEBSITE_URL when it's set. */
 export const SITE_URL = "https://farmkeke.com";
 const TAGLINE = "Farmkeke · from the farm directly to your home";
+// The registered company behind the brand (CAC certificate)
+const COMPANY_LINE = "Farmkeke is a brand of Farmhaul Technologies Ltd (RC 9920885).";
 
 const trimSlash = (s: string) => s.replace(/\/+$/, "");
 const envValue = (value: string | undefined) => (value && value.trim() ? trimSlash(value.trim()) : undefined);
@@ -284,6 +286,7 @@ ${SMALL(`Need help? Reply to this email or visit ${LINK(helpUrl(), helpLabel())}
 <tr><td style="padding:20px 4px 0;font-family:${BODY_FONT};font-size:12px;line-height:18px;color:${MUTED};">
 ${reason ? `<p style="margin:0 0 8px;">${esc(reason)}</p>` : ""}
 <p style="margin:0;font-weight:600;color:${FOREST};">${esc(TAGLINE)}</p>
+<p style="margin:4px 0 0;">${esc(COMPANY_LINE)}</p>
 </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
@@ -308,6 +311,7 @@ function plain(opts: { lines: string[]; cta: { label: string; url: string }; ext
     "--",
     ...(opts.reason ? [opts.reason] : []),
     TAGLINE,
+    COMPANY_LINE,
   ].join("\n");
 }
 
