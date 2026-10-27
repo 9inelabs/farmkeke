@@ -3,9 +3,9 @@
 import { cacheLife } from "next/cache";
 import QRCode from "qrcode";
 import { routes } from "@/lib/routes";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://farmkeke.com";
-export const APP_LINK = `${SITE_URL.replace(/\/$/, "")}${routes.getTheApp}`;
+export const APP_LINK = `${SITE_URL}${routes.getTheApp}`;
 
 async function qrSvg(text: string) {
   "use cache";

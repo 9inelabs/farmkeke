@@ -8,6 +8,7 @@ import { ConnectionStatus } from "@/components/system/ConnectionStatus";
 import { CookieBanner } from "@/components/system/CookieBanner";
 import { MaintenanceGate } from "@/components/system/MaintenanceGate";
 import { SiteOnly } from "@/components/system/SiteOnly";
+import { SITE_URL } from "@/lib/siteUrl";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-inter", display: "swap" });
@@ -18,10 +19,8 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://farmkeke.com";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Farmkeke · From the farm directly to your home",
     template: "%s · Farmkeke",
@@ -33,9 +32,9 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Farmkeke",
     locale: "en_NG",
-    images: [{ url: "/brand/wordmark.png", width: 705, height: 135, alt: "Farmkeke" }],
   },
-  twitter: { card: "summary" },
+  // The share picture is app/opengraph-image.tsx
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

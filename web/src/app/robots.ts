@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { routes } from "@/lib/routes";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://farmkeke.com").replace(/\/$/, "");
+const siteUrl = SITE_URL;
 
 // Shop and information pages are public; personal, checkout and order pages are not.
 export default function robots(): MetadataRoute.Robots {

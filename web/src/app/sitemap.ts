@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getSitemapData } from "@/components/shop/data";
 import { routes } from "@/lib/routes";
+import { SITE_URL } from "@/lib/siteUrl";
 
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://farmkeke.com").replace(/\/$/, "");
+const siteUrl = SITE_URL;
 
 // Static pages from routes, category pages, and product and farm pages found
 // through the storefront queries (cached for an hour).

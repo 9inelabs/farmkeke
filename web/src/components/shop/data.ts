@@ -18,9 +18,10 @@ import type {
 import type { ListingSummary } from "@/convex/returns/common";
 import { serverQuery } from "@/convex/server";
 import { todayInLagos } from "@/lib/format";
+import { SITE_URL } from "@/lib/siteUrl";
 import { categoryArgs, searchArgs, withoutLocation, type ListFilters } from "./filters-shared";
 
-export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://farmkeke.com").replace(/\/$/, "");
+export const siteUrl = SITE_URL;
 
 export {
   categoryArgs,
