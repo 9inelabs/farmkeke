@@ -2,7 +2,7 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { applicationProblems, EDITABLE_STATUSES, MAX_FARM_PHOTOS } from "./lib/application";
+import { applicationProblems, countDocuments, EDITABLE_STATUSES, isNin, MAX_FARM_PHOTOS } from "./lib/application";
 import { getViewer, requireAccount } from "./lib/auth";
 import { bankName } from "./lib/banks";
 import { nextCounter } from "./lib/counters";
@@ -28,17 +28,6 @@ async function documentsOf(ctx: QueryCtx, applicationId: Id<"farmerApplications"
     .query("farmerDocuments")
     .withIndex("by_applicationId", (q) => q.eq("applicationId", applicationId))
     .take(50);
-}
-
-function countDocs(docs: Doc<"farmerDocuments">[]) {
-  const live = docs.filter((d) => d.status !== "rejected" && d.status !== "expired");
-  const count = (kind: Doc<"farmerDocuments">["kind"]) => live.filter((d) => d.kind === kind).length;
-  return {
-    government_id: count("government_id"),
-    farm_photo: count("farm_photo"),
-    proof_of_address: count("proof_of_address"),
-    association_letter: count("association_letter"),
-  };
 }
 
 /** The caller's application in an editable state, or a clear error. */
@@ -68,7 +57,7 @@ export const mine = query({
       photoUrl: app.photoStorageId ? await ctx.storage.getUrl(app.photoStorageId) : null,
       documents,
       // Older applications have no full name; the account's name stands in
-      problems: applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocs(docs)),
+      problems: applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocuments(docs)),
       expectedDecisionAt: app.submittedAt === undefined ? null : app.submittedAt + REVIEW_DAYS * 86_400_000,
     };
   },
@@ -117,11 +106,12 @@ const optionalText = (value: string | undefined, max = 300) => {
 
 /**
  * The short form's first screen ("Let's get to know you"): the farmer's name
- * and photo, the farm's name, and where it is. Partial saves are fine.
+ * and photo, their NIN, the farm's name, and where it is. Partial saves are fine.
  */
 export const saveProfile = mutation({
   args: {
     fullName: v.optional(v.string()),
+    nin: v.optional(v.string()),
     farmName: v.optional(v.string()),
     photoStorageId: v.optional(v.union(v.id("_storage"), v.null())),
     state: v.optional(v.string()),
@@ -133,21 +123,31 @@ export const saveProfile = mutation({
   handler: async (ctx, args) => {
     const { user, app } = await editableApplication(ctx);
     const fullName = optionalText(args.fullName, 80);
+    // Spaces and dashes are fine; what's kept is the 11 digits
+    let nin = app.nin;
+    if (args.nin !== undefined) {
+      const digits = args.nin.replace(/[\s-]/g, "");
+      if (digits !== "" && !isNin(digits)) throw new ConvexError({ code: "INVALID_NIN" });
+      nin = digits || undefined;
+    }
     let photoStorageId = app.photoStorageId;
     if (args.photoStorageId !== undefined && args.photoStorageId !== app.photoStorageId) {
       if (args.photoStorageId !== null) await validateImageUpload(ctx, args.photoStorageId);
       if (app.photoStorageId) await ctx.storage.delete(app.photoStorageId);
       photoStorageId = args.photoStorageId ?? undefined;
     }
+    // Only what was sent changes (the photo is saved on its own); "" clears a field
+    const sent = <T,>(key: keyof typeof args, value: T) => (args[key] === undefined ? {} : { [key]: value });
     await ctx.db.patch("farmerApplications", app._id, {
-      fullName,
-      farmName: optionalText(args.farmName, 80),
+      ...sent("fullName", fullName),
+      nin,
+      ...sent("farmName", optionalText(args.farmName, 80)),
       photoStorageId,
-      state: optionalText(args.state, 60),
-      lga: optionalText(args.lga, 60),
-      address: optionalText(args.address),
-      latitude: args.latitude,
-      longitude: args.longitude,
+      ...sent("state", optionalText(args.state, 60)),
+      ...sent("lga", optionalText(args.lga, 60)),
+      ...sent("address", optionalText(args.address)),
+      // A position belongs with the place it was found for
+      ...(args.state !== undefined || args.lga !== undefined || args.latitude !== undefined ? { latitude: args.latitude, longitude: args.longitude } : {}),
     });
     // The account takes the farmer's name (accounts made by phone start without one)
     if (fullName && user.name !== fullName) await ctx.db.patch("users", user._id, { name: fullName });
@@ -312,7 +312,7 @@ export const submit = mutation({
     const { user, app } = await editableApplication(ctx);
     if (!args.acceptTerms) throw new ConvexError({ code: "TERMS_REQUIRED" });
     const docs = await documentsOf(ctx, app._id);
-    const problems = applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocs(docs));
+    const problems = applicationProblems({ ...app, fullName: app.fullName ?? user.name }, countDocuments(docs));
     if (Object.keys(problems).length > 0) throw new ConvexError({ code: "INCOMPLETE", sections: Object.keys(problems) });
 
     // The phone becomes a way to sign in, so it must belong to one account.

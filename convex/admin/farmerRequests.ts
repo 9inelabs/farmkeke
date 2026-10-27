@@ -4,9 +4,9 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
-import { applicationProblems, DEFAULT_COLLECTION_HOURS, DEFAULT_LEAD_TIME_HOURS } from "../lib/application";
+import { applicationProblems, countDocuments, DEFAULT_COLLECTION_HOURS, DEFAULT_LEAD_TIME_HOURS } from "../lib/application";
 import { writeAudit } from "../lib/audit";
-import { requireStaff } from "../lib/auth";
+import { requireStaff, requireStaffContext } from "../lib/auth";
 import { notify } from "../lib/notify";
 import { applicationSection, applicationStatus } from "../schema";
 
@@ -60,10 +60,12 @@ export const counts = query({
 export const get = query({
   args: { applicationId: v.id("farmerApplications") },
   handler: async (ctx, args) => {
-    await requireStaff(ctx, "farmers.view");
+    const staff = await requireStaffContext(ctx, "farmers.view");
     const app = await ctx.db.get("farmerApplications", args.applicationId);
     if (app === null) return null;
     const user = await ctx.db.get("users", app.userId);
+    // The full NIN is for staff who approve farmers; others see the last 4 digits
+    const nin = app.nin && !staff.permissions.has("farmers.approve") ? `•••••••${app.nin.slice(-4)}` : app.nin;
     const docs = await ctx.db
       .query("farmerDocuments")
       .withIndex("by_applicationId", (q) => q.eq("applicationId", app._id))
@@ -76,7 +78,7 @@ export const get = query({
       .order("desc")
       .take(50);
     return {
-      application: app,
+      application: { ...app, nin },
       photoUrl: app.photoStorageId ? await ctx.storage.getUrl(app.photoStorageId) : null,
       applicant: user === null ? null : { _id: user._id, name: user.name, email: user.email, phone: user.phone },
       categories: categories.filter((c) => c !== null).map((c) => c.name),
@@ -106,7 +108,7 @@ export const approve = mutation({
     const live = docs.filter((d) => d.status !== "rejected" && d.status !== "expired");
     const applicant = await ctx.db.get("users", app.userId);
     // Older applications have no full name; the account's name stands in
-    const problems = applicationProblems({ ...app, fullName: app.fullName ?? applicant?.name });
+    const problems = applicationProblems({ ...app, fullName: app.fullName ?? applicant?.name }, countDocuments(docs));
     if (Object.keys(problems).length > 0) throw new ConvexError("Application is incomplete; request more info instead");
     const existing = await ctx.db.query("farms").withIndex("by_userId", (q) => q.eq("userId", app.userId)).unique();
     if (existing !== null) throw new ConvexError("This person already has a farm");

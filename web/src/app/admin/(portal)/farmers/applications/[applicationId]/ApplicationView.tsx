@@ -101,6 +101,7 @@ export function ApplicationView({ applicationId }: { applicationId: string }) {
             <Facts
               items={[
                 { label: "Full name", value: app.fullName ?? data.applicant?.name ?? "–" },
+                { label: "NIN", value: app.nin ? <span className="font-mono tracking-wider">{app.nin}</span> : "–" },
                 { label: "Email", value: data.applicant?.email ?? "–" },
                 { label: "Account phone", value: data.applicant?.phone ? displayPhone(data.applicant.phone) : "–" },
                 { label: "Submitted", value: app.submittedAt ? dateTime(app.submittedAt) : "Not yet" },

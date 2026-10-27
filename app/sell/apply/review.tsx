@@ -7,7 +7,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Bank, Call, Edit, Info, Pin, Shop, User, type IconComponent } from "@/components/icons";
+import { Bank, Call, Edit, IdCard, Info, Pin, Shop, User, type IconComponent } from "@/components/icons";
 import { Avatar, Button, Checkbox, Skeleton, Text } from "@/components/ui";
 import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
@@ -64,6 +64,7 @@ export default function Review() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const incomplete = app ? Object.keys(app.problems).length > 0 : true;
+  const farmPhotos = (app?.documents ?? []).filter((d) => d.kind === "farm_photo" && d.status !== "rejected" && d.status !== "expired");
 
   const send = async () => {
     if (!terms) return setError("Tick the box to agree to the farmer terms.");
@@ -80,7 +81,7 @@ export default function Review() {
     }
   };
 
-  const edit = (path: "/sell/apply/profile" | "/sell/apply/bank") => router.push({ pathname: path, params: { from: "review" } });
+  const edit = (path: "/sell/apply/profile" | "/sell/apply/photos" | "/sell/apply/bank") => router.push({ pathname: path, params: { from: "review" } });
 
   return (
     <SellShell
@@ -133,7 +134,19 @@ export default function Review() {
             <Line icon={User} label="Full name" value={app.fullName ?? null} />
             <Line icon={Shop} label="Farm" value={app.farmName ?? null} />
             <Line icon={Call} label="Phone" value={app.phone ? displayPhone(app.phone) : null} />
+            <Line icon={IdCard} label="NIN" value={app.nin ? `•••••••${app.nin.slice(-4)}` : null} />
             <Line icon={Pin} label="Location" value={[app.address, app.lga, app.state].filter(Boolean).join(", ") || null} />
+          </Section>
+          <Section title="Farm photos" onEdit={() => edit("/sell/apply/photos")} problems={app.problems.documents ?? []}>
+            {farmPhotos.length > 0 ? (
+              <View style={styles.photos}>
+                {farmPhotos.map((d) => (d.url ? <Image key={d._id} source={{ uri: d.url }} style={styles.farmPhoto} contentFit="cover" /> : <View key={d._id} style={styles.farmPhoto} />))}
+              </View>
+            ) : (
+              <Text variant="body" color={colors.inkMuted}>
+                Not added yet
+              </Text>
+            )}
           </Section>
           <Section title="Bank details" onEdit={() => edit("/sell/apply/bank")} problems={app.problems.payout ?? []}>
             <Line icon={Bank} label="Bank" value={app.bankName && app.accountNumber ? `${app.bankName} ••${app.accountNumber.slice(-4)}` : null} />
@@ -158,4 +171,6 @@ const styles = StyleSheet.create({
   problem: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   admin: { backgroundColor: colors.pendingSoft, borderRadius: radii.lg, padding: spacing.lg, gap: 4 },
   link: { fontFamily: fonts.semibold, textDecorationLine: "underline" },
+  photos: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
+  farmPhoto: { width: 64, height: 64, borderRadius: radii.md, backgroundColor: colors.placeholder },
 });

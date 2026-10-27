@@ -1,5 +1,5 @@
-// Farmer sign-up: "Let's get to know you!" The farmer's photo and full name,
-// the farm's name, and where the farm is: "Select location" to choose it by
+// Farmer sign-up: "Let's get to know you!" The farmer's photo, full name and
+// NIN (11 digits, for identity checks only), the farm's name, and where the farm is: "Select location" to choose it by
 // hand (state, LGA and an address or landmark), or "Search location
 // automatically" to fill it in from where the phone is now.
 import { api } from "@convex/_generated/api";
@@ -15,7 +15,7 @@ import { BottomSheet, Button, SelectField, Text, TextField } from "@/components/
 import { NIGERIAN_STATES } from "@/content/nigeria";
 import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
-import { errorMessage } from "@/lib/errors";
+import { errorCode, errorMessage } from "@/lib/errors";
 import { pickPhotos, preparePhoto, uploadFile } from "@/lib/upload";
 import { whereIs } from "@/lib/whereIs";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -38,6 +38,7 @@ export default function Profile() {
 
   const [fullName, setFullName] = useState("");
   const [farmName, setFarmName] = useState("");
+  const [nin, setNin] = useState("");
   const [place, setPlace] = useState<Place>({ lga: "", address: "" });
   const [photo, setPhoto] = useState<{ uri: string; id?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -52,6 +53,7 @@ export default function Profile() {
     if (!app) return;
     setFullName(app.fullName ?? "");
     setFarmName(app.farmName ?? "");
+    setNin(app.nin ?? "");
     setPlace({ state: app.state, lga: app.lga ?? "", address: app.address ?? "", latitude: app.latitude, longitude: app.longitude });
     if (app.photoUrl) setPhoto({ uri: app.photoUrl });
     // Load once per application, not on every live update
@@ -120,16 +122,17 @@ export default function Profile() {
     const problems: Record<string, string> = {};
     if (!fullName.trim()) problems.fullName = "Enter your full name.";
     if (!farmName.trim()) problems.farmName = "Enter your farm's name.";
+    if (!/^\d{11}$/.test(nin)) problems.nin = nin ? "A NIN has 11 digits." : "Enter your NIN.";
     if (!place.state || !place.lga.trim() || !place.address.trim()) problems.place = "Choose where your farm is.";
     setErrors(problems);
     if (Object.keys(problems).length > 0) return;
     setBusy(true);
     try {
-      await save({ fullName, farmName, state: place.state, lga: place.lga, address: place.address, latitude: place.latitude, longitude: place.longitude });
+      await save({ fullName, farmName, nin, state: place.state, lga: place.lga, address: place.address, latitude: place.latitude, longitude: place.longitude });
       if (from === "review") router.back();
-      else router.push("/sell/apply/bank");
+      else router.push("/sell/apply/photos");
     } catch (e) {
-      setErrors({ form: errorMessage(e) });
+      setErrors(errorCode(e) === "INVALID_NIN" ? { nin: "A NIN has 11 digits." } : { form: errorMessage(e) });
     } finally {
       setBusy(false);
     }
@@ -142,7 +145,7 @@ export default function Profile() {
       scene="profile"
       curve="right"
       sticker="right"
-      footer={<Button label={from === "review" ? "Save changes" : "Set Bank Details"} variant="black" size="large" fullWidth loading={busy || app === undefined} disabled={uploading} onPress={() => void submit()} />}
+      footer={<Button label={from === "review" ? "Save changes" : "Add Farm Photos"} variant="black" size="large" fullWidth loading={busy || app === undefined} disabled={uploading} onPress={() => void submit()} />}
     >
       <SellTitle title="Let's get to know you!" note="Please fill in all details correctly" />
 
@@ -168,6 +171,17 @@ export default function Profile() {
 
       <TextField tone="lime" label="Full Name" value={fullName} onChangeText={setFullName} placeholder="Okafor John" autoCapitalize="words" autoComplete="name" error={errors.fullName} />
       <TextField tone="lime" label="Name of Farm" value={farmName} onChangeText={setFarmName} placeholder="Okafor's Farm" autoCapitalize="words" error={errors.farmName} />
+      <TextField
+        tone="lime"
+        label="NIN (National Identification Number)"
+        value={nin}
+        onChangeText={(v) => setNin(v.replace(/\D/g, "").slice(0, 11))}
+        placeholder="11 digits"
+        keyboardType="number-pad"
+        maxLength={11}
+        helper="Only Farmkeke staff see it, to confirm who you are. It's never shown to buyers."
+        error={errors.nin}
+      />
 
       <View style={styles.locationBlock}>
         <Pressable accessibilityRole="button" accessibilityLabel={summary ? `Farm location: ${summary}. Change` : "Select location"} onPress={() => setSheet(true)} style={[styles.select, errors.place ? styles.selectError : null]}>

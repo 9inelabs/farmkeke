@@ -382,6 +382,8 @@ export default defineSchema({
     // farmer's name and photo, the farm's name and location, and bank details.
     fullName: v.optional(v.string()),
     photoStorageId: v.optional(v.id("_storage")),
+    // National Identification Number, 11 digits (KYC since 27 Oct 2026). Staff only.
+    nin: v.optional(v.string()),
     farmName: v.optional(v.string()),
     phone: v.optional(v.string()),
     state: v.optional(v.string()),

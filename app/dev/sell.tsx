@@ -8,6 +8,7 @@ import { Chip } from "@/components/ui";
 import { SampleApplication, type Application } from "@/features/farmer/useApplication";
 import { colors, spacing } from "@/theme/tokens";
 import Bank from "../sell/apply/bank";
+import Photos from "../sell/apply/photos";
 import Profile from "../sell/apply/profile";
 import Review from "../sell/apply/review";
 
@@ -26,13 +27,24 @@ const base = {
   expectedDecisionAt: null,
 };
 
+// Three farm photos (grey placeholders: samples load nothing from the network)
+const SAMPLE_PHOTOS = [0, 1, 2].map((i) => ({
+  _id: `doc${i}` as Id<"farmerDocuments">,
+  _creationTime: Date.now(),
+  kind: "farm_photo",
+  status: "pending",
+  url: null,
+}));
+
 const SAMPLES: Record<string, { label: string; app: object; Screen: () => React.ReactElement }> = {
   profile: { label: "Empty profile", app: { ...base, problems: { farm: ["Add your full name"] } }, Screen: Profile },
-  filled: { label: "Filled profile", app: { ...base, fullName: "Okafor John", farmName: "Okafor's Farm", state: "Imo", lga: "Owerri North", address: "Km 4 Owerri–Aba Road" }, Screen: Profile },
+  filled: { label: "Filled profile", app: { ...base, fullName: "Okafor John", farmName: "Okafor's Farm", nin: "12345678901", state: "Imo", lga: "Owerri North", address: "Km 4 Owerri–Aba Road" }, Screen: Profile },
+  photos: { label: "Farm photos", app: { ...base, problems: { documents: ["Add at least 3 photos of your farm"] } }, Screen: Photos },
+  photosDone: { label: "Farm photos, 3", app: { ...base, documents: SAMPLE_PHOTOS }, Screen: Photos },
   bank: { label: "Bank", app: { ...base, problems: { payout: ["Choose your bank"] } }, Screen: Bank },
   review: {
     label: "Review",
-    app: { ...base, fullName: "Okafor John", farmName: "Okafor's Farm", state: "Imo", lga: "Owerri North", address: "Km 4 Owerri–Aba Road", bankCode: "044", bankName: "Access Bank", accountNumber: "0123454821", accountName: "OKAFOR JOHN" },
+    app: { ...base, fullName: "Okafor John", farmName: "Okafor's Farm", nin: "12345678901", documents: SAMPLE_PHOTOS, state: "Imo", lga: "Owerri North", address: "Km 4 Owerri–Aba Road", bankCode: "044", bankName: "Access Bank", accountNumber: "0123454821", accountName: "OKAFOR JOHN" },
     Screen: Review,
   },
   missing: { label: "Review, missing", app: { ...base, fullName: "Okafor John", problems: { farm: ["Add your farm's name", "Choose where your farm is"], payout: ["Choose your bank"] } }, Screen: Review },

@@ -313,7 +313,7 @@ test("farm application approved email", async () => {
   const applicant = await t.run(async (ctx) => {
     const id = await ctx.db.insert("users", { name: "Bola Ade", email: "bola@example.com" });
     const appId = await ctx.db.insert("farmerApplications", {
-      userId: id, status: "submitted", reference: "FA-10001", farmName: "Green Acres", phone: "+2348030000044", state: "Oyo", lga: "Ibadan North",
+      userId: id, status: "submitted", reference: "FA-10001", farmName: "Green Acres", nin: "12345678901", phone: "+2348030000044", state: "Oyo", lga: "Ibadan North",
       address: "12 Ring Road", farmSize: "1_to_5", farmType: "crops", categoryIds: [await ctx.db.insert("categories", { name: "Vegetables", slug: "veg", illustration: "veg", sortOrder: 1, hidden: false })],
       mainCrops: "Peppers", seasons: ["all_year"], collectionAddress: "12 Ring Road", collectionHours: hours, leadTimeHours: 4,
       bankCode: "058", bankName: "GTBank", accountNumber: "0123456780", accountName: "Bola Ade", submittedAt: Date.now(),

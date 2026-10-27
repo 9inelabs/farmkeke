@@ -40,6 +40,8 @@ export type ApplicationDetail = {
     reference?: string;
     // The short form (24 Oct 2026)
     fullName?: string;
+    /** 11 digits for staff who approve farmers; "•••••••1234" for others */
+    nin?: string;
     farmName?: string;
     phone?: string;
     state?: string;
