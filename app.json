@@ -47,8 +47,16 @@
         "expo-image-picker",
         {
           "photosPermission": "Farmkeke needs your photos so you can add pictures of your produce and your farm documents.",
-          "cameraPermission": "Farmkeke needs your camera so you can photograph your produce and your farm documents.",
+          "cameraPermission": "Farmkeke needs your camera so you can photograph your produce and farm, and scan buyers' pickup codes.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Farmkeke needs your camera so you can photograph your produce and farm, and scan buyers' pickup codes.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [

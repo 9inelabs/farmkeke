@@ -3,12 +3,13 @@
 // for pickup at the farm.
 import { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
-import { Bike, Call, Danger, Key } from "@/components/icons";
+import { Bike, Call, Camera, Danger, Key } from "@/components/icons";
 import { BottomSheet, Button, Checkbox, RadioRow, Text } from "@/components/ui";
 import { displayPhone } from "@/lib/phone";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
+import { PickupScanner } from "./PickupScanner";
 import { DECLINE_REASONS, type DeclineReason } from "./status";
 
 function SheetHead({ icon: Icon, title, note, tone = "brand" }: { icon: typeof Key; title: string; note: string; tone?: "brand" | "danger" }) {
@@ -164,15 +165,20 @@ export function HandoverSheet({
 }
 
 /** Pickup at the farm: the buyer's 4-digit code hands the order over. */
+// The camera scanner is for phones; the browser preview types the code
+const CAN_SCAN = Platform.OS !== "web";
+
 export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; onClose: () => void; onConfirm: (code: string) => Promise<unknown> }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const input = useRef<TextInput>(null);
   useEffect(() => {
     if (visible) {
       setCode("");
       setError(null);
+      setScanning(false);
       const t = setTimeout(() => input.current?.focus(), 350);
       return () => clearTimeout(t);
     }
@@ -195,7 +201,23 @@ export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; o
 
   return (
     <BottomSheet visible={visible} onClose={onClose} dismissible={!busy}>
-      <SheetHead icon={Key} title="Enter pickup code" note="Ask the buyer for their 4-digit code." />
+      <SheetHead icon={Key} title="Enter pickup code" note={CAN_SCAN ? "Scan the QR code on the buyer's order, or type their 4-digit code." : "Ask the buyer for their 4-digit code."} />
+      {CAN_SCAN ? (
+        <Button
+          label="Scan QR code"
+          icon={Camera}
+          variant="primary"
+          size="large"
+          pill
+          fullWidth
+          disabled={busy}
+          onPress={() => {
+            input.current?.blur();
+            setError(null);
+            setScanning(true);
+          }}
+        />
+      ) : null}
       <Pressable onPress={() => input.current?.focus()} style={styles.code} accessibilityLabel="Pickup code" accessibilityHint="Opens the keypad">
         {[0, 1, 2, 3].map((i) => {
           const filled = code[i] !== undefined;
@@ -230,6 +252,15 @@ export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; o
         </Text>
       ) : null}
       <Button label="Confirm collection" variant="dark" size="large" pill fullWidth disabled={code.length !== 4} loading={busy} onPress={() => void submit()} />
+      <PickupScanner
+        visible={scanning}
+        onClose={() => setScanning(false)}
+        onCode={(scanned) => {
+          setScanning(false);
+          setCode(scanned);
+          void submit(scanned);
+        }}
+      />
     </BottomSheet>
   );
 }
