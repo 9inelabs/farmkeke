@@ -3,10 +3,10 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { Headphone, Mail } from "@/components/icons";
+import { Call, Headphone, Mail } from "@/components/icons";
 import { Linking, ScrollView, StyleSheet } from "react-native";
 import { ListGroup, ListRow, Screen, ScreenHeader, Text } from "@/components/ui";
-import { SUPPORT_EMAIL } from "@/content/help";
+import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_PHONE_TEL } from "@/content/help";
 import { spacing } from "@/theme/tokens";
 
 export default function FarmerSupport() {
@@ -29,8 +29,14 @@ export default function FarmerSupport() {
           <ListRow
             icon={Mail}
             title="Email us"
-            subtitle={`${SUPPORT_EMAIL} · replies within a day`}
+            subtitle={`${SUPPORT_EMAIL} · usually replies within a few hours`}
             onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}`)}
+          />
+          <ListRow
+            icon={Call}
+            title="Call or WhatsApp"
+            subtitle={`${SUPPORT_PHONE} · Mon to Sat, 8am to 8pm`}
+            onPress={() => void Linking.openURL(`tel:${SUPPORT_PHONE_TEL}`)}
           />
         </ListGroup>
       </ScrollView>

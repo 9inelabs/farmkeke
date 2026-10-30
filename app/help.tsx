@@ -1,9 +1,9 @@
 // M-90 Help and FAQ.
-import { Basket, BoxRemove, ChevronDown, ChevronUp, Help as HelpIcon, Lock, Mail, Search, Truck } from "@/components/icons";
+import { Basket, BoxRemove, Call, ChevronDown, ChevronUp, Help as HelpIcon, Lock, Mail, Search, Truck } from "@/components/icons";
 import { useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Button, EmptyState, Screen, ScreenHeader, Text } from "@/components/ui";
-import { FAQ, HELP_TOPICS, SUPPORT_EMAIL, type HelpTopic } from "@/content/help";
+import { FAQ, HELP_TOPICS, SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_PHONE_TEL, type HelpTopic } from "@/content/help";
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 
@@ -93,13 +93,14 @@ export default function Help() {
 
         <View style={styles.contact}>
           <Text variant="heading">Still need help?</Text>
-          <Text variant="caption">Our team replies within a day.</Text>
+          <Text variant="caption">Our team usually replies within a few hours, Monday to Saturday, 8am to 8pm.</Text>
           <Button
             label={`Email ${SUPPORT_EMAIL}`}
             icon={Mail}
             variant="secondary"
             onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
           />
+          <Button label={`Call ${SUPPORT_PHONE}`} icon={Call} variant="secondary" onPress={() => void Linking.openURL(`tel:${SUPPORT_PHONE_TEL}`)} />
         </View>
       </ScrollView>
     </Screen>

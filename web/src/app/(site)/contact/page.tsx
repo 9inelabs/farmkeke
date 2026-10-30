@@ -1,5 +1,4 @@
-// W-86 Contact. Phone and WhatsApp are placeholders until the real line exists
-// (farmkeke-docs/pending-backend/README.md, "Content still to provide").
+// W-86 Contact: chat, the support line (calls and WhatsApp), email and the contact form.
 import { ArrowRight, CircleHelp, Clock, Mail, MapPin, MessageCircle, Phone, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -15,9 +14,9 @@ export const metadata: Metadata = {
     "Get help from Farmkeke support. Chat, call, WhatsApp or email us, Monday to Saturday, 8am to 8pm. We usually reply within a few hours.",
 };
 
-/** Placeholder shown in the design; the call button stays disabled until a real number is set. */
-const SUPPORT_PHONE_LABEL = "+234 [support line]";
-const SUPPORT_PHONE_TEL: string | null = null;
+/** The support line (calls and WhatsApp). Set SUPPORT_PHONE_TEL to null to disable the call button. */
+const SUPPORT_PHONE_LABEL = "+234 816 040 4686";
+const SUPPORT_PHONE_TEL: string | null = "+2348160404686";
 
 const cardBtn = "btn sm ghost mt-1 self-start px-4 m:mt-1.5 m:min-h-9 m:justify-self-start m:text-[13px]";
 // Phones: icon on the left, everything else beside it

@@ -14,6 +14,8 @@ const ART: Record<string, ImageSource> = {
   "grains-tubers": require("../../../assets/categories/grains-tubers.png"),
   "poultry-eggs": require("../../../assets/categories/poultry-eggs.png"),
   "meat-fish": require("../../../assets/categories/meat-fish.png"),
+  "herbs-spices": require("../../../assets/categories/herbs-spices.png"),
+  "legumes-nuts": require("../../../assets/categories/legumes-nuts.png"),
   dairy: require("../../../assets/categories/dairy.png"),
 };
 

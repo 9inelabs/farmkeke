@@ -27,13 +27,13 @@ export const FAQ: { topic: HelpTopic; question: string; answer: string }[] = [
     topic: "delivery",
     question: "How long does delivery take?",
     answer:
-      "Farms have up to 24 hours to accept, so the earliest delivery is usually the next day. You choose a delivery window at checkout, and each farm's order arrives in that window.",
+      "Farms have up to 24 hours to accept. Once a farm accepts, we price the delivery and send you a bill to pay within 12 hours. The rider then agrees a delivery time with you. Delivery is usually the next day.",
   },
   {
     topic: "problem",
     question: "What if my produce arrives damaged?",
     answer:
-      "Don't confirm delivery. Tap There's a problem on the order instead, add photos, and tell us what happened. The farm isn't paid while we look into it.",
+      "Don't confirm delivery. Tap There's a problem on the order instead, add photos, and tell us what happened. The farm has 12 hours to reply, and Farmkeke usually decides within a day. The farm isn't paid while we look into it.",
   },
   {
     topic: "ordering",
@@ -45,7 +45,7 @@ export const FAQ: { topic: HelpTopic; question: string; answer: string }[] = [
     topic: "delivery",
     question: "How does pickup work?",
     answer:
-      "Choose pickup at checkout. When the farm has your order ready, you'll get a 4-digit pickup code. Go to the farm, give the farmer your code, and collect your produce. There's no fee for pickup.",
+      "Choose pickup at checkout. When the farm has your order ready, you'll get a 4-digit pickup code. Go to the farm within 3 days, give the farmer your code, and collect your produce. There's no fee for pickup.",
   },
   {
     topic: "ordering",
@@ -58,13 +58,19 @@ export const FAQ: { topic: HelpTopic; question: string; answer: string }[] = [
     question: "What happens if a farm can't fill my order?",
     answer: "You're refunded for that farm's order. Orders from your other farms carry on as normal.",
   },
+  {
+    topic: "payment",
+    question: "How do refunds work?",
+    answer:
+      "You get a full refund if the farm doesn't accept or the whole order is affected, or a part refund for the affected items. Refunds go back to the card or bank account you paid with, through Paystack. Your bank may take up to 7 working days to show it.",
+  },
 ];
 
 export const HOW_IT_WORKS: { title: string; body: string }[] = [
   { title: "Choose your produce", body: "Shop from verified farms near you. One cart can hold several farms." },
   {
-    title: "Pay once, held safely",
-    body: "Farmkeke holds your payment. The farmer can see it is paid but can't touch it yet.",
+    title: "Pay safely, held by Farmkeke",
+    body: "Pickup orders are paid at checkout; delivery orders once the farm accepts and the delivery is priced. Farmkeke holds your payment until you confirm.",
   },
   { title: "The farm prepares it", body: "Each farm accepts within 24 hours, then packs your order fresh." },
   {
@@ -78,5 +84,8 @@ export const HOW_IT_WORKS: { title: string; body: string }[] = [
 ];
 
 export const SUPPORT_EMAIL = "support@farmkeke.com";
+/** Calls and WhatsApp, Monday to Saturday, 8am to 8pm */
+export const SUPPORT_PHONE = "+234 816 040 4686";
+export const SUPPORT_PHONE_TEL = "+2348160404686";
 export const INFO_EMAIL = "info@farmkeke.com";
 export const WEBSITE = "https://farmkeke.com";
