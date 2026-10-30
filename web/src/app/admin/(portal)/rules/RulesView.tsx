@@ -19,6 +19,7 @@ const RULES = [
   { key: "unconfirmedAfterHours", label: "Delivered but not confirmed: flag after", unit: "hours", min: 1, max: 168, note: "The order shows under Orders, Needs attention." },
   { key: "pickupHoldDays", label: "Pickup orders wait at the farm for", unit: "days", min: 1, max: 14, note: "The shopper's time to collect once the farm has it ready." },
   { key: "disputeReplyHours", label: "Farm must reply to a problem report within", unit: "hours", min: 1, max: 72, note: "After that, staff decide without the farm's reply." },
+  { key: "disputeDecideHours", label: "Farmkeke decides a problem report within", unit: "hours", min: 1, max: 168, note: "Shown to the shopper and the farm as the decision time. The payment stays held until then." },
 ] as const;
 type RuleKey = (typeof RULES)[number]["key"];
 
@@ -26,11 +27,13 @@ const pct = (bps: number) => `${(bps / 100).toLocaleString("en-NG", { maximumFra
 
 export function RulesView() {
   const me = useStaff();
-  const rules = useQuery(admin.fees.get, {}) as Rules | undefined;
+  const raw = useQuery(admin.fees.get, {}) as Rules | undefined;
+  // An older backend doesn't send the decision time yet: show the default
+  const rules = raw && { ...raw, disputeDecideHours: raw.disputeDecideHours ?? raw.defaults.disputeDecideHours };
   const setRules = useMutation(admin.fees.setRules);
   const setCommission = useMutation(admin.fees.setCommission);
   const [editing, setEditing] = useState<"rules" | "commission" | null>(null);
-  const [values, setValues] = useState<Record<RuleKey, string>>({ farmerResponseHours: "", unconfirmedAfterHours: "", pickupHoldDays: "", disputeReplyHours: "" });
+  const [values, setValues] = useState<Record<RuleKey, string>>({ farmerResponseHours: "", unconfirmedAfterHours: "", pickupHoldDays: "", disputeReplyHours: "", disputeDecideHours: "" });
   const [commission, setCommissionText] = useState("");
   const [done, setDone] = useState<string | null>(null);
 
@@ -96,6 +99,7 @@ export function RulesView() {
                     unconfirmedAfterHours: String(rules.unconfirmedAfterHours),
                     pickupHoldDays: String(rules.pickupHoldDays),
                     disputeReplyHours: String(rules.disputeReplyHours),
+                    disputeDecideHours: String(rules.disputeDecideHours),
                   });
                   setEditing("rules");
                 }}

@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, CategoryTile, EmptyState, ScreenHeader, SearchPill, Skeleton, Text } from "@/components/ui";
-import { activeCount, FilterSheet, filterArgs, type Filters } from "@/features/shop/FilterSheet";
+import { activeCount, areaKey, FilterSheet, filterArgs, type FarmArea, type Filters } from "@/features/shop/FilterSheet";
 import { ProductGrid } from "@/features/shop/ProductGrid";
 import { ProductRow } from "@/features/shop/ProductRow";
 import { ResultsBar } from "@/features/shop/ResultsBar";
@@ -46,6 +46,15 @@ export default function Search() {
   const [last, setLast] = useState<typeof results>(undefined);
   if (results !== undefined && results !== last) setLast(results);
   const shown = searching ? (results ?? last) : undefined;
+
+  // Farm locations to filter by: where the farms in these results are, kept
+  // while the search stays the same so a chosen location's siblings stay offered
+  const [areas, setAreas] = useState<{ query: string; list: FarmArea[] }>({ query: "", list: [] });
+  if (shown !== undefined) {
+    const known = areas.query === query ? areas.list : [];
+    const fresh = shown.farms.map((f) => ({ lga: f.lga, state: f.state })).filter((a) => a.lga && !known.some((k) => areaKey(k) === areaKey(a)));
+    if (areas.query !== query || fresh.length > 0) setAreas({ query, list: [...known, ...fresh] });
+  }
 
   const popular = useQuery(api.storefront.popular, searching ? "skip" : { today, limit: 10 });
   const categories = useQuery(api.catalog.listCategories);
@@ -204,6 +213,7 @@ export default function Search() {
       <FilterSheet
         visible={showFilters}
         value={filters}
+        areas={areas.query === query ? areas.list : []}
         onClose={() => setShowFilters(false)}
         onApply={(f) => {
           setFilters(f);

@@ -32,7 +32,7 @@ export function SearchView() {
   const total = results ? results.orders.length + results.people.length + results.farms.length + results.products.length : 0;
   return (
     <>
-      <PageHeader title="Search" description="An order number (FK-10234), an exact email or phone number, or part of a farm or product name." />
+      <PageHeader title="Search" description="An order number (FK-10234), an exact email or phone number, or part of a customer, farm or product name." />
       <form onSubmit={submit} role="search" className="mb-6 flex max-w-[560px] gap-2">
         <label htmlFor="search-page" className="sr-only">
           Search

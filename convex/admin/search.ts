@@ -44,6 +44,13 @@ export const find = query({
             .take(5);
           for (const u of users) out.people.push({ _id: u._id, name: u.name ?? "Account", detail: u.phone ?? "" });
         }
+        if (out.people.length === 0) {
+          const named = await ctx.db
+            .query("users")
+            .withSearchIndex("search_name", (r) => r.search("name", q))
+            .take(5);
+          for (const u of named) out.people.push({ _id: u._id, name: u.name ?? "Account", detail: u.email ?? u.phone ?? (u.isAnonymous ? "Guest" : "") });
+        }
       }
     }
     if (can("farmers.view") && !looksLikeEmail(q)) {

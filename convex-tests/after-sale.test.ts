@@ -228,7 +228,7 @@ test("notifications: preferences decide push, SMS and email; delivery uses Expo 
   // The whole alert off: nothing at all
   await account.mutation(api.notifications.setPreference, { side: "shop", alert: "order_updates", on: false });
   p = (await plan("order_accepted"))!;
-  expect(p).toEqual({ push: [], sms: null, email: null });
+  expect(p).toEqual({ push: [], sms: null, email: null, staleTokenIds: [] });
   const prefs = (await account.query(api.notifications.preferences, { side: "shop" }))!;
   expect(prefs.alerts.find((a: any) => a.alert === "order_updates")).toMatchObject({ push: false, sms: false, email: false });
   expect(prefs.alerts.find((a: any) => a.alert === "payments")).toMatchObject({ locked: true, push: true });

@@ -42,6 +42,8 @@ export type Rules = {
   unconfirmedAfterHours: number;
   pickupHoldDays: number;
   disputeReplyHours: number;
+  /** Older backends: absent (the default, 24, applies) */
+  disputeDecideHours?: number;
   defaults: { farmerResponseHours: number; unconfirmedAfterHours: number; pickupHoldDays: number; disputeReplyHours: number; disputeDecideHours: number };
 };
 

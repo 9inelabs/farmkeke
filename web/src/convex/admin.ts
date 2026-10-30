@@ -94,7 +94,7 @@ export const admin = {
   fees: {
     get: makeFunctionReference<"query", Record<string, never>, any>("admin/fees:get"),
     setCommission: makeFunctionReference<"mutation", { "commissionBps": number | null; "reason": string }, any>("admin/fees:setCommission"),
-    setRules: makeFunctionReference<"mutation", { "farmerResponseHours"?: number; "unconfirmedAfterHours"?: number; "pickupHoldDays"?: number; "disputeReplyHours"?: number; "reason": string }, any>("admin/fees:setRules"),
+    setRules: makeFunctionReference<"mutation", { "farmerResponseHours"?: number; "unconfirmedAfterHours"?: number; "pickupHoldDays"?: number; "disputeReplyHours"?: number; "disputeDecideHours"?: number; "reason": string }, any>("admin/fees:setRules"),
     setSlotCapacity: makeFunctionReference<"mutation", { "capacity": number | null; "serviceAreaId"?: Id<"serviceAreas">; "from"?: string; "reason": string }, any>("admin/fees:setSlotCapacity"),
   },
   ledger: {

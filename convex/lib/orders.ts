@@ -575,6 +575,9 @@ export async function orderCore(ctx: QueryCtx, order: Doc<"orders">) {
   };
 }
 
+/** Order lists show this many item photos, then "+N". */
+const ROW_PHOTOS = 4;
+
 /** Short row for lists. */
 export async function orderRow(ctx: QueryCtx, order: Doc<"orders">) {
   const farm = await ctx.db.get("farms", order.farmId);
@@ -594,6 +597,8 @@ export async function orderRow(ctx: QueryCtx, order: Doc<"orders">) {
     itemCount: order.items.length,
     summary: first ? `${first.quantity} × ${first.name}${order.items.length > 1 ? ` + ${order.items.length - 1} more` : ""}` : "",
     imageUrl: first?.photoId ? await ctx.storage.getUrl(first.photoId) : null,
+    /** One photo per item (null when an item has none), up to ROW_PHOTOS items */
+    imageUrls: await Promise.all(order.items.slice(0, ROW_PHOTOS).map((i) => (i.photoId ? ctx.storage.getUrl(i.photoId) : null))),
     itemsTotalKobo: order.itemsTotalKobo,
     deliveryFeeKobo: order.deliveryFeeKobo,
     totalKobo: order.totalKobo,

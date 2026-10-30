@@ -132,6 +132,8 @@ export type OrderRow = {
   itemCount: number;
   summary: string;
   imageUrl: string | null;
+  /** One photo per item, first 4 items (older backends: absent) */
+  imageUrls?: Array<string | null>;
   itemsTotalKobo: number;
   deliveryFeeKobo: number;
   totalKobo: number;

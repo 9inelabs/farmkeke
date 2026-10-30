@@ -2428,6 +2428,12 @@
             },
             "optional": true
           },
+          "disputeDecideHours": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
           "reason": {
             "fieldType": {
               "type": "string"

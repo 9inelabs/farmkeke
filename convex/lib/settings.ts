@@ -30,7 +30,7 @@ export async function getRules(ctx: QueryCtx): Promise<Rules> {
     unconfirmedAfterHours: row?.unconfirmedAfterHours ?? DEFAULT_RULES.unconfirmedAfterHours,
     pickupHoldDays: row?.pickupHoldDays ?? DEFAULT_RULES.pickupHoldDays,
     disputeReplyHours: row?.disputeReplyHours ?? DEFAULT_RULES.disputeReplyHours,
-    disputeDecideHours: DEFAULT_RULES.disputeDecideHours,
+    disputeDecideHours: row?.disputeDecideHours ?? DEFAULT_RULES.disputeDecideHours,
     commissionBps: typeof commission === "number" ? commission : DEFAULT_COMMISSION_BPS,
     commissionSet: typeof commission === "number",
   };

@@ -1,6 +1,7 @@
 // In-app notifications (M-87, F-11), push tokens (M-48, F-12) and alert
 // preferences (W-48, M-88, F-75). Guests have their own list too.
 import { paginationOptsValidator } from "convex/server";
+import { getAuthSessionId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CHANNELS, findAlert, preferenceRows } from "./lib/alerts";
@@ -80,6 +81,7 @@ export const registerPushToken = mutation({
     const user = await requireUser(ctx);
     const token = args.token.trim();
     if (!/^(Exponent|Expo)PushToken\[[^\]]+\]$/.test(token)) throw new ConvexError({ code: "INVALID_TOKEN" });
+    const sessionId = (await getAuthSessionId(ctx)) ?? undefined;
     // A token belongs to one phone: move it to whoever is signed in there now.
     const rows = await ctx.db
       .query("pushTokens")
@@ -89,12 +91,13 @@ export const registerPushToken = mutation({
     for (const row of rows) {
       if (!kept && row.userId === user._id) {
         kept = true;
-        if (row.platform !== args.platform) await ctx.db.patch("pushTokens", row._id, { platform: args.platform });
+        if (row.platform !== args.platform || row.sessionId !== sessionId)
+          await ctx.db.patch("pushTokens", row._id, { platform: args.platform, sessionId });
       } else {
         await ctx.db.delete("pushTokens", row._id);
       }
     }
-    if (!kept) await ctx.db.insert("pushTokens", { userId: user._id, token, platform: args.platform });
+    if (!kept) await ctx.db.insert("pushTokens", { userId: user._id, token, platform: args.platform, sessionId });
   },
 });
 

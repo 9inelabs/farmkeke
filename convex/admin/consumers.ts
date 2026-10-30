@@ -122,7 +122,7 @@ export const listDeletions = query({
   },
 });
 
-/** A-35 search: an account by exact email or phone number. */
+/** A-35 search: an account by exact email or phone number, or by name. */
 export const find = query({
   args: { query: v.string() },
   handler: async (ctx, args) => {
@@ -136,12 +136,19 @@ export const find = query({
       return user === null ? [] : [await accountRow(ctx, user)];
     }
     const phone = normalizeNigerianPhone(q);
-    if (phone === null) return [];
-    const users = await ctx.db
+    if (phone !== null) {
+      const users = await ctx.db
+        .query("users")
+        .withIndex("phone", (r) => r.eq("phone", phone))
+        .take(5);
+      if (users.length > 0) return await Promise.all(users.map((u) => accountRow(ctx, u)));
+    }
+    if (q.length < 2) return [];
+    const named = await ctx.db
       .query("users")
-      .withIndex("phone", (r) => r.eq("phone", phone))
-      .take(5);
-    return await Promise.all(users.map((u) => accountRow(ctx, u)));
+      .withSearchIndex("search_name", (r) => r.search("name", q))
+      .take(20);
+    return await Promise.all(named.map((u) => accountRow(ctx, u)));
   },
 });
 

@@ -254,7 +254,9 @@ export default defineSchema({
     .index("phone", ["phone"])
     .index("by_staffRole", ["staffRole"])
     .index("by_guestClaimToken", ["guestClaimToken"])
-    .index("by_guestLinkToken", ["guestLinkToken"]),
+    .index("by_guestLinkToken", ["guestLinkToken"])
+    // A-35: staff find a customer by part of their name
+    .searchIndex("search_name", { searchField: "name" }),
 
   // A-80. Fixed set of 8 at launch; staff can rename, reorder, hide.
   categories: defineTable({
@@ -846,6 +848,8 @@ export default defineSchema({
     unconfirmedAfterHours: v.optional(v.number()),
     pickupHoldDays: v.optional(v.number()),
     disputeReplyHours: v.optional(v.number()),
+    /** Hours Farmkeke has to decide a problem report (default 24) */
+    disputeDecideHours: v.optional(v.number()),
     // W-23 "Full": delivery orders one area can take in one time slot. Unset or
     // null = no limit. Per-area (and per-slot) rows override the default.
     slotCapacity: v.optional(v.union(v.number(), v.null())),
@@ -1039,6 +1043,10 @@ export default defineSchema({
     userId: v.id("users"),
     token: v.string(),
     platform: v.union(v.literal("ios"), v.literal("android")),
+    /** The sign-in that registered it: once that session ends (sign-out, a
+     * password reset elsewhere, an admin sign-out), the phone gets no more
+     * alerts. Older rows have none. */
+    sessionId: v.optional(v.id("authSessions")),
   })
     .index("by_token", ["token"])
     .index("by_userId", ["userId"]),

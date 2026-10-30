@@ -103,6 +103,7 @@ export const send = internalAction({
     const plan = await ctx.runQuery(internal.notifications.store.plan, args);
     if (plan === null) return null;
     if (plan.push.length > 0) await pushNow(ctx, plan.push, 0);
+    if (plan.staleTokenIds.length > 0) await ctx.runMutation(internal.notifications.store.dropStaleTokens, { ids: plan.staleTokenIds });
     // Texts go out through Termii once it's set up; until then they're only recorded.
     if (plan.sms) {
       if (smsConfigured()) {

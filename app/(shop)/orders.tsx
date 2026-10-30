@@ -139,6 +139,7 @@ function ActiveCard({ o, now }: { o: Row; now: number }) {
         </View>
         <ChevronRight size={18} color={colors.inkMuted} />
       </View>
+      {o.itemCount > 1 ? <ItemPhotos o={o} /> : null}
       <View style={[styles.next, (toConfirm || billReady) && styles.nextAction]}>
         <Text variant="caption" color={toConfirm || billReady ? colors.ink : colors.inkSoft} style={styles.flex}>
           {toConfirm ? "Check your items, then confirm to release payment to the farm." : timingText(o, now)}
@@ -150,6 +151,26 @@ function ActiveCard({ o, now }: { o: Row; now: number }) {
         ) : null}
       </View>
     </Pressable>
+  );
+}
+
+/** Every item's photo (the first four), then "+N" for the rest. */
+function ItemPhotos({ o }: { o: Row }) {
+  const urls = o.imageUrls ?? [o.imageUrl];
+  const more = o.itemCount - urls.length;
+  return (
+    <View style={styles.photos} accessibilityLabel={`${o.itemCount} items`}>
+      {urls.map((url, i) =>
+        url ? <Image key={i} source={{ uri: url }} style={styles.photo} contentFit="cover" /> : <View key={i} style={styles.photo} />,
+      )}
+      {more > 0 ? (
+        <View style={[styles.photo, styles.photoMore]}>
+          <Text variant="small" style={styles.semibold}>
+            +{more}
+          </Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -197,6 +218,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.md, gap: spacing.md },
   cardHead: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   thumb: { width: 56, height: 56, borderRadius: radii.md, backgroundColor: colors.placeholder },
+  photos: { flexDirection: "row", gap: spacing.xs },
+  photo: { width: 40, height: 40, borderRadius: radii.sm, backgroundColor: colors.placeholder },
+  photoMore: { alignItems: "center", justifyContent: "center" },
   badges: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
   held: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   next: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },

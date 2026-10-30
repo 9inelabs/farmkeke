@@ -97,9 +97,9 @@ export function CustomersView() {
       <PageHeader title="Customers" description="Every Farmkeke account: shoppers, guests who ordered, farmers and staff." />
       <form onSubmit={search} role="search" className="mb-5 flex max-w-[520px] gap-2">
         <label htmlFor="customer-search" className="sr-only">
-          Email or phone number
+          Name, email or phone number
         </label>
-        <input id="customer-search" className="fin" placeholder="Find by email or phone number" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input id="customer-search" className="fin" placeholder="Find by name, email or phone number" value={query} onChange={(e) => setQuery(e.target.value)} />
         <Button type="submit" variant="dark">
           Find
         </Button>
@@ -107,7 +107,7 @@ export function CustomersView() {
       {found !== null ? (
         <div className="mb-6">
           {found.length === 0 ? (
-            <Notice tone="err">No account with that email or phone. Use the full email address or phone number.</Notice>
+            <Notice tone="err">No account found. Try part of their name, or the full email address or phone number.</Notice>
           ) : (
             <Panel title="Found" padded={false}>
               <DataTable caption="Search results" columns={columns} rows={found} rowKey={(u) => u._id} rowHref={(u) => adminRoutes.customer(u._id)} />

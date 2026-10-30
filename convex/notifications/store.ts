@@ -4,7 +4,7 @@
 // supportEmail for the shopping side, farmEmail for farms).
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "../_generated/server";
 import { alertOfKind, channelOn, smsWanted, textsFor, type Channel } from "../lib/alerts";
 import { affectedItems, REASON_LABELS } from "../lib/disputes";
@@ -112,6 +112,18 @@ export const dropTokens = internalMutation({
   },
 });
 
+/** Forgets phones whose sign-in has ended (checked again, in case it signed back in). */
+export const dropStaleTokens = internalMutation({
+  args: { ids: v.array(v.id("pushTokens")) },
+  handler: async (ctx, args) => {
+    for (const id of args.ids.slice(0, 50)) {
+      const row = await ctx.db.get("pushTokens", id);
+      if (row?.sessionId !== undefined && (await ctx.db.get("authSessions", row.sessionId)) === null)
+        await ctx.db.delete("pushTokens", id);
+    }
+  },
+});
+
 /** Marks a batch of unread notifications read, and continues until none are left. */
 export const markAllReadBatch = internalMutation({
   args: { side: v.union(v.literal("shop"), v.literal("farm")), userId: v.id("users") },
@@ -135,12 +147,19 @@ export const plan = internalQuery({
     const alert = alertOfKind(n.side, n.kind);
     const allow = (channel: Channel) => channelOn(prefs, alert, n.side, channel);
 
-    const tokens = allow("push")
+    const rows = allow("push")
       ? await ctx.db
           .query("pushTokens")
           .withIndex("by_userId", (q) => q.eq("userId", user._id))
           .take(10)
       : [];
+    // A phone whose sign-in has ended gets nothing; send() then forgets it
+    const tokens: typeof rows = [];
+    const staleTokenIds: Array<Id<"pushTokens">> = [];
+    for (const t of rows) {
+      if (t.sessionId !== undefined && (await ctx.db.get("authSessions", t.sessionId)) === null) staleTokenIds.push(t._id);
+      else tokens.push(t);
+    }
     const push = tokens.map((t) => ({
       to: t.token,
       title: n.title,
@@ -165,7 +184,7 @@ export const plan = internalQuery({
     // the person, the side, the kind and the order (or the ticket's href).
     const emailThrottleKey =
       email !== null && MESSAGE_KINDS.has(n.kind) ? `msg:${user._id}:${n.side}:${n.kind}:${n.orderId ?? n.href}` : undefined;
-    return { push, sms, email, emailThrottleKey };
+    return { push, sms, email, emailThrottleKey, staleTokenIds };
   },
 });
 

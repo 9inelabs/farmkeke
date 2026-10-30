@@ -159,10 +159,12 @@ function ActiveCard({ o, now, onConfirm }: { o: OrderRow; now: number; onConfirm
         {o.escrow === "held" ? <span className="badge b-held">Payment held</span> : null}
       </div>
       <div className="mt-3.5 flex gap-2">
-        <Thumb id={o._id} imageUrl={o.imageUrl} size={48} radius={10} />
-        {o.itemCount > 1 ? (
+        {(o.imageUrls ?? [o.imageUrl]).map((url, i) => (
+          <Thumb key={i} id={`${o._id}-${i}`} imageUrl={url} size={48} radius={10} />
+        ))}
+        {o.itemCount > (o.imageUrls?.length ?? 1) ? (
           <span className="flex size-12 items-center justify-center rounded-[10px] bg-soft text-xs font-semibold text-muted">
-            +{o.itemCount - 1}
+            +{o.itemCount - (o.imageUrls?.length ?? 1)}
             <span className="sr-only"> more items</span>
           </span>
         ) : null}

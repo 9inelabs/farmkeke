@@ -32,6 +32,7 @@ export const get = query({
       unconfirmedAfterHours: rules.unconfirmedAfterHours,
       pickupHoldDays: rules.pickupHoldDays,
       disputeReplyHours: rules.disputeReplyHours,
+      disputeDecideHours: rules.disputeDecideHours,
       defaults: DEFAULT_RULES,
       // W-23: null = no limit
       slotCapacity: typeof row?.slotCapacity === "number" ? row.slotCapacity : null,
@@ -112,7 +113,7 @@ export const setCommission = mutation({
   },
 });
 
-/** A-85: escrow timers, pickup hold and the farm's problem-report reply time. */
+/** A-85: escrow timers, pickup hold, and the problem-report reply and decision times. */
 export const setRules = mutation({
   args: {
     farmerResponseHours: v.optional(v.number()),
@@ -121,6 +122,8 @@ export const setRules = mutation({
     pickupHoldDays: v.optional(v.number()),
     // Hours the farm has to reply to a problem report
     disputeReplyHours: v.optional(v.number()),
+    // Hours Farmkeke has to decide a problem report
+    disputeDecideHours: v.optional(v.number()),
     reason: v.string(),
   },
   handler: async (ctx, args) => {
@@ -134,12 +137,14 @@ export const setRules = mutation({
     check(args.unconfirmedAfterHours, 1, 168, "unconfirmedAfterHours");
     check(args.pickupHoldDays, 1, 14, "pickupHoldDays", "days");
     check(args.disputeReplyHours, 1, 72, "disputeReplyHours");
+    check(args.disputeDecideHours, 1, 168, "disputeDecideHours");
     const row = await settingsRow(ctx);
     const changes = {
       ...(args.farmerResponseHours !== undefined ? { farmerResponseHours: args.farmerResponseHours } : {}),
       ...(args.unconfirmedAfterHours !== undefined ? { unconfirmedAfterHours: args.unconfirmedAfterHours } : {}),
       ...(args.pickupHoldDays !== undefined ? { pickupHoldDays: args.pickupHoldDays } : {}),
       ...(args.disputeReplyHours !== undefined ? { disputeReplyHours: args.disputeReplyHours } : {}),
+      ...(args.disputeDecideHours !== undefined ? { disputeDecideHours: args.disputeDecideHours } : {}),
     };
     // New deadlines apply to orders paid from now on.
     await ctx.db.patch("platformSettings", row._id, { ...changes, updatedBy: actor._id });

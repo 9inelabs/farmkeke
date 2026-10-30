@@ -1,5 +1,5 @@
-// M-16 Filter and sort: sort order, how to get it, price, freshness and farm
-// rating. Applies to category and search results.
+// M-16 Filter and sort: sort order, how to get it, price, freshness, farm
+// rating and (in search) farm location. Applies to category and search results.
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { BottomSheet, Button, ChipGroup, Text } from "@/components/ui";
@@ -12,7 +12,13 @@ export type Filters = {
   price?: "under2k" | "2to5k" | "5to10k" | "over10k";
   harvestedWithinDays?: 1 | 3 | 7;
   minRating?: 4;
+  /** Farm location, "lga|state" */
+  area?: string;
 };
+
+/** A farm location offered in the filter. */
+export type FarmArea = { lga: string; state: string };
+export const areaKey = (a: FarmArea) => `${a.lga}|${a.state}`;
 
 const PRICE: Record<NonNullable<Filters["price"]>, { minPriceKobo?: number; maxPriceKobo?: number }> = {
   under2k: { maxPriceKobo: 200_000 },
@@ -29,23 +35,31 @@ export function filterArgs(f: Filters) {
     ...(f.price ? PRICE[f.price] : {}),
     ...(f.harvestedWithinDays ? { harvestedWithinDays: f.harvestedWithinDays } : {}),
     ...(f.minRating ? { minRating: f.minRating } : {}),
+    ...(f.area ? { farmLga: f.area.split("|")[0], farmState: f.area.split("|")[1] } : {}),
   };
 }
 
 /** How many filters (not counting sort) are on, for the button badge. */
-export const activeCount = (f: Filters) => [f.get, f.price, f.harvestedWithinDays, f.minRating].filter((x) => x !== undefined).length;
+export const activeCount = (f: Filters) => [f.get, f.price, f.harvestedWithinDays, f.minRating, f.area].filter((x) => x !== undefined).length;
 
-type Props = { visible: boolean; value: Filters; onClose: () => void; onApply: (f: Filters) => void };
+type Props = {
+  visible: boolean;
+  value: Filters;
+  onClose: () => void;
+  onApply: (f: Filters) => void;
+  /** Farm locations to offer (search: the farms in the results). None: no location filter. */
+  areas?: FarmArea[];
+};
 
-export function FilterSheet({ visible, value, onClose, onApply }: Props) {
+export function FilterSheet({ visible, value, onClose, onApply, areas = [] }: Props) {
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      {visible ? <Body initial={value} onApply={onApply} /> : null}
+      {visible ? <Body initial={value} onApply={onApply} areas={areas} /> : null}
     </BottomSheet>
   );
 }
 
-function Body({ initial, onApply }: { initial: Filters; onApply: (f: Filters) => void }) {
+function Body({ initial, onApply, areas }: { initial: Filters; onApply: (f: Filters) => void; areas: FarmArea[] }) {
   const [f, setF] = useState<Filters>(initial);
   const set = <K extends keyof Filters>(k: K) => (v: Filters[K]) => setF((x) => ({ ...x, [k]: x[k] === v ? undefined : v }));
   return (
@@ -97,6 +111,14 @@ function Body({ initial, onApply }: { initial: Filters; onApply: (f: Filters) =>
           ]}
         />
         <ChipGroup label="Farm rating" value={f.minRating} onChange={set("minRating")} options={[{ value: 4, label: "4 stars and up" }]} />
+        {areas.length > 0 ? (
+          <ChipGroup
+            label="Farm location"
+            value={f.area}
+            onChange={set("area")}
+            options={areas.map((a) => ({ value: areaKey(a), label: `${a.lga}, ${a.state}` }))}
+          />
+        ) : null}
       </ScrollView>
       <View style={styles.actions}>
         <Button label="Reset" variant="outline" onPress={() => onApply({})} style={styles.flex} />
