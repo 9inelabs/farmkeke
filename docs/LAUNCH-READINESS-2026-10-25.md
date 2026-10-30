@@ -192,19 +192,25 @@ Also:
 7. **Remove the old pickup-point and time-slot code,** and the hidden `/admin/pickup-points` page (recommended in report 16).
 8. **Crash reporting.** There isn't any in the app or on the website. If something breaks on a customer's phone, you won't hear about it unless they tell you. Adding Sentry (free tier) to the app and the website is a small job.
 
-## 5. Decisions waiting on you
+## 5. Decisions (made 30 Oct 2026)
 
-- The delivery marking question in section 1, item 5.
-- "Ask the farmer" before ordering (W-06). It goes to Farmkeke support today.
-- Two-person approval for large refunds and payouts.
-- Map pins in the app (`react-native-maps` plus a Google Maps key) and QR scanning of pickup codes (`expo-camera`). Both need a native build.
-- Smaller numbers:
-  - the ₦50,000 delivery-price ceiling;
-  - at most 3 unpaid delivery checkouts;
-  - low stock at 3 units;
-  - the 30-minute window to set a PIN after the code.
-- Offering push notifications to guests.
-- Whether the farm sees the buyer's street on delivery orders. It's hidden today.
+All decided. Everything stays as it works today, except map pins and QR scanning, which are now planned for the first store release.
+
+| Question | Decision |
+| --- | --- |
+| Delivery marking | The shopper confirms once the rider has the order (done 26 Oct) |
+| "Ask the farmer" before ordering (W-06) | Stays with Farmkeke support |
+| Two-person approval for large refunds and payouts | No. One approver; every action is logged |
+| Map pins (shoppers) and QR scanning of pickup codes (farmers) | **Both, in the first store release.** Needs a new native build; map pins on Android need a Google Maps API key |
+| Delivery-price ceiling | Stays ₦50,000 |
+| Unpaid delivery checkouts per shopper | Stays 3 |
+| Low stock ("Almost Gone" and the farmer alert) | Stays 3 units |
+| Time to set a PIN after the code | Stays 30 minutes |
+| Push notifications for guests | No, accounts only |
+| The farm sees the buyer's street on delivery orders | No, stays hidden |
+| The Support role sees payouts | Yes (amounts and statuses, never bank details) |
+
+Staffing (on the staffing board): riders on contract, paid per delivery; a shared office in Owerri; one support line for calls and WhatsApp. Still open: pay and the monthly staffing budget.
 
 ## 6. Suggested order
 
