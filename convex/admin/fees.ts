@@ -34,55 +34,7 @@ export const get = query({
       disputeReplyHours: rules.disputeReplyHours,
       disputeDecideHours: rules.disputeDecideHours,
       defaults: DEFAULT_RULES,
-      // W-23: null = no limit
-      slotCapacity: typeof row?.slotCapacity === "number" ? row.slotCapacity : null,
-      slotCapacities: row?.slotCapacities ?? [],
     };
-  },
-});
-
-/**
- * W-23 "Full": delivery orders one area can take in one time slot. `capacity`
- * null removes the limit. With `serviceAreaId` it sets that area (and with
- * `from`, that one slot, e.g. "09:00"); without, the default for every area.
- */
-export const setSlotCapacity = mutation({
-  args: {
-    capacity: v.union(v.number(), v.null()),
-    serviceAreaId: v.optional(v.id("serviceAreas")),
-    from: v.optional(v.string()),
-    reason: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, "fees.manage");
-    const cap = args.capacity;
-    if (cap !== null && (!Number.isInteger(cap) || cap < 0 || cap > 10_000)) {
-      throw new ConvexError({ code: "INVALID_CAPACITY", message: "Use a whole number from 0 to 10,000" });
-    }
-    if (args.from !== undefined && !/^\d{2}:\d{2}$/.test(args.from)) throw new ConvexError({ code: "INVALID_SLOT" });
-    if (args.from !== undefined && args.serviceAreaId === undefined) throw new ConvexError({ code: "AREA_REQUIRED" });
-    if (args.serviceAreaId !== undefined && (await ctx.db.get("serviceAreas", args.serviceAreaId)) === null) {
-      throw new ConvexError({ code: "NOT_FOUND" });
-    }
-    const row = await settingsRow(ctx);
-    const before = { slotCapacity: row.slotCapacity ?? null, slotCapacities: row.slotCapacities ?? [] };
-    if (args.serviceAreaId === undefined) {
-      await ctx.db.patch("platformSettings", row._id, { slotCapacity: cap, updatedBy: actor._id });
-    } else {
-      const others = (row.slotCapacities ?? []).filter(
-        (r) => !(r.serviceAreaId === args.serviceAreaId && r.from === args.from),
-      );
-      const next = cap === null ? others : [...others, { serviceAreaId: args.serviceAreaId, from: args.from, capacity: cap }];
-      await ctx.db.patch("platformSettings", row._id, { slotCapacities: next, updatedBy: actor._id });
-    }
-    await writeAudit(ctx, {
-      actorId: actor._id,
-      action: "fees.setSlotCapacity",
-      targetTable: "platformSettings",
-      targetId: row._id,
-      reason: args.reason,
-      details: { before, serviceAreaId: args.serviceAreaId ?? null, from: args.from ?? null, capacity: cap },
-    });
   },
 });
 

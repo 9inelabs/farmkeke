@@ -850,19 +850,6 @@ export default defineSchema({
     disputeReplyHours: v.optional(v.number()),
     /** Hours Farmkeke has to decide a problem report (default 24) */
     disputeDecideHours: v.optional(v.number()),
-    // W-23 "Full": delivery orders one area can take in one time slot. Unset or
-    // null = no limit. Per-area (and per-slot) rows override the default.
-    slotCapacity: v.optional(v.union(v.number(), v.null())),
-    slotCapacities: v.optional(
-      v.array(
-        v.object({
-          serviceAreaId: v.id("serviceAreas"),
-          // Slot start, e.g. "09:00"; unset = every slot in the area
-          from: v.optional(v.string()),
-          capacity: v.number(),
-        }),
-      ),
-    ),
     updatedBy: v.optional(v.id("users")),
   }).index("by_key", ["key"]),
 

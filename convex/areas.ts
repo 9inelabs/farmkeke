@@ -28,30 +28,6 @@ export const listServedStates = query({
   },
 });
 
-/** Active pickup points, optionally limited to one state (M-37, M-07). */
-export const listPickupPoints = query({
-  args: { state: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    const state = args.state;
-    const points =
-      state === undefined
-        ? await ctx.db
-            .query("pickupPoints")
-            .withIndex("by_active_and_state", (q) => q.eq("active", true))
-            .take(200)
-        : await ctx.db
-            .query("pickupPoints")
-            .withIndex("by_active_and_state", (q) => q.eq("active", true).eq("state", state))
-            .take(200);
-    return await Promise.all(
-      points.map(async (point) => ({
-        ...point,
-        photoUrl: point.photoStorageId ? await ctx.storage.getUrl(point.photoStorageId) : null,
-      })),
-    );
-  },
-});
-
 const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
   const rad = Math.PI / 180;
   const dLat = (bLat - aLat) * rad;
@@ -81,26 +57,8 @@ export const matchLocation = query({
       const { _id, name, state, lga } = best.area;
       return { kind: "served" as const, area: { _id, name, state, lga } };
     }
-    const points = await ctx.db
-      .query("pickupPoints")
-      .withIndex("by_active_and_state", (q) => q.eq("active", true))
-      .take(200);
-    const nearest = points
-      .map((p) => ({ p, km: distanceKm(args.latitude, args.longitude, p.latitude, p.longitude) }))
-      .sort((a, b) => a.km - b.km)[0];
-    return {
-      kind: "outside" as const,
-      nearestPickupPoint:
-        nearest === undefined
-          ? null
-          : {
-              _id: nearest.p._id,
-              name: nearest.p.name,
-              address: nearest.p.address,
-              hours: nearest.p.hours,
-              distanceKm: Math.round(nearest.km),
-            },
-    };
+    // Pickup is at the farm now, so there is no pickup point to suggest
+    return { kind: "outside" as const, nearestPickupPoint: null };
   },
 });
 

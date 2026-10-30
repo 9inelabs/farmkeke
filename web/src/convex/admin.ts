@@ -13,11 +13,8 @@ export const admin = {
     updateApplication: makeFunctionReference<"mutation", { "jobTitle": string; "phone"?: string; "note": string }, any>("admin/access:updateApplication"),
   },
   areas: {
-    createPickupPoint: makeFunctionReference<"mutation", { "name": string; "address": string; "state": string; "lga": string; "latitude": number; "longitude": number; "hours": Array<{ "day": number; "opens": string; "closes": string }>; "phone": string; "collectWithinDays": number; "reason": string }, any>("admin/areas:createPickupPoint"),
     createServiceArea: makeFunctionReference<"mutation", { "state": string; "name": string; "lga": string; "deliveryFeeKobo"?: number; "latitude"?: number; "longitude"?: number; "radiusKm"?: number; "reason": string }, any>("admin/areas:createServiceArea"),
-    listAllPickupPoints: makeFunctionReference<"query", Record<string, never>, any>("admin/areas:listAllPickupPoints"),
     listAllServiceAreas: makeFunctionReference<"query", Record<string, never>, any>("admin/areas:listAllServiceAreas"),
-    updatePickupPoint: makeFunctionReference<"mutation", { "pointId": Id<"pickupPoints">; "name"?: string; "address"?: string; "state"?: string; "lga"?: string; "latitude"?: number; "longitude"?: number; "hours"?: Array<{ "day": number; "opens": string; "closes": string }>; "phone"?: string; "collectWithinDays"?: number; "active"?: boolean; "photoStorageId"?: Id<"_storage">; "reason": string }, any>("admin/areas:updatePickupPoint"),
     updateServiceArea: makeFunctionReference<"mutation", { "areaId": Id<"serviceAreas">; "name"?: string; "lga"?: string; "deliveryFeeKobo"?: number; "active"?: boolean; "latitude"?: number; "longitude"?: number; "radiusKm"?: number; "reason": string }, any>("admin/areas:updateServiceArea"),
   },
   banners: {
@@ -95,7 +92,6 @@ export const admin = {
     get: makeFunctionReference<"query", Record<string, never>, any>("admin/fees:get"),
     setCommission: makeFunctionReference<"mutation", { "commissionBps": number | null; "reason": string }, any>("admin/fees:setCommission"),
     setRules: makeFunctionReference<"mutation", { "farmerResponseHours"?: number; "unconfirmedAfterHours"?: number; "pickupHoldDays"?: number; "disputeReplyHours"?: number; "disputeDecideHours"?: number; "reason": string }, any>("admin/fees:setRules"),
-    setSlotCapacity: makeFunctionReference<"mutation", { "capacity": number | null; "serviceAreaId"?: Id<"serviceAreas">; "from"?: string; "reason": string }, any>("admin/fees:setSlotCapacity"),
   },
   ledger: {
     entries: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("admin/ledger:entries"),

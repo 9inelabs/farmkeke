@@ -30,7 +30,6 @@ export const adminRoutes = {
   banners: adminPath("/banners"),
   sitePhotos: adminPath("/site-photos"),
   areas: adminPath("/areas"),
-  pickupPoints: adminPath("/pickup-points"),
   rules: adminPath("/rules"),
   riders: adminPath("/riders"),
   rider: (id: string) => adminPath(`/riders/${id}`),

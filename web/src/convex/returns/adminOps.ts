@@ -17,22 +17,6 @@ export type ServiceArea = {
   radiusKm?: number;
 };
 
-export type PickupPoint = {
-  _id: Id<"pickupPoints">;
-  name: string;
-  address: string;
-  state: string;
-  lga: string;
-  latitude: number;
-  longitude: number;
-  hours: Hours[];
-  phone: string;
-  collectWithinDays: number;
-  photoStorageId?: Id<"_storage">;
-  photoUrl: string | null;
-  active: boolean;
-};
-
 export type Rules = {
   commissionBps: number | null;
   effectiveCommissionBps: number;

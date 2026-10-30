@@ -1,6 +1,10 @@
-// Starting configuration data. Idempotent: inserts what is missing and never
+// Starting data. Each part is idempotent: it inserts what is missing and never
 // overwrites rows staff have since edited.
-//   npx convex run seed:run
+//   npx convex run seed:run            needed everywhere, production included:
+//                                      categories, units, app version settings
+//   npx convex run seed:sampleAreas    development only: made-up delivery areas.
+//                                      On production, add real areas in Admin →
+//                                      Delivery areas instead.
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { insertListing, patchListing } from "./lib/listingCounts";
@@ -31,8 +35,7 @@ const UNITS = [
   { slug: "bag", singular: "bag", plural: "bags" },
 ];
 
-// PLACEHOLDER service areas and pickup points, taken from the design mockups.
-// Replace with real coverage, fees, addresses and coordinates before launch.
+// SAMPLE service areas from the design mockups (seed:sampleAreas only).
 const DELIVERY_FEE_KOBO = 1_000_00; // ₦1,000 per farm order
 
 // Centres and radii are rough placeholders for matching GPS to an area (M-05).
@@ -45,58 +48,10 @@ const SERVICE_AREAS = [
   { state: "Imo", name: "Mbaise", lga: "Aboh Mbaise", latitude: 5.45, longitude: 7.23, radiusKm: 8 },
 ];
 
-const MON_SAT = [1, 2, 3, 4, 5, 6];
-const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
-const hours = (days: number[], opens: string, closes: string) =>
-  days.map((day) => ({ day, opens, closes }));
-
-const PICKUP_POINTS = [
-  {
-    name: "Farmkeke Pickup · Ikenegbu",
-    address: "22 Ikenegbu Layout, beside Access Bank",
-    state: "Imo",
-    lga: "Owerri Municipal",
-    latitude: 5.4986,
-    longitude: 7.0342,
-    hours: hours(MON_SAT, "08:00", "19:00"),
-    phone: "+2348035550142",
-  },
-  {
-    name: "Farmkeke Pickup · World Bank",
-    address: "World Bank Housing Estate, Umuguma Road",
-    state: "Imo",
-    lga: "Owerri North",
-    latitude: 5.4697,
-    longitude: 7.0006,
-    hours: hours(MON_SAT, "09:00", "18:00"),
-    phone: "+2348035550143",
-  },
-  {
-    name: "Farmkeke Pickup · Douglas Road",
-    address: "Douglas Road, Owerri",
-    state: "Imo",
-    lga: "Owerri Municipal",
-    latitude: 5.4836,
-    longitude: 7.0333,
-    hours: hours(EVERY_DAY, "08:00", "20:00"),
-    phone: "+2348035550144",
-  },
-  {
-    name: "Farmkeke Pickup · Enugu GRA",
-    address: "Independence Layout, GRA",
-    state: "Enugu",
-    lga: "Enugu North",
-    latitude: 6.4519,
-    longitude: 7.5139,
-    hours: hours(MON_SAT, "08:00", "18:00"),
-    phone: "+2348035550145",
-  },
-];
-
 export const run = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const added = { categories: 0, units: 0, serviceAreas: 0, pickupPoints: 0, appConfig: 0 };
+    const added = { categories: 0, units: 0, appConfig: 0 };
 
     for (const [index, category] of CATEGORIES.entries()) {
       const existing = await ctx.db
@@ -120,40 +75,6 @@ export const run = internalMutation({
       }
     }
 
-    for (const [index, area] of SERVICE_AREAS.entries()) {
-      const existing = await ctx.db
-        .query("serviceAreas")
-        .withIndex("by_state_and_name", (q) => q.eq("state", area.state).eq("name", area.name))
-        .unique();
-      if (existing === null) {
-        await ctx.db.insert("serviceAreas", {
-          ...area,
-          deliveryFeeKobo: DELIVERY_FEE_KOBO,
-          active: true,
-          sortOrder: index + 1,
-        });
-        added.serviceAreas++;
-      } else if (existing.latitude === undefined) {
-        // Backfill for areas seeded before centres existed (Phase 1)
-        await ctx.db.patch("serviceAreas", existing._id, {
-          latitude: area.latitude,
-          longitude: area.longitude,
-          radiusKm: area.radiusKm,
-        });
-      }
-    }
-
-    for (const point of PICKUP_POINTS) {
-      const existing = await ctx.db
-        .query("pickupPoints")
-        .withIndex("by_name", (q) => q.eq("name", point.name))
-        .unique();
-      if (existing === null) {
-        await ctx.db.insert("pickupPoints", { ...point, collectWithinDays: 2, active: true });
-        added.pickupPoints++;
-      }
-    }
-
     const config = await ctx.db
       .query("appConfig")
       .withIndex("by_key", (q) => q.eq("key", "app"))
@@ -169,6 +90,38 @@ export const run = internalMutation({
     }
 
     return added;
+  },
+});
+
+/** Development only: the made-up delivery areas above, each with a ₦1,000 fee. */
+export const sampleAreas = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let added = 0;
+    for (const [index, area] of SERVICE_AREAS.entries()) {
+      const existing = await ctx.db
+        .query("serviceAreas")
+        .withIndex("by_state_and_name", (q) => q.eq("state", area.state).eq("name", area.name))
+        .unique();
+      if (existing === null) {
+        await ctx.db.insert("serviceAreas", {
+          ...area,
+          deliveryFeeKobo: DELIVERY_FEE_KOBO,
+          active: true,
+          sortOrder: index + 1,
+        });
+        added++;
+      } else if (existing.latitude === undefined) {
+        // Backfill for areas seeded before centres existed (Phase 1)
+        await ctx.db.patch("serviceAreas", existing._id, {
+          latitude: area.latitude,
+          longitude: area.longitude,
+          radiusKm: area.radiusKm,
+        });
+      }
+    }
+
+    return { serviceAreas: added };
   },
 });
 

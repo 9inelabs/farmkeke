@@ -25,21 +25,13 @@ import { MAX_OPEN_BILLS } from "./lib/bill";
 import { notifyConsumer, notifyFarm, smsSending } from "./lib/notify";
 import { looksLikeEmail, normalizeNigerianPhone } from "./lib/phone";
 import { hitLimit } from "./lib/rateLimit";
-import { getRules, HOUR, slotCapacityReader } from "./lib/settings";
+import { getRules, HOUR } from "./lib/settings";
 import { responseTimeHours } from "./lib/shop";
 import { fulfilment as fulfilmentValidator } from "./schema";
 
 const MAX_LINES = 50;
 // W-23 "Note for the rider"
 const MAX_NOTE = 200;
-// Nigeria is UTC+1 all year (no daylight saving).
-const WAT_OFFSET = 3_600_000;
-const SLOTS = [
-  { from: "09:00", to: "12:00" },
-  { from: "12:00", to: "15:00" },
-  { from: "15:00", to: "18:00" },
-];
-const WINDOW_DAYS = 14;
 
 type CartItem = { listingId: string; unitId: string; quantity: number; priceKobo?: number };
 
@@ -259,179 +251,6 @@ export const listingForCart = query({
   },
 });
 
-const dayKey = (ms: number) => new Date(ms + WAT_OFFSET).toISOString().slice(0, 10);
-/** Epoch ms of "YYYY-MM-DD HH:MM" in Nigerian time. */
-const watTime = (day: string, hhmm: string) => Date.parse(`${day}T${hhmm}:00Z`) - WAT_OFFSET;
-
-/** A delivery window as W-23 shows it: open, or closed because it's full or too soon. */
-type SlotState = { from: string; to: string; open: boolean; reason?: "full" | "too_soon" };
-
-// Orders that no longer need a rider don't take a place in a slot.
-const FREES_SLOT: Doc<"orders">["status"][] = ["cancelled", "declined", "expired"];
-const SLOT_COUNT_SCAN = 5000;
-
-/** Delivery orders already booked in each slot of one day in one area. */
-async function bookedSlots(ctx: QueryCtx, day: string, serviceAreaId: Id<"serviceAreas">) {
-  const counts = new Map<string, number>();
-  const orders = await ctx.db
-    .query("orders")
-    .withIndex("by_window_day_and_address_serviceAreaId", (q) =>
-      q.eq("window.day", day).eq("address.serviceAreaId", serviceAreaId),
-    )
-    .take(SLOT_COUNT_SCAN);
-  for (const o of orders) {
-    if (o.fulfilment !== "delivery" || o.window === undefined || FREES_SLOT.includes(o.status)) continue;
-    counts.set(o.window.from, (counts.get(o.window.from) ?? 0) + 1);
-  }
-  return counts;
-}
-
-/**
- * Delivery days and windows every farm in the cart can make. With an area,
- * slots at their capacity (platformSettings) are "full"; `newOrders` is how
- * many orders this cart would add (one per farm).
- */
-async function windowsFor(
-  ctx: QueryCtx,
-  farmIds: string[],
-  now: number,
-  opts: { serviceAreaId?: Id<"serviceAreas"> | null; newOrders?: number } = {},
-) {
-  const farms: Doc<"farms">[] = [];
-  for (const raw of farmIds.slice(0, 20)) {
-    const id = ctx.db.normalizeId("farms", raw);
-    const farm = id ? await ctx.db.get("farms", id) : null;
-    if (farm !== null) farms.push(farm);
-  }
-  if (farms.some((f) => f.status !== "active" || f.holidayMode)) return { days: [], allDays: [], readyDay: null };
-  // The rider collects once every farm has had its lead time.
-  const readyAt = now + Math.max(0, ...farms.map((f) => f.leadTimeHours)) * 3_600_000;
-  const areaId = opts.serviceAreaId ?? null;
-  const capacityOf = areaId === null ? null : await slotCapacityReader(ctx);
-  const need = Math.max(1, opts.newOrders ?? farms.length);
-  // `days` keeps its original shape (open slots only, days with one or more);
-  // `allSlots` / `allDays` add every slot with why it's closed (W-23 "Full").
-  const days: { day: string; slots: { from: string; to: string }[]; allSlots: SlotState[] }[] = [];
-  const allDays: { day: string; slots: SlotState[] }[] = [];
-  for (let i = 0; i < WINDOW_DAYS; i++) {
-    const day = dayKey(now + i * 86_400_000);
-    const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
-    if (!farms.every((f) => f.openDays.includes(weekday))) continue;
-    const inTime = SLOTS.map((s) => watTime(day, s.from) >= readyAt);
-    if (!inTime.some(Boolean)) continue;
-    const limits = SLOTS.map((s) => (capacityOf && areaId ? capacityOf(areaId, s.from) : null));
-    const booked = areaId !== null && limits.some((l) => l !== null) ? await bookedSlots(ctx, day, areaId) : null;
-    const all: SlotState[] = SLOTS.map((s, j) => {
-      if (!inTime[j]) return { from: s.from, to: s.to, open: false, reason: "too_soon" as const };
-      const limit = limits[j];
-      if (limit !== null && limit !== undefined && (booked?.get(s.from) ?? 0) + need > limit) {
-        return { from: s.from, to: s.to, open: false, reason: "full" as const };
-      }
-      return { from: s.from, to: s.to, open: true };
-    });
-    allDays.push({ day, slots: all });
-    const open = all.filter((s) => s.open).map((s) => ({ from: s.from, to: s.to }));
-    if (open.length > 0) days.push({ day, slots: open, allSlots: all });
-  }
-  // The first day the farms can make, whether or not its slots are full
-  return { days, allDays, readyDay: allDays[0]?.day ?? null };
-}
-
-/**
- * M-36 / W-22 / W-23: delivery days and time windows. `now` is the device's
- * clock. With `serviceAreaId`, slots that are full in that area say so.
- */
-export const deliveryWindows = query({
-  args: { farmIds: v.array(v.string()), now: v.number(), serviceAreaId: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    const areaId = args.serviceAreaId ? ctx.db.normalizeId("serviceAreas", args.serviceAreaId) : null;
-    return await windowsFor(ctx, args.farmIds, args.now, { serviceAreaId: areaId });
-  },
-});
-
-/**
- * W-24 "Ready from Sun 18 Oct": the first day the order can wait at the point.
- * The rider brings it once the farms are ready (`handoverDay`), on a day the
- * point is open.
- */
-function pointReadyDay(handoverDay: string | null, hours: Doc<"pickupPoints">["hours"]) {
-  if (handoverDay === null) return null;
-  const openDays = new Set(hours.map((h) => h.day));
-  const start = Date.parse(`${handoverDay}T12:00:00Z`);
-  for (let i = 0; i < WINDOW_DAYS; i++) {
-    const day = new Date(start + i * 86_400_000).toISOString().slice(0, 10);
-    if (openDays.has(new Date(`${day}T12:00:00Z`).getUTCDay())) return day;
-  }
-  return null;
-}
-
-const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
-  const rad = Math.PI / 180;
-  const dLat = (bLat - aLat) * rad;
-  const dLng = (bLng - aLng) * rad;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.asin(Math.sqrt(h));
-};
-
-/** M-37 / W-23: active pickup points, nearest first when a position is known. */
-export const pickupPoints = query({
-  args: {
-    latitude: v.optional(v.number()),
-    longitude: v.optional(v.number()),
-    serviceAreaId: v.optional(v.string()),
-    state: v.optional(v.string()),
-    // Phase 5 (W-24 "Ready from …" per point): the cart's farms and the device's clock
-    farmIds: v.optional(v.array(v.string())),
-    now: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const areaId = args.serviceAreaId ? ctx.db.normalizeId("serviceAreas", args.serviceAreaId) : null;
-    const area = areaId ? await ctx.db.get("serviceAreas", areaId) : null;
-    const handoverDay =
-      args.farmIds !== undefined && args.farmIds.length > 0 && args.now !== undefined
-        ? (await windowsFor(ctx, args.farmIds, args.now)).readyDay
-        : null;
-    const state = args.state ?? area?.state;
-    const points =
-      state === undefined
-        ? await ctx.db
-            .query("pickupPoints")
-            .withIndex("by_active_and_state", (q) => q.eq("active", true))
-            .take(200)
-        : await ctx.db
-            .query("pickupPoints")
-            .withIndex("by_active_and_state", (q) => q.eq("active", true).eq("state", state))
-            .take(200);
-    const rules = await getRules(ctx);
-    const lat = args.latitude;
-    const lng = args.longitude;
-    const rows = await Promise.all(
-      points.map(async (p) => ({
-        _id: p._id,
-        name: p.name,
-        address: p.address,
-        state: p.state,
-        lga: p.lga,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        hours: p.hours,
-        phone: p.phone,
-        // PRD: orders wait at least 3 days at the point
-        collectWithinDays: Math.max(rules.pickupHoldDays, p.collectWithinDays),
-        photoUrl: p.photoStorageId ? await ctx.storage.getUrl(p.photoStorageId) : null,
-        distanceKm:
-          lat === undefined || lng === undefined
-            ? null
-            : Math.round(distanceKm(lat, lng, p.latitude, p.longitude) * 10) / 10,
-        // "YYYY-MM-DD"; null without farmIds and now
-        readyDay: pointReadyDay(handoverDay, p.hours),
-      })),
-    );
-    if (lat !== undefined && lng !== undefined) rows.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
-    return rows;
-  },
-});
-
 /** M-39 / W-24: prefill contact details from the account or the last order. */
 export const contactDefaults = query({
   args: {},
@@ -478,10 +297,6 @@ export const place = mutation({
         note: v.optional(v.string()),
       }),
     ),
-    // Ignored: pickup is at the farm, and delivery times are agreed with the rider.
-    // Kept so an older website or app can still place orders.
-    pickupPointId: v.optional(v.string()),
-    window: v.optional(v.object({ day: v.string(), from: v.string(), to: v.string() })),
     contact: v.optional(
       v.object({ name: v.optional(v.string()), phone: v.optional(v.string()), email: v.optional(v.string()) }),
     ),

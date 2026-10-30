@@ -1,10 +1,9 @@
-// A-82 Pickup locations and A-83 Service areas and delivery fees.
+// A-83 Service areas and delivery fees. (Pickup points are no longer offered: pickup is at the farm.)
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
-import { requireKobo, requireOpeningHours, requireText } from "../lib/validate";
-import { openingHours } from "../schema";
+import { requireKobo, requireText } from "../lib/validate";
 
 
 export const listAllServiceAreas = query({
@@ -120,74 +119,3 @@ export const updateServiceArea = mutation({
   },
 });
 
-const pickupPointFields = {
-  name: v.string(),
-  address: v.string(),
-  state: v.string(),
-  lga: v.string(),
-  latitude: v.number(),
-  longitude: v.number(),
-  hours: openingHours,
-  phone: v.string(),
-  collectWithinDays: v.number(),
-};
-
-export const listAllPickupPoints = query({
-  args: {},
-  handler: async (ctx) => {
-    await requireStaff(ctx, null);
-    const points = await ctx.db.query("pickupPoints").take(500);
-    return await Promise.all(
-      points.map(async (p) => ({ ...p, photoUrl: p.photoStorageId ? await ctx.storage.getUrl(p.photoStorageId) : null })),
-    );
-  },
-});
-
-export const createPickupPoint = mutation({
-  args: { ...pickupPointFields, reason: v.string() },
-  handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, "areas.manage");
-    const { reason, ...fields } = args;
-    requireOpeningHours(fields.hours);
-    const pointId = await ctx.db.insert("pickupPoints", {
-      ...fields,
-      name: requireText(fields.name, "Name"),
-      address: requireText(fields.address, "Address"),
-      active: true,
-    });
-    await writeAudit(ctx, {
-      actorId: actor._id,
-      action: "pickupPoint.create",
-      targetTable: "pickupPoints",
-      targetId: pointId,
-      reason,
-    });
-    return pointId;
-  },
-});
-
-export const updatePickupPoint = mutation({
-  args: {
-    pointId: v.id("pickupPoints"),
-    ...v.object(pickupPointFields).partial().fields,
-    active: v.optional(v.boolean()),
-    photoStorageId: v.optional(v.id("_storage")),
-    reason: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const actor = await requireStaff(ctx, "areas.manage");
-    const { pointId, reason, ...changes } = args;
-    const point = await ctx.db.get("pickupPoints", pointId);
-    if (point === null) throw new ConvexError("Pickup point not found");
-    if (changes.hours !== undefined) requireOpeningHours(changes.hours);
-    await ctx.db.patch("pickupPoints", pointId, changes);
-    await writeAudit(ctx, {
-      actorId: actor._id,
-      action: "pickupPoint.update",
-      targetTable: "pickupPoints",
-      targetId: pointId,
-      reason,
-      details: changes,
-    });
-  },
-});

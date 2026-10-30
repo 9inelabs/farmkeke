@@ -74,35 +74,6 @@ export type Quote = {
   deliveryFeeLater?: boolean;
 };
 
-/** A W-23 time slot: open, or closed because it's full or too soon (Phase 5). */
-export type SlotState = { from: string; to: string; open: boolean; reason?: "full" | "too_soon" | null };
-
-/** checkout.deliveryWindows */
-export type DeliveryWindows = {
-  days: Array<{ day: string; slots: Array<{ from: string; to: string }>; allSlots?: SlotState[] }>;
-  /** Phase 5: every day the farms can make, with every slot (full days too). */
-  allDays?: Array<{ day: string; slots: SlotState[] }>;
-  readyDay: string | null;
-};
-
-/** checkout.pickupPoints item */
-export type CheckoutPickupPoint = {
-  _id: string;
-  name: string;
-  address: string;
-  state: string;
-  lga: string;
-  latitude: number;
-  longitude: number;
-  hours: Array<{ day: number; opens: string; closes: string }>;
-  phone?: string;
-  collectWithinDays: number;
-  photoUrl?: string | null;
-  distanceKm: number | null;
-  /** Phase 5 (with farmIds and now): "YYYY-MM-DD" the order can wait here from. */
-  readyDay?: string | null;
-};
-
 /** checkout.contactDefaults */
 export type ContactDefaults = { name: string | null; phone: string | null; email: string | null };
 
