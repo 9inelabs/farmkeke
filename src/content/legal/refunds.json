@@ -1,0 +1,90 @@
+{
+  "title": "Refund and dispute policy",
+  "nav": "Refund and dispute policy",
+  "draft": false,
+  "updated": "27 October 2026",
+  "description": "How Farmkeke protects your payment, what happens if a farm doesn't accept, how to report a problem, and how refunds are paid.",
+  "short": "**In short:** Farmkeke holds your payment until you confirm your order. If something goes wrong, report it before confirming, and we'll make it right.",
+  "sections": [
+    {
+      "title": "Our payment protection",
+      "blocks": [
+        {
+          "p": "When you pay for an order, Farmkeke holds the money. The farm is paid only after you confirm that your order arrived as expected, or after a problem report is resolved."
+        },
+        {
+          "p": "You can confirm receipt once the rider is bringing your order, or once you have collected a pickup order. Pickup orders wait at the farm for 3 days once they are ready."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "If the farm does not accept",
+      "blocks": [
+        {
+          "p": "Each farm has 24 hours to accept your order. If the farm declines or does not respond in time, the order is cancelled and anything you paid for it is refunded in full. Home delivery orders are paid only after the farm accepts and the delivery is priced, so you pay nothing for a delivery order the farm declines. If you do not pay your delivery bill within 12 hours, the order is cancelled."
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "Reporting a problem",
+      "blocks": [
+        {
+          "p": "If your order is damaged, incomplete, wrong or not as described, report it from your order page before you confirm receipt. Please include:"
+        },
+        {
+          "ul": [
+            "which items were affected, and how many",
+            "clear photos where possible",
+            "a short description of what went wrong"
+          ]
+        },
+        {
+          "p": "Once you confirm receipt, the payment is released and the order can no longer be disputed through Farmkeke."
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "How decisions are made",
+      "blocks": [
+        {
+          "p": "The farm has 12 hours to reply to your report. Farmkeke then reviews the photos, messages and delivery records, and usually makes a decision within one day. We will tell you the outcome by email and in the app."
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Refund amounts",
+      "blocks": [
+        {
+          "ul": [
+            "**Full refund** if the whole order is affected, or the farm does not accept it.",
+            "**Part refund** for the affected items only. The rest of the payment is released to the farm.",
+            "The delivery fee is not refunded for a part refund, because the delivery took place."
+          ]
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "How refunds are paid",
+      "blocks": [
+        {
+          "p": "Refunds go back to the card or bank account you paid with, through Paystack. Your bank may take up to 7 working days to show the refund. You can track it on your order page using the refund reference."
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "Payments outside Farmkeke",
+      "blocks": [
+        {
+          "p": "Only payments made through Farmkeke are protected. If a farmer asks you to pay them directly or in cash, please refuse and report it to [support@farmkeke.com](mailto:support@farmkeke.com)."
+        }
+      ],
+      "id": "s7"
+    }
+  ]
+}

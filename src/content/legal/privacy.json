@@ -1,0 +1,193 @@
+{
+  "title": "Privacy policy",
+  "nav": "Privacy policy",
+  "draft": false,
+  "description": "What personal information Farmkeke collects, why, who we share it with, how long we keep it, and your rights.",
+  "short": "**In short:** we collect what we need to sell, deliver and protect your orders. We share it only with the farm, the rider and the companies that help us run Farmkeke. We never sell your information. You can see, correct or delete it.",
+  "sections": [
+    {
+      "title": "Who we are",
+      "blocks": [
+        {
+          "p": "Farmkeke is run by Farmhaul Technologies Ltd (RC 9920885), a company registered in Nigeria. We are the data controller for the personal information described here, under the Nigeria Data Protection Act 2023 (NDPA) and the rules of the Nigeria Data Protection Commission (NDPC)."
+        },
+        {
+          "p": "You can reach our Data Protection Officer at [privacy@farmkeke.com](mailto:privacy@farmkeke.com)."
+        },
+        {
+          "p": "This policy covers shoppers (with an account or as a guest), farmers, Farmkeke riders and visitors to our website and app."
+        }
+      ],
+      "id": "s1"
+    },
+    {
+      "title": "Information we collect",
+      "blocks": [
+        {
+          "p": "**When you shop:**"
+        },
+        {
+          "ul": [
+            "your name, phone number and email address",
+            "delivery addresses, landmarks and directions for the rider, and the map pin you place",
+            "your location, only if you tap “Use my location”, to find your delivery area or place your pin",
+            "your orders, bills, payments, refunds and pickup collections",
+            "payment details from Paystack: card type, the last 4 digits, expiry and bank. If you choose to save a card, a secure token from Paystack lets us charge it again. We never receive your full card number or PIN.",
+            "messages and photos you send to farms or to our support team, problem reports, and reviews",
+            "your notification choices, and a device token if you allow notifications in the app"
+          ]
+        },
+        {
+          "p": "**When you apply to sell (farmers):** your name, phone number, farm name, address and location, your National Identification Number (NIN), photos of your farm, your collection days and hours, and your bank account details for payouts. Your 4-digit PIN is stored only in a scrambled (hashed) form that we cannot read."
+        },
+        {
+          "p": "**Farmkeke riders:** name, phone number, photo, address, a government ID type, number and photo, vehicle and plate number, a guarantor's name, phone, address and relationship, and bank details."
+        },
+        {
+          "p": "**When you visit:** our service providers receive your IP address and basic device and browser information when they deliver pages, maps and messages. We do not use advertising or analytics tracking. See the [Cookie policy](/legal/cookies)."
+        }
+      ],
+      "id": "s2"
+    },
+    {
+      "title": "How we use it, and our lawful basis",
+      "blocks": [
+        {
+          "ul": [
+            "**To provide our service** (performing our contract with you): taking and delivering orders, holding and releasing payments, refunds, pickup codes, and order updates by email and app notification, and by text message for a few important ones, such as your delivery bill and when a pickup order is ready.",
+            "**To check farmers and riders, and keep Farmkeke safe** (legitimate interests and legal obligations): verifying identity and documents, preventing fraud and misuse, handling problem reports, and keeping records of staff actions.",
+            "**To meet the law** (legal obligation): accounting and tax records, and answering lawful requests from authorities.",
+            "**To improve Farmkeke** (legitimate interests): understanding what goes wrong, such as failed payments and late orders, so we can fix it.",
+            "**With your consent:** using your device location, saving a card, and app notifications. You can withdraw consent at any time in your device or account settings."
+          ]
+        },
+        {
+          "p": "We do not send marketing messages and do not use your information for automated decisions that have legal or similarly significant effects on you."
+        }
+      ],
+      "id": "s3"
+    },
+    {
+      "title": "Who we share it with",
+      "blocks": [
+        {
+          "ul": [
+            "**The farm** that receives your order: your name, the items you ordered, and what it needs to prepare and hand over your order.",
+            "**The Farmkeke rider** delivering your order: your name, phone number, address, map pin and directions.",
+            "**Shoppers**, for pickup orders: the farm's name, collection address, hours and phone number.",
+            "**Paystack** (payments, refunds and farmer payouts): your email, amount and payment details; for farmers, bank account details.",
+            "**Termii** (text messages) and **Resend** (emails): your phone number or email address and the message.",
+            "**Expo** (app notifications): your device token and the notification text.",
+            "**Convex** (our database and file storage), where your information is stored.",
+            "**OpenStreetMap** (maps): when you view a map or tap “Use my location”, your device sends your location to OpenStreetMap's services to show the map and find the address.",
+            "**Professional advisers, auditors and authorities**, when the law requires it or to protect our rights, and a buyer of our business if Farmkeke is ever sold, under the same protections."
+          ]
+        },
+        {
+          "p": "We never sell your personal information."
+        }
+      ],
+      "id": "s4"
+    },
+    {
+      "title": "Transfers outside Nigeria",
+      "blocks": [
+        {
+          "p": "Some of our service providers, including Convex, Resend and Expo, store or process information outside Nigeria, for example in the United States or Europe. When information leaves Nigeria, we rely on the safeguards the NDPA allows, such as contracts that require the provider to protect it to an adequate standard."
+        }
+      ],
+      "id": "s5"
+    },
+    {
+      "title": "How long we keep it",
+      "blocks": [
+        {
+          "ul": [
+            "**Your account:** until you delete it.",
+            "**Orders, payments, refunds and payouts:** 6 years after the order, for accounting and tax law.",
+            "**Messages, problem reports and support conversations:** 2 years after the order or ticket is closed, in case of a later dispute.",
+            "**Farmer applications and documents:** while the farm sells on Farmkeke and for 2 years after it stops. For rejected applications, 1 year.",
+            "**Rider records:** while the rider works with Farmkeke and for 2 years after.",
+            "**Text message logs:** 1 year.",
+            "**Information saved in your browser**, such as your cart and delivery area: until you clear it. See the [Cookie policy](/legal/cookies)."
+          ]
+        }
+      ],
+      "id": "s6"
+    },
+    {
+      "title": "Deleting your account",
+      "blocks": [
+        {
+          "p": "You can delete your account from **Account → Delete account**. We immediately erase your saved addresses, saved items, saved cards, notification choices, device tokens and sign-in details. If you have an order in progress, we finish it first and then delete your account."
+        },
+        {
+          "p": "We keep records of your past orders and payments, including the name, phone number and address on them, for the periods above, because the law requires it. Your reviews stay on the farm's page with your first name and initial. Messages and problem reports stay for the period above."
+        }
+      ],
+      "id": "s7"
+    },
+    {
+      "title": "Your rights",
+      "blocks": [
+        {
+          "p": "Under the NDPA you can ask us to: see the personal information we hold about you; correct it; delete it; restrict or object to how we use it; give it to you or another company in a common format; and withdraw consent you gave. Email [privacy@farmkeke.com](mailto:privacy@farmkeke.com). We will answer within 30 days, and we may ask you to prove who you are first."
+        },
+        {
+          "p": "If you are not happy with our answer, you can complain to the Nigeria Data Protection Commission at [ndpc.gov.ng](https://ndpc.gov.ng)."
+        }
+      ],
+      "id": "s8"
+    },
+    {
+      "title": "Keeping it safe",
+      "blocks": [
+        {
+          "p": "We protect your information with encrypted connections, strict access controls and limits on sign-in attempts. Staff can only see what their role needs, sign in with a code sent to their email, and every important staff action is recorded. If a breach puts your information at risk, we will notify the NDPC within 72 hours and tell you without delay where the law requires."
+        }
+      ],
+      "id": "s9"
+    },
+    {
+      "title": "Children",
+      "blocks": [
+        {
+          "p": "Farmkeke is not meant for children under 18. If you think a child has given us their information, contact [privacy@farmkeke.com](mailto:privacy@farmkeke.com) and we will delete it."
+        }
+      ],
+      "id": "s10"
+    },
+    {
+      "title": "Your choices",
+      "blocks": [
+        {
+          "ul": [
+            "Change your details and notification choices in your account. Payment and order-safety messages cannot be turned off while you have an active order.",
+            "Allow or block location access in your browser or phone settings.",
+            "Remove saved cards from your account at any time."
+          ]
+        }
+      ],
+      "id": "s11"
+    },
+    {
+      "title": "Changes to this policy",
+      "blocks": [
+        {
+          "p": "We will update this policy when our service or the law changes, and show the date at the top. For important changes, we tell you by email or in the app."
+        }
+      ],
+      "id": "s12"
+    },
+    {
+      "title": "Contact us",
+      "blocks": [
+        {
+          "p": "Data protection questions: [privacy@farmkeke.com](mailto:privacy@farmkeke.com). Anything else: [support@farmkeke.com](mailto:support@farmkeke.com). The data controller is Farmhaul Technologies Ltd (RC 9920885), which runs Farmkeke."
+        }
+      ],
+      "id": "s13"
+    }
+  ],
+  "updated": "27 October 2026"
+}

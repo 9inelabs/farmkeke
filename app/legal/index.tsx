@@ -1,19 +1,30 @@
-// M-93 Legal: terms, privacy, refund and dispute policy.
+// M-93 Legal: every Farmkeke policy, with the website's wording.
 import { router } from "expo-router";
-import { Document, Refresh, ShieldCheck } from "@/components/icons";
+import { Document, Refresh, ShieldCheck, Truck, Ban, Leaf, Sliders } from "@/components/icons";
 import { ScrollView, StyleSheet } from "react-native";
 import { ListGroup, ListRow, Screen, ScreenHeader } from "@/components/ui";
-import { LEGAL_DOCS } from "@/content/help";
+import { LEGAL, type LegalDoc } from "@/content/legal";
+import type { IconComponent } from "@/components/icons";
 import { spacing } from "@/theme/tokens";
+
+const ROWS: Array<{ doc: LegalDoc; icon: IconComponent }> = [
+  { doc: "terms", icon: Document },
+  { doc: "privacy", icon: ShieldCheck },
+  { doc: "refunds", icon: Refresh },
+  { doc: "delivery", icon: Truck },
+  { doc: "acceptable-use", icon: Ban },
+  { doc: "farmer-terms", icon: Leaf },
+  { doc: "cookies", icon: Sliders },
+];
 
 export default function Legal() {
   return (
     <Screen header={<ScreenHeader title="Terms and policies" />}>
       <ScrollView contentContainerStyle={styles.body}>
         <ListGroup>
-          <ListRow icon={Document} title={LEGAL_DOCS.terms.title} subtitle={LEGAL_DOCS.terms.summary} onPress={() => router.push("/legal/terms")} />
-          <ListRow icon={ShieldCheck} title={LEGAL_DOCS.privacy.title} subtitle={LEGAL_DOCS.privacy.summary} onPress={() => router.push("/legal/privacy")} />
-          <ListRow icon={Refresh} title={LEGAL_DOCS.refunds.title} subtitle={LEGAL_DOCS.refunds.summary} onPress={() => router.push("/legal/refunds")} />
+          {ROWS.map(({ doc, icon }) => (
+            <ListRow key={doc} icon={icon} title={LEGAL[doc].title} subtitle={`Updated ${LEGAL[doc].updated}`} onPress={() => router.push(`/legal/${doc}`)} />
+          ))}
         </ListGroup>
       </ScrollView>
     </Screen>

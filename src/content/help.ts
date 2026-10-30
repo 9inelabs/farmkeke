@@ -77,14 +77,6 @@ export const HOW_IT_WORKS: { title: string; body: string }[] = [
   },
 ];
 
-export const LEGAL_DOCS = {
-  terms: { title: "Terms of use", summary: "The rules for using Farmkeke" },
-  privacy: { title: "Privacy policy", summary: "How we use and protect your data" },
-  refunds: { title: "Refund and dispute policy", summary: "What happens when something goes wrong" },
-} as const;
-
-export type LegalDoc = keyof typeof LEGAL_DOCS;
-
 export const SUPPORT_EMAIL = "support@farmkeke.com";
 export const INFO_EMAIL = "info@farmkeke.com";
 export const WEBSITE = "https://farmkeke.com";
