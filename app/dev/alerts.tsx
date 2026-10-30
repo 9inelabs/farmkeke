@@ -34,6 +34,7 @@ const FARM = {
     { alert: "messages", title: "Messages", description: "Shoppers' messages about their orders, and support replies", locked: false, smsAvailable: false, push: true, sms: false, email: false },
     { alert: "listings", title: "Listings", description: "Listing approved or sent back, low stock", locked: false, smsAvailable: false, push: true, sms: false, email: true },
     { alert: "reviews", title: "Reviews", description: "When a shopper rates an order", locked: false, smsAvailable: false, push: true, sms: false, email: false },
+    { alert: "news", title: "Farmkeke news", description: "Offers, tips and news from Farmkeke", locked: false, smsAvailable: false, push: false, sms: false, email: false },
   ],
 };
 

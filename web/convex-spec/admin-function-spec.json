@@ -2740,6 +2740,497 @@
       "returns": null
     },
     {
+      "identifier": "admin/messages.js:cancel",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:list",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                },
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          },
+          "status": {
+            "fieldType": {
+              "type": "literal",
+              "value": "scheduled"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:opened",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:reach",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:send",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "kind": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "update"
+                },
+                {
+                  "type": "literal",
+                  "value": "offer"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "link": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "to": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "literal",
+                        "value": "message"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "home"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "orders"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "product"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "farm"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "category"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "dashboard"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "listings"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "sales"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "earnings"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          },
+          "sendAt": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:sendTest",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "kind": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "update"
+                },
+                {
+                  "type": "literal",
+                  "value": "offer"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "link": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "to": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "literal",
+                        "value": "message"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "home"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "orders"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "product"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "farm"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "category"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "dashboard"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "listings"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "sales"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "earnings"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:withdraw",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/orders.js:addNote",
       "functionType": "Mutation",
       "visibility": {

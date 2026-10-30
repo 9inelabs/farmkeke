@@ -27,6 +27,15 @@ const MESSAGES: Record<string, string> = {
   WRONG_STATUS: "This was already changed by someone else. The page has the latest status.",
   NOT_FOUND: "This no longer exists.",
   NOT_EDITABLE: "This application can't be changed right now.",
+  TEXT_REQUIRED: "Add a title and a message.",
+  TOO_LONG: "Keep the title to 60 characters and the message to 200.",
+  TOO_FAR_AHEAD: "Schedule it within the next 30 days.",
+  PERSON_NOT_FOUND: "No account has that phone number or email.",
+  NOT_A_FARMER: "That person doesn't have a farm on Farmkeke. Send it to them as a shopper instead.",
+  ONE_NEEDS_A_SIDE: "Choose Shoppers or Farmers for a message to one person.",
+  LINK_NOT_FOR_BOTH: "A message to shoppers and farmers can only open the message itself.",
+  LINK_WRONG_SIDE: "That place isn't in the app this group uses. Pick another.",
+  LINK_NOT_FOUND: "We couldn't find that product, farm or category. Check it's live, then try again.",
 };
 
 /** A problem found in the form before calling the server; its message is shown as is. */

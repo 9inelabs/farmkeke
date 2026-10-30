@@ -48,6 +48,31 @@ async function ensureRolesImpl(ctx: MutationCtx) {
   return ids;
 }
 
+/**
+ * A new permission that built-in roles get by default (in lib/permissions.ts)
+ * only reaches roles created after it. This adds it to the existing built-in
+ * roles that should have it, once:
+ *   npx convex run admin/setup:grantBuiltInPermission '{"permission":"messages.send"}'
+ * Staff can still take it away again on the Roles page.
+ */
+export const grantBuiltInPermission = internalMutation({
+  args: { permission: v.string() },
+  handler: async (ctx, args) => {
+    const granted: string[] = [];
+    for (const def of BUILT_IN_ROLES) {
+      if (!(def.permissions as string[]).includes(args.permission)) continue;
+      const role = await ctx.db
+        .query("staffRoles")
+        .withIndex("by_key", (q) => q.eq("key", def.key))
+        .unique();
+      if (role === null || role.permissions.includes(args.permission)) continue;
+      await ctx.db.patch("staffRoles", role._id, { permissions: [...role.permissions, args.permission] });
+      granted.push(def.name);
+    }
+    return granted;
+  },
+});
+
 export const ensureRoles = internalMutation({
   args: {},
   handler: async (ctx) => {

@@ -26,6 +26,7 @@ import type * as admin_farmers from "../admin/farmers.js";
 import type * as admin_fees from "../admin/fees.js";
 import type * as admin_ledger from "../admin/ledger.js";
 import type * as admin_listings from "../admin/listings.js";
+import type * as admin_messages from "../admin/messages.js";
 import type * as admin_orders from "../admin/orders.js";
 import type * as admin_payments from "../admin/payments.js";
 import type * as admin_platform from "../admin/platform.js";
@@ -132,6 +133,7 @@ declare const fullApi: ApiFromModules<{
   "admin/fees": typeof admin_fees;
   "admin/ledger": typeof admin_ledger;
   "admin/listings": typeof admin_listings;
+  "admin/messages": typeof admin_messages;
   "admin/orders": typeof admin_orders;
   "admin/payments": typeof admin_payments;
   "admin/platform": typeof admin_platform;

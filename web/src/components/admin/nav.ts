@@ -10,6 +10,7 @@ import {
   GalleryHorizontalEnd,
   ImagePlus,
   LayoutDashboard,
+  Megaphone,
   ArrowLeftRight,
   Banknote,
   Bike,
@@ -86,6 +87,7 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.customers, label: "Customers", icon: Users, any: ["customers.view"] },
       { href: adminRoutes.disputes, label: "Problem reports", icon: MessageSquareWarning, any: ["disputes.view"], badge: "disputes" },
       { href: adminRoutes.support, label: "Support inbox", icon: Headphones, any: ["support.view"], badge: "support" },
+      { href: adminRoutes.messages, label: "Messages", icon: Megaphone, any: ["messages.send"] },
     ],
   },
   {

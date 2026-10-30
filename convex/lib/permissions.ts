@@ -41,6 +41,7 @@ export const PERMISSIONS = [
   { key: "support.view", group: "Customer care", label: "See the support inbox", description: "Messages from the contact form and the app." },
   { key: "support.manage", group: "Customer care", label: "Reply to support messages", description: "Reply, assign and resolve." },
   { key: "chat.view", group: "Customer care", label: "Read order chats", description: "Messages between shoppers and farms." },
+  { key: "messages.send", group: "Customer care", label: "Send messages", description: "Notifications to every shopper, every farmer or one person, in the app and by push." },
 
   // Money
   { key: "money.view", group: "Money", label: "See money", description: "Escrow ledger, payouts, refunds and reconciliation." },
@@ -101,6 +102,7 @@ export const BUILT_IN_ROLES: { key: string; name: string; description: string; p
       "support.view",
       "support.manage",
       "chat.view",
+      "messages.send",
       "money.view",
     ],
   },
@@ -122,6 +124,7 @@ export const BUILT_IN_ROLES: { key: string; name: string; description: string; p
       "support.view",
       "support.manage",
       "chat.view",
+      "messages.send",
       "money.view",
     ],
   },

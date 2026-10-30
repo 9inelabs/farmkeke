@@ -110,6 +110,15 @@ export const admin = {
     sendBack: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string; "note"?: string }, any>("admin/listings:sendBack"),
     unpublish: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string; "note"?: string }, any>("admin/listings:unpublish"),
   },
+  messages: {
+    cancel: makeFunctionReference<"mutation", { "broadcastId": Id<"broadcasts"> }, any>("admin/messages:cancel"),
+    list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "scheduled" }, any>("admin/messages:list"),
+    opened: makeFunctionReference<"query", { "broadcastId": Id<"broadcasts"> }, any>("admin/messages:opened"),
+    reach: makeFunctionReference<"query", { "side": "shop" | "farm" | "both"; "audience": "everyone" | "one"; "contact"?: string }, any>("admin/messages:reach"),
+    send: makeFunctionReference<"mutation", { "side": "shop" | "farm" | "both"; "audience": "everyone" | "one"; "contact"?: string; "kind": "update" | "offer"; "title": string; "body": string; "link": { "to": "message" | "home" | "orders" | "product" | "farm" | "category" | "dashboard" | "listings" | "sales" | "earnings"; "id"?: string }; "sendAt"?: number }, any>("admin/messages:send"),
+    sendTest: makeFunctionReference<"mutation", { "side": "shop" | "farm" | "both"; "audience": "everyone" | "one"; "contact"?: string; "kind": "update" | "offer"; "title": string; "body": string; "link": { "to": "message" | "home" | "orders" | "product" | "farm" | "category" | "dashboard" | "listings" | "sales" | "earnings"; "id"?: string } }, any>("admin/messages:sendTest"),
+    withdraw: makeFunctionReference<"mutation", { "broadcastId": Id<"broadcasts"> }, any>("admin/messages:withdraw"),
+  },
   orders: {
     addNote: makeFunctionReference<"mutation", { "note": string; "orderId": Id<"orders"> }, any>("admin/orders:addNote"),
     cancel: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string }, any>("admin/orders:cancel"),

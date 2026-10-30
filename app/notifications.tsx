@@ -1,12 +1,14 @@
 // M-87 Notifications (and F-11 for farmers, ?side=farm): newest first, unread marked with
-// a dot. Tapping one marks it read and opens what it's about.
+// a dot. Tapping one marks it read and opens what it's about. Messages staff
+// send from Admin → Messages (kinds "broadcast" and "offer") get a megaphone,
+// a "From Farmkeke" or "Offer" label, and their full text.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { router, useLocalSearchParams, type Href } from "expo-router";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bell, Sliders } from "@/components/icons";
+import { Bell, Megaphone, Sliders } from "@/components/icons";
 import { EmptyState, ScreenHeader, Skeleton, Text } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -23,7 +25,8 @@ export default function Notifications() {
 
   const open = (n: { _id: Id<"notifications">; href: string; read: boolean }) => {
     if (!n.read) void markRead({ notificationId: n._id });
-    if (n.href) router.push(n.href as Href);
+    // A message that opens itself is already here, in full
+    if (n.href && !n.href.startsWith("/notifications")) router.push(n.href as Href);
   };
 
   return (
@@ -61,34 +64,47 @@ export default function Notifications() {
           ListEmptyComponent={
             <EmptyState icon={Bell} title="Nothing new yet" message={side === "farm" ? "New orders, payouts and reviews will show up here." : "Order updates, bills and pickup codes will show up here."} />
           }
-          renderItem={({ item: n }) => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${n.read ? "" : "Unread. "}${n.title}. ${n.body}`}
-              onPress={() => open(n)}
-              style={({ pressed }) => [styles.row, !n.read && styles.unread, pressed && styles.pressed]}
-            >
-              <View style={[styles.icon, !n.read && styles.iconUnread]}>
-                <Bell size={20} color={colors.forest} variant={n.read ? "line" : "solid"} />
-              </View>
-              <View style={styles.copy}>
-                <View style={styles.titleRow}>
-                  <Text variant="bodyMedium" numberOfLines={1} style={[styles.title, !n.read && styles.bold]}>
-                    {n.title}
-                  </Text>
-                  <Text variant="small">{timeAgo(n.createdAt)}</Text>
+          renderItem={({ item: n }) => {
+            const fromFarmkeke = FROM_FARMKEKE[n.kind];
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${n.read ? "" : "Unread. "}${n.title}. ${n.body}`}
+                onPress={() => open(n)}
+                style={({ pressed }) => [styles.row, !n.read && styles.unread, pressed && styles.pressed]}
+              >
+                <View style={[styles.icon, !n.read && styles.iconUnread]}>
+                  {fromFarmkeke ? <Megaphone size={20} color={colors.forest} strokeWidth={1.75} /> : <Bell size={20} color={colors.forest} variant={n.read ? "line" : "solid"} />}
                 </View>
-                <Text variant="caption" numberOfLines={2}>
-                  {n.body}
-                </Text>
-              </View>
-            </Pressable>
-          )}
+                <View style={styles.copy}>
+                  {fromFarmkeke ? (
+                    <View style={styles.tag}>
+                      <Text variant="small" color={colors.forest} style={styles.bold}>
+                        {fromFarmkeke}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <View style={styles.titleRow}>
+                    <Text variant="bodyMedium" numberOfLines={1} style={[styles.title, !n.read && styles.bold]}>
+                      {n.title}
+                    </Text>
+                    <Text variant="small">{timeAgo(n.createdAt)}</Text>
+                  </View>
+                  <Text variant="caption" numberOfLines={fromFarmkeke ? undefined : 2}>
+                    {n.body}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          }}
         />
       )}
     </SafeAreaView>
   );
 }
+
+// Labels for messages from Farmkeke staff
+const FROM_FARMKEKE: Record<string, string> = { broadcast: "From Farmkeke", offer: "Offer" };
 
 function timeAgo(at: number) {
   const minutes = Math.round((Date.now() - at) / 60000);
@@ -116,4 +132,5 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   title: { flex: 1 },
   bold: { fontFamily: fonts.semibold },
+  tag: { alignSelf: "flex-start", paddingHorizontal: 6, paddingVertical: 1, borderRadius: radii.sm, backgroundColor: colors.white, marginBottom: 2 },
 });

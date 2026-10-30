@@ -20,6 +20,17 @@ type Alert = {
 
 const on = { push: true, sms: true, email: true };
 
+// Admin → Messages service updates, on both sides
+const UPDATES: Alert = {
+  alert: "farmkeke_updates",
+  title: "Updates from Farmkeke",
+  description: "",
+  locked: true,
+  hidden: true,
+  defaults: { push: true, sms: false, email: false },
+  kinds: ["broadcast"],
+};
+
 const SHOP: Alert[] = [
   {
     alert: "order_updates",
@@ -87,7 +98,9 @@ const SHOP: Alert[] = [
     description: "Seasonal produce and Farmkeke news",
     defaults: { push: false, sms: false, email: false },
     kinds: ["offer"],
-  },
+  },  // Admin → Messages service updates (delivery paused, new hours): always in
+  // the app and by push; never texted or emailed
+  UPDATES,
 ];
 
 const FARM: Alert[] = [
@@ -145,6 +158,15 @@ const FARM: Alert[] = [
     defaults: { push: true, sms: false, email: true },
     kinds: ["application_received", "application_more_info", "application_approved", "application_rejected"],
   },
+  {
+    alert: "news",
+    title: "Farmkeke news",
+    description: "Offers, tips and news from Farmkeke",
+    // Promotions only reach phones that opted in (as for shoppers' offers)
+    defaults: { push: false, sms: false, email: false },
+    kinds: ["offer"],
+  },
+  UPDATES,
 ];
 
 // Kinds no alert type lists (none today) follow these.

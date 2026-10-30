@@ -18,6 +18,7 @@ export type NotifyArgs = {
   orderId?: Id<"orders">;
   // Phone to text, if the preferences allow SMS
   smsTo?: string;
+  broadcastId?: Id<"broadcasts">;
 };
 
 export async function notify(ctx: MutationCtx, n: NotifyArgs): Promise<Id<"notifications">> {
@@ -30,6 +31,7 @@ export async function notify(ctx: MutationCtx, n: NotifyArgs): Promise<Id<"notif
     href: n.href,
     orderId: n.orderId,
     smsTo: n.smsTo,
+    broadcastId: n.broadcastId,
   });
   await ctx.scheduler.runAfter(0, internal.notifications.deliver.send, { notificationId });
   return notificationId;

@@ -64,6 +64,7 @@ npx convex run --prod admin/setup:createFounder '{"email":"you@farmkeke.com","na
 - `seed:run` adds categories, units and app version settings. It's safe to run again.
 - The Founder gets an email with a link to set a password. Repeat it for each co-founder.
 - Never run `seed:sampleAreas` or `seed:demoStorefront` on production: they add made-up data.
+- **Development only, once:** the dev backend's staff roles were made before Admin → Messages existed. To let Admin, Operations and Support send messages there, run `npx convex run admin/setup:grantBuiltInPermission '{"permission":"messages.send"}'` after deploying. Production gets it automatically when its roles are first created.
 
 ### 1e. Fill in the real setup in the Admin Portal
 

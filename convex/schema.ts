@@ -167,6 +167,24 @@ export const notificationSide = v.union(v.literal("shop"), v.literal("farm"));
 // Stored side of a notification. "staff" rows are in-app alerts for Farmkeke
 // staff (A-12), written by lib/notify.notifyStaff and never pushed. Function
 // arguments keep using notificationSide.
+// Admin → Messages: where tapping a message goes
+export const broadcastLink = v.object({
+  to: v.union(
+    v.literal("message"),
+    v.literal("home"),
+    v.literal("orders"),
+    v.literal("product"),
+    v.literal("farm"),
+    v.literal("category"),
+    v.literal("dashboard"),
+    v.literal("listings"),
+    v.literal("sales"),
+    v.literal("earnings"),
+  ),
+  // The product or farm id, or the category slug
+  id: v.optional(v.string()),
+});
+
 export const storedNotificationSide = v.union(v.literal("shop"), v.literal("farm"), v.literal("staff"));
 
 // A category's sub-chips (W-03 "Type" filter), e.g. { slug: "tomatoes", name: "Tomatoes" }.
@@ -1014,9 +1032,37 @@ export default defineSchema({
     readAt: v.optional(v.number()),
     // Phone to text when the alert and the person's preferences allow SMS
     smsTo: v.optional(v.string()),
+    // A message staff sent from Admin → Messages (broadcasts)
+    broadcastId: v.optional(v.id("broadcasts")),
   })
     .index("by_userId_and_side", ["userId", "side"])
-    .index("by_userId_and_side_and_readAt", ["userId", "side", "readAt"]),
+    .index("by_userId_and_side_and_readAt", ["userId", "side", "readAt"])
+    .index("by_broadcastId_and_readAt", ["broadcastId", "readAt"]),
+
+  // Admin → Messages (30 Oct 2026): a notification staff send to shoppers,
+  // farmers or both, in the app's Notifications and by push. Each person gets
+  // an ordinary notifications row (kind "broadcast" for a service update,
+  // "offer" for an offer or news, which only pushes when they allow it).
+  broadcasts: defineTable({
+    // "both": shoppers first, then farmers
+    side: v.union(v.literal("shop"), v.literal("farm"), v.literal("both")),
+    // Everyone on that side, or one person
+    audience: v.union(v.literal("everyone"), v.literal("one")),
+    recipientId: v.optional(v.id("users")),
+    kind: v.union(v.literal("update"), v.literal("offer")),
+    title: v.string(),
+    body: v.string(),
+    // Where tapping it goes: "message" stays on Notifications
+    link: broadcastLink,
+    status: v.union(v.literal("scheduled"), v.literal("sending"), v.literal("sent"), v.literal("cancelled"), v.literal("withdrawn")),
+    sendAt: v.number(),
+    sentAt: v.optional(v.number()),
+    withdrawnAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    // People it was delivered to so far
+    recipients: v.number(),
+  })
+    .index("by_status", ["status"]),
 
   notificationPrefs: defineTable({
     userId: v.id("users"),
