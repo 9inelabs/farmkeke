@@ -38,7 +38,7 @@
           ]
         },
         {
-          "p": "**When you apply to sell (farmers):** your name, phone number, farm name, address and location, your National Identification Number (NIN), photos of your farm, your collection days and hours, and your bank account details for payouts. Your 4-digit PIN is stored only in a scrambled (hashed) form that we cannot read."
+          "p": "**When you apply to sell (farmers):** your name, phone number, farm name, address and location, your National Identification Number (NIN), photos of your farm, your collection days and hours, and your bank account details, so Paystack can pay you your share of each order. Your 4-digit PIN is stored only in a scrambled (hashed) form that we cannot read."
         },
         {
           "p": "**Farmkeke riders:** name, phone number, photo, address, a government ID type, number and photo, vehicle and plate number, a guarantor's name, phone, address and relationship, and bank details."
@@ -75,7 +75,7 @@
             "**The farm** that receives your order: your name, the items you ordered, and what it needs to prepare and hand over your order.",
             "**The Farmkeke rider** delivering your order: your name, phone number, address, map pin and directions.",
             "**Shoppers**, for pickup orders: the farm's name, collection address, hours and phone number.",
-            "**Paystack** (payments, refunds and farmer payouts): your email, amount and payment details; for farmers, bank account details.",
+            "**Paystack** (payments, splitting each payment between farms and Farmkeke, and refunds): your email, amount and payment details; for farmers, bank account details, which Paystack keeps as the farm's subaccount.",
             "**Termii** (text messages) and **Resend** (emails): your phone number or email address and the message.",
             "**Expo** (app notifications): your device token and the notification text.",
             "**Convex** (our database and file storage), where your information is stored.",
@@ -104,7 +104,7 @@
         {
           "ul": [
             "**Your account:** until you delete it.",
-            "**Orders, payments, refunds and payouts:** 6 years after the order, for accounting and tax law.",
+            "**Orders, payments and refunds:** 6 years after the order, for accounting and tax law.",
             "**Messages, problem reports and support conversations:** 2 years after the order or ticket is closed, in case of a later dispute.",
             "**Farmer applications and documents:** while the farm sells on Farmkeke and for 2 years after it stops. For rejected applications, 1 year.",
             "**Rider records:** while the rider works with Farmkeke and for 2 years after.",
@@ -189,5 +189,5 @@
       "id": "s13"
     }
   ],
-  "updated": "27 October 2026"
+  "updated": "17 November 2026"
 }

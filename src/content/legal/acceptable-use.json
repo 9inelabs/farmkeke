@@ -2,9 +2,9 @@
   "title": "Acceptable use policy",
   "nav": "Acceptable use",
   "draft": false,
-  "updated": "27 October 2026",
+  "updated": "17 November 2026",
   "description": "What can be sold on Farmkeke, and how shoppers, farmers and visitors must use the website and app.",
-  "short": "**In short:** Farmkeke is for buying and selling genuine farm produce, paid for through Farmkeke. No unsafe or illegal products, no payments outside Farmkeke, no fraud, abuse or misuse of the service. If someone breaks these rules, we can remove content, hold payouts and suspend or close accounts.",
+  "short": "**In short:** Farmkeke is for buying and selling genuine farm produce, paid for through Farmkeke. No unsafe or illegal products, no payments outside Farmkeke, no fraud, abuse or misuse of the service. If someone breaks these rules, we can remove content, pause sales and suspend or close accounts.",
   "sections": [
     {
       "title": "About this policy",
@@ -87,7 +87,7 @@
       "title": "What we do if this policy is broken",
       "blocks": [
         {
-          "p": "Depending on what happened, we may remove a listing, review or message; cancel and refund an order; hold a farmer's payout while we investigate; suspend or close an account or farm; and report the matter to the police or other authorities. Where we can, we tell the person why and give them a chance to respond."
+          "p": "Depending on what happened, we may remove a listing, review or message; cancel and refund an order; pause a farm's sales while we investigate; suspend or close an account or farm; and report the matter to the police or other authorities. Where we can, we tell the person why and give them a chance to respond."
         }
       ],
       "id": "s7"

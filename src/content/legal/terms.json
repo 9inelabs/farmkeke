@@ -3,7 +3,7 @@
   "nav": "Terms of use",
   "draft": false,
   "description": "The rules for buying fresh produce on Farmkeke, on the website and in the app.",
-  "short": "**In short:** Farmkeke connects you with verified farms. You pay through Farmkeke, we hold your money until you confirm your order arrived, and Farmkeke riders deliver it. These terms explain the rules for everyone who shops with us.",
+  "short": "**In short:** Farmkeke connects you with verified farms. You pay through Paystack once the farm accepts your order, Farmkeke riders deliver it, and if something is wrong you can report it within 24 hours for a refund. These terms explain the rules for everyone who shops with us.",
   "sections": [
     {
       "title": "About these terms",
@@ -35,7 +35,7 @@
       "title": "What Farmkeke does",
       "blocks": [
         {
-          "p": "Farmkeke is an online marketplace. Each farm is the seller of its produce and sets its own prices. Farmkeke checks every farm before it can sell, takes payment on the farm's behalf, holds that payment safely until you confirm your order, and arranges delivery with Farmkeke riders."
+          "p": "Farmkeke is an online marketplace. Each farm is the seller of its produce and sets its own prices. Farmkeke checks every farm before it can sell, collects payment through Paystack, which passes each farm its share and Farmkeke its commission and the delivery fee, and arranges delivery with Farmkeke riders."
         },
         {
           "p": "We check farms and listings, but fresh produce is natural and can vary in size, colour and ripeness. Photos show typical produce, not the exact items you will receive."
@@ -50,7 +50,7 @@
           "ul": [
             "Keep your password private. You are responsible for what happens in your account. If you think someone else has used it, change your password and tell us.",
             "If you untick “Keep me signed in”, you are signed out when you close your browser. Otherwise you stay signed in for up to 30 days.",
-            "**Guest orders** are linked to the phone or browser you ordered on. Only that device can confirm receipt or report a problem. On another device, Find my order shows the order but you cannot act on it.",
+            "**Guest orders** are linked to the phone or browser you ordered on. Only that device can report a problem with them. On another device, Find my order shows the order but you cannot act on it.",
             "You can add guest orders to an account later, from the link we show or send you after ordering."
           ]
         }
@@ -64,7 +64,7 @@
           "ul": [
             "Prices are in Naira and are set by each farm. The price shown at checkout is the price you pay for the produce.",
             "If your cart has items from several farms, each farm gets its own order.",
-            "Each farm has **24 hours** to accept your order. If it declines or does not answer in time, the order is cancelled and anything you paid for it is refunded in full.",
+            "Each farm has **24 hours** to accept your order. If it declines or does not answer in time, the order is cancelled. You pay only after the farm accepts, so you are not charged.",
             "Stock can run out. If an item becomes unavailable, we tell you before you pay, or the farm may decline the order.",
             "To protect farms and other shoppers, you can have at most **3 unpaid home delivery orders** at a time, and we limit how many checkouts can be started in a short time.",
             "We may cancel an order and refund you if a price or listing was clearly wrong, or if we suspect fraud."
@@ -79,8 +79,9 @@
         {
           "ul": [
             "Payments are processed by **Paystack**, a licensed payment company. You can pay by card, bank transfer or USSD. Farmkeke never sees or stores your full card number.",
-            "**Pickup orders** are paid at checkout. If payment is not completed within 60 minutes, the checkout is cancelled and the stock is released.",
-            "**Home delivery orders** are placed without paying. Once the farm accepts, we price the delivery and send you one bill by email, text and in the app. You have **12 hours** to pay, and we remind you after 6 hours. If the bill is not paid in time, the order is cancelled and you are not charged.",
+            "**Every order is placed without paying.** Once the farm accepts, we send you one bill by email, text and in the app. For home delivery, the bill includes the delivery fee we set for your order.",
+            "You have **12 hours** to pay your bill, and we remind you after 6 hours. If it is not paid in time, the order is cancelled and you are not charged.",
+            "Paystack splits your payment: each farm receives its share for its produce, and Farmkeke receives its commission and the delivery fee. Farmkeke does not hold your money.",
             "Anyone who has your bill's pay link can pay it, so only share it with someone you want to pay for you.",
             "If you are signed in, you can choose to save a card for faster payment next time. You can remove a saved card at any time from your account."
           ]
@@ -103,13 +104,10 @@
       "id": "s7"
     },
     {
-      "title": "Confirming receipt and our payment protection",
+      "title": "When your order arrives",
       "blocks": [
         {
-          "p": "Your money stays with Farmkeke until you confirm that your order arrived as expected. You can confirm once the rider is bringing your order, or once you have collected a pickup order. Confirming releases the payment to the farm and cannot be undone, so check everything first."
-        },
-        {
-          "p": "If something is wrong, report it from your order page **before** you confirm. See the [Refund and dispute policy](/legal/refunds). If you neither confirm nor report a problem within 24 hours of delivery, we remind you, and our team may release the payment to the farm after checking the delivery records."
+          "p": "Check everything when your order arrives or when you collect it. If something is wrong, report it from your order page within **24 hours** of delivery or collection. See the [Refund and dispute policy](/legal/refunds). After 24 hours the order closes."
         }
       ],
       "id": "s8"
@@ -153,7 +151,7 @@
           "p": "Your rights under the Federal Competition and Consumer Protection Act 2018 and other Nigerian consumer laws are not affected by these terms."
         },
         {
-          "p": "Each farm is responsible for the quality, safety and description of its produce. Farmkeke is responsible for running the marketplace, holding and refunding payments as these terms describe, and for deliveries made by our riders."
+          "p": "Each farm is responsible for the quality, safety and description of its produce. Farmkeke is responsible for running the marketplace, collecting and refunding payments as these terms describe, and for deliveries made by our riders."
         },
         {
           "p": "As far as the law allows, we are not responsible for losses that were not foreseeable, for business losses, or for delays caused by events outside our reasonable control, such as severe weather, road closures or network outages. Nothing in these terms limits liability that cannot be limited by law."
@@ -201,5 +199,5 @@
       "id": "s15"
     }
   ],
-  "updated": "27 October 2026"
+  "updated": "17 November 2026"
 }

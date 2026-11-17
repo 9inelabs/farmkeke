@@ -2,18 +2,18 @@
   "title": "Refund and dispute policy",
   "nav": "Refund and dispute policy",
   "draft": false,
-  "updated": "27 October 2026",
+  "updated": "17 November 2026",
   "description": "How Farmkeke protects your payment, what happens if a farm doesn't accept, how to report a problem, and how refunds are paid.",
-  "short": "**In short:** Farmkeke holds your payment until you confirm your order. If something goes wrong, report it before confirming, and we'll make it right.",
+  "short": "**In short:** you pay through Paystack only after the farm accepts your order. If something is wrong with it, report it within 24 hours of delivery or collection, and we'll refund you.",
   "sections": [
     {
-      "title": "Our payment protection",
+      "title": "Your buyer protection",
       "blocks": [
         {
-          "p": "When you pay for an order, Farmkeke holds the money. The farm is paid only after you confirm that your order arrived as expected, or after a problem report is resolved."
+          "p": "Payments are made through Paystack, a licensed payment company. You pay only after the farm has accepted your order, and Paystack passes each farm its share of your payment directly."
         },
         {
-          "p": "You can confirm receipt once the rider is bringing your order, or once you have collected a pickup order. Pickup orders wait at the farm for 3 days once they are ready."
+          "p": "If your order arrives damaged, incomplete, wrong or not as described, report it within **24 hours** of delivery or collection, and Farmkeke refunds you for what went wrong, even when the farm has already been paid. Pickup orders wait at the farm for 3 days once they are ready."
         }
       ],
       "id": "s1"
@@ -22,7 +22,7 @@
       "title": "If the farm does not accept",
       "blocks": [
         {
-          "p": "Each farm has 24 hours to accept your order. If the farm declines or does not respond in time, the order is cancelled and anything you paid for it is refunded in full. Home delivery orders are paid only after the farm accepts and the delivery is priced, so you pay nothing for a delivery order the farm declines. If you do not pay your delivery bill within 12 hours, the order is cancelled."
+          "p": "Each farm has 24 hours to accept your order. You pay only after it accepts: we then send you one bill by email, text and in the app, with the delivery fee included for home delivery. If the farm declines or does not respond in time, the order is cancelled and you pay nothing. If you do not pay your bill within 12 hours, the order is cancelled and you are not charged."
         }
       ],
       "id": "s2"
@@ -31,7 +31,7 @@
       "title": "Reporting a problem",
       "blocks": [
         {
-          "p": "If your order is damaged, incomplete, wrong or not as described, report it from your order page before you confirm receipt. Please include:"
+          "p": "If your order is damaged, incomplete, wrong or not as described, report it from your order page within **24 hours** of delivery or collection. Please include:"
         },
         {
           "ul": [
@@ -41,7 +41,7 @@
           ]
         },
         {
-          "p": "Once you confirm receipt, the payment is released and the order can no longer be disputed through Farmkeke."
+          "p": "After 24 hours the order closes and can no longer be reported from the order page, but you can still contact support."
         }
       ],
       "id": "s3"
@@ -60,8 +60,9 @@
       "blocks": [
         {
           "ul": [
-            "**Full refund** if the whole order is affected, or the farm does not accept it.",
-            "**Part refund** for the affected items only. The rest of the payment is released to the farm.",
+            "**Full refund** if the whole order is affected, or it never reached you.",
+            "**Part refund** for the affected items only.",
+            "**No refund** if the order arrived as described.",
             "The delivery fee is not refunded for a part refund, because the delivery took place."
           ]
         }
@@ -72,7 +73,10 @@
       "title": "How refunds are paid",
       "blocks": [
         {
-          "p": "Refunds go back to the card or bank account you paid with, through Paystack. Your bank may take up to 7 working days to show the refund. You can track it on your order page using the refund reference."
+          "p": "Refunds go back to the card or bank account you paid with, through Paystack, against your original payment. Banks usually show a refund within 3 to 10 working days. You can track it on your order page using the refund reference."
+        },
+        {
+          "p": "Farmkeke pays your refund straight away and settles anything the farm owes with the farm separately, so you never wait for the farm."
         }
       ],
       "id": "s6"
