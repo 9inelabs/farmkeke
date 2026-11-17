@@ -392,14 +392,14 @@ export const place = mutation({
     if (name.length === 0) throw new ConvexError({ code: "NAME_REQUIRED" });
     if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
     if (emailRaw.length > 0 && !looksLikeEmail(emailRaw)) throw new ConvexError({ code: "INVALID_EMAIL" });
-    // The delivery bill goes by email and SMS; until texts really send, email is the only way it reaches a guest.
-    if (args.fulfilment === "delivery" && emailRaw.length === 0 && !smsSending()) {
+    // The bill goes by email and SMS; until texts really send, email is the only way it reaches a guest.
+    if (emailRaw.length === 0 && !smsSending()) {
       throw new ConvexError({ code: "EMAIL_REQUIRED" });
     }
     const contact = { name: name.slice(0, 80), phone, email: emailRaw || undefined };
 
-    // Farms pack unpaid delivery orders, so cap how many one person can have open.
-    if (args.fulfilment === "delivery") {
+    // Farms accept unpaid orders (17 Nov 2026: pickup too), so cap how many one person can have open.
+    {
       const mine = await ctx.db
         .query("checkouts")
         .withIndex("by_userId", (q) => q.eq("userId", user._id))
@@ -414,13 +414,12 @@ export const place = mutation({
           .query("checkouts")
           .withIndex("by_contact_phone_and_status", (q) => q.eq("contact.phone", phone).eq("status", "awaiting_payment"))
           .take(MAX_OPEN_BILLS + 1)),
-      ].filter((c) => c.fulfilment === "delivery");
-      const openBill = (c: Doc<"checkouts">) =>
-        c.fulfilment === "delivery" && (c.status === "awaiting_bill" || c.status === "awaiting_payment");
+      ].filter((c) => c.payBy !== undefined || c.status === "awaiting_bill");
+      const openBill = (c: Doc<"checkouts">) => c.status === "awaiting_bill" || (c.status === "awaiting_payment" && c.payBy !== undefined);
       if (mine.filter(openBill).length >= MAX_OPEN_BILLS || byPhone.length >= MAX_OPEN_BILLS) {
         throw new ConvexError({
           code: "TOO_MANY_UNPAID",
-          message: "You have unpaid delivery orders waiting. Pay or cancel one before placing another.",
+          message: "You have unpaid orders waiting. Pay or cancel one before placing another.",
         });
       }
     }
@@ -434,11 +433,13 @@ export const place = mutation({
       throw new ConvexError({ code: "TOTAL_CHANGED", totalKobo: quoted.totalKobo });
     }
 
+    // Every order is paid after its farm accepts (Paystack split, 17 Nov 2026):
+    // the checkout waits for the bill (lib/bill.ts)
     const delivery = args.fulfilment === "delivery";
     const checkoutId = await ctx.db.insert("checkouts", {
       userId: user._id,
       reference: await checkoutReference(ctx),
-      status: delivery ? "awaiting_bill" : "awaiting_payment",
+      status: "awaiting_bill",
       fulfilment: args.fulfilment,
       address,
       contact,
@@ -465,14 +466,14 @@ export const place = mutation({
       }));
       await takeStock(ctx, items);
       const number = await orderNumber(ctx);
-      // Delivery orders go to the farm now, unpaid, with the usual 24 hours to answer
-      const respondBy = delivery ? now + rules.farmerResponseHours * HOUR : undefined;
+      // Orders go to the farm now, unpaid, with the usual 24 hours to answer
+      const respondBy = now + rules.farmerResponseHours * HOUR;
       const orderId = await ctx.db.insert("orders", {
         checkoutId,
         userId: user._id,
         farmId: farm.farmId,
         number,
-        status: delivery ? "placed" : "awaiting_payment",
+        status: "placed",
         escrow: "none",
         fulfilment: args.fulfilment,
         items,
@@ -484,27 +485,29 @@ export const place = mutation({
         contact,
         respondBy,
       });
-      await logOrderEvent(ctx, orderId, delivery ? "placed" : "awaiting_payment", actor);
-      if (delivery) {
-        const expiryJobId = await ctx.scheduler.runAt(respondBy!, internal.orders.system.expireOne, { orderId });
-        await ctx.db.patch("orders", orderId, { expiryJobId });
-        const order = (await ctx.db.get("orders", orderId))!;
-        await notifyFarm(
-          ctx,
-          order,
-          "order_new",
-          "New delivery order",
-          `Order ${number} is waiting. Accept or decline within ${rules.farmerResponseHours} hours. ` +
-            "The shopper pays once Farmkeke has priced the delivery; the rider only collects after that.",
-        );
-        await notifyConsumer(
-          ctx,
-          order,
-          "order_received",
-          `Order ${number} received`,
-          `We've sent it to ${farm.farmName}. Once they accept, we'll arrange a rider and send your bill, delivery included.`,
-        );
-      }
+      await logOrderEvent(ctx, orderId, "placed", actor);
+      const expiryJobId = await ctx.scheduler.runAt(respondBy, internal.orders.system.expireOne, { orderId });
+      await ctx.db.patch("orders", orderId, { expiryJobId });
+      const order = (await ctx.db.get("orders", orderId))!;
+      await notifyFarm(
+        ctx,
+        order,
+        "order_new",
+        delivery ? "New delivery order" : "New pickup order",
+        `Order ${number} is waiting. Accept or decline within ${rules.farmerResponseHours} hours. ` +
+          (delivery
+            ? "The shopper pays once Farmkeke has priced the delivery; the rider only collects after that."
+            : "The shopper pays once you accept; hand it over only when the app shows it's paid."),
+      );
+      await notifyConsumer(
+        ctx,
+        order,
+        "order_received",
+        `Order ${number} received`,
+        delivery
+          ? `We've sent it to ${farm.farmName}. Once they accept, we'll arrange a rider and send your bill, delivery included.`
+          : `We've sent it to ${farm.farmName}. Once they accept, we'll send your bill to pay.`,
+      );
       orders.push({ orderId, number, farmName: farm.farmName, totalKobo: farm.itemsTotalKobo });
     }
     const checkout = (await ctx.db.get("checkouts", checkoutId))!;
@@ -513,8 +516,8 @@ export const place = mutation({
       reference: checkout.reference,
       totalKobo: checkout.totalKobo,
       orders,
-      // Pickup is paid now; delivery is paid when the bill comes
-      payNow: !delivery,
+      // Every order is paid when the bill comes, once the farm accepts
+      payNow: false,
     };
   },
 });

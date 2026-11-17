@@ -1,8 +1,8 @@
-// Phase 6 "done when": a guest orders from two farms, farms act, the consumer
-// confirms, and the ledger shows the money released. Plus expiry, auth checks,
-// admin release queue and guest claim. Runs against the repo's convex/ code.
-// Delivery orders are placed unpaid and paid by bill once staff have priced
-// the delivery; pickup orders are paid up front and collected at the farm.
+// Phase 6 "done when": a guest orders from two farms, farms act, the order is
+// delivered and closes, and the ledger shows each side's split. Plus expiry,
+// auth checks and guest claim. Runs against the repo's convex/ code. Every
+// order is placed unpaid and paid by bill once the farms have accepted (and,
+// for delivery, staff have priced it); Paystack splits each payment at once.
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
@@ -42,7 +42,7 @@ async function seed(t: ReturnType<typeof convexTest>) {
         userId, applicationId: appId, name, phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
         farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: hours, leadTimeHours: 4,
         openDays: [0, 1, 2, 3, 4, 5, 6], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789",
-        accountName: name, status: "active", trusted: true,
+        accountName: name, status: "active", trusted: true, paystackSubaccountCode: `ACCT_${name.split(" ")[0]}`,
       });
     const farmA = await farm(farmerA.id, "Ada Greens");
     const farmB = await farm(farmerB.id, "Okafor Farms");
@@ -158,7 +158,7 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   await expect(payTest(t, s.account, placed.checkoutId)).rejects.toThrow(/NOT_FOUND/);
   await payTest(t, s.account, placed.checkoutId, checkout.payToken);
   const paidA = await guest.query(api.orders.consumer.get, { orderId: orderA });
-  expect(paidA).toMatchObject({ status: "ready_for_rider", escrow: "held", paid: true, deliveryFeeKobo: 150000, totalKobo: 1050000 });
+  expect(paidA).toMatchObject({ status: "ready_for_rider", escrow: "released", paid: true, deliveryFeeKobo: 150000, totalKobo: 1050000 });
 
   // Paid: the rider collects
   await farmerA.mutation(api.orders.farmer.confirmHandover, { orderId: orderA });
@@ -173,8 +173,13 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   expect(found).toMatchObject({ viewOnly: true, canConfirm: false, pickupCode: null });
   await expect(other.mutation(api.orders.consumer.confirmReceipt, { orderId: orderA })).rejects.toThrow(/NOT_FOUND/);
 
-  await guest.mutation(api.orders.consumer.confirmReceipt, { orderId: orderA });
-  // Run everything scheduled: the payout now; the bill's reminder and lapse find it paid
+  // No problem reported within a day: the order closes by itself
+  vi.advanceTimersByTime(23 * HOUR);
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  expect(await t.run(async (ctx) => (await ctx.db.get(orderA))!.status)).toBe("delivered");
+  vi.advanceTimersByTime(2 * HOUR);
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  // Run everything scheduled: the bill's reminder and lapse find it paid
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 
   const result = await t.run(async (ctx) => {
@@ -189,20 +194,19 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
     const finalCheckout = (await ctx.db.get(placed.checkoutId))!;
     return { a, ledgerA, ledgerB, payouts, refunds, events, stockB, notes, finalCheckout };
   });
-  expect(result.a).toMatchObject({ status: "completed", escrow: "released" });
+  expect(result.a).toMatchObject({ status: "completed", escrow: "released", farmShareKobo: 855000, commissionKobo: 45000, recoveredKobo: 0 });
   expect(result.finalCheckout.status).toBe("paid");
+  // Split the moment it's paid: the farm's share, Farmkeke's commission and delivery fee
   expect(result.ledgerA.map((e) => [e.kind, e.amountKobo, e.status])).toEqual([
-    ["hold", 1050000, "done"],
-    ["release", 855000, "done"],
+    ["farm_share", 855000, "done"],
     ["commission", 45000, "done"],
     ["delivery_fee", 150000, "done"],
-    ["payout", 855000, "done"],
   ]);
-  expect(result.payouts).toHaveLength(1);
-  expect(result.payouts[0]).toMatchObject({ status: "sent", provider: "simulated", amountKobo: 855000 });
+  // Nothing is held, so nothing is paid out later
+  expect(result.payouts).toHaveLength(0);
   expect(result.events.map((e) => e.kind)).toEqual([
     "placed", "accepted", "preparing", "packed", "ready_for_rider", "rider_assigned", "delivery_priced", "bill_sent", "paid",
-    "out_for_delivery", "delivered", "completed", "released",
+    "out_for_delivery", "delivered", "completed",
   ]);
   expect(result.events.find((e) => e.kind === "accepted")?.actorKind).toBe("farmer");
   // The farm that expired was never paid, so there's nothing to refund
@@ -265,7 +269,7 @@ test("delivery bills: price changes until sent, reminder at 6 hours, cancelled u
   expect(await t.run(async (ctx) => (await ctx.db.get(lone.checkoutId))!)).toMatchObject({ status: "abandoned", abandonReason: "no_orders_left" });
 });
 
-test("pickup order gets a code; admin fees, hold and release; guest claim", async () => {
+test("pickup order: accepted, billed, paid, collected and closed; admin fees; guest claim", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
   const guest = as(t, s.guest);
@@ -281,19 +285,31 @@ test("pickup order gets a code; admin fees, hold and release; guest claim", asyn
   const quote = await guest.query(api.checkout.quote, { items, fulfilment: "pickup" });
   expect(quote.farms[0]).toMatchObject({ collectionArea: "Owerri North, Imo" });
   expect(quote.deliveryFeeLater).toBe(false);
-  const placed = await guest.mutation(api.checkout.place, {
+  // Without SMS, the bill needs an email to reach a guest
+  await expect(guest.mutation(api.checkout.place, {
     items, fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Guest", phone: "08031112222" },
+  })).rejects.toThrow(/EMAIL_REQUIRED/);
+  const placed = await guest.mutation(api.checkout.place, {
+    items, fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Guest", phone: "08031112222", email: "guest@example.com" },
   });
-  expect(placed.payNow).toBe(true);
+  // Paid only once the farm accepts
+  expect(placed.payNow).toBe(false);
   const orderId = placed.orders[0].orderId;
-  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
+  await expect(guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId })).rejects.toThrow(/BILL_NOT_READY/);
   const summary = await guest.query(api.orders.consumer.placedSummary, { checkoutId: placed.checkoutId });
   expect(summary!.orders[0].pickupCode).toMatch(/^\d{4}$/);
 
   const farmer = as(t, s.farmerA);
   await farmer.mutation(api.orders.farmer.accept, { orderId });
+  // Accepting sends the bill at once: nothing to price for pickup
+  const billed = await t.run(async (ctx) => (await ctx.db.get(placed.checkoutId))!);
+  expect(billed).toMatchObject({ status: "awaiting_payment", totalKobo: 450000, deliveryFeeKobo: 0 });
   await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
   await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
+  // Ready but unpaid: the farm waits for the payment before handing it over
+  expect(await farmer.query(api.orders.farmer.get, { orderId })).toMatchObject({ next: "waiting_for_payment", paymentPending: true });
+  await expect(farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: summary!.orders[0].pickupCode! })).rejects.toThrow(/NOT_PAID_YET/);
+  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
   // Ready at the farm: the shopper has 3 days, and sees where to go
   const ready = await guest.query(api.orders.consumer.get, { orderId });
   expect(ready).toMatchObject({ status: "ready_for_collection", collectFrom: { farmName: "Ada Greens", address: "x", collectWithinDays: 3 } });
@@ -304,30 +320,17 @@ test("pickup order gets a code; admin fees, hold and release; guest claim", asyn
   await expect(farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: "0000" })).rejects.toThrow(/WRONG_PICKUP_CODE/);
   await farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: ready!.pickupCode! });
   expect((await guest.query(api.orders.consumer.get, { orderId }))!.status).toBe("collected");
-  await t.run(async (ctx) => {
-    await ctx.db.patch(orderId, { deliveredAt: Date.now() - 2 * 86_400_000 });
-  });
-
-  // Unconfirmed a day after collection: flagged for staff
+  // A day after collection with no problem reported: closed
+  vi.advanceTimersByTime(25 * HOUR);
   await t.mutation(internal.orders.system.flagUnconfirmed, {});
-  const queue = await staff.query(api.admin.ledger.releaseQueue, {});
-  expect(queue.unconfirmed.map((r: any) => r.orderId)).toEqual([orderId]);
-
-  await staff.mutation(api.admin.ledger.setHold, { orderId, hold: true, reason: "Checking" });
-  await expect(staff.mutation(api.admin.ledger.release, { orderId, reason: "x" })).rejects.toThrow(/ESCROW_ON_HOLD/);
-  // Consumer confirms while held: completed, money stays held
-  await guest.mutation(api.orders.consumer.confirmReceipt, { orderId });
-  let order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
-  expect(order).toMatchObject({ status: "completed", escrow: "held" });
-  // Lifting the hold releases at the new 10% commission
-  await staff.mutation(api.admin.ledger.setHold, { orderId, hold: false, reason: "All good" });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
-  order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
-  expect(order.escrow).toBe("released");
+  const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
+  expect(order).toMatchObject({ status: "completed", escrow: "released", farmShareKobo: 405000, commissionKobo: 45000 });
+  // Split at the new 10% commission
   const entries = await staff.query(api.admin.ledger.entries, { orderId });
-  expect(entries.find((e: any) => e.kind === "commission")?.amountKobo).toBe(45000);
+  expect(entries.map((e: any) => [e.kind, e.amountKobo])).toEqual([["farm_share", 405000], ["commission", 45000]]);
   const audit = await t.run(async (ctx) => await ctx.db.query("auditLog").collect());
-  expect(audit.map((a) => a.action)).toEqual(["fees.setCommission", "ledger.hold", "ledger.unhold"]);
+  expect(audit.map((a) => a.action)).toEqual(["fees.setCommission"]);
 
   // Guest saves their details: orders move to the account
   const { token } = await guest.mutation(api.orders.consumer.startGuestClaim, {});
@@ -338,49 +341,94 @@ test("pickup order gets a code; admin fees, hold and release; guest claim", asyn
   await expect(account.mutation(api.orders.consumer.claimGuestOrders, { token })).rejects.toThrow(/INVALID_TOKEN/);
 });
 
-test("decline refunds in full; cart changes block place; markPaidTest off with a key", async () => {
+test("decline before payment; refunds owed by the farm and recovered from its next order; cart changes; markPaidTest off with a key", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
   const guest = as(t, s.guest);
+  const farmerB = as(t, s.farmerB);
+  const admin = as(t, s.admin);
+  const contact = { name: "G", phone: "08031112222", email: "g@example.com" };
   const items = [{ listingId: s.yams, unitId: s.unitId, quantity: 2, priceKobo: 300000 }];
   await expect(
-    guest.mutation(api.checkout.place, {
-      items: [{ ...items[0], priceKobo: 1 }], fulfilment: "pickup", expectedTotalKobo: 2,
-      contact: { name: "G", phone: "08031112222" },
-    }),
+    guest.mutation(api.checkout.place, { items: [{ ...items[0], priceKobo: 1 }], fulfilment: "pickup", expectedTotalKobo: 2, contact }),
   ).rejects.toThrow(/CART_CHANGED/);
-  const placed = await guest.mutation(api.checkout.place, {
-    items, fulfilment: "pickup", expectedTotalKobo: 600000, contact: { name: "G", phone: "08031112222" },
-  });
-  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
+  const placed = await guest.mutation(api.checkout.place, { items, fulfilment: "pickup", expectedTotalKobo: 600000, contact });
   const orderId = placed.orders[0].orderId;
-  await as(t, s.farmerB).mutation(api.orders.farmer.decline, { orderId, reason: "out_of_stock" });
+  await farmerB.mutation(api.orders.farmer.decline, { orderId, reason: "out_of_stock" });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
+  // Declined before anyone paid: nothing to refund
   const view = await guest.query(api.orders.consumer.get, { orderId });
-  expect(view).toMatchObject({ status: "declined", escrow: "refunded", hasRefund: true, declineReason: "out_of_stock" });
+  expect(view).toMatchObject({ status: "declined", escrow: "none", hasRefund: false, declineReason: "out_of_stock" });
+  expect(await t.run(async (ctx) => (await ctx.db.get(placed.checkoutId))!.status)).toBe("abandoned");
   // Out of stock: stock not put back
   expect(await t.run(async (ctx) => (await ctx.db.get(s.yams))!.units[0].stock)).toBe(8);
 
-  // Abandoned checkout gives stock back
-  const again = await guest.mutation(api.checkout.place, {
-    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000,
-    contact: { name: "G", phone: "08031112222" },
+  // Accepted, paid, then cancelled by Farmkeke: the shopper gets everything back, the farm owes its share
+  const paidOrder = await guest.mutation(api.checkout.place, { items, fulfilment: "pickup", expectedTotalKobo: 600000, contact });
+  const paidId = paidOrder.orders[0].orderId;
+  await farmerB.mutation(api.orders.farmer.accept, { orderId: paidId });
+  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: paidOrder.checkoutId });
+  expect(await t.run(async (ctx) => (await ctx.db.get(paidId))!)).toMatchObject({ escrow: "released", farmShareKobo: 570000, commissionKobo: 30000 });
+  await admin.mutation(api.admin.orders.cancel, { orderId: paidId, reason: "Farm can't supply" });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  const after = await t.run(async (ctx) => ({
+    order: (await ctx.db.get(paidId))!,
+    refund: (await ctx.db.query("refunds").collect())[0]!,
+    farm: (await ctx.db.get(s.farmB))!,
+    debt: (await ctx.db.query("ledgerEntries").withIndex("by_orderId", (q) => q.eq("orderId", paidId)).collect()).find((e) => e.kind === "farm_debt"),
+    note: (await ctx.db.query("notifications").collect()).find((n) => n.kind === "farm_debt"),
+  }));
+  expect(after.order).toMatchObject({ status: "cancelled", escrow: "refunded" });
+  expect(after.refund).toMatchObject({ amountKobo: 600000, farmDebtKobo: 570000, status: "processed" });
+  expect(after.farm.owedKobo).toBe(570000);
+  expect(after.debt).toMatchObject({ amountKobo: 570000 });
+  expect(after.note).toMatchObject({ side: "farm" });
+
+  // The farm's next order pays the debt down before anything reaches the farm
+  const next = await guest.mutation(api.checkout.place, {
+    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000, contact,
   });
-  vi.advanceTimersByTime(2 * 3_600_000);
-  await t.mutation(internal.checkout.abandonStale, { olderThanMinutes: 60 });
-  expect(await t.run(async (ctx) => (await ctx.db.get(again.checkoutId))!.status)).toBe("abandoned");
-  expect(await t.run(async (ctx) => (await ctx.db.get(s.yams))!.units[0].stock)).toBe(8);
-  expect(await guest.query(api.orders.consumer.list, {})).toHaveLength(1);
+  await farmerB.mutation(api.orders.farmer.accept, { orderId: next.orders[0].orderId });
+  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: next.checkoutId });
+  const recovered = await t.run(async (ctx) => ({
+    order: (await ctx.db.get(next.orders[0].orderId))!,
+    farm: (await ctx.db.get(s.farmB))!,
+    ledger: (await ctx.db.query("ledgerEntries").withIndex("by_orderId", (q) => q.eq("orderId", next.orders[0].orderId)).collect()).map((e) => [e.kind, e.amountKobo]),
+  }));
+  expect(recovered.order).toMatchObject({ farmShareKobo: 0, commissionKobo: 15000, recoveredKobo: 285000 });
+  expect(recovered.farm.owedKobo).toBe(285000);
+  expect(recovered.ledger).toEqual([["farm_share", 0], ["commission", 15000], ["debt_recovered", 285000]]);
+
+  // Cancelled at Farmkeke's cost: the shopper is refunded, the farm owes nothing more
+  const third = await guest.mutation(api.checkout.place, {
+    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000, contact,
+  });
+  await farmerB.mutation(api.orders.farmer.accept, { orderId: third.orders[0].orderId });
+  await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: third.checkoutId });
+  await admin.mutation(api.admin.orders.cancel, { orderId: third.orders[0].orderId, reason: "Rider crashed", chargeFarm: false });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(await t.run(async (ctx) => (await ctx.db.get(s.farmB))!.owedKobo)).toBe(0);
+
+  // A bill nobody pays gives the stock back after 12 hours
+  const unpaid = await guest.mutation(api.checkout.place, {
+    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000, contact,
+  });
+  const stockBefore = await t.run(async (ctx) => (await ctx.db.get(s.yams))!.units[0].stock);
+  await farmerB.mutation(api.orders.farmer.accept, { orderId: unpaid.orders[0].orderId });
+  vi.advanceTimersByTime(13 * HOUR);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(await t.run(async (ctx) => (await ctx.db.get(unpaid.checkoutId))!.status)).toBe("abandoned");
+  expect(await t.run(async (ctx) => (await ctx.db.get(s.yams))!.units[0].stock)).toBe(stockBefore + 1);
 
   process.env.PAYSTACK_SECRET_KEY = "sk_test_x";
-  const third = await guest.mutation(api.checkout.place, {
-    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000,
-    contact: { name: "G", phone: "08031112222" },
+  const last = await guest.mutation(api.checkout.place, {
+    items: [{ ...items[0], quantity: 1 }], fulfilment: "pickup", expectedTotalKobo: 300000, contact,
   });
-  await expect(guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: third.checkoutId })).rejects.toThrow(/TEST_STEP_OFF/);
+  await farmerB.mutation(api.orders.farmer.accept, { orderId: last.orders[0].orderId });
+  await expect(guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: last.checkoutId })).rejects.toThrow(/TEST_STEP_OFF/);
 });
 
-test("live Paystack path: start, signed webhook, payout transfer, refund", async () => {
+test("live Paystack path: split, start, signed webhook, refund", async () => {
   process.env.PAYSTACK_SECRET_KEY = "sk_test_secret";
   const calls: { url: string; body: any }[] = [];
   let txAmount = 0;
@@ -398,8 +446,7 @@ test("live Paystack path: start, signed webhook, payout transfer, refund", async
         authorization: { authorization_code: "AUTH_1", card_type: "visa ", last4: "4081", exp_month: "12", exp_year: "2030", reusable: true, signature: "SIG_1" },
         customer: { email: "x@y.z" } });
     }
-    if (url.endsWith("/transferrecipient")) return ok({ recipient_code: "RCP_1" });
-    if (url.endsWith("/transfer")) return ok({ transfer_code: "TRF_1", status: "pending" });
+    if (url.endsWith("/split")) return ok({ split_code: `SPL_${calls.filter((c) => c.url.endsWith("/split")).length}` });
     if (url.endsWith("/refund")) return ok({ id: 77, status: "pending" });
     return new Response(JSON.stringify({ status: false, message: "unexpected" }), { status: 400 });
   });
@@ -421,10 +468,23 @@ test("live Paystack path: start, signed webhook, payout transfer, refund", async
     items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
     fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Ada Obi", phone: "08031112222" },
   });
+  const orderId = placed.orders[0].orderId;
+  const farmer = as(t, s.farmerA);
+  await farmer.mutation(api.orders.farmer.accept, { orderId });
+  // A farm without a subaccount can't be paid yet: Farmkeke retries setting it up
+  await t.run(async (ctx) => await ctx.db.patch(s.farmA, { paystackSubaccountCode: undefined }));
+  await expect(shopper.action(api.payments.checkout.start, { checkoutId: placed.checkoutId, method: "card" })).rejects.toThrow(/FARM_NOT_READY/);
+  await t.run(async (ctx) => await ctx.db.patch(s.farmA, { paystackSubaccountCode: "ACCT_Ada" }));
   const started = await shopper.action(api.payments.checkout.start, { checkoutId: placed.checkoutId, method: "card", saveCard: true });
   expect(started).toEqual({ accessCode: "abc", authorizationUrl: "https://checkout.paystack.com/abc", reference: "CK-10001-1" });
-  expect(calls[0].body.callback_url).toBe(`https://farmkeke.com/checkout/pay/${placed.checkoutId}`);
-  expect(calls[0].body.amount).toBe(450000);
+  // The split first: the farm's share as a flat amount, Paystack's fee shared in proportion
+  const splitCall = calls.find((c) => c.url.endsWith("/split"))!;
+  expect(splitCall.body).toEqual({
+    name: "Farmkeke CK-10001-1", type: "flat", currency: "NGN", bearer_type: "all-proportional",
+    subaccounts: [{ subaccount: "ACCT_Ada", share: 427500 }],
+  });
+  const initCall = calls.find((c) => c.url.endsWith("/transaction/initialize"))!;
+  expect(initCall.body).toMatchObject({ callback_url: `https://farmkeke.com/checkout/pay/${placed.checkoutId}`, amount: 450000, split_code: "SPL_1" });
 
   expect((await hook({ event: "charge.success", data: { reference: "CK-10001-1" } }, "bad")).status).toBe(401);
   expect((await hook({ event: "charge.success", data: { reference: "CK-10001-1" } })).status).toBe(200);
@@ -433,36 +493,29 @@ test("live Paystack path: start, signed webhook, payout transfer, refund", async
   const paid = await shopper.query(api.payments.checkout.get, { checkoutId: placed.checkoutId });
   expect(paid).toMatchObject({ status: "paid", lastAttempt: { status: "success" } });
   expect(await shopper.query(api.payments.cards.list, {})).toMatchObject([{ brand: "visa", last4: "4081" }]);
-  const holds = await t.run(async (ctx) => await ctx.db.query("ledgerEntries").collect());
-  expect(holds.filter((e) => e.kind === "hold")).toHaveLength(1);
+  const entries = await t.run(async (ctx) => await ctx.db.query("ledgerEntries").collect());
+  expect(entries.map((e) => [e.kind, e.amountKobo, e.simulated ?? false])).toEqual([["farm_share", 427500, false], ["commission", 22500, false]]);
+  expect(await t.run(async (ctx) => (await ctx.db.query("paymentAttempts").collect()).at(-1)!)).toMatchObject({ splitCode: "SPL_1" });
 
-  const orderId = placed.orders[0].orderId;
-  const farmer = as(t, s.farmerA);
-  await farmer.mutation(api.orders.farmer.accept, { orderId });
   await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
   await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
   const code = await t.run(async (ctx) => (await ctx.db.get(orderId))!.pickupCode!);
   await farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code });
-  await shopper.mutation(api.orders.consumer.confirmReceipt, { orderId });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
-  let payout = await t.run(async (ctx) => (await ctx.db.query("payouts").first())!);
-  expect(payout).toMatchObject({ status: "pending", provider: "paystack", transferCode: "TRF_1", amountKobo: 427500 });
-  expect(calls.find((c) => c.url.endsWith("/transfer"))!.body).toMatchObject({ amount: 427500, recipient: "RCP_1", reference: "PO-FK-10001-1" });
-  expect((await hook({ event: "transfer.success", data: { reference: "PO-FK-10001-1", transfer_code: "TRF_1", amount: 427500 } })).status).toBe(200);
-  payout = await t.run(async (ctx) => (await ctx.db.query("payouts").first())!);
-  expect(payout.status).toBe("sent");
-  const farmPayouts = await farmer.query(api.payments.payouts.list, {});
-  expect(farmPayouts).toMatchObject([{ status: "sent", amountKobo: 427500 }]);
+  // Paystack paid the farm in the split: no transfer, no payout
+  expect(calls.some((c) => c.url.endsWith("/transfer") || c.url.endsWith("/transferrecipient"))).toBe(false);
+  expect(await t.run(async (ctx) => await ctx.db.query("payouts").collect())).toHaveLength(0);
 
-  // A second order, declined: refund goes to Paystack, settles by webhook
+  // A second order, paid then cancelled by Farmkeke: the refund goes to Paystack, settles by webhook
   const second = await shopper.mutation(api.checkout.place, {
     items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
     fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Ada Obi", phone: "08031112222" },
   });
+  await farmer.mutation(api.orders.farmer.accept, { orderId: second.orders[0].orderId });
   await shopper.action(api.payments.checkout.start, { checkoutId: second.checkoutId, method: "card" });
   const verified = await shopper.action(api.payments.checkout.verify, { checkoutId: second.checkoutId });
   expect(verified).toEqual({ status: "paid", paid: true });
-  await farmer.mutation(api.orders.farmer.decline, { orderId: second.orders[0].orderId, reason: "other", note: "Rain" });
+  await as(t, s.admin).mutation(api.admin.orders.cancel, { orderId: second.orders[0].orderId, reason: "Rain" });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
   expect(calls.find((c) => c.url.endsWith("/refund"))!.body).toMatchObject({ transaction: "CK-10002-1", amount: 450000 });
   let refund = await t.run(async (ctx) => (await ctx.db.query("refunds").first())!);
@@ -504,6 +557,7 @@ test("in-app Paystack: bill return link, checking while the page is open", async
       const reference = decodeURIComponent(url.split("/transaction/verify/")[1]);
       return ok({ reference, status: txStatus, amount: txAmount, currency: "NGN", channel: "card", paid_at: new Date().toISOString(), gateway_response: "Declined", customer: { email: "x@y.z" } });
     }
+    if (url.endsWith("/split")) return ok({ split_code: "SPL_1" });
     return new Response(JSON.stringify({ status: false, message: "unexpected" }), { status: 400 });
   });
   const t = convexTest(schema, modules);

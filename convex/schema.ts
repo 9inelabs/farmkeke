@@ -491,6 +491,17 @@ export default defineSchema({
     suspendedReason: v.optional(v.string()),
     // A-31: trusted farms' listings skip review (Phase 4)
     trusted: v.boolean(),
+    // Paystack split (17 Nov 2026): the farm's Paystack subaccount, which
+    // receives its share of each payment. Made when the farm is approved and
+    // updated when its bank account changes (payments/subaccounts.ts).
+    paystackSubaccountCode: v.optional(v.string()),
+    subaccountSyncedAt: v.optional(v.number()),
+    // Paystack's reason the last create or update failed
+    subaccountError: v.optional(v.string()),
+    // What the farm owes Farmkeke for refunds Farmkeke paid for its orders,
+    // taken from its share of its next orders. Negative: Farmkeke owes the
+    // farm (a recovery that overshot), added to its next share.
+    owedKobo: v.optional(v.number()),
     // F-14 setup checklist
     profileConfirmedAt: v.optional(v.number()),
     collectionConfirmedAt: v.optional(v.number()),
@@ -754,6 +765,12 @@ export default defineSchema({
     unconfirmedFlaggedAt: v.optional(v.number()),
     confirmedAt: v.optional(v.number()),
     releasedAt: v.optional(v.number()),
+    // Paystack split (17 Nov 2026): set when the order is paid. The farm's
+    // share as Paystack sent it, Farmkeke's commission, and how much of the
+    // farm's debt (owedKobo) came out of this order's share (negative: credit).
+    farmShareKobo: v.optional(v.number()),
+    commissionKobo: v.optional(v.number()),
+    recoveredKobo: v.optional(v.number()),
     endedAt: v.optional(v.number()),
     declineReason: v.optional(
       v.union(v.literal("out_of_stock"), v.literal("cannot_deliver_in_time"), v.literal("other")),
@@ -841,6 +858,12 @@ export default defineSchema({
       v.literal("delivery_fee"),
       v.literal("refund"),
       v.literal("payout"),
+      // Paystack split (17 Nov 2026): the farm's share, sent by Paystack at payment
+      v.literal("farm_share"),
+      // A refund Farmkeke paid that the farm owes back
+      v.literal("farm_debt"),
+      // Debt taken from (or credit added to) the farm's share of a payment
+      v.literal("debt_recovered"),
     ),
     amountKobo: v.number(),
     status: v.union(v.literal("pending"), v.literal("done"), v.literal("failed")),
@@ -905,6 +928,21 @@ export default defineSchema({
     // A-65 decision on a mismatch
     resolution: v.optional(v.union(v.literal("refund"), v.literal("dismiss"))),
     resolvedAt: v.optional(v.number()),
+    // Paystack split (17 Nov 2026): each farm's part of this payment, worked
+    // out when it started, applied when it succeeds
+    split: v.optional(
+      v.array(
+        v.object({
+          orderId: v.id("orders"),
+          farmId: v.id("farms"),
+          subaccount: v.optional(v.string()),
+          shareKobo: v.number(),
+          commissionKobo: v.number(),
+          recoveredKobo: v.number(),
+        }),
+      ),
+    ),
+    splitCode: v.optional(v.string()),
   })
     .index("by_reference", ["reference"])
     .index("by_checkoutId", ["checkoutId"])
@@ -969,6 +1007,9 @@ export default defineSchema({
     attempts: v.number(),
     disputeId: v.optional(v.id("disputes")),
     actorId: v.optional(v.id("users")),
+    // Paystack split (17 Nov 2026): the farm's portion of this refund, which it
+    // owes Farmkeke (farms.owedKobo); none when staff chose not to charge the farm
+    farmDebtKobo: v.optional(v.number()),
   })
     .index("by_orderId", ["orderId"])
     .index("by_status", ["status"])

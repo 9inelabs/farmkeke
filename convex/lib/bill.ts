@@ -1,8 +1,10 @@
-// Delivery bills. Delivery orders are placed unpaid: each farm accepts and
-// packs, staff brief a rider and set the delivery price, and once every farm
-// in the checkout has answered and every accepted order is priced, one bill
-// goes out (in-app, email and SMS). The shopper has 12 hours to pay, with a
-// reminder at 6; an unpaid bill cancels its orders and tells the farms.
+// Bills. Every order is placed unpaid (pickup too, since the Paystack split
+// of 17 Nov 2026: money goes to the farm the moment it's paid, so nothing is
+// paid before the farm accepts). Each farm accepts; for delivery, staff brief
+// a rider and set the delivery price. Once every farm in the checkout has
+// answered and every accepted delivery order is priced, one bill goes out
+// (in-app, email and SMS). The shopper has 12 hours to pay, with a reminder
+// at 6; an unpaid bill cancels its orders and tells the farms.
 import { ConvexError } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -19,9 +21,9 @@ export const MAX_OPEN_BILLS = 3;
 // ₦50,000: a typo guard on the price staff enter
 export const MAX_DELIVERY_FEE_KOBO = 5_000_000;
 
-/** A delivery order the farm has accepted and the shopper hasn't paid for. */
+/** An order the farm has accepted and the shopper hasn't paid for. */
 export const awaitingPayment = (o: Doc<"orders">) =>
-  o.fulfilment === "delivery" && o.escrow === "none" && !ENDED.includes(o.status) && o.status !== "placed";
+  o.escrow === "none" && !ENDED.includes(o.status) && o.status !== "placed" && o.status !== "awaiting_payment";
 
 function newPayToken() {
   const bytes = new Uint8Array(24);
@@ -47,7 +49,7 @@ const shortLink = (url: string) => url.replace(/^https?:\/\//, "");
  */
 export async function checkBill(ctx: MutationCtx, checkoutId: Id<"checkouts">) {
   const checkout = await ctx.db.get("checkouts", checkoutId);
-  if (checkout === null || checkout.fulfilment !== "delivery" || checkout.status !== "awaiting_bill") return;
+  if (checkout === null || checkout.status !== "awaiting_bill") return;
   const orders = await ordersOf(ctx, checkoutId);
   const live = orders.filter((o) => !ENDED.includes(o.status));
   const now = Date.now();
@@ -56,7 +58,7 @@ export async function checkBill(ctx: MutationCtx, checkoutId: Id<"checkouts">) {
     await ctx.db.patch("checkouts", checkoutId, { status: "abandoned", abandonedAt: now, abandonReason: "no_orders_left" });
     return;
   }
-  if (live.some((o) => o.status === "placed" || o.deliveryPricedAt === undefined)) return;
+  if (live.some((o) => o.status === "placed" || (o.fulfilment === "delivery" && o.deliveryPricedAt === undefined))) return;
 
   const itemsTotalKobo = live.reduce((sum, o) => sum + o.itemsTotalKobo, 0);
   const deliveryFeeKobo = live.reduce((sum, o) => sum + o.deliveryFeeKobo, 0);
@@ -83,7 +85,7 @@ export async function checkBill(ctx: MutationCtx, checkoutId: Id<"checkouts">) {
     live[0]!,
     "bill_ready",
     `Your bill for order ${numbers} is ready`,
-    `${naira(totalKobo)}, including ${naira(deliveryFeeKobo)} delivery. Pay within ${BILL_PAY_HOURS} hours: ${shortLink(links.pay(payToken))}`,
+    `${naira(totalKobo)}${deliveryFeeKobo > 0 ? `, including ${naira(deliveryFeeKobo)} delivery` : ""}. Pay within ${BILL_PAY_HOURS} hours: ${shortLink(links.pay(payToken))}`,
     { href: `/pay/${payToken}` },
   );
 }

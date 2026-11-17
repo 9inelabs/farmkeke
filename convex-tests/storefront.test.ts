@@ -208,16 +208,16 @@ test("counters follow listing and farm changes; subtypes admin; farm and product
   await as(t, s.ops).mutation(api.admin.catalog.setSubtypes, { categoryId: s.veg, subtypes: [{ slug: "tomatoes", name: "Tomatoes" }, { slug: "leafy-greens", name: "Leafy greens" }], reason: "W-03 chips" });
   expect((await count()).subtypes).toEqual([{ slug: "tomatoes", name: "Tomatoes", count: 3 }, { slug: "leafy-greens", name: "Leafy greens", count: 0 }]);
 
-  // Response time: a paid order accepted 2 hours later, another after 4 hours
+  // Response time: an order accepted 2 hours after it was placed, another after 4 hours
   const buyer = as(t, s.guest);
   for (const wait of [2, 4]) {
     const placed = await buyer.mutation(api.checkout.place, {
       items: [{ listingId: s.L.freshTomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
-      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
+      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222", email: "chidi@example.com" },
     });
-    await buyer.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
     vi.advanceTimersByTime(wait * 3_600_000);
     await farmerA.mutation(api.orders.farmer.accept, { orderId: placed.orders[0].orderId });
+    await buyer.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
   }
   const farm = (await t.query(api.storefront.farm, { id: s.okafor, today: TODAY, ...OWERRI }))!;
   expect(farm).toMatchObject({
@@ -283,11 +283,11 @@ test("problem report: staff alert, farm reminder 2h before the 12h deadline, ove
   const report = async () => {
     const placed = await guest.mutation(api.checkout.place, {
       items: [{ listingId: s.L.freshTomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
-      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
+      fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222", email: "chidi@example.com" },
     });
-    await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
     const orderId = placed.orders[0].orderId;
     await farmer.mutation(api.orders.farmer.accept, { orderId });
+    await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
     await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
     await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
     // Pickup at the farm: staff can record the collection too, with the shopper's code

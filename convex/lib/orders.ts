@@ -11,6 +11,7 @@ import { claimSlot, naira, notify, notifyConsumer, notifyFarm } from "./notify";
 import { paymentsLive } from "./paystack";
 import { noteStockChange } from "./restock";
 import { commissionOn, DAY, getRules, HOUR } from "./settings";
+import { ordersPaidBy, planSplit, type SplitPart } from "./split";
 
 export type OrderStatus = Infer<typeof orderStatus>;
 export type Actor = { kind: Infer<typeof actorKind>; id?: Id<"users"> };
@@ -167,18 +168,24 @@ async function alertLowStock(ctx: MutationCtx, order: Doc<"orders">) {
 // Payment success
 
 /**
- * Marks a checkout paid and moves its money into escrow. Pickup orders then
- * wait for their farm (24h, scheduled expiry). Delivery orders were accepted
- * before the bill, so their farms just hear it's paid and the rider can
- * collect. Returns false if already handled.
+ * Marks a checkout paid. Paystack has already split the money (lib/split.ts):
+ * each farm's share is on its way to the farm, Farmkeke has its commission
+ * and the delivery fee, so a paid order is "released" at once and nothing is
+ * held. `split` is each farm's part as the payment was made (worked out now
+ * when not given). Billed orders were accepted before the bill, so their
+ * farms just hear it's paid; older pickup checkouts paid at checkout still
+ * wait for their farm (24h, scheduled expiry). Returns false if already handled.
  */
 export async function markCheckoutPaid(
   ctx: MutationCtx,
   checkoutId: Id<"checkouts">,
   payment: { provider: "paystack" | "simulated"; reference: string; paidAt: number },
+  split?: SplitPart[],
 ): Promise<boolean> {
   const checkout = await ctx.db.get("checkouts", checkoutId);
   if (checkout === null || checkout.status !== "awaiting_payment") return false;
+  const parts = split ?? (await planSplit(ctx, checkoutId));
+  const orders = await ordersPaidBy(ctx, checkoutId);
   const now = Date.now();
   await ctx.db.patch("checkouts", checkoutId, {
     status: "paid",
@@ -187,71 +194,75 @@ export async function markCheckoutPaid(
     paymentReference: payment.reference,
   });
   const rules = await getRules(ctx);
-  const orders = await ctx.db
-    .query("orders")
-    .withIndex("by_checkoutId", (q) => q.eq("checkoutId", checkoutId))
-    .take(50);
+  const simulated = payment.provider === "simulated" ? true : undefined;
   for (const order of orders) {
-    if (order.fulfilment === "delivery" && order.status !== "awaiting_payment") {
-      // A bill: accepted, packed or ready, priced, and now paid
-      if (ENDED.includes(order.status) || order.escrow !== "none") continue;
-      await ctx.db.patch("orders", order._id, { escrow: "held", paidAt: payment.paidAt });
-      const paid = { ...order, escrow: "held" as const, paidAt: payment.paidAt };
+    const part = parts.find((p) => p.orderId === order._id);
+    const commissionKobo = part?.commissionKobo ?? commissionOn(order.itemsTotalKobo, rules.commissionBps);
+    const shareKobo = part?.shareKobo ?? order.itemsTotalKobo - commissionKobo;
+    const recoveredKobo = part?.recoveredKobo ?? 0;
+    const money = {
+      escrow: "released" as const,
+      paidAt: payment.paidAt,
+      releasedAt: payment.paidAt,
+      farmShareKobo: shareKobo,
+      commissionKobo,
+      recoveredKobo,
+    };
+
+    let paid: Doc<"orders">;
+    const billed = order.status !== "awaiting_payment";
+    if (billed) {
+      await ctx.db.patch("orders", order._id, money);
+      paid = { ...order, ...money };
       await logOrderEvent(ctx, order._id, "paid", SYSTEM);
+    } else {
+      // An older pickup checkout, paid before its farm answered
+      const respondBy = now + rules.farmerResponseHours * HOUR;
+      const expiryJobId = await ctx.scheduler.runAt(respondBy, internal.orders.system.expireOne, { orderId: order._id });
+      paid = await transition(ctx, order, "paid", SYSTEM, { ...money, respondBy, expiryJobId });
+    }
+
+    // The ledger: what went where when Paystack split the payment
+    await ledger(ctx, paid, { kind: "farm_share", amountKobo: shareKobo, status: "done", note: "Sent by Paystack", simulated });
+    if (commissionKobo > 0) {
+      await ledger(ctx, paid, { kind: "commission", amountKobo: commissionKobo, status: "done", note: `${rules.commissionBps / 100}%`, simulated });
+    }
+    if (order.deliveryFeeKobo > 0) {
+      await ledger(ctx, paid, { kind: "delivery_fee", amountKobo: order.deliveryFeeKobo, status: "done", simulated });
+    }
+    if (recoveredKobo !== 0) {
       await ledger(ctx, paid, {
-        kind: "hold",
-        amountKobo: order.totalKobo,
+        kind: "debt_recovered",
+        amountKobo: recoveredKobo,
         status: "done",
-        simulated: payment.provider === "simulated" ? true : undefined,
+        note: recoveredKobo > 0 ? "Taken from this order's share for an earlier refund" : "Credit added to this order's share",
+        simulated,
       });
+      const farm = await ctx.db.get("farms", order.farmId);
+      if (farm !== null) await ctx.db.patch("farms", farm._id, { owedKobo: (farm.owedKobo ?? 0) - recoveredKobo });
+    }
+
+    const shareLine = `Your share, ${naira(shareKobo)}${recoveredKobo > 0 ? ` (after ${naira(recoveredKobo)} for an earlier refund)` : ""}, comes from Paystack with its next settlement, less its fee.`;
+    if (billed) {
       await notifyFarm(
         ctx,
         paid,
         "order_paid",
         `Order ${order.number} is paid`,
-        "The shopper has paid. Hand it to the Farmkeke rider when they arrive.",
+        `${order.fulfilment === "delivery" ? "Hand it to the Farmkeke rider when they arrive." : "Hand it over when the shopper shows their code."} ${shareLine}`,
       );
-      await notifyConsumer(
+      await notifyConsumer(ctx, paid, "order_placed", `Order ${order.number} is paid`, "Thank you, we've received your payment.");
+    } else {
+      await notifyFarm(
         ctx,
         paid,
-        "order_placed",
-        `Order ${order.number} is paid`,
-        "Thank you. Your money is held safely until you confirm you received it.",
+        "order_new",
+        "New order",
+        `Order ${order.number} is paid and waiting. Accept or decline within ${rules.farmerResponseHours} hours.`,
       );
-      continue;
+      await alertLowStock(ctx, paid);
+      await notifyConsumer(ctx, paid, "order_placed", `Order ${order.number} placed`, "Thank you, we've received your payment.");
     }
-    if (order.status !== "awaiting_payment") continue;
-    const respondBy = now + rules.farmerResponseHours * HOUR;
-    const expiryJobId = await ctx.scheduler.runAt(respondBy, internal.orders.system.expireOne, {
-      orderId: order._id,
-    });
-    const paid = await transition(ctx, order, "paid", SYSTEM, {
-      escrow: "held",
-      paidAt: payment.paidAt,
-      respondBy,
-      expiryJobId,
-    });
-    await ledger(ctx, paid, {
-      kind: "hold",
-      amountKobo: order.totalKobo,
-      status: "done",
-      simulated: payment.provider === "simulated" ? true : undefined,
-    });
-    await notifyFarm(
-      ctx,
-      paid,
-      "order_new",
-      "New order",
-      `Order ${order.number} is paid and waiting. Accept or decline within ${rules.farmerResponseHours} hours.`,
-    );
-    await alertLowStock(ctx, paid);
-    await notifyConsumer(
-      ctx,
-      paid,
-      "order_placed",
-      `Order ${order.number} placed`,
-      "Your money is held safely until you confirm you received it.",
-    );
   }
   return true;
 }
@@ -261,7 +272,11 @@ export async function markCheckoutPaid(
 
 /**
  * Queues a refund to the original payment method and sends it. Full refunds
- * include the delivery fee; part refunds never do (PRD).
+ * include the delivery fee; part refunds never do (PRD). Paystack split
+ * orders (farmShareKobo set): Farmkeke pays the refund from its own balance,
+ * and the farm owes back its portion (the refunded products minus Farmkeke's
+ * commission on them), taken from its share of its next orders, unless staff
+ * chose not to charge the farm (`chargeFarm: false`, e.g. the rider's fault).
  */
 export async function refundOrder(
   ctx: MutationCtx,
@@ -273,6 +288,7 @@ export async function refundOrder(
     // Part refunds only: product amount to refund
     amountKobo?: number;
     disputeId?: Id<"disputes">;
+    chargeFarm?: boolean;
   },
 ): Promise<Id<"refunds"> | null> {
   const checkout = await ctx.db.get("checkouts", order.checkoutId);
@@ -280,6 +296,11 @@ export async function refundOrder(
   const amountKobo = opts.kind === "full" ? order.totalKobo : Math.min(opts.amountKobo ?? 0, order.itemsTotalKobo);
   if (!Number.isInteger(amountKobo) || amountKobo <= 0) throw new ConvexError({ code: "INVALID_AMOUNT" });
   const provider = checkout.paymentProvider === "paystack" ? "paystack" : "simulated";
+  // What the farm owes back: its share of the refunded products
+  const refundedItemsKobo = opts.kind === "full" ? order.itemsTotalKobo : amountKobo;
+  const farmPart =
+    order.itemsTotalKobo > 0 ? Math.round((refundedItemsKobo * (order.itemsTotalKobo - (order.commissionKobo ?? 0))) / order.itemsTotalKobo) : 0;
+  const farmDebtKobo = order.farmShareKobo !== undefined && opts.chargeFarm !== false && farmPart > 0 ? farmPart : undefined;
   const refundId = await ctx.db.insert("refunds", {
     orderId: order._id,
     checkoutId: order.checkoutId,
@@ -294,7 +315,28 @@ export async function refundOrder(
     attempts: 0,
     disputeId: opts.disputeId,
     actorId: opts.actor.id,
+    farmDebtKobo,
   });
+  if (farmDebtKobo !== undefined) {
+    const farm = await ctx.db.get("farms", order.farmId);
+    if (farm !== null) await ctx.db.patch("farms", farm._id, { owedKobo: (farm.owedKobo ?? 0) + farmDebtKobo });
+    await ledger(ctx, order, {
+      kind: "farm_debt",
+      amountKobo: farmDebtKobo,
+      status: "done",
+      note: opts.reason,
+      refundId,
+      simulated: provider === "simulated" ? true : undefined,
+      actorId: opts.actor.id,
+    });
+    await notifyFarm(
+      ctx,
+      order,
+      "farm_debt",
+      `${naira(farmDebtKobo)} will come off your next orders`,
+      `Farmkeke refunded the shopper for order ${order.number}. Your share of that, ${naira(farmDebtKobo)}, comes off your share of your next orders.`,
+    );
+  }
   await ledger(ctx, order, {
     kind: "refund",
     amountKobo,
@@ -308,7 +350,11 @@ export async function refundOrder(
   return refundId;
 }
 
-/** Ends an order before it was fulfilled and refunds it in full. */
+/**
+ * Ends an order before it was fulfilled and, if it was paid, refunds it in
+ * full: from escrow for older orders, or by Farmkeke for Paystack split
+ * orders, with the farm charged its share unless `chargeFarm` is false.
+ */
 export async function endWithFullRefund(
   ctx: MutationCtx,
   order: Doc<"orders">,
@@ -317,19 +363,20 @@ export async function endWithFullRefund(
   patch: Partial<Omit<Doc<"orders">, "_id" | "_creationTime" | "status">>,
   reason: string,
   putStockBack: boolean,
+  chargeFarm = true,
 ) {
-  const wasHeld = order.escrow === "held";
+  const wasPaid = order.escrow === "held" || (order.escrow === "released" && order.farmShareKobo !== undefined);
   const ended = await transition(
     ctx,
     order,
     to,
     actor,
-    { ...patch, endedAt: Date.now(), escrow: wasHeld ? "refunded" : order.escrow },
+    { ...patch, endedAt: Date.now(), escrow: wasPaid ? "refunded" : order.escrow },
     reason,
   );
   if (order.expiryJobId) await cancelJob(ctx, order.expiryJobId);
   if (putStockBack) await restoreStock(ctx, order);
-  if (wasHeld) await refundOrder(ctx, ended, { kind: "full", reason: to, actor });
+  if (wasPaid) await refundOrder(ctx, ended, { kind: "full", reason: to, actor, chargeFarm });
   return ended;
 }
 
@@ -339,12 +386,13 @@ async function cancelJob(ctx: MutationCtx, jobId: Id<"_scheduled_functions">) {
 }
 
 // ---------------------------------------------------------------------------
-// Release
+// Release (orders paid before the Paystack split only)
 
 /**
- * Releases an order's money to the farm: product total (or the part staff
- * release in a split) minus Farmkeke's commission, paid out automatically
- * by Paystack Transfer. The delivery fee stays with Farmkeke for the rider.
+ * Releases an older escrow order's money to the farm: product total (or the
+ * part staff release in a split) minus Farmkeke's commission, paid out by
+ * Paystack Transfer. Orders paid since 17 Nov 2026 are never held (Paystack
+ * splits the payment), so this only finishes orders held before then.
  */
 export async function releaseOrder(
   ctx: MutationCtx,

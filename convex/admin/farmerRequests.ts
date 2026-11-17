@@ -2,6 +2,7 @@
 // Document viewer, A-23 Approve, A-24 Request more info and A-25 Reject.
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx } from "../_generated/server";
 import { applicationProblems, countDocuments, DEFAULT_COLLECTION_HOURS, DEFAULT_LEAD_TIME_HOURS } from "../lib/application";
@@ -143,6 +144,8 @@ export const approve = mutation({
       status: "active",
       trusted: false,
     });
+    // Its Paystack subaccount, which receives its share of each payment
+    await ctx.scheduler.runAfter(0, internal.payments.subaccounts.sync, { farmId });
     for (const doc of live) await ctx.db.patch("farmerDocuments", doc._id, { status: "approved" });
     await ctx.db.patch("farmerApplications", app._id, { status: "approved", decidedAt: Date.now(), moreInfo: undefined });
     await writeAudit(ctx, {

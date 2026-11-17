@@ -1443,6 +1443,12 @@
               "type": "number"
             },
             "optional": true
+          },
+          "chargeFarm": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": true
           }
         }
       },
@@ -3277,6 +3283,12 @@
               "type": "string"
             },
             "optional": false
+          },
+          "chargeFarm": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": true
           }
         }
       },

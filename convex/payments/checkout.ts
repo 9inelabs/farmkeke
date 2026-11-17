@@ -1,5 +1,6 @@
 // Paying for a checkout with Paystack (M-43 to M-46, W-24). One checkout =
-// one Paystack transaction. Success arrives by webhook, by the return page,
+// one Paystack transaction, split by Paystack between the farms and Farmkeke
+// (lib/split.ts, 17 Nov 2026). Success arrives by webhook, by the return page,
 // or by `verify`; `settleCharge` handles all three and is idempotent.
 // Delivery bills can also be paid by anyone holding the bill's pay link
 // (`payToken`), e.g. a guest paying from another phone.
@@ -20,6 +21,7 @@ import {
   type PaystackTransaction,
 } from "../lib/paystack";
 import { hitLimit } from "../lib/rateLimit";
+import { ordersPaidBy, paystackSplit, planSplit } from "../lib/split";
 import { paymentMethod } from "../schema";
 
 const START_LIMIT = { max: 10, windowMs: 10 * 60_000 };
@@ -148,6 +150,22 @@ export const beginAttempt = internalMutation({
       .take(100);
     const reference = `${checkout.reference}-${previous.length + 1}`;
     const email = paymentEmail(checkout.contact.email ?? (user.isAnonymous ? undefined : user.email), checkout.contact.phone);
+    // The bill covers the orders still to pay for: one cancelled since it went out comes off
+    const due = await ordersPaidBy(ctx, checkout._id);
+    if (due.length === 0) throw new ConvexError({ code: "CHECKOUT_EXPIRED" });
+    const itemsTotalKobo = due.reduce((sum, o) => sum + o.itemsTotalKobo, 0);
+    const deliveryFeeKobo = due.reduce((sum, o) => sum + o.deliveryFeeKobo, 0);
+    if (itemsTotalKobo + deliveryFeeKobo !== checkout.totalKobo) {
+      await ctx.db.patch("checkouts", checkout._id, { itemsTotalKobo, deliveryFeeKobo, totalKobo: itemsTotalKobo + deliveryFeeKobo });
+      checkout.totalKobo = itemsTotalKobo + deliveryFeeKobo;
+    }
+    // Each farm's share goes to its Paystack subaccount; a farm without one can't be paid yet
+    const split = await planSplit(ctx, checkout._id);
+    const notReady = split.filter((p) => p.subaccount === undefined && p.shareKobo > 0);
+    if (paymentsLive() && notReady.length > 0) {
+      for (const p of notReady) await ctx.scheduler.runAfter(0, internal.payments.subaccounts.sync, { farmId: p.farmId });
+      throw new ConvexError({ code: "FARM_NOT_READY", message: "A farm in this order isn't ready to receive payments yet. Try again in a few minutes." });
+    }
     await ctx.db.insert("paymentAttempts", {
       checkoutId: checkout._id,
       userId: user._id,
@@ -165,8 +183,28 @@ export const beginAttempt = internalMutation({
       // A saved card is known before Paystack answers (W-27 "Card ending 4081")
       cardBrand: savedCard?.brand,
       cardLast4: savedCard?.last4,
+      split,
     });
-    return { reference, amountKobo: checkout.totalKobo, email, authorizationCode, checkoutReference: checkout.reference };
+    return {
+      reference,
+      amountKobo: checkout.totalKobo,
+      email,
+      authorizationCode,
+      checkoutReference: checkout.reference,
+      split: paystackSplit(split, `Farmkeke ${reference}`),
+    };
+  },
+});
+
+/** Records the Paystack split made for an attempt. */
+export const attemptSplit = internalMutation({
+  args: { reference: v.string(), splitCode: v.string() },
+  handler: async (ctx, args) => {
+    const attempt = await ctx.db
+      .query("paymentAttempts")
+      .withIndex("by_reference", (q) => q.eq("reference", args.reference))
+      .unique();
+    if (attempt !== null) await ctx.db.patch("paymentAttempts", attempt._id, { splitCode: args.splitCode });
   },
 });
 
@@ -198,9 +236,27 @@ export const start = action({
   handler: async (ctx, args): Promise<{ accessCode: string; authorizationUrl: string; reference: string }> => {
     if (!paymentsLive()) throw new ConvexError({ code: "PAYMENTS_NOT_LIVE" });
     const { returnTo, ...attemptArgs } = args;
-    const begun: { reference: string; amountKobo: number; email: string; authorizationCode?: string; checkoutReference: string } =
-      await ctx.runMutation(internal.payments.checkout.beginAttempt, attemptArgs);
+    const begun: {
+      reference: string;
+      amountKobo: number;
+      email: string;
+      authorizationCode?: string;
+      checkoutReference: string;
+      split: Record<string, unknown> | null;
+    } = await ctx.runMutation(internal.payments.checkout.beginAttempt, attemptArgs);
     const metadata = { checkoutId: args.checkoutId, checkoutReference: begun.checkoutReference };
+
+    // The split: each farm's share to its subaccount, the rest to Farmkeke
+    let splitCode: string | undefined;
+    if (begun.split !== null) {
+      const made = await paystack<{ split_code: string }>("/split", { body: begun.split });
+      if (!made.ok) {
+        await ctx.runMutation(internal.payments.checkout.settleCharge, { reference: begun.reference, status: "failed", reason: `split: ${made.message}` });
+        throw new ConvexError({ code: "PAYMENT_START_FAILED", message: "We couldn't open the payment. Try again." });
+      }
+      splitCode = made.data.split_code;
+      await ctx.runMutation(internal.payments.checkout.attemptSplit, { reference: begun.reference, splitCode });
+    }
 
     if (args.method === "saved_card") {
       const charged = await paystack<PaystackTransaction>("/transaction/charge_authorization", {
@@ -210,6 +266,7 @@ export const start = action({
           currency: "NGN",
           authorization_code: begun.authorizationCode,
           reference: begun.reference,
+          ...(splitCode ? { split_code: splitCode } : {}),
           metadata,
         },
       });
@@ -239,6 +296,7 @@ export const start = action({
           reference: begun.reference,
           callback_url: callbackUrl,
           channels,
+          ...(splitCode ? { split_code: splitCode } : {}),
           metadata: { ...metadata, cancel_action: callbackUrl },
         },
       },
@@ -394,7 +452,7 @@ export const settleCharge = internalMutation({
       return { outcome: "mismatch", checkoutStatus };
     }
     await ctx.db.patch("paymentAttempts", attempt._id, { ...paid, status: "success" });
-    await markCheckoutPaid(ctx, checkout._id, { provider: "paystack", reference: attempt.reference, paidAt });
+    await markCheckoutPaid(ctx, checkout._id, { provider: "paystack", reference: attempt.reference, paidAt }, attempt.split);
 
     if (attempt.saveCard && card?.reusable) {
       const existing = card.signature

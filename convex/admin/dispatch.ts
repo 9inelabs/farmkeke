@@ -304,7 +304,7 @@ export const recordStep = mutation({
             moved,
             "out_for_delivery",
             `Order ${order.number} is on its way`,
-            `${rider ? `${rider.name} (${rider.phone}) is` : "A Farmkeke rider is"} bringing your order. Once you have it, confirm receipt in the app.`,
+            `${rider ? `${rider.name} (${rider.phone}) is` : "A Farmkeke rider is"} bringing your order. Check everything when it arrives.`,
           );
         }
         break;
@@ -329,7 +329,7 @@ export const recordStep = mutation({
           moved,
           "order_delivered",
           `Order ${order.number} was delivered`,
-          "Check everything, then confirm receipt. Something wrong? Report it before you confirm.",
+          "Check everything. Something wrong? Report it from your order page within 24 hours.",
         );
         break;
       }
@@ -340,7 +340,7 @@ export const recordStep = mutation({
           moved,
           "order_collected",
           `Order ${order.number} was collected`,
-          "Check everything, then confirm receipt. Something wrong? Report it before you confirm.",
+          "Check everything. Something wrong? Report it from your order page within 24 hours.",
         );
         break;
       }

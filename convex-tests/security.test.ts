@@ -52,7 +52,7 @@ async function seed(t: T) {
         userId, applicationId: appId, name, phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
         farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: hours, leadTimeHours: 4,
         openDays: [0, 1, 2, 3, 4, 5, 6], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789",
-        accountName: name, status: "active", trusted: true,
+        accountName: name, status: "active", trusted: true, paystackSubaccountCode: `ACCT_${name.split(" ")[0]}`,
       });
     const farmA = await farm(farmerA.id, "Ada Greens");
     const farmB = await farm(farmerB.id, "Okafor Farms");
@@ -143,7 +143,6 @@ test("another farm can't see or act on a farm's orders, listings or payouts", as
     expectedTotalKobo: 450000,
     contact: { name: "Ada Obi", phone: "0803 111 2222" },
   });
-  await as(t, s.account).mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
   const orderId = placed.orders[0]!.orderId;
   const farmB = as(t, s.farmerB);
 
@@ -195,6 +194,7 @@ test("payments: test pay is off once Paystack is live, forged webhooks are refus
       const reference = decodeURIComponent(url.split("/transaction/verify/")[1]!);
       return ok({ reference, status: "success", amount: paidAmount, currency: "NGN", channel: "card", paid_at: new Date().toISOString(), customer: { email: "x@y.z" } });
     }
+    if (url.endsWith("/split")) return ok({ split_code: "SPL_1" });
     return new Response("{}", { status: 400 });
   });
   const t = convexTest(schema, modules);
@@ -206,6 +206,7 @@ test("payments: test pay is off once Paystack is live, forged webhooks are refus
     expectedTotalKobo: 450000,
     contact: { name: "Ada Obi", phone: "0803 111 2222" },
   });
+  await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: placed.orders[0]!.orderId });
   // "Pay now (test)" can't be used to skip paying
   await expect(shopper.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId })).rejects.toThrow(/TEST_STEP_OFF/);
   const started = await shopper.action(api.payments.checkout.start, { checkoutId: placed.checkoutId, method: "card" });

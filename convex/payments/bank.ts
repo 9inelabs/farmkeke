@@ -74,6 +74,8 @@ export const applyPayoutAccount = internalMutation({
       accountNumber: args.accountNumber,
       accountName,
     });
+    // Paystack sends the farm's share of each payment to the new account
+    await ctx.scheduler.runAfter(0, internal.payments.subaccounts.sync, { farmId: farm._id });
     // The old Paystack recipient no longer matches.
     const recipients = await ctx.db
       .query("payoutRecipients")
@@ -93,7 +95,7 @@ export const applyPayoutAccount = internalMutation({
       side: "farm",
       kind: "payout_account_changed",
       title: "Payout account changed",
-      body: `Payouts now go to ${name} ••${args.accountNumber.slice(-4)}. If this wasn't you, contact Farmkeke support now.`,
+      body: `Your earnings now go to ${name} ••${args.accountNumber.slice(-4)}. If this wasn't you, contact Farmkeke support now.`,
       href: "/farm/payout-account",
       smsTo: farm.phone,
     });

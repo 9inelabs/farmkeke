@@ -104,7 +104,7 @@ test("chat: only the shopper and the farm, unread counts, throttle", async () =>
   expect(alerts.filter((n) => n.side === "farm").length).toBe(1);
 });
 
-test("dispute: open before confirm, money held, split resolves with a part refund excluding delivery", async () => {
+test("dispute: reported within a day of delivery, split resolves with a part refund excluding delivery, the farm owes its part", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
   const orderId = await paidOrder(t, s, s.guest, "delivery", 2);
@@ -120,7 +120,8 @@ test("dispute: open before confirm, money held, split resolves with a part refun
   await expect(guest.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow();
 
   const view = await guest.query(api.disputes.forOrder, { orderId });
-  expect(view).toMatchObject({ status: "open", amountKobo: 900000, heldKobo: 1000000, reasonLabel: "Damaged or spoiled" });
+  // Paystack already split the payment: nothing is held
+  expect(view).toMatchObject({ status: "open", amountKobo: 900000, heldKobo: 0, reasonLabel: "Damaged or spoiled" });
   expect(Math.round((view!.farmReplyBy - view!.reportedAt) / 1000)).toBe(12 * 3600);
 
   const farmer = as(t, s.farmerA);
@@ -151,17 +152,21 @@ test("dispute: open before confirm, money held, split resolves with a part refun
     ledger: await ctx.db.query("ledgerEntries").withIndex("by_orderId", (q) => q.eq("orderId", orderId)).collect(),
     payouts: await ctx.db.query("payouts").collect(),
     audit: await ctx.db.query("auditLog").collect(),
+    farm: (await ctx.db.get(s.farmA))!,
   }));
   expect(r.order).toMatchObject({ status: "completed", escrow: "split" });
-  expect(r.dispute).toMatchObject({ status: "resolved", outcome: "split", refundKobo: 450000, releaseKobo: 450000 });
+  expect(r.dispute).toMatchObject({ status: "resolved", outcome: "split", refundKobo: 450000 });
   expect(r.refunds).toHaveLength(1);
-  expect(r.refunds[0]).toMatchObject({ kind: "part", amountKobo: 450000, status: "processed", disputeId });
+  // Farmkeke refunds the shopper; the farm owes its share of the refunded basket
+  expect(r.refunds[0]).toMatchObject({ kind: "part", amountKobo: 450000, status: "processed", disputeId, farmDebtKobo: 427500 });
+  expect(r.farm.owedKobo).toBe(427500);
   const sum = (kind: string) => r.ledger.filter((e) => e.kind === kind).reduce((a, e) => a + e.amountKobo, 0);
   expect(sum("refund")).toBe(450000);
-  expect(sum("release")).toBe(450000 - 22500);
-  expect(sum("commission")).toBe(22500);
+  expect(sum("farm_share")).toBe(855000);
+  expect(sum("commission")).toBe(45000);
   expect(sum("delivery_fee")).toBe(100000);
-  expect(r.payouts[0]).toMatchObject({ amountKobo: 427500, status: "sent" });
+  expect(sum("farm_debt")).toBe(427500);
+  expect(r.payouts).toHaveLength(0);
   expect(r.audit.find((a) => a.action === "dispute.resolve")).toMatchObject({ reason: "Photos show damage" });
   expect((await guest.query(api.disputes.mine, {}))[0]).toMatchObject({ status: "resolved", outcome: "split" });
 });
@@ -254,11 +259,11 @@ test("notifications: preferences decide push, SMS and email; delivery uses Expo 
   await t.action(internal.notifications.deliver.send, { notificationId: await make("refund_issued") });
   expect(calls.some((c) => c.url.includes("exp.host") && c.body[0].to === token)).toBe(true);
   expect(await t.run(async (ctx) => (await ctx.db.query("pushTokens").collect()).length)).toBe(0);
-  // refund_issued has no processed refund yet, so no email; order_placed sends the confirmation
+  // refund_issued has no processed refund yet, so no email; order_placed sends the payment confirmation
   calls.length = 0;
   await t.action(internal.notifications.deliver.send, { notificationId: await make("order_placed") });
   const resend = calls.find((c) => c.url.includes("resend"));
-  expect(resend?.body).toMatchObject({ to: ["ada@example.com"], subject: "Order placed: FK-10001" });
+  expect(resend?.body).toMatchObject({ to: ["ada@example.com"], subject: "Paid: order FK-10001" });
 
   // In-app list and unread
   expect(await account.query(api.notifications.unreadCount, { side: "shop" })).toBeGreaterThan(3);
@@ -360,12 +365,12 @@ test("the shopper marks a delivery received while the rider is bringing it, or r
   // Staff can't mark it delivered after that
   await expect(as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" })).rejects.toThrow(/WRONG_STATUS/);
 
-  // A problem reported while it's out for delivery: delivered, then disputed, money held
+  // A problem reported while it's out for delivery: delivered, then disputed (already split, so nothing held)
   const second = await paidOrder(t, s, s.guest, "delivery");
   await handOver(t, s, second);
   await guest.mutation(api.disputes.open, { orderId: second, itemIndexes: [], note: "The rider never came", photoIds: [], reason: "not_received" });
   const disputed = await read(second);
   expect(disputed.status).toBe("disputed");
   expect(disputed.deliveredAt).toBeDefined();
-  expect(disputed.escrow).toBe("held");
+  expect(disputed.escrow).toBe("released");
 });

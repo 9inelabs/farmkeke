@@ -128,23 +128,14 @@ test("each shop status change sends the right email (delivery)", async () => {
   await flush(t);
   expect(mail.to(shopper)).toEqual(["Order FK-10001 delivered. Please check and confirm"]);
 
-  // A day later, still unconfirmed: the reminder
+  // A day later with no problem reported: the order closes and the review ask goes out.
+  // The farm was paid in the split, so no release or payout emails follow.
   mail.clear();
   vi.advanceTimersByTime(25 * HOUR);
   await t.mutation(internal.orders.system.flagUnconfirmed, {});
   await flush(t);
-  expect(mail.to(shopper)).toEqual(["Did order FK-10001 arrive?"]);
-
-  mail.clear();
-  await as(t, s.account).mutation(api.orders.consumer.confirmReceipt, { orderId });
-  await flush(t);
-  expect(mail.to(shopper)).toEqual(["Thanks for confirming order FK-10001"]);
-  // Locked money emails reach the farm: released, then the payout
-  expect(mail.to(farmer)).toEqual(["Payment released: ₦8,550 for order FK-10001", "Payout sent: ₦8,550"]);
-
-  mail.clear();
-  await later(t, DAY + 1000);
   expect(mail.to(shopper)).toEqual(["How was your order from Ada Greens?"]);
+  expect(mail.to(farmer)).toEqual([]);
 
   // Every email has a text part, one button and the footer reason
   const review = mail.sent[0]!;
@@ -163,9 +154,11 @@ test("pickup, cancel and decline emails; guests only with an email", async () =>
   const pickup = await paidOrder(t, s, s.guest, "pickup", 1, guestEmail);
   await handOver(t, s, pickup);
   await flush(t);
+  // Placed, accepted (the bill follows at once), paid, then collected at the farm
   expect(mail.to(guestEmail)).toEqual([
-    "Order placed: FK-10001",
+    "We've got your order FK-10001",
     "Ada Greens accepted order FK-10001",
+    "Paid: order FK-10001",
     "Ada Greens is preparing order FK-10001",
     "Ready for pickup: order FK-10001",
   ]);
@@ -193,11 +186,16 @@ test("pickup, cancel and decline emails; guests only with an email", async () =>
   expect(cancelMail.text).toContain("You'll get a full refund of ₦10,000, delivery fee included.");
   expect(mail.to("a@example.com")).toContain("Order FK-10002 was cancelled");
 
-  // A guest without an email gets none
+  // Once texts really send, a guest may skip the email; then they get none
   mail.clear();
-  const noEmail = await paidOrder(t, s, s.guest, "pickup", 1);
-  await as(t, s.farmerA).mutation(api.orders.farmer.decline, { orderId: noEmail, reason: "out_of_stock" });
+  process.env.TERMII_API_KEY = "tk_test";
+  const noEmail = await as(t, s.guest).mutation(api.checkout.place, {
+    items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
+    fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Chidi Okeke", phone: "0803 111 2222" },
+  });
+  await as(t, s.farmerA).mutation(api.orders.farmer.decline, { orderId: noEmail.orders[0].orderId, reason: "out_of_stock" });
   await flush(t);
+  delete process.env.TERMII_API_KEY;
   expect(mail.sent.filter((m) => m.to[0] !== "a@example.com")).toEqual([]);
 });
 

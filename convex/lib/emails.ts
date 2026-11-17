@@ -460,7 +460,7 @@ export function orderConfirmationEmail(p: {
   delivery?: { address: string; window?: string };
   /** For pickup through a pickup point (older orders). Without it, pickup is at each farm. */
   pickupPoint?: { name: string; address: string };
-  /** Delivery: this is the bill being paid, after the farms accepted. */
+  /** This is the bill being paid, after the farms accepted (every order since 17 Nov 2026). */
   paidBill?: boolean;
 }): Email {
   if (p.orders.length === 0) throw new Error("orderConfirmationEmail needs at least one order");
@@ -526,7 +526,9 @@ export function orderConfirmationEmail(p: {
 
   const heading = p.paidBill ? "Thank you for paying" : many ? "Your orders are placed" : "Your order is placed";
   const intro = p.paidBill
-    ? `thank you. The ${many ? "farms have" : "farm has"} your ${many ? "orders" : "order"} ready, and a Farmkeke rider will collect and deliver ${many ? "them" : "it"}.`
+    ? p.fulfilment === "pickup"
+      ? `thank you. The ${many ? "farms are" : "farm is"} getting your ${many ? "orders" : "order"} ready for you to collect.`
+      : `thank you. The ${many ? "farms have" : "farm has"} your ${many ? "orders" : "order"} ready, and a Farmkeke rider will collect and deliver ${many ? "them" : "it"}.`
     : `thank you. We've sent your ${many ? "orders" : "order"} to the ${many ? "farms" : "farm"}.`;
   const acceptLine = p.paidBill ? "" : "Farms have 24 hours to accept. If a farm doesn't, that order is refunded in full.";
   const body = [
@@ -587,7 +589,7 @@ export function orderConfirmationEmail(p: {
     ),
     html: page({
       preheader: p.paidBill
-        ? `${naira(p.totalKobo)} held safely until you confirm. A rider is on the way to the farm.`
+        ? `${naira(p.totalKobo)} paid. ${p.fulfilment === "pickup" ? "We'll tell you when it's ready to collect." : "A rider is on the way to the farm."}`
         : `${naira(p.totalKobo)} held safely until you confirm. Farms have 24 hours to accept.`,
       body,
       reason,

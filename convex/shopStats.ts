@@ -33,7 +33,8 @@ export const rebuild = internalMutation({
       }
     }
 
-    // Response times: payment to acceptance, from each accepted order's events
+    // Response times: to acceptance from payment (older orders, paid before the
+    // farm answered) or from the order being placed (every order since 17 Nov 2026)
     const samples = new Map<Id<"farms">, { at: number; hours: number }[]>();
     const orders = await ctx.db.query("orders").order("desc").take(MAX_ROWS);
     for (const o of orders) {
@@ -44,9 +45,10 @@ export const rebuild = internalMutation({
         .take(50);
       const paid = events.find((e) => e.kind === "paid");
       const accepted = events.find((e) => e.kind === "accepted");
-      if (paid === undefined || accepted === undefined) continue;
+      if (accepted === undefined) continue;
+      const from = paid !== undefined && paid._creationTime < accepted._creationTime ? paid._creationTime : o._creationTime;
       const list = samples.get(o.farmId) ?? [];
-      list.push({ at: accepted._creationTime, hours: Math.round(((accepted._creationTime - paid._creationTime) / HOUR) * 100) / 100 });
+      list.push({ at: accepted._creationTime, hours: Math.round(((accepted._creationTime - from) / HOUR) * 100) / 100 });
       samples.set(o.farmId, list);
     }
 

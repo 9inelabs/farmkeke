@@ -364,7 +364,8 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       }
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderConfirmationEmail({
-        paidBill: order.fulfilment === "delivery",
+        // Every order since the Paystack split is paid by bill, after the farm accepts
+        paidBill: order.fulfilment === "delivery" || order.respondBy !== undefined,
         to,
         name: ref.name,
         isGuest,
@@ -427,7 +428,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderAcceptedEmail({
         ...ref,
-        unpaid: order.fulfilment === "delivery" && order.escrow === "none",
+        unpaid: order.escrow === "none",
         fulfilment: order.fulfilment,
         window: order.window ? windowLabel(order.window) : undefined,
         pickupPointName: point?.name,
@@ -519,7 +520,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderPreparingEmail({
         ...ref,
-        unpaid: order.fulfilment === "delivery" && order.escrow === "none",
+        unpaid: order.escrow === "none",
         fulfilment: order.fulfilment,
         window: order.window ? windowLabel(order.window) : undefined,
         pickupPointName: point?.name,

@@ -1,8 +1,9 @@
 // Test helper: drives an order through the current flow.
 // Delivery: placed unpaid → the farm accepts → staff assign a rider and set
 // the delivery price → the bill goes out → the shopper pays → the rider
-// collects and delivers. Pickup: placed and paid → the farm accepts and
-// gets it ready at the farm → the farmer hands it over with the shopper's code.
+// collects and delivers. Pickup (since the Paystack split, 17 Nov 2026):
+// placed unpaid → the farm accepts → the bill goes out → the shopper pays →
+// the farm gets it ready → the farmer hands it over with the shopper's code.
 import type { convexTest } from "convex-test";
 import { api } from "../convex/_generated/api";
 
@@ -71,9 +72,8 @@ export async function payTest(t: T, who: U, checkoutId: any, payToken?: string) 
 }
 
 /**
- * A paid order of `quantity` baskets of tomatoes from farm A. Delivery
- * orders are accepted and priced first (that's how they get a bill);
- * pickup orders are paid straight away and wait for the farm.
+ * A paid order of `quantity` baskets of tomatoes from farm A. Every order is
+ * accepted first (that's how it gets a bill); delivery orders are priced too.
  */
 export async function paidOrder(t: T, s: S, who: U, fulfilment: "delivery" | "pickup", quantity = 2, email?: string) {
   if (fulfilment === "delivery") {
@@ -86,8 +86,10 @@ export async function paidOrder(t: T, s: S, who: U, fulfilment: "delivery" | "pi
     items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity, priceKobo: 450000 }],
     fulfilment,
     expectedTotalKobo: quantity * 450000,
-    contact: { name: "Chidi Okeke", phone: "0803 111 2222", ...(email ? { email } : {}) },
+    // The bill goes by email (texts aren't sent in tests)
+    contact: { name: "Chidi Okeke", phone: "0803 111 2222", email: email ?? "chidi@example.com" },
   });
+  for (const o of placed.orders) await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: o.orderId });
   await payTest(t, who, placed.checkoutId);
   return placed.orders[0]!.orderId as any;
 }

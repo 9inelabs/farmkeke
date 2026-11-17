@@ -19,7 +19,7 @@ export type PaystackResult<T> =
 /** Calls Paystack with the secret key. Never throws on HTTP errors. */
 export async function paystack<T>(
   path: string,
-  init: { method?: "GET" | "POST"; body?: Record<string, unknown> } = {},
+  init: { method?: "GET" | "POST" | "PUT"; body?: Record<string, unknown> } = {},
 ): Promise<PaystackResult<T>> {
   const key = env.PAYSTACK_SECRET_KEY;
   if (!key) return { ok: false, status: 0, message: "Paystack isn't set up" };

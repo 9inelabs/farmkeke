@@ -168,9 +168,10 @@ export const get = query({
         rider === null
           ? null
           : { _id: rider._id, name: rider.name, phone: rider.phone, plateNumber: rider.plateNumber ?? null, bikeModel: rider.bikeModel ?? null },
-      // Delivery: the shopper's bill (all of the checkout's accepted orders)
+      // The shopper's bill (all of the checkout's accepted orders); older
+      // pickup checkouts were paid at checkout, with no bill
       bill:
-        order.fulfilment !== "delivery" || checkout === null
+        checkout === null || (order.fulfilment !== "delivery" && checkout.billedAt === undefined && checkout.status !== "awaiting_bill")
           ? null
           : {
               status: checkout.status,
@@ -178,7 +179,7 @@ export const get = query({
               payBy: checkout.payBy ?? null,
               totalKobo: checkout.totalKobo,
               abandonReason: checkout.abandonReason ?? null,
-              canPrice: checkout.status === "awaiting_bill" && ["accepted", "preparing", "ready_for_rider"].includes(order.status),
+              canPrice: order.fulfilment === "delivery" && checkout.status === "awaiting_bill" && ["accepted", "preparing", "ready_for_rider"].includes(order.status),
             },
       unconfirmedFlaggedAt: order.unconfirmedFlaggedAt ?? null,
       refunds: refunds.map((r) => ({ _id: r._id, amountKobo: r.amountKobo, kind: r.kind, status: r.status, reason: r.reason, at: r._creationTime })),
@@ -213,22 +214,27 @@ export const addNote = mutation({
   },
 });
 
-/** A-52: staff cancel. Paid money is refunded in full, delivery fee included. */
+/**
+ * A-52: staff cancel. Paid money is refunded in full, delivery fee included.
+ * Paystack split orders: the farm owes back its share unless `chargeFarm` is
+ * false (Farmkeke's own fault, e.g. no rider).
+ */
 export const cancel = mutation({
-  args: { orderId: v.id("orders"), reason: v.string() },
+  args: { orderId: v.id("orders"), reason: v.string(), chargeFarm: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const staff = await requireStaff(ctx, "orders.manage");
     const order = await ctx.db.get("orders", args.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (!CANCELLABLE.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     const reason = args.reason.trim();
+    const paid = order.escrow === "held" || (order.escrow === "released" && order.farmShareKobo !== undefined);
     await writeAudit(ctx, {
       actorId: staff._id,
       action: "order.cancel",
       targetTable: "orders",
       targetId: order._id,
       reason,
-      details: { number: order.number, status: order.status, refundKobo: order.escrow === "held" ? order.totalKobo : 0 },
+      details: { number: order.number, status: order.status, refundKobo: paid ? order.totalKobo : 0, chargeFarm: args.chargeFarm !== false },
     });
     const actor = { kind: "staff" as const, id: staff._id };
     if (order.status === "awaiting_payment") {
@@ -236,13 +242,22 @@ export const cancel = mutation({
       await restoreStock(ctx, order);
       return;
     }
-    const ended = await endWithFullRefund(ctx, order, "cancelled", actor, { cancelReason: reason }, reason, AT_FARM.includes(order.status));
+    const ended = await endWithFullRefund(
+      ctx,
+      order,
+      "cancelled",
+      actor,
+      { cancelReason: reason },
+      reason,
+      AT_FARM.includes(order.status),
+      args.chargeFarm !== false,
+    );
     await notifyConsumer(
       ctx,
       ended,
       "order_cancelled",
       `Order ${order.number} was cancelled`,
-      order.escrow === "held"
+      paid
         ? "Farmkeke cancelled this order. You'll get a full refund to your original payment method."
         : "Farmkeke cancelled this order. You weren't charged.",
     );

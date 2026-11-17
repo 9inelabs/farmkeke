@@ -1,13 +1,16 @@
-// Timers that drive escrow (A-85). Scheduled per order with runAt, with
-// cron sweeps (crons.ts) as a safety net. Money never releases here: an
-// unconfirmed order goes to staff (A-61), never straight to the farm.
+// Order timers (A-85). Scheduled per order with runAt, with cron sweeps
+// (crons.ts) as a safety net. Since the Paystack split (17 Nov 2026) the farm
+// has its share from the moment the order is paid, so a delivered or
+// collected order simply closes 24 hours later unless a problem is reported.
+// Older orders still held in escrow are never released here: they go to
+// staff (A-61).
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
 import { checkBill, expireBill, remindBill } from "../lib/bill";
 import { notifyConsumer, notifyFarm } from "../lib/notify";
-import { endWithFullRefund, SYSTEM, type OrderStatus } from "../lib/orders";
+import { endWithFullRefund, SYSTEM, transition, type OrderStatus } from "../lib/orders";
 import { getRules, HOUR } from "../lib/settings";
 
 const BATCH = 50;
@@ -115,9 +118,11 @@ export const remindFarmers = internalMutation({
 });
 
 /**
- * Cron: delivered or collected orders still unconfirmed a day later go to the
- * A-61 release queue and the consumer gets a reminder. Pickup orders left at
- * the point past their 3 days are flagged for staff too.
+ * Cron: a day after delivery or collection, with no problem reported, an
+ * order closes (completed) and the shopper is asked for a review. Older
+ * orders still held in escrow go to the A-61 release queue instead, with a
+ * reminder to the shopper. Pickup orders left past their 3 days are flagged
+ * for staff too.
  */
 export const flagUnconfirmed = internalMutation({
   args: {},
@@ -132,6 +137,12 @@ export const flagUnconfirmed = internalMutation({
         .withIndex("by_status_and_deliveredAt", (q) => q.eq("status", status).lte("deliveredAt", cutoff))
         .take(200);
       for (const order of late) {
+        if (order.escrow !== "held") {
+          await transition(ctx, order, "completed", SYSTEM, { endedAt: now }, "Closed a day after delivery, with no problem reported");
+          await ctx.scheduler.runAfter(0, internal.reviews.remind, { orderId: order._id });
+          flagged++;
+          continue;
+        }
         if (order.unconfirmedFlaggedAt !== undefined) continue;
         await ctx.db.patch("orders", order._id, { unconfirmedFlaggedAt: now });
         await notifyConsumer(

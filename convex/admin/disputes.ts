@@ -206,6 +206,9 @@ export const resolve = mutation({
     reason: v.string(),
     refundKobo: v.optional(v.number()),
     releaseKobo: v.optional(v.number()),
+    // Paystack split orders: whether the farm owes back its share of a refund
+    // (default yes; no when it wasn't the farm's fault, e.g. the rider's)
+    chargeFarm: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const staff = await requireStaff(ctx, "disputes.decide");
@@ -214,8 +217,12 @@ export const resolve = mutation({
     const order = await ctx.db.get("orders", dispute.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.status !== "disputed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
-    if (order.escrow !== "held") throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });
+    // Paystack split orders (17 Nov 2026) were never held: the farm has its
+    // share, so "released" means no refund and refunds come from Farmkeke
+    const splitPaid = order.escrow === "released" && order.farmShareKobo !== undefined;
+    if (order.escrow !== "held" && !splitPaid) throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });
     if (order.escrowHold) throw new ConvexError({ code: "ESCROW_ON_HOLD" });
+    const chargeFarm = args.chargeFarm !== false;
     const note = args.note.trim();
     if (note.length === 0) throw new ConvexError({ code: "NOTE_REQUIRED" });
 
@@ -258,7 +265,19 @@ export const resolve = mutation({
         { endedAt: now, escrow: "refunded", cancelReason: "dispute_refunded" },
         label,
       );
-      await refundOrder(ctx, ended, { kind: "full", reason: label, actor, disputeId: dispute._id });
+      await refundOrder(ctx, ended, { kind: "full", reason: label, actor, disputeId: dispute._id, chargeFarm });
+    } else if (splitPaid) {
+      const done = await transition(
+        ctx,
+        order,
+        "completed",
+        actor,
+        { endedAt: now, ...(args.outcome === "split" ? { escrow: "split" as const } : {}) },
+        label,
+      );
+      if (args.outcome === "split") {
+        await refundOrder(ctx, done, { kind: "part", amountKobo: refundKobo, reason: label, actor, disputeId: dispute._id, chargeFarm });
+      }
     } else {
       const done = await transition(ctx, order, "completed", actor, { endedAt: now }, label);
       if (args.outcome === "split") {
@@ -280,8 +299,13 @@ export const resolve = mutation({
       staffReadAt: now,
     });
     const after = (await ctx.db.get("orders", order._id))!;
-    const summary =
-      args.outcome === "refunded"
+    const summary = splitPaid
+      ? args.outcome === "refunded"
+        ? `Full refund of ${naira(refundKobo)}.`
+        : args.outcome === "split"
+          ? `Part refund of ${naira(refundKobo)} for the affected items.`
+          : "No refund. The order arrived as described."
+      : args.outcome === "refunded"
         ? `Full refund of ${naira(refundKobo)}.`
         : args.outcome === "split"
           ? `Part refund of ${naira(refundKobo)}; ${naira(releaseKobo)} released to the farm.`

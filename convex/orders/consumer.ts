@@ -37,15 +37,17 @@ function maskEmail(email: string | undefined) {
 
 /**
  * Orders a shopper sees: paid ones, ones still awaiting payment, and every
- * delivery order (placed unpaid, then billed, or cancelled unpaid).
+ * order placed unpaid for a bill (all orders since 17 Nov 2026, delivery
+ * before that), then billed or cancelled unpaid.
  */
-const visible = (o: Doc<"orders">) => o.paidAt !== undefined || o.status === "awaiting_payment" || o.fulfilment === "delivery";
+const visible = (o: Doc<"orders">) =>
+  o.paidAt !== undefined || o.status === "awaiting_payment" || o.fulfilment === "delivery" || o.respondBy !== undefined;
 
-/** Delivery: where the order's bill stands, for the order page's "Pay now". */
+/** Where the order's bill stands, for the order page's "Pay now". */
 async function billView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) {
-  if (order.fulfilment !== "delivery") return null;
   const checkout = await ctx.db.get("checkouts", order.checkoutId);
-  if (checkout === null) return null;
+  // Older pickup checkouts were paid at checkout, with no bill
+  if (checkout === null || (checkout.fulfilment !== "delivery" && checkout.billedAt === undefined && checkout.status !== "awaiting_bill")) return null;
   const state =
     checkout.status === "paid" || order.escrow !== "none"
       ? ("paid" as const)
@@ -99,8 +101,8 @@ export const list = query({
     return await Promise.all(
       orders.filter(visible).map(async (o) => {
         const row = await orderRow(ctx, o);
-        if (o.fulfilment !== "delivery" || o.escrow !== "none" || !isActive(o)) return row;
-        // Unpaid delivery: "Bill ready" once the bill is out
+        if (o.escrow !== "none" || !isActive(o)) return row;
+        // Unpaid: "Bill ready" once the bill is out
         const checkout = await ctx.db.get("checkouts", o.checkoutId);
         return { ...row, billReady: checkout?.status === "awaiting_payment" };
       }),

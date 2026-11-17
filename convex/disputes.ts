@@ -93,6 +93,12 @@ export const open = mutation({
     if (!shopperCanConfirm(order)) {
       throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
     }
+    // Paystack split orders: problems are reported within a day of delivery or
+    // collection, after which the order closes (orders/system.flagUnconfirmed)
+    if (order.escrow !== "held" && order.deliveredAt !== undefined) {
+      const window = (await getRules(ctx)).unconfirmedAfterHours * HOUR;
+      if (Date.now() > order.deliveredAt + window) throw new ConvexError({ code: "REPORT_WINDOW_CLOSED" });
+    }
     const note = cleanText(args.note, true);
     if (args.itemQuantities !== undefined && args.itemQuantities.length !== args.itemIndexes.length) {
       throw new ConvexError({ code: "INVALID_QUANTITY" });

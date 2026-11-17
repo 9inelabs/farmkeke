@@ -64,7 +64,7 @@ export const admin = {
     list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "open" | "farmer_responded" | "resolved" }, any>("admin/disputes:list"),
     markRead: makeFunctionReference<"mutation", { "disputeId": Id<"disputes"> }, any>("admin/disputes:markRead"),
     openCount: makeFunctionReference<"query", Record<string, never>, any>("admin/disputes:openCount"),
-    resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "releaseKobo"?: number }, any>("admin/disputes:resolve"),
+    resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "releaseKobo"?: number; "chargeFarm"?: boolean }, any>("admin/disputes:resolve"),
     sendMessage: makeFunctionReference<"mutation", { "audience": "consumer" | "farmer"; "body": string; "disputeId": Id<"disputes">; "photoIds": Array<Id<"_storage">> }, any>("admin/disputes:sendMessage"),
   },
   exports: {
@@ -121,7 +121,7 @@ export const admin = {
   },
   orders: {
     addNote: makeFunctionReference<"mutation", { "note": string; "orderId": Id<"orders"> }, any>("admin/orders:addNote"),
-    cancel: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string }, any>("admin/orders:cancel"),
+    cancel: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string; "chargeFarm"?: boolean }, any>("admin/orders:cancel"),
     extendDeadline: makeFunctionReference<"mutation", { "hours": number; "orderId": Id<"orders">; "reason": string }, any>("admin/orders:extendDeadline"),
     findByNumber: makeFunctionReference<"query", { "number": string }, any>("admin/orders:findByNumber"),
     get: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("admin/orders:get"),
