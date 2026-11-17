@@ -37,13 +37,13 @@ import { routes } from "@/lib/routes";
 export const metadata: Metadata = {
   title: { absolute: "Farmkeke · From the farm directly to your home" },
   description:
-    "Farmkeke connects households with verified Nigerian farmers. Shop fresh produce at fair prices, and your money stays protected until your order arrives.",
+    "Farmkeke connects households with verified Nigerian farmers. Shop fresh produce at fair prices, pay only after the farm accepts, and get a refund if anything is wrong.",
 };
 
 const FAQS = [
   {
-    q: "How does Farmkeke protect my money?",
-    a: "When you pay, Farmkeke holds the money. The farmer is paid only after you confirm your order arrived as expected.",
+    q: "How am I protected when I buy?",
+    a: "You pay through Paystack only after the farm accepts your order. If it arrives damaged, incomplete or wrong, report it within 24 hours of delivery or collection and Farmkeke refunds you, even if the farm has already been paid.",
   },
   {
     q: "Do I need an account to buy?",
@@ -59,7 +59,7 @@ const FAQS = [
   },
   {
     q: "What if something is wrong with my order?",
-    a: "Report the problem before you confirm receipt. Your money stays held while our team reviews it and works out the right outcome.",
+    a: "Report it from your order page within 24 hours of delivery or collection, with photos. The farm has 12 hours to reply, and Farmkeke usually decides within a day. Refunds go back to the card or account you paid with.",
   },
   {
     q: "How do I become a Farmkeke farmer?",
@@ -69,7 +69,7 @@ const FAQS = [
 
 const TRUST: Array<[LucideIcon, string, string]> = [
   [BadgeCheck, "Verified farmers", "Every farm checked by our team"],
-  [ShieldCheck, "Protected payments", "Held until you confirm delivery"],
+  [ShieldCheck, "Buyer protection", "Refunded if something's wrong"],
   [Truck, "Farmkeke riders", "Our own team delivers"],
   [MapPin, "Pickup at the farm", "Collect within 3 days, no fee"],
 ];
@@ -85,9 +85,9 @@ const SHOPPERS: Array<[LucideIcon, string, string]> = [
 
 const STEPS: Array<[string, string]> = [
   ["Choose your produce", "Browse farms near you and add items to your cart."],
-  ["Pay securely", "Pay with Paystack. Farmkeke holds the money safely."],
+  ["The farm accepts, then you pay", "One bill, paid securely with Paystack."],
   ["Receive your order", "At your door, or collected from the farm."],
-  ["Confirm and release", "Confirm it all arrived, and the farmer gets paid."],
+  ["Covered for 24 hours", "If anything is wrong, report it and we refund you."],
 ];
 
 const APPLY: Array<[string, string]> = [
@@ -126,7 +126,7 @@ export default function Landing() {
             From the farm, directly to your <span className="lime-text">home</span>
           </h1>
           <p className="m-0 max-w-[540px] text-base leading-[26px] text-white/72 m:text-sm m:leading-[22px]">
-            Shop fresh produce from verified farmers at fair prices. Your money is held safely until you confirm delivery.
+            Shop fresh produce from verified farmers at fair prices. You pay only after the farm accepts, and we refund you if anything is wrong.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2.5 m:mt-1 m:w-full m:flex-col">
             <Link href="#download" className="btn lime h-[46px] px-[22px] shadow-[0_8px_24px_rgba(169,214,84,0.25)] m:h-12">
@@ -151,12 +151,12 @@ export default function Landing() {
                 <ShieldCheck size={18} strokeWidth={1.75} />
               </span>
               <div>
-                <div className="text-xs text-muted-2 m:text-[10px]">Payment held</div>
+                <div className="text-xs text-muted-2 m:text-[10px]">Your bill is ready</div>
                 <div className="font-display text-lg font-bold text-forest m:text-[15px]">₦12,300</div>
               </div>
             </div>
             <div className="mt-2.5 text-xs leading-[17px] text-ink-3 m:mt-0.5 m:text-[10px] m:leading-[14px]">
-              Released to the farm only when you confirm delivery.
+              You pay only once the farm has accepted your order.
             </div>
           </div>
 
@@ -264,8 +264,8 @@ export default function Landing() {
 
             <div className="soft-panel flex flex-col gap-5 p-7 m:rounded-[20px] m:p-5">
               <div>
-                <h3 className={cardTitle}>Your money is held safely</h3>
-                <p className={`${sub} mt-1.5`}>Farmkeke holds your payment and releases it to the farmer only after you confirm your order arrived.</p>
+                <h3 className={cardTitle}>You&apos;re protected on every order</h3>
+                <p className={`${sub} mt-1.5`}>You pay through Paystack only after the farm accepts. If anything is wrong, report it within 24 hours and we refund you.</p>
               </div>
               <div aria-hidden className="rounded-2xl bg-surface p-[18px] shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
                 <div className="flex items-baseline justify-between">
@@ -273,7 +273,7 @@ export default function Landing() {
                   <span className="font-display text-xl font-bold text-forest">₦12,300</span>
                 </div>
                 <ol className="m-0 mt-3.5 flex list-none flex-col gap-2.5 p-0 text-[13px]">
-                  {["Paid · held by Farmkeke", "Farm accepted and packed it", "Delivered to your door"].map((t) => (
+                  {["Farm accepted your order", "Paid securely with Paystack", "Delivered to your door"].map((t) => (
                     <li key={t} className="flex items-center gap-2.5">
                       <span className="flex size-5 items-center justify-center rounded-full bg-forest text-white">
                         <Check size={12} strokeWidth={3} />
@@ -283,7 +283,7 @@ export default function Landing() {
                   ))}
                   <li className="-mx-2.5 flex items-center gap-2.5 rounded-[10px] bg-tint px-2.5 py-2 font-semibold text-forest">
                     <span className="size-5 rounded-full shadow-[inset_0_0_0_2px_var(--color-forest)]" />
-                    You confirm, then the farmer is paid
+                    Something wrong? Report it within 24 hours
                   </li>
                 </ol>
               </div>
@@ -389,7 +389,7 @@ export default function Landing() {
             <h2 id="how-h" className={`${L.h2} m-0`}>
               Four simple steps, start to finish
             </h2>
-            <p className={sub}>From choosing your produce to paying the farmer, every step is clear.</p>
+            <p className={sub}>From choosing your produce to your doorstep, every step is clear.</p>
             <ol className="m-0 mt-4 list-none p-0">
               {STEPS.map(([title, text], i) => (
                 <li key={title} className={`flex gap-4 py-3.5 ${i < STEPS.length - 1 ? "shadow-[inset_0_-1px_0_#EEEFEA]" : ""}`}>
@@ -418,10 +418,10 @@ export default function Landing() {
                 Sell your harvest to homes across Nigeria
               </h2>
               <p className="m-0 max-w-[440px] text-[15px] leading-6 text-on-forest m:text-sm m:leading-[22px]">
-                List your produce in the Farmkeke app. We find the buyers, secure the payment and deliver for you.
+                List your produce in the Farmkeke app. We find the buyers, handle payments and deliver for you.
               </p>
               <ul className="m-0 mt-2 flex list-none flex-col gap-2.5 p-0 text-sm text-[#E7EFDF] m:mt-1 m:text-[13px]">
-                {["Reach buyers beyond your local market", "The buyer's payment is secured before you deliver", "Farmkeke riders handle delivery for you"].map((t) => (
+                {["Reach buyers beyond your local market", "Paid straight to your bank through Paystack", "Farmkeke riders handle delivery for you"].map((t) => (
                   <li key={t} className="flex items-center gap-2.5">
                     <Check aria-hidden size={18} strokeWidth={2} className="flex-none text-lime" />
                     {t}
@@ -593,8 +593,8 @@ function OrderScreen() {
       <div className="mt-0.5 text-[11px] text-muted-2">Okafor Family Farms · 3 items</div>
       <div className="mt-3.5 flex flex-col">
         {[
-          ["Paid · held", "9:12 am", "done"],
-          ["Farm accepted", "9:40 am", "done"],
+          ["Farm accepted", "9:12 am", "done"],
+          ["Paid with Paystack", "9:20 am", "done"],
           ["Out for delivery", "Rider Emeka · 11:05 am", "now"],
           ["Delivered", "", "next"],
         ].map(([title, when, state], i, all) => (
@@ -615,7 +615,7 @@ function OrderScreen() {
         ))}
       </div>
       <div className="mt-4 flex h-[38px] items-center justify-center rounded-full bg-forest text-[11px] font-semibold text-white">
-        I received everything
+        It&apos;s arrived
       </div>
     </div>
   );
