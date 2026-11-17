@@ -103,14 +103,11 @@ You can do this once Paystack has activated the business.
 3. Check `TERMII_SENDER_ID` on both matches the approved Sender ID exactly ("Farmkeke" or "OE Alert", whichever Termii approved).
 4. Keep a balance on Termii. Texts go out only for the six events you chose.
 
-## 4. support@farmkeke.com
+## 4. support@farmkeke.com: done (17 Nov 2026)
 
-Pick one:
+support@farmkeke.com forwards to a Gmail inbox through Namecheap email forwarding. It doesn't affect Resend, which sends through send.farmkeke.com.
 
-- **Forwarding (free, quickest):** Cloudflare Email Routing (if farmkeke.com uses Cloudflare DNS) or ImprovMX. Forward support@farmkeke.com to the inbox you read. Add the MX and TXT records they give you to farmkeke.com's DNS.
-- **A real mailbox:** Zoho Mail (free plan) or Google Workspace (paid). Better once more than one person answers support.
-
-Either way, this doesn't affect Resend: Resend sends through its own records. When it works, set `EMAIL_REPLY_TO` (1c) on both deployments.
+Still to do: set `EMAIL_REPLY_TO` to `Farmkeke Support <support@farmkeke.com>` on development now, and on production when you set it up (1c).
 
 ## 5. Vercel production (farmkeke.com and admin.farmkeke.com)
 
