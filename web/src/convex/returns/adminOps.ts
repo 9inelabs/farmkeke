@@ -160,7 +160,6 @@ export type OrderRow = {
   isActive: boolean;
   consumerName: string;
   consumerPhone: string;
-  escrowHold: boolean;
   riderId: Id<"riders"> | null;
   disputeId: Id<"disputes"> | null;
   unconfirmedFlaggedAt: number | null;
@@ -172,8 +171,10 @@ export type OrderDetail = {
   number: string;
   status: string;
   escrow: string;
-  escrowHold: boolean;
-  holdReason: string | null;
+  /** The Paystack split, once paid */
+  farmShareKobo: number | null;
+  commissionKobo: number | null;
+  recoveredKobo: number | null;
   fulfilment: "delivery" | "pickup";
   farmName: string;
   farmId: Id<"farms">;
@@ -211,8 +212,7 @@ export type OrderDetail = {
   payment: { checkoutReference: string; reference: string | null; provider: string | null } | null;
   riderDetail: { _id: Id<"riders">; name: string; phone: string; plateNumber: string | null; bikeModel: string | null } | null;
   unconfirmedFlaggedAt: number | null;
-  refunds: { _id: string; amountKobo: number; kind: string; status: string; reason: string; at: number }[];
-  payoutIds: string[];
+  refunds: { _id: string; amountKobo: number; kind: string; status: string; reason: string; at: number; farmDebtKobo: number }[];
   conversationId: Id<"conversations"> | null;
   timeline: { _id: string; kind: string; at: number; actorKind: string; actorName: string | null; note: string | null }[];
   notes: { _id: string; at: number; note: string; authorName: string | null }[];

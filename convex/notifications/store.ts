@@ -17,7 +17,6 @@ import {
   billEmail,
   billExpiredEmail,
   chatMessageEmail,
-  confirmReminderEmail,
   disputeMessageEmail,
   farmDeadlineEmail,
   farmDeadlineExtendedEmail,
@@ -27,10 +26,7 @@ import {
   farmMessageEmail,
   farmNewOrderEmail,
   farmOrderEndedEmail,
-  farmPaymentReleasedEmail,
   farmPayoutAccountChangedEmail,
-  farmPayoutFailedEmail,
-  farmPayoutSentEmail,
   farmProblemDecisionEmail,
   farmProblemReportedEmail,
   farmReplyReminderEmail,
@@ -461,7 +457,6 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       return orderDeliveredEmail({
         ...ref,
         how: n.kind === "order_collected" ? "collected" : "delivered",
-        heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
         isGuest,
       });
     case "order_declined":
@@ -483,8 +478,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
           caseNumber: dispute.number,
           problem: [REASON_LABELS[dispute.reason], ...affected].join(" · "),
           farmReplyBy: lagosTime(dispute.farmReplyBy),
-          heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
-        });
+          });
       }
       if (dispute.outcome === undefined) return null;
       return problemDecisionEmail({
@@ -556,17 +550,8 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         ...ref,
         pointName: where?.place.name ?? "the farm",
         atFarm: where?.place.kind !== "point",
-        heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
       });
     }
-    case "confirm_reminder":
-      if (order.status !== "delivered" && order.status !== "collected") return null;
-      return confirmReminderEmail({
-        ...ref,
-        how: order.status === "collected" ? "collected" : "delivered",
-        heldKobo: order.escrow === "held" ? order.totalKobo : undefined,
-        isGuest,
-      });
     case "review_reminder":
       return reviewReminderEmail({ ...ref, isGuest });
     case "chat_message":
@@ -659,15 +644,6 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
 
   // Notifications that aren't about one order
   switch (n.kind) {
-    case "payout_sent":
-    case "payout_failed": {
-      const raw = hrefId(n.href, "/payouts/");
-      const payoutId = raw ? ctx.db.normalizeId("payouts", raw) : null;
-      const payout = payoutId ? await ctx.db.get("payouts", payoutId) : null;
-      if (payout === null) return null;
-      const args = { ...base, amountKobo: payout.amountKobo, bank: bank(payout.bankName, payout.accountLast4), reference: payout.reference };
-      return n.kind === "payout_sent" ? farmPayoutSentEmail(args) : farmPayoutFailedEmail({ ...args, reason: payout.failureReason });
-    }
     case "payout_account_changed":
       return farmPayoutAccountChangedEmail({
         ...base,
@@ -752,15 +728,6 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
         from: (order.contact.name || "The shopper").trim().split(/\s+/)[0] ?? "The shopper",
         preview: n.body,
       });
-    case "payment_released": {
-      const items = await ctx.db
-        .query("payoutItems")
-        .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
-        .take(5);
-      const amountKobo = items.reduce((sum, i) => sum + i.amountKobo, 0);
-      if (amountKobo <= 0) return null;
-      return farmPaymentReleasedEmail({ ...ref, amountKobo, bank: bank(farm.bankName, farm.accountNumber.slice(-4)) });
-    }
   }
 
   // Problem reports

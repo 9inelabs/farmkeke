@@ -1,7 +1,7 @@
 // Sample farmer screens drawn with the real views, to check each one in the
 // browser preview without a farmer account: /dev/farm?s=dashboard (orders,
 // new, prepare, handover, pickup, waiting, declined, problem, slip, case,
-// earnings, payout, reviews). Steps on the sample order work on this screen
+// earnings, reviews). Steps on the sample order work on this screen
 // only (the pickup code is 4821). Nothing here touches the backend.
 import { ConvexError } from "convex/values";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,7 +13,6 @@ import { DisputeView, type FarmDispute } from "@/features/farm/DisputeView";
 import { EarningsView } from "@/features/farm/EarningsView";
 import { FarmOrderView, type FarmOrder } from "@/features/farm/FarmOrderView";
 import { OrdersView } from "@/features/farm/OrdersView";
-import { PayoutView, type Payout } from "@/features/farm/PayoutView";
 import { ReviewsView, type ReviewFilter } from "@/features/farm/ReviewsView";
 import { SlipView, type Slip } from "@/features/farm/SlipView";
 import type { FarmTab } from "@/features/farm/status";
@@ -73,7 +72,7 @@ const base = {
   events: [],
   consumer: { firstName: "Adaeze", phone: "+2348031234567" },
   declineNote: null,
-  money: { productKobo: 1140000, feeKobo: 114000, netKobo: 1026000, final: false },
+  money: { productKobo: 1140000, feeKobo: 114000, recoveredKobo: 0, netKobo: 1026000, final: false },
   next: "accept",
   paymentPending: false,
 };
@@ -110,7 +109,8 @@ const dash = {
   counts: { new: 3, to_prepare: 2, with_rider: 1, disputed: 0 },
   newOrders: rows.new,
   toPrepare: rows.to_prepare,
-  heldKobo: 4_872_000,
+  paid30dKobo: 4_872_000,
+  owedKobo: 0,
   commissionBps: 1000,
 };
 
@@ -150,7 +150,6 @@ const dispute = {
   decideBy: now + 43 * H,
   farmResponse: null,
   decision: null,
-  heldKobo: 1290000,
   deliveryFeeKobo: 150000,
   itemsTotalKobo: 1140000,
   canMessage: true,
@@ -160,34 +159,24 @@ const dispute = {
 };
 
 const summary = {
-  heldKobo: 4_872_000,
-  heldOrders: 6,
-  releasedKobo: 38_450_000,
-  paidOutKobo: 35_200_000,
-  pendingPayoutKobo: 3_250_000,
-  failedPayoutKobo: 0,
+  earnedKobo: 38_450_000,
+  paidOrders: 41,
+  lastPaid: { amountKobo: 1_026_000, at: now - 2 * H },
   commissionKobo: 4_272_000,
   commissionBps: 1000,
-  lastPayout: { amountKobo: 3_250_000, sentAt: now - 26 * H, status: "sent" },
+  owedKobo: 405_000,
+  creditKobo: 0,
+  recoveredKobo: 120_000,
+  paystack: "ready",
   payoutAccount: { bankName: "Access Bank", accountLast4: "4821", accountName: "Okafor Family Farms" },
 };
 const tx = [
-  { _id: "t1", at: now - 2 * H, kind: "release", direction: "in", amountKobo: 1026000, status: "done", orderId: "o1", orderNumber: "FK-10198", note: null, simulated: false },
+  { _id: "t1", at: now - 2 * H, kind: "farm_share", direction: "in", amountKobo: 906000, status: "done", orderId: "o1", orderNumber: "FK-10198", note: null, simulated: false },
   { _id: "t2", at: now - 2 * H, kind: "commission", direction: "fee", amountKobo: 114000, status: "done", orderId: "o1", orderNumber: "FK-10198", note: null, simulated: false },
-  { _id: "t3", at: now - 26 * H, kind: "payout", direction: "paid_out", amountKobo: 3250000, status: "done", orderId: "o2", orderNumber: "FK-10180", note: null, simulated: false },
-  { _id: "t4", at: now - 50 * H, kind: "release", direction: "in", amountKobo: 2224000, status: "done", orderId: "o3", orderNumber: "FK-10180", note: null, simulated: false },
+  { _id: "t3", at: now - 2 * H, kind: "debt_recovered", direction: "recovered", amountKobo: 120000, status: "done", orderId: "o1", orderNumber: "FK-10198", note: null, simulated: false },
+  { _id: "t4", at: now - 26 * H, kind: "farm_debt", direction: "owed", amountKobo: 525000, status: "done", orderId: "o2", orderNumber: "FK-10180", note: null, simulated: false },
+  { _id: "t5", at: now - 50 * H, kind: "farm_share", direction: "in", amountKobo: 2224000, status: "done", orderId: "o3", orderNumber: "FK-10180", note: null, simulated: false },
 ] as const;
-const payouts = [
-  { _id: "p1", amountKobo: 3250000, status: "pending", reference: "FKP-20261022-0041", bankName: "Access Bank", accountLast4: "4821", simulated: false, createdAt: now - 3 * H, sentAt: null, failed: false },
-  { _id: "p2", amountKobo: 5410000, status: "sent", reference: "FKP-20261015-0032", bankName: "Access Bank", accountLast4: "4821", simulated: false, createdAt: now - 8 * 24 * H, sentAt: now - 8 * 24 * H, failed: false },
-] as const;
-const payout = {
-  ...payouts[1],
-  items: [
-    { orderId: "o1", number: "FK-10150", itemsTotalKobo: 3600000, commissionKobo: 360000, amountKobo: 3240000 },
-    { orderId: "o2", number: "FK-10162", itemsTotalKobo: 2411111, commissionKobo: 241111, amountKobo: 2170000 },
-  ],
-};
 const reviews = [
   { _id: "r1", rating: 5, tags: ["Fresh", "Well packed"], comment: "The tomatoes were firm and so fresh. Will order again.", reviewerName: "Adaeze N.", createdAt: now - 30 * H, orderId: "o1", orderNumber: "FK-10198", hidden: false },
   { _id: "r2", rating: 4, tags: ["On time"], comment: null, reviewerName: "Tunde A.", createdAt: now - 80 * H, orderId: "o2", orderNumber: "FK-10180", hidden: false },
@@ -207,7 +196,6 @@ const SCREENS: Record<string, string> = {
   slip: "Packing slip",
   case: "Case reply",
   earnings: "Earnings",
-  payout: "Payout",
   reviews: "Reviews",
 };
 
@@ -273,9 +261,7 @@ export default function FarmSamples() {
   } else if (s === "case") {
     screen = <DisputeView d={dispute as unknown as FarmDispute} now={now} generateUploadUrl={async () => ""} onRespond={wait} onSend={wait} />;
   } else if (s === "earnings") {
-    screen = <EarningsView summary={summary as never} recent={tx as never} payouts={payouts as never} />;
-  } else if (s === "payout") {
-    screen = <PayoutView p={payout as unknown as Payout} />;
+    screen = <EarningsView summary={summary as never} recent={tx as never} />;
   } else {
     screen = <ReviewsView summary={{ average: 4.8, count: 126, stars: [1, 2, 6, 21, 96] }} reviews={filter === "all" ? reviews : reviews.filter((r) => String(r.rating) === filter)} filter={filter} onFilter={setFilter} />;
   }

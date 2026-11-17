@@ -8,7 +8,6 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Platform, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ShieldCheck } from "@/components/icons";
 import { Button, ScreenHeader, StatusBadge, Text, Timeline, type BadgeTone, type TimelineStep } from "@/components/ui";
 import { AttachmentStrip } from "@/features/chat/AttachmentStrip";
 import { ChatThread } from "@/features/chat/ChatThread";
@@ -126,22 +125,13 @@ export function DisputeView({ d, now, generateUploadUrl, onRespond, onSend }: Pr
         </Text>
         <View style={styles.heroBadges}>
           <StatusBadge label={label} tone={tone} />
-          {d.heldKobo > 0 ? (
-            <View style={styles.held}>
-              <ShieldCheck size={13} color={colors.forest} variant="solid" />
-              <Text variant="small" color={colors.forest}>
-                Payment held
-              </Text>
-            </View>
-          ) : null}
         </View>
       </View>
 
       {d.decision ? (
         <View style={[styles.card, styles.decision]}>
-          <Text variant="heading">{d.decision.outcome === "refunded" ? "Refunded to the buyer" : d.decision.outcome === "split" ? "Part refund, part paid to you" : "Paid to you"}</Text>
-          {d.decision.releaseKobo > 0 ? <Text variant="caption">To you: {formatNaira(d.decision.releaseKobo)}</Text> : null}
-          {d.decision.refundKobo > 0 ? <Text variant="caption">Refund: {formatNaira(d.decision.refundKobo)}</Text> : null}
+          <Text variant="heading">{d.decision.outcome === "refunded" ? "Full refund to the buyer" : d.decision.outcome === "split" ? "Part refund to the buyer" : "No refund. You keep the payment"}</Text>
+          {d.decision.refundKobo > 0 ? <Text variant="caption">Farmkeke refunded: {formatNaira(d.decision.refundKobo)}. Any part you owe comes off your next orders; see Earnings.</Text> : null}
           {d.decision.note ? <Text variant="body">{d.decision.note}</Text> : null}
         </View>
       ) : null}
@@ -240,7 +230,6 @@ const styles = StyleSheet.create({
   glow: { position: "absolute", right: -50, top: -70, width: 170, height: 170, borderRadius: 85, backgroundColor: "rgba(169,214,84,0.14)" },
   heroTitle: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.white },
   heroBadges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
-  held: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
   reply: { borderWidth: 1.5, borderColor: colors.lime },
   decision: { borderWidth: 1.5, borderColor: colors.lime },

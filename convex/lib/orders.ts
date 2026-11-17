@@ -8,7 +8,6 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { actorKind, orderStatus } from "../schema";
 import { nextCounter } from "./counters";
 import { claimSlot, naira, notify, notifyConsumer, notifyFarm } from "./notify";
-import { paymentsLive } from "./paystack";
 import { noteStockChange } from "./restock";
 import { commissionOn, DAY, getRules, HOUR } from "./settings";
 import { ordersPaidBy, planSplit, type SplitPart } from "./split";
@@ -74,12 +73,16 @@ export async function transition(
 }
 
 /**
- * The shopper can say an order reached them: once it's been delivered or
- * collected, or while the rider is bringing it (they don't have to wait for
- * staff to mark it delivered).
+ * The order has reached the shopper, or the rider is bringing it: they can
+ * report a problem (and, while it's on its way, say it arrived without
+ * waiting for staff to mark it delivered).
  */
-export const shopperCanConfirm = (o: Doc<"orders">) =>
+export const reachedShopper = (o: Doc<"orders">) =>
   o.status === "delivered" || o.status === "collected" || o.status === "out_for_delivery";
+
+/** When the order closes and problems can no longer be reported: a day after delivery or collection. */
+export const reportBy = (o: Doc<"orders">, rules: { unconfirmedAfterHours: number }) =>
+  o.deliveredAt === undefined ? null : o.deliveredAt + rules.unconfirmedAfterHours * HOUR;
 
 /** Out for delivery → delivered, on the shopper's word. Staff do the same from Dispatch. */
 export async function deliveredByShopper(ctx: MutationCtx, order: Doc<"orders">, actor: Actor, note: string) {
@@ -352,8 +355,8 @@ export async function refundOrder(
 
 /**
  * Ends an order before it was fulfilled and, if it was paid, refunds it in
- * full: from escrow for older orders, or by Farmkeke for Paystack split
- * orders, with the farm charged its share unless `chargeFarm` is false.
+ * full from Farmkeke, with the farm charged its share unless `chargeFarm` is
+ * false (the farm already has it: Paystack split the payment).
  */
 export async function endWithFullRefund(
   ctx: MutationCtx,
@@ -365,7 +368,8 @@ export async function endWithFullRefund(
   putStockBack: boolean,
   chargeFarm = true,
 ) {
-  const wasPaid = order.escrow === "held" || (order.escrow === "released" && order.farmShareKobo !== undefined);
+  // Paid: Paystack split the payment, so Farmkeke refunds it
+  const wasPaid = order.farmShareKobo !== undefined && order.escrow === "released";
   const ended = await transition(
     ctx,
     order,
@@ -383,91 +387,6 @@ export async function endWithFullRefund(
 async function cancelJob(ctx: MutationCtx, jobId: Id<"_scheduled_functions">) {
   const job = await ctx.db.system.get("_scheduled_functions", jobId);
   if (job !== null && job.state.kind === "pending") await ctx.scheduler.cancel(jobId);
-}
-
-// ---------------------------------------------------------------------------
-// Release (orders paid before the Paystack split only)
-
-/**
- * Releases an older escrow order's money to the farm: product total (or the
- * part staff release in a split) minus Farmkeke's commission, paid out by
- * Paystack Transfer. Orders paid since 17 Nov 2026 are never held (Paystack
- * splits the payment), so this only finishes orders held before then.
- */
-export async function releaseOrder(
-  ctx: MutationCtx,
-  order: Doc<"orders">,
-  actor: Actor,
-  opts: { releaseItemsKobo?: number; split?: boolean; note?: string } = {},
-) {
-  if (order.escrow !== "held") throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });
-  if (order.escrowHold) throw new ConvexError({ code: "ESCROW_ON_HOLD" });
-  const farm = await ctx.db.get("farms", order.farmId);
-  const checkout = await ctx.db.get("checkouts", order.checkoutId);
-  if (farm === null || checkout === null) throw new ConvexError({ code: "NOT_FOUND" });
-  const rules = await getRules(ctx);
-  const itemsKobo = Math.min(opts.releaseItemsKobo ?? order.itemsTotalKobo, order.itemsTotalKobo);
-  const commissionKobo = commissionOn(itemsKobo, rules.commissionBps);
-  const farmKobo = itemsKobo - commissionKobo;
-  const simulated = checkout.paymentProvider !== "paystack" || !paymentsLive();
-  const sim = simulated ? true : undefined;
-  const now = Date.now();
-
-  await ledger(ctx, order, { kind: "release", amountKobo: farmKobo, status: "done", note: opts.note, simulated: sim, actorId: actor.id });
-  if (commissionKobo > 0) {
-    await ledger(ctx, order, {
-      kind: "commission",
-      amountKobo: commissionKobo,
-      status: "done",
-      note: `${rules.commissionBps / 100}%`,
-      simulated: sim,
-    });
-  }
-  if (order.deliveryFeeKobo > 0) {
-    await ledger(ctx, order, { kind: "delivery_fee", amountKobo: order.deliveryFeeKobo, status: "done", simulated: sim });
-  }
-  await ctx.db.patch("orders", order._id, { escrow: opts.split ? "split" : "released", releasedAt: now });
-  await logOrderEvent(ctx, order._id, "released", actor, opts.note);
-
-  if (farmKobo > 0) {
-    const payoutId = await ctx.db.insert("payouts", {
-      farmId: farm._id,
-      amountKobo: farmKobo,
-      status: "pending",
-      reference: `PO-${order.number}-1`,
-      provider: simulated ? "simulated" : "paystack",
-      bankName: farm.bankName,
-      accountLast4: farm.accountNumber.slice(-4),
-      attempts: 0,
-    });
-    await ctx.db.insert("payoutItems", {
-      payoutId,
-      orderId: order._id,
-      farmId: farm._id,
-      itemsTotalKobo: itemsKobo,
-      commissionKobo,
-      amountKobo: farmKobo,
-    });
-    await ledger(ctx, order, { kind: "payout", amountKobo: farmKobo, status: "pending", payoutId, simulated: sim });
-    await ctx.scheduler.runAfter(0, internal.payments.payouts.send, { payoutId });
-  }
-  await notifyFarm(
-    ctx,
-    order,
-    "payment_released",
-    "Payment released",
-    `${naira(farmKobo)} for order ${order.number} is on its way to your bank.`,
-  );
-  // The shopper confirmed: thank them and ask for a review (W-52b / M-66).
-  if (order.confirmedAt !== undefined && !opts.split) {
-    await notifyConsumer(
-      ctx,
-      order,
-      "order_completed",
-      `Thanks for confirming order ${order.number}`,
-      `Payment released to ${farm.name}. How was your order? Leave a review.`,
-    );
-  }
 }
 
 /** Starts the pickup clock when an order is ready at the farm (or, before the change, at a pickup point). */
@@ -568,7 +487,6 @@ export async function orderCore(ctx: QueryCtx, order: Doc<"orders">) {
     number: order.number,
     status: order.status,
     escrow: order.escrow,
-    escrowHold: order.escrowHold === true,
     fulfilment: order.fulfilment,
     farm: farm === null ? null : { _id: farm._id, name: farm.name, area: farm.lga },
     farmName: farm?.name ?? "Farm",

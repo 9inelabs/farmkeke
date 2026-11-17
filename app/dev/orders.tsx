@@ -61,8 +61,9 @@ const base = {
   bill: { state: "paid", checkoutId: "c1", totalKobo: 1290000, deliveryFeeKobo: 150000, billedAt: now - 21 * H, payBy: now - 9 * H, payToken: null },
   pickupCode: null,
   contact: { name: "Adaeze Nwankwo", phone: "+2348031234567", email: "ada@example.com" },
-  canConfirm: false,
+  canMarkArrived: false,
   canReport: false,
+  reportBy: null,
   viewOnly: false,
   linkEmailHint: null,
 };
@@ -70,7 +71,7 @@ const base = {
 const pickupFarm = { farmName: "Okafor Family Farms", address: "Km 4 Owerri–Aba Road", lga: "Owerri North", state: "Imo", hours: [1, 2, 3, 4, 5, 6].map((day) => ({ day, opens: "08:00", closes: "17:00" })), phone: "+2348030000000", collectWithinDays: 3 };
 
 const SAMPLES: Record<string, { label: string; order: object }> = {
-  out: { label: "Out for delivery", order: { ...base, status: "out_for_delivery", outForDeliveryAt: now - H, rider: { name: "Chinedu Okeke", phone: "+2348039998877" }, canConfirm: true, canReport: true } },
+  out: { label: "Out for delivery", order: { ...base, status: "out_for_delivery", outForDeliveryAt: now - H, rider: { name: "Chinedu Okeke", phone: "+2348039998877" }, canMarkArrived: true, canReport: true } },
   bill: {
     label: "Bill ready",
     order: { ...base, status: "preparing", escrow: "none", paid: false, paidAt: null, bill: { ...base.bill, state: "ready_to_pay", payBy: now + 11 * H, payToken: "sample-token-0000000000000000000000000" } },
@@ -79,10 +80,10 @@ const SAMPLES: Record<string, { label: string; order: object }> = {
     label: "Pickup ready",
     order: { ...base, fulfilment: "pickup", status: "ready_for_collection", address: null, deliveryFeeKobo: 0, totalKobo: 1140000, bill: null, pickupCode: "4821", collectBy: now + 72 * H, collectFrom: pickupFarm },
   },
-  delivered: { label: "Delivered", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
-  done: { label: "Completed", order: { ...base, status: "completed", escrow: "released", deliveredAt: now - 5 * H, confirmedAt: now - 4 * H, releasedAt: now - 4 * H, isActive: false } },
+  delivered: { label: "Delivered", order: { ...base, status: "delivered", deliveredAt: now - H / 2, reportBy: now + 23.5 * H, canReport: true } },
+  done: { label: "Completed", order: { ...base, status: "completed", escrow: "released", deliveredAt: now - 29 * H, endedAt: now - 5 * H, isActive: false } },
   declined: { label: "Declined", order: { ...base, status: "declined", escrow: "refunded", declineReason: "out_of_stock", hasRefund: true, isActive: false } },
-  problem: { label: "Report a problem", order: { ...base, status: "delivered", deliveredAt: now - H / 2, canConfirm: true, canReport: true } },
+  problem: { label: "Report a problem", order: { ...base, status: "delivered", deliveredAt: now - H / 2, reportBy: now + 23.5 * H, canReport: true } },
   view: { label: "View only", order: { ...base, status: "out_for_delivery", viewOnly: true, linkEmailHint: "a***@example.com" } },
 };
 

@@ -1461,34 +1461,6 @@ export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKo
 }
 
 // ---------------------------------------------------------------------------
-// 17. Confirm-receipt reminder (a day after delivery, still unconfirmed)
-// ---------------------------------------------------------------------------
-
-export function confirmReminderEmail(
-  p: OrderRef & { how: "delivered" | "collected"; heldKobo?: number; isGuest?: boolean },
-): Email {
-  return compose({
-    to: p.to,
-    subject: `Did order ${p.number} arrive?`,
-    preheader: "Please confirm, or tell us about a problem. The farm is paid once you confirm.",
-    title: "Did your order arrive?",
-    blocks: [
-      b.p(hi(p.name), " order ", { b: p.number }, ` from ${p.farmName} was ${p.how}, but it isn't confirmed yet.`),
-      b.p("If everything was right, please confirm receipt. Then the farm is paid."),
-      b.note(
-        "Something wrong? ",
-        { link: links.reportProblem(p.orderId), label: "Report a problem" },
-        " before you confirm.",
-        p.heldKobo ? ` Until then, ${naira(p.heldKobo)} stays held by Farmkeke.` : "",
-      ),
-      ...(p.isGuest ? [b.small("You ordered as a guest, so please confirm on the phone or computer you ordered on.")] : []),
-    ],
-    cta: { label: "Check and confirm", url: links.order(p.orderId) },
-    reason: optionalOrderReason(p.number, p.isGuest),
-  });
-}
-
-// ---------------------------------------------------------------------------
 // 18. Review reminder (a day after confirming)
 // ---------------------------------------------------------------------------
 
@@ -2120,77 +2092,6 @@ export function farmMessageEmail(
     ],
     cta: openApp(),
     reason: farmReason(p.farmName),
-  });
-}
-
-export function farmPaymentReleasedEmail(p: FarmRef & { number: string; amountKobo: number; bank?: string }): Email {
-  return compose({
-    to: p.to,
-    subject: `Payment released: ${naira(p.amountKobo)} for order ${p.number}`,
-    preheader: "It's on its way to your bank.",
-    title: "Payment released",
-    blocks: [
-      b.p(hi(p.name), " order ", { b: p.number }, " is complete, so Farmkeke released your payment."),
-      b.rows([
-        { label: "Order", value: p.number },
-        { label: "Paid to you", value: naira(p.amountKobo), strong: true },
-        ...(p.bank ? [{ label: "Going to", value: p.bank }] : []),
-      ]),
-      b.p("This is after Farmkeke's commission. We'll email you again when the bank transfer is sent."),
-      b.inApp(["Switch to farmer mode", "Earnings"]),
-    ],
-    cta: openApp(),
-    reason: FARM_MONEY_REASON,
-  });
-}
-
-export function farmPayoutSentEmail(p: FarmRef & { amountKobo: number; bank: string; reference: string }): Email {
-  return compose({
-    to: p.to,
-    subject: `Payout sent: ${naira(p.amountKobo)}`,
-    preheader: `Sent to ${p.bank}.`,
-    title: "Your payout is sent",
-    blocks: [
-      b.p(hi(p.name), " we've sent ", { b: naira(p.amountKobo) }, " to ", { b: p.bank }, "."),
-      b.rows([
-        { label: "Amount", value: naira(p.amountKobo), strong: true },
-        { label: "To", value: p.bank },
-        { label: "Reference", value: p.reference },
-      ]),
-      b.small("Most transfers arrive within minutes. Not there after a working day? Share the reference with your bank, or reply to this email."),
-      b.inApp(["Switch to farmer mode", "Earnings"]),
-    ],
-    cta: openApp(),
-    reason: FARM_MONEY_REASON,
-  });
-}
-
-export function farmPayoutFailedEmail(
-  p: FarmRef & { amountKobo: number; bank: string; reference: string; reason?: string },
-): Email {
-  return compose({
-    to: p.to,
-    subject: `We couldn't send your payout of ${naira(p.amountKobo)}`,
-    preheader: "Your money is safe. Please check your payout account.",
-    title: "Your payout didn't go through",
-    blocks: [
-      b.p(hi(p.name), " we tried to send ", { b: naira(p.amountKobo) }, " to ", { b: p.bank }, ", but the bank transfer failed."),
-      b.rows([
-        { label: "Amount", value: naira(p.amountKobo), strong: true },
-        { label: "To", value: p.bank },
-        { label: "Reference", value: p.reference },
-        ...(p.reason ? [{ label: "What the bank said", value: p.reason }] : []),
-      ]),
-      b.note({ b: "Your money is safe with Farmkeke." }, " Nothing is lost."),
-      b.h2("What to do"),
-      b.steps([
-        { title: "Check your payout account", note: "Make sure the bank and account number are right, and the account is open." },
-        { title: "Fix it in the app if needed", note: "Switch to farmer mode, Earnings, Payout account." },
-        { title: "Farmkeke sends it again", note: "Our team retries failed payouts. Reply to this email if you have questions." },
-      ]),
-    ],
-    cta: openApp(),
-    reason: FARM_MONEY_REASON,
   });
 }
 

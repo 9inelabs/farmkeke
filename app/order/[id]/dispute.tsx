@@ -10,7 +10,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Flag, ShieldCheck } from "@/components/icons";
+import { Flag } from "@/components/icons";
 import { Button, ScreenHeader, Skeleton, StatusBadge, StatusScreen, Text, Timeline, type BadgeTone, type TimelineStep } from "@/components/ui";
 import { ChatThread } from "@/features/chat/ChatThread";
 import { dayTime } from "@/features/orders/format";
@@ -91,24 +91,15 @@ export default function Dispute() {
         </Text>
         <View style={styles.heroBadges}>
           <StatusBadge label={label} tone={tone} />
-          {d.heldKobo > 0 ? (
-            <View style={styles.held}>
-              <ShieldCheck size={13} color={colors.forest} variant="solid" />
-              <Text variant="small" color={colors.forest}>
-                {formatNaira(d.heldKobo)} still held
-              </Text>
-            </View>
-          ) : null}
         </View>
       </View>
 
       {d.decision ? (
         <View style={[styles.card, styles.decision]}>
           <Text variant="heading">
-            {d.decision.outcome === "refunded" ? "You'll get a refund" : d.decision.outcome === "split" ? "Part refund, part paid to the farm" : "The payment goes to the farm"}
+            {d.decision.outcome === "refunded" ? "You'll get a full refund" : d.decision.outcome === "split" ? "You'll get a part refund" : "No refund"}
           </Text>
           {d.decision.refundKobo > 0 ? <Text variant="caption">Refund to you: {formatNaira(d.decision.refundKobo)}</Text> : null}
-          {d.decision.releaseKobo > 0 ? <Text variant="caption">Paid to {d.farmName}: {formatNaira(d.decision.releaseKobo)}</Text> : null}
           {d.decision.note ? <Text variant="body">{d.decision.note}</Text> : null}
           {d.decision.refundKobo > 0 ? (
             <Button label="View refund" variant="dark" size="small" onPress={() => router.push({ pathname: "/order/[id]/refund", params: { id } })} style={styles.start} />
@@ -202,7 +193,6 @@ const styles = StyleSheet.create({
   hero: { backgroundColor: colors.forest, borderRadius: radii.lg + 8, padding: spacing.xl, gap: spacing.xs },
   heroTitle: { fontFamily: fonts.displayBold },
   heroBadges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
-  held: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
   decision: { borderWidth: 1.5, borderColor: colors.lime },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md },

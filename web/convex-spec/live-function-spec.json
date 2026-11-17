@@ -101,6 +101,25 @@
       "returns": null
     },
     {
+      "identifier": "accountsInternal.js:allowResetEmail",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "email": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "accountsInternal.js:currentViewer",
       "functionType": "Query",
       "visibility": {
@@ -673,102 +692,6 @@
       "returns": null
     },
     {
-      "identifier": "admin/areas.js:createPickupPoint",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "name": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "address": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "state": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "lga": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "latitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": false
-          },
-          "longitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": false
-          },
-          "hours": {
-            "fieldType": {
-              "type": "array",
-              "value": {
-                "type": "object",
-                "value": {
-                  "day": {
-                    "fieldType": {
-                      "type": "number"
-                    },
-                    "optional": false
-                  },
-                  "opens": {
-                    "fieldType": {
-                      "type": "string"
-                    },
-                    "optional": false
-                  },
-                  "closes": {
-                    "fieldType": {
-                      "type": "string"
-                    },
-                    "optional": false
-                  }
-                }
-              }
-            },
-            "optional": false
-          },
-          "phone": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "collectWithinDays": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "admin/areas.js:createServiceArea",
       "functionType": "Mutation",
       "visibility": {
@@ -830,18 +753,6 @@
       "returns": null
     },
     {
-      "identifier": "admin/areas.js:listAllPickupPoints",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
-      },
-      "returns": null
-    },
-    {
       "identifier": "admin/areas.js:listAllServiceAreas",
       "functionType": "Query",
       "visibility": {
@@ -850,122 +761,6 @@
       "args": {
         "type": "object",
         "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/areas.js:updatePickupPoint",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "pointId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "pickupPoints"
-            },
-            "optional": false
-          },
-          "name": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "address": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "state": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "lga": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "latitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "longitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "hours": {
-            "fieldType": {
-              "type": "array",
-              "value": {
-                "type": "object",
-                "value": {
-                  "day": {
-                    "fieldType": {
-                      "type": "number"
-                    },
-                    "optional": false
-                  },
-                  "opens": {
-                    "fieldType": {
-                      "type": "string"
-                    },
-                    "optional": false
-                  },
-                  "closes": {
-                    "fieldType": {
-                      "type": "string"
-                    },
-                    "optional": false
-                  }
-                }
-              }
-            },
-            "optional": true
-          },
-          "phone": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "collectWithinDays": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "active": {
-            "fieldType": {
-              "type": "boolean"
-            },
-            "optional": true
-          },
-          "photoStorageId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "_storage"
-            },
-            "optional": true
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
       },
       "returns": null
     },
@@ -2307,9 +2102,9 @@
             },
             "optional": true
           },
-          "releaseKobo": {
+          "chargeFarm": {
             "fieldType": {
-              "type": "number"
+              "type": "boolean"
             },
             "optional": true
           }
@@ -2395,7 +2190,7 @@
       "returns": null
     },
     {
-      "identifier": "admin/exports.js:orders",
+      "identifier": "admin/exports.js:farmShares",
       "functionType": "Query",
       "visibility": {
         "kind": "public"
@@ -2420,7 +2215,7 @@
       "returns": null
     },
     {
-      "identifier": "admin/exports.js:payouts",
+      "identifier": "admin/exports.js:orders",
       "functionType": "Query",
       "visibility": {
         "kind": "public"
@@ -3073,49 +2868,9 @@
             },
             "optional": true
           },
-          "reason": {
+          "disputeDecideHours": {
             "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/fees.js:setSlotCapacity",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "capacity": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "optional": false
-          },
-          "serviceAreaId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "serviceAreas"
-            },
-            "optional": true
-          },
-          "from": {
-            "fieldType": {
-              "type": "string"
+              "type": "number"
             },
             "optional": true
           },
@@ -3146,189 +2901,6 @@
             "optional": false
           }
         }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:list",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "paginationOpts": {
-            "fieldType": {
-              "type": "object",
-              "value": {
-                "numItems": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": false
-                },
-                "cursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": false
-                },
-                "endCursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": true
-                },
-                "id": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumRowsRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumBytesRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                }
-              }
-            },
-            "optional": false
-          },
-          "state": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "literal",
-                  "value": "none"
-                },
-                {
-                  "type": "literal",
-                  "value": "held"
-                },
-                {
-                  "type": "literal",
-                  "value": "released"
-                },
-                {
-                  "type": "literal",
-                  "value": "refunded"
-                },
-                {
-                  "type": "literal",
-                  "value": "split"
-                }
-              ]
-            },
-            "optional": true
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:release",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:releaseQueue",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:setHold",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          },
-          "hold": {
-            "fieldType": {
-              "type": "boolean"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:summary",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
       },
       "returns": null
     },
@@ -3649,6 +3221,739 @@
       "returns": null
     },
     {
+      "identifier": "admin/messages.js:cancel",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:deliverBatch",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          },
+          "phase": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "cursor": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:list",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                },
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          },
+          "status": {
+            "fieldType": {
+              "type": "literal",
+              "value": "scheduled"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:opened",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:reach",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:removeBatch",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:send",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "kind": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "update"
+                },
+                {
+                  "type": "literal",
+                  "value": "offer"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "link": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "to": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "literal",
+                        "value": "message"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "home"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "orders"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "product"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "farm"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "category"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "dashboard"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "listings"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "sales"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "earnings"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          },
+          "sendAt": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:sendTest",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "side": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "shop"
+                },
+                {
+                  "type": "literal",
+                  "value": "farm"
+                },
+                {
+                  "type": "literal",
+                  "value": "both"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "audience": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "everyone"
+                },
+                {
+                  "type": "literal",
+                  "value": "one"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "contact": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "kind": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "update"
+                },
+                {
+                  "type": "literal",
+                  "value": "offer"
+                }
+              ]
+            },
+            "optional": false
+          },
+          "title": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "link": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "to": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "literal",
+                        "value": "message"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "home"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "orders"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "product"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "farm"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "category"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "dashboard"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "listings"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "sales"
+                      },
+                      {
+                        "type": "literal",
+                        "value": "earnings"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "string"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/messages.js:withdraw",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "broadcastId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "broadcasts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:farms",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "show": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "owing"
+                },
+                {
+                  "type": "literal",
+                  "value": "paystack"
+                }
+              ]
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:forgiveDebt",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          },
+          "amountKobo": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:overview",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:payments",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                },
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:retryPaystack",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/orders.js:addNote",
       "functionType": "Mutation",
       "visibility": {
@@ -3695,6 +4000,12 @@
               "type": "string"
             },
             "optional": false
+          },
+          "chargeFarm": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": true
           }
         }
       },
@@ -4026,119 +4337,6 @@
       "returns": null
     },
     {
-      "identifier": "admin/payments.js:payout",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/payments.js:payouts",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "paginationOpts": {
-            "fieldType": {
-              "type": "object",
-              "value": {
-                "numItems": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": false
-                },
-                "cursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": false
-                },
-                "endCursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": true
-                },
-                "id": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumRowsRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumBytesRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                }
-              }
-            },
-            "optional": false
-          },
-          "status": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "literal",
-                  "value": "pending"
-                },
-                {
-                  "type": "literal",
-                  "value": "sent"
-                },
-                {
-                  "type": "literal",
-                  "value": "failed"
-                }
-              ]
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "admin/payments.js:reconciliation",
       "functionType": "Query",
       "visibility": {
@@ -4318,32 +4516,6 @@
             "fieldType": {
               "type": "id",
               "tableName": "unmatchedPaymentEvents"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/payments.js:retryPayout",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
             },
             "optional": false
           },
@@ -4941,6 +5113,25 @@
       "returns": null
     },
     {
+      "identifier": "admin/setup.js:grantBuiltInPermission",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "permission": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/setup.js:makeFounder",
       "functionType": "Mutation",
       "visibility": {
@@ -5022,6 +5213,42 @@
                 {
                   "type": "literal",
                   "value": "signup"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_intro"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_phone"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_code"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_pin"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_login"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_profile"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_bank"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_review"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_submitted"
                 }
               ]
             },
@@ -5057,6 +5284,42 @@
                 {
                   "type": "literal",
                   "value": "signup"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_intro"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_phone"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_code"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_pin"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_login"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_profile"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_bank"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_review"
+                },
+                {
+                  "type": "literal",
+                  "value": "farmer_submitted"
                 }
               ]
             },
@@ -5087,7 +5350,19 @@
                 }
               ]
             },
-            "optional": false
+            "optional": true
+          },
+          "focusX": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "focusY": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
           },
           "reason": {
             "fieldType": {
@@ -5968,25 +6243,6 @@
       "args": {
         "type": "object",
         "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "areas.js:listPickupPoints",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "state": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          }
-        }
       },
       "returns": null
     },
@@ -7105,40 +7361,6 @@
       "returns": null
     },
     {
-      "identifier": "checkout.js:deliveryWindows",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "farmIds": {
-            "fieldType": {
-              "type": "array",
-              "value": {
-                "type": "string"
-              }
-            },
-            "optional": false
-          },
-          "now": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": false
-          },
-          "serviceAreaId": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "checkout.js:listingForCart",
       "functionType": "Query",
       "visibility": {
@@ -7152,58 +7374,6 @@
               "type": "string"
             },
             "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "checkout.js:pickupPoints",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "latitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "longitude": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "serviceAreaId": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "state": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "farmIds": {
-            "fieldType": {
-              "type": "array",
-              "value": {
-                "type": "string"
-              }
-            },
-            "optional": true
-          },
-          "now": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
           }
         }
       },
@@ -7340,38 +7510,6 @@
                     "type": "string"
                   },
                   "optional": true
-                }
-              }
-            },
-            "optional": true
-          },
-          "pickupPointId": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "window": {
-            "fieldType": {
-              "type": "object",
-              "value": {
-                "day": {
-                  "fieldType": {
-                    "type": "string"
-                  },
-                  "optional": false
-                },
-                "from": {
-                  "fieldType": {
-                    "type": "string"
-                  },
-                  "optional": false
-                },
-                "to": {
-                  "fieldType": {
-                    "type": "string"
-                  },
-                  "optional": false
                 }
               }
             },
@@ -8255,6 +8393,82 @@
               }
             },
             "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "farmerApplications.js:saveProfile",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "fullName": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "nin": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "farmName": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "photoStorageId": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "id",
+                  "tableName": "_storage"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "state": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "lga": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "address": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "latitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "longitude": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
           }
         }
       },
@@ -10005,6 +10219,29 @@
       "returns": null
     },
     {
+      "identifier": "notifications/store.js:dropStaleTokens",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "ids": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "id",
+                "tableName": "pushTokens"
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "notifications/store.js:dropTokens",
       "functionType": "Mutation",
       "visibility": {
@@ -10210,26 +10447,6 @@
       "returns": null
     },
     {
-      "identifier": "orders/consumer.js:confirmReceipt",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "orders/consumer.js:find",
       "functionType": "Query",
       "visibility": {
@@ -10306,6 +10523,26 @@
       "args": {
         "type": "object",
         "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "orders/consumer.js:markArrived",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "orderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "orders"
+            },
+            "optional": false
+          }
+        }
       },
       "returns": null
     },
@@ -10868,6 +11105,12 @@
               "type": "string"
             },
             "optional": true
+          },
+          "secret": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
           }
         }
       },
@@ -10941,6 +11184,31 @@
             "optional": false
           },
           "authorizationUrl": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "payments/checkout.js:attemptSplit",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "reference": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "splitCode": {
             "fieldType": {
               "type": "string"
             },
@@ -11332,6 +11600,12 @@
               "type": "string"
             },
             "optional": true
+          },
+          "open": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": true
           }
         }
       },
@@ -11346,236 +11620,6 @@
       "args": {
         "type": "object",
         "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:beginSend",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:finishSend",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          },
-          "status": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "literal",
-                  "value": "sent"
-                },
-                {
-                  "type": "literal",
-                  "value": "pending"
-                },
-                {
-                  "type": "literal",
-                  "value": "failed"
-                }
-              ]
-            },
-            "optional": false
-          },
-          "transferCode": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:get",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:list",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:newReference",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:saveRecipient",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "farmId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "farms"
-            },
-            "optional": false
-          },
-          "bankCode": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "accountNumber": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "recipientCode": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:send",
-      "functionType": "Action",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "payments/payouts.js:settleTransfer",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "internal"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "event": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "reference": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          },
-          "status": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "transferCode": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          },
-          "amountKobo": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": true
-          }
-        }
       },
       "returns": null
     },
@@ -11738,6 +11782,327 @@
               "type": "number"
             },
             "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "payments/subaccounts.js:farmForSync",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "payments/subaccounts.js:saveResult",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          },
+          "code": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "error": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "payments/subaccounts.js:sync",
+      "functionType": "Action",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "payments/subaccounts.js:syncMissing",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:accountFor",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:checkCode",
+      "functionType": "Action",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "code": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:credentialsOf",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:issueCode",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "codeHash": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:mine",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:peekCode",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "codeHash": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:pinCleared",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "userId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "users"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:pinFailed",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "accountId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "authAccounts"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:pinGate",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "userId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "users"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:sendCode",
+      "functionType": "Action",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "phoneAuth.js:useCode",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "phone": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "codeHash": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "currentUserId": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "id",
+                  "tableName": "users"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": false
           }
         }
       },
@@ -12070,6 +12435,18 @@
       "returns": null
     },
     {
+      "identifier": "seed.js:sampleAreas",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
       "identifier": "shopStats.js:rebuild",
       "functionType": "Mutation",
       "visibility": {
@@ -12090,6 +12467,18 @@
     },
     {
       "identifier": "sitePhotos.js:auth",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "sitePhotos.js:farmerSignup",
       "functionType": "Query",
       "visibility": {
         "kind": "public"

@@ -20,7 +20,7 @@ export default function Transactions() {
         </View>
       ) : results.length === 0 ? (
         <View style={styles.pad}>
-          <EmptyCard icon={Receipt} title="No money moved yet" note="Released payments, fees and payouts show here." />
+          <EmptyCard icon={Receipt} title="No money moved yet" note="Payments, Farmkeke's fee and any refunds you owe show here." />
         </View>
       ) : (
         <FlatList

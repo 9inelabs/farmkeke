@@ -1,7 +1,8 @@
 "use client";
 
 // A-51 / A-52: one order, its money and its full history. Staff can add
-// notes; with orders.manage they can cancel it (full refund if paid), give
+// notes; with orders.manage they can cancel it (full refund if paid, from
+// Farmkeke, with the farm owing its part back unless staff say no), give
 // the farm more time to accept, or change the rider. Delivery orders show
 // their bill, and dispatch staff can set the delivery price here too.
 import { useMutation, useQuery } from "convex/react";
@@ -11,7 +12,6 @@ import { useStaff } from "@/components/admin/context";
 import { FormError } from "@/components/admin/errors";
 import { koboFrom, NairaField, nairaText } from "@/components/admin/inputs";
 import { ESCROW, eventLabel, LEDGER_KIND, ORDER_STATUS } from "@/components/admin/labels";
-import { MoneyActions } from "@/components/admin/MoneyActions";
 import { adminRoutes } from "@/components/admin/routes";
 import { Facts, Notice, PageHeader, Panel, ReasonDialog, StatusBadge, TableSkeleton } from "@/components/admin/ui";
 import { isoDayLabel } from "@/components/orders/format";
@@ -69,6 +69,7 @@ export function OrderView({ orderId }: { orderId: string }) {
   const [hours, setHours] = useState(12);
   const [riderId, setRiderId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [chargeFarm, setChargeFarm] = useState(true);
   const [done, setDone] = useState<string | null>(null);
 
   if (o === undefined) return <TableSkeleton />;
@@ -91,7 +92,6 @@ export function OrderView({ orderId }: { orderId: string }) {
         actions={
           <span className="flex flex-wrap gap-1.5">
             <StatusBadge map={ORDER_STATUS} status={o.status} />
-            {o.escrowHold ? <span className="badge b-err">Money on hold</span> : null}
           </span>
         }
       />
@@ -103,11 +103,6 @@ export function OrderView({ orderId }: { orderId: string }) {
       {o.cancelReason || o.declineReason ? (
         <div className="mb-4">
           <Notice tone="err">{o.cancelReason ? `Cancelled: ${o.cancelReason}` : `Declined by the farm: ${o.declineReason}`}</Notice>
-        </div>
-      ) : null}
-      {o.escrowHold && o.holdReason ? (
-        <div className="mb-4">
-          <Notice tone="pend">Money on hold: {o.holdReason}</Notice>
         </div>
       ) : null}
       <div className="grid grid-cols-[1fr_320px] gap-6 m:grid-cols-1">
@@ -227,10 +222,10 @@ export function OrderView({ orderId }: { orderId: string }) {
           <Panel title="Money">
             <Facts
               items={[
-                { label: "Where the money is", value: ESCROW[o.escrow] ?? o.escrow },
+                { label: "Payment", value: ESCROW[o.escrow] ?? o.escrow },
                 { label: "Paid", value: o.paidAt ? dateTime(o.paidAt) : "Not paid" },
                 { label: "Payment reference", value: o.payment?.reference ?? o.payment?.checkoutReference ?? "–" },
-                { label: "Paid to the farm", value: o.releasedAt ? dateTime(o.releasedAt) : "Not yet" },
+                { label: "Sent to the farm", value: o.farmShareKobo !== null ? naira(o.farmShareKobo) : "–" },
               ]}
             />
             {ledger && ledger.length > 0 ? (
@@ -249,19 +244,12 @@ export function OrderView({ orderId }: { orderId: string }) {
                 ))}
               </ul>
             ) : null}
-            {o.escrow === "held" ? (
-              <div className="mt-4">
-                <MoneyActions
-                  order={{ orderId: o._id, number: o.number, status: o.status, escrow: o.escrow, escrowHold: o.escrowHold, amountKobo: o.totalKobo }}
-                  onDone={setDone}
-                />
-              </div>
-            ) : null}
             {o.refunds.length > 0 ? (
               <ul className="m-0 mt-4 list-none p-0">
                 {o.refunds.map((r) => (
                   <li key={r._id} className="text-sm">
                     Refund {naira(r.amountKobo)} ({r.kind}, {r.status}) · {r.reason} · {dateTime(r.at)}
+                    {r.farmDebtKobo > 0 ? ` · the farm owes ${naira(r.farmDebtKobo)} back` : ""}
                   </li>
                 ))}
               </ul>
@@ -349,7 +337,14 @@ export function OrderView({ orderId }: { orderId: string }) {
               </Button>
             ) : null}
             {canManage && CANCELLABLE.includes(o.status) ? (
-              <Button variant="danger" fullWidth onClick={() => setDialog("cancel")}>
+              <Button
+                variant="danger"
+                fullWidth
+                onClick={() => {
+                  setChargeFarm(true);
+                  setDialog("cancel");
+                }}
+              >
                 Cancel order
               </Button>
             ) : null}
@@ -363,18 +358,30 @@ export function OrderView({ orderId }: { orderId: string }) {
         onClose={() => setDialog(null)}
         title={`Cancel ${o.number}`}
         description={
-          o.escrow === "held"
-            ? "The shopper gets a full refund, delivery fee included. The shopper and the farm are told why."
+          o.paid
+            ? `Farmkeke refunds the shopper in full (${naira(o.totalKobo)}, delivery fee included) from its Paystack balance. The shopper and the farm are told why.`
             : "Nothing has been paid, so there's nothing to refund. The shopper and the farm are told."
         }
         hint="Shown to the farm and saved in the audit log."
-        confirmLabel={o.escrow === "held" ? "Cancel and refund" : "Cancel order"}
+        confirmLabel={o.paid ? "Cancel and refund" : "Cancel order"}
         variant="danger"
         onConfirm={async (reason) => {
-          await cancel({ orderId: id, reason });
-          setDone(o.escrow === "held" ? "Order cancelled. The refund is on its way." : "Order cancelled.");
+          await cancel({ orderId: id, reason, ...(o.paid ? { chargeFarm } : {}) });
+          setDone(o.paid ? "Order cancelled. The refund is on its way." : "Order cancelled.");
         }}
-      />
+      >
+        {o.paid ? (
+          <label className="flex cursor-pointer items-start gap-3 py-2 text-[15px]">
+            <input type="checkbox" className="mt-1 size-5 accent-forest" checked={chargeFarm} onChange={(e) => setChargeFarm(e.target.checked)} />
+            <span>
+              The farm pays its share back
+              <span className="sm block">
+                The farm already has {o.farmShareKobo !== null ? naira(o.farmShareKobo) : "its share"}. Ticked, that comes off its next orders. Untick when it wasn&apos;t the farm&apos;s fault; Farmkeke then carries the cost.
+              </span>
+            </span>
+          </label>
+        ) : null}
+      </ReasonDialog>
       <ReasonDialog
         open={dialog === "price"}
         onClose={() => setDialog(null)}

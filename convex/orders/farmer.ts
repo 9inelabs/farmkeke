@@ -20,7 +20,7 @@ import {
   type OrderStatus,
 } from "../lib/orders";
 import { hitLimit } from "../lib/rateLimit";
-import { commissionOn, getRules, HOUR } from "../lib/settings";
+import { commissionOn, DAY, getRules, HOUR } from "../lib/settings";
 import { recordResponseTime } from "../lib/shop";
 
 const TABS = {
@@ -67,8 +67,21 @@ async function ownOrder(ctx: MutationCtx, orderId: Id<"orders">) {
   return { user, farm, order, actor: { kind: "farmer" as const, id: user._id } };
 }
 
-/** What the farm earns from an order: product total minus commission. */
+/**
+ * What the farm earns from an order: product total minus commission, and
+ * minus anything taken to pay back a refund (or plus a credit). Paid orders
+ * (Paystack split) carry the exact share Paystack sent.
+ */
 async function money(ctx: QueryCtx, order: Doc<"orders">) {
+  if (order.farmShareKobo !== undefined) {
+    return {
+      productKobo: order.itemsTotalKobo,
+      feeKobo: order.commissionKobo ?? 0,
+      recoveredKobo: order.recoveredKobo ?? 0,
+      netKobo: order.farmShareKobo,
+      final: true,
+    };
+  }
   const entries = await ctx.db
     .query("ledgerEntries")
     .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
@@ -76,11 +89,11 @@ async function money(ctx: QueryCtx, order: Doc<"orders">) {
   const released = entries.find((e) => e.kind === "release");
   const commission = entries.find((e) => e.kind === "commission");
   if (released) {
-    return { productKobo: order.itemsTotalKobo, feeKobo: commission?.amountKobo ?? 0, netKobo: released.amountKobo, final: true };
+    return { productKobo: order.itemsTotalKobo, feeKobo: commission?.amountKobo ?? 0, recoveredKobo: 0, netKobo: released.amountKobo, final: true };
   }
   const rules = await getRules(ctx);
   const feeKobo = commissionOn(order.itemsTotalKobo, rules.commissionBps);
-  return { productKobo: order.itemsTotalKobo, feeKobo, netKobo: order.itemsTotalKobo - feeKobo, final: false };
+  return { productKobo: order.itemsTotalKobo, feeKobo, recoveredKobo: 0, netKobo: order.itemsTotalKobo - feeKobo, final: false };
 }
 
 /** F-40 tabs. */
@@ -126,7 +139,7 @@ export const counts = query({
   },
 });
 
-/** F-10 dashboard: what needs doing now, and money held. */
+/** F-10 dashboard: what needs doing now, and what Paystack has sent the farm lately. */
 export const dashboard = query({
   args: {},
   handler: async (ctx) => {
@@ -137,8 +150,12 @@ export const dashboard = query({
     const withRider = await ordersIn(ctx, farm._id, TABS.with_rider, 50);
     const disputed = await ordersIn(ctx, farm._id, TABS.disputed, 50);
     const rules = await getRules(ctx);
-    const net = (o: Doc<"orders">) => o.itemsTotalKobo - commissionOn(o.itemsTotalKobo, rules.commissionBps);
-    const held = [...waiting, ...toPrepare, ...withRider, ...disputed].filter((o) => o.escrow === "held");
+    // The farm's shares from the last 30 days (Paystack sends each when the shopper pays)
+    const since = Date.now() - 30 * DAY;
+    const recent = await ctx.db
+      .query("ledgerEntries")
+      .withIndex("by_farmId", (q) => q.eq("farmId", farm._id).gte("_creationTime", since))
+      .take(1000);
     return {
       farm: { _id: farm._id, name: farm.name, status: farm.status, holidayMode: farm.holidayMode },
       counts: {
@@ -149,8 +166,9 @@ export const dashboard = query({
       },
       newOrders: await Promise.all(waiting.slice(0, 5).map((o) => orderRow(ctx, o))),
       toPrepare: await Promise.all(toPrepare.slice(0, 5).map((o) => orderRow(ctx, o))),
-      // Expected earnings after commission, still in escrow
-      heldKobo: held.reduce((s, o) => s + net(o), 0),
+      paid30dKobo: recent.reduce((s, e) => s + (e.kind === "farm_share" && e.status === "done" ? e.amountKobo : 0), 0),
+      // Refunds Farmkeke paid that this farm still owes back
+      owedKobo: Math.max(farm.owedKobo ?? 0, 0),
       commissionBps: rules.commissionBps,
     };
   },

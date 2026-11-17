@@ -107,17 +107,6 @@ http.route({
         providerRefundId: d.id === undefined || d.id === null ? undefined : String(d.id),
         amountKobo: num(d.amount),
       });
-    } else if (event.startsWith("transfer.")) {
-      const reference = str(d.reference);
-      if (reference === undefined) return new Response("Missing reference", { status: 400 });
-      await ctx.runMutation(internal.payments.payouts.settleTransfer, {
-        event,
-        reference,
-        status: str(d.status),
-        transferCode: str(d.transfer_code),
-        amountKobo: num(d.amount),
-        reason: str(d.reason),
-      });
     }
     // Anything else is acknowledged and ignored.
     return new Response("ok", { status: 200 });

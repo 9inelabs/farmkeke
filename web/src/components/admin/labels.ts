@@ -81,17 +81,12 @@ const ACTIONS: Record<string, string> = {
 };
 
 export const LEDGER_KIND: Record<string, string> = {
-  hold: "Paid and held",
-  release: "Released to the farm",
+  farm_share: "Sent to the farm by Paystack",
   commission: "Farmkeke commission",
   delivery_fee: "Delivery fee (Farmkeke)",
-  refund: "Refund to the shopper",
-  payout: "Paid out to the farm's bank",
-};
-export const PAYOUT_STATUS: Record<string, [string, string]> = {
-  pending: ["b-pend", "Waiting to send"],
-  sent: ["b-ok", "Sent"],
-  failed: ["b-err", "Failed"],
+  debt_recovered: "Taken back for an earlier refund",
+  refund: "Refund to the shopper (from Farmkeke)",
+  farm_debt: "The farm owes this back",
 };
 export const REFUND_STATUS: Record<string, [string, string]> = {
   queued: ["b-pend", "Queued"],
@@ -107,7 +102,7 @@ export const DISPUTE_STATUS: Record<string, [string, string]> = {
   resolved: ["b-ok", "Decided"],
 };
 export const OUTCOME: Record<string, string> = {
-  released: "No refund, paid to the farm",
+  released: "No refund",
   refunded: "Full refund",
   split: "Part refund",
 };
@@ -133,10 +128,9 @@ export const ORDER_STATUS: Record<string, [string, string]> = {
 };
 export const ESCROW: Record<string, string> = {
   none: "Not paid",
-  held: "Held by Farmkeke",
-  released: "Paid to the farm",
+  released: "Paid and split",
   refunded: "Refunded",
-  split: "Part refunded, rest paid to the farm",
+  split: "Paid and split, part refunded",
 };
 export const STUCK_REASON: Record<string, string> = {
   deadline_passed: "Farm deadline passed",

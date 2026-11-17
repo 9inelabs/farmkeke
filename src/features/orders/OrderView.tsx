@@ -2,9 +2,12 @@
 // and the next step), ended early (M-71), and view-only (Find my order on
 // another phone). app/order/[id] loads the order; app/dev/orders draws sample
 // orders with it.
+import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
+import { useMutation } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Call, ChevronRight, Clock, CloseCircle, Eye, Flag, Headphone, Help, Messages, Pin, Receipt, ShieldCheck, Star, type IconComponent } from "@/components/icons";
@@ -59,16 +62,7 @@ function Tracking({ o }: { o: OrderDetail }) {
             </Text>
             <View style={styles.badges}>
               <StatusBadge label={b.label} tone={b.tone} />
-              {o.escrow === "held" ? (
-                <View style={styles.held}>
-                  <ShieldCheck size={13} color={colors.forest} variant="solid" />
-                  <Text variant="small" color={colors.forest} style={styles.medium}>
-                    {formatNaira(o.totalKobo)} held
-                  </Text>
-                </View>
-              ) : o.fulfilment === "delivery" && o.escrow === "none" ? (
-                <StatusBadge label="Not paid yet" tone="neutral" />
-              ) : null}
+              {!o.paid ? <StatusBadge label="Not paid yet" tone="neutral" /> : null}
             </View>
           </View>
 
@@ -78,7 +72,7 @@ function Tracking({ o }: { o: OrderDetail }) {
               <View style={styles.flex}>
                 <Text variant="bodyMedium">Your bill is ready: {formatNaira(o.bill!.totalKobo)}</Text>
                 <Text variant="small">
-                  Delivery included. Pay by {o.bill!.payBy ? dayTime(o.bill!.payBy) : "the time on your bill"}, or the order is cancelled.
+                  {o.fulfilment === "delivery" ? "Delivery included. " : ""}Pay by {o.bill!.payBy ? dayTime(o.bill!.payBy) : "the time on your bill"}, or the order is cancelled.
                 </Text>
               </View>
             </View>
@@ -149,17 +143,19 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
   const pickup = o.fulfilment === "pickup";
   const r = RANK[o.status] ?? 0;
   const rider = o.rider ? shortName(o.rider.name).split(" ")[0] : null;
-  const first = o.items[0]?.name.toLowerCase();
+  const markArrived = useMutation(api.orders.consumer.markArrived);
+  const [busy, setBusy] = useState(false);
   let title: string;
   let body: string;
   let action: ReactNode = null;
-  // Under a confirm button that isn't available yet
-  let hint: string | null = null;
-  const confirm = () => router.push({ pathname: "/order/[id]/confirm", params: { id: o._id } });
+  const report = () => router.push({ pathname: "/order/[id]/problem", params: { id: o._id } });
+  // Problems are reported until the order closes, a day after delivery or collection
+  const until = o.reportBy ? dayTime(o.reportBy) : null;
+  const reportLine = until ? `Something wrong? Report it by ${until}. After that, the order closes.` : "Something wrong? Report a problem.";
 
   if (o.status === "completed") {
     title = "All done";
-    body = `${formatNaira(o.totalKobo)} was released to ${o.farmName}. Thanks for buying direct from the farm.`;
+    body = "Thanks for buying direct from the farm.";
     action = o.reviewed ? (
       <Button label={`Buy again from ${o.farmName}`} size="large" pill fullWidth onPress={() => router.push(`/farm/${o.farmId}`)} />
     ) : (
@@ -167,39 +163,56 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
     );
   } else if (o.status === "disputed") {
     title = "We're looking into your report";
-    body = "Your payment stays held while the farm replies and our team reviews it. We'll text you with the outcome.";
+    body = "The farm can reply, then our team decides. If you're owed a refund, Farmkeke sends it. We'll text you with the outcome.";
     action = <Button label="Follow this case" size="large" pill fullWidth onPress={() => router.push({ pathname: "/order/[id]/dispute", params: { id: o._id } })} />;
-  } else if (o.fulfilment === "delivery" && o.escrow === "none") {
+  } else if (!o.paid) {
     if (payToken) {
       title = "Pay your bill";
-      body = `${o.farmName} has packed your order and a rider is arranged. Pay ${formatNaira(o.bill!.totalKobo)}, delivery included, and the rider brings it.`;
+      body = pickup
+        ? `${o.farmName} accepted your order. Pay ${formatNaira(o.bill!.totalKobo)} and they'll get it ready for you to collect.`
+        : `${o.farmName} has packed your order and a rider is arranged. Pay ${formatNaira(o.bill!.totalKobo)}, delivery included, and the rider brings it.`;
       action = <Button label={`Pay ${formatNaira(o.bill!.totalKobo)}`} size="large" pill fullWidth onPress={() => router.push({ pathname: "/pay/[token]", params: { token: payToken } })} />;
     } else {
       title = r <= 1 ? `Waiting for ${o.farmName} to accept` : "We're pricing your delivery";
-      body = "Nothing to pay yet. We'll send your bill by email, text and in the app once a rider is arranged. You'll have 12 hours to pay.";
+      body = `Nothing to pay yet. We'll send your bill by email, text and in the app once ${pickup ? "the farm accepts" : "a rider is arranged"}. You'll have 12 hours to pay.`;
     }
   } else if (pickup) {
-    title = "Collect your order, then confirm";
-    body = "Check everything at the farm. Something wrong? Report a problem instead of confirming.";
-    action = <Button label="I've collected my order" size="large" pill fullWidth disabled={!o.canConfirm} onPress={confirm} />;
-    if (!o.canConfirm) hint = "Available once the farm hands it over";
-  } else if (o.canConfirm && o.status === "out_for_delivery") {
-    // The shopper marks it delivered themselves by confirming
+    if (o.status === "collected") {
+      title = "Check everything";
+      body = reportLine;
+      action = o.canReport ? <Button label="Report a problem" variant="secondary" size="large" pill fullWidth onPress={report} /> : null;
+    } else {
+      title = r >= 4.5 ? "Ready to collect" : `${o.farmName} is getting your order ready`;
+      body = r >= 4.5 ? "Show your pickup code at the farm. Check everything before you leave." : "We'll tell you when it's ready to collect.";
+    }
+  } else if (o.canMarkArrived) {
+    // The shopper can say it arrived without waiting for staff
     title = `${rider ?? "The rider"} is bringing your order`;
-    body = "When it's in your hands, check everything, then confirm here. That marks it delivered and releases payment to the farm. Something wrong? Report a problem instead.";
-    action = <Button label="I received everything" size="large" pill fullWidth onPress={confirm} />;
-  } else if (o.canConfirm) {
+    body = "When it's in your hands, check everything and let us know it arrived. Something wrong? Report a problem.";
+    action = (
+      <Button
+        label="It's arrived"
+        size="large"
+        pill
+        fullWidth
+        loading={busy}
+        onPress={async () => {
+          setBusy(true);
+          try {
+            await markArrived({ orderId: o._id as Id<"orders"> });
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+    );
+  } else if (o.status === "delivered") {
     title = "Check everything arrived";
-    body = "Then confirm receipt here to release payment to the farm. Something wrong? Report a problem instead.";
-    action = <Button label="I received everything" size="large" pill fullWidth onPress={confirm} />;
-  } else if (r >= 4) {
-    title = first ? `Check your ${first} when ${o.items.length > 1 ? "your order arrives" : "it arrives"}` : "Check your order when it arrives";
-    body = `Once ${rider ?? "the rider"} hands ${o.items.length > 1 ? "everything" : "it"} over, confirm receipt here to release payment to the farm.`;
-    action = <Button label="I received everything" size="large" pill fullWidth disabled />;
-    hint = "Available once your order is on its way";
+    body = reportLine;
+    action = o.canReport ? <Button label="Report a problem" variant="secondary" size="large" pill fullWidth onPress={report} /> : null;
   } else {
     title = r <= 1 ? `Waiting for ${o.farmName} to accept` : `${o.farmName} is getting your order ready`;
-    body = "We'll text you when it's on its way. Your payment stays held until you confirm delivery.";
+    body = "We'll text you when it's on its way.";
   }
 
   const dark = !pickup;
@@ -215,11 +228,6 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
         {body}
       </Text>
       {action ? <View style={styles.nextAction}>{action}</View> : null}
-      {hint ? (
-        <Text variant="small" align="center" color={dark ? "rgba(255,255,255,0.7)" : colors.inkMuted}>
-          {hint}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -298,20 +306,20 @@ function Line({ label, value, bold = false }: { label: string; value: string; bo
 }
 
 function Payment({ o }: { o: OrderDetail }) {
+  // Paystack splits each payment at once: the farm's share goes to the farm,
+  // Farmkeke keeps its fee and the delivery fee. Refunds come from Farmkeke.
   const [title, sub] =
-    o.escrow === "held"
-      ? [`${formatNaira(o.totalKobo)} held safely by Farmkeke`, o.status === "disputed" ? "Held until your report is resolved" : "Released only when you confirm"]
-      : o.escrow === "released"
-        ? [`${formatNaira(o.totalKobo)} released to ${o.farmName}`, o.releasedAt ? dayTime(o.releasedAt) : "After you confirmed receipt"]
-        : o.escrow === "refunded"
-          ? [`${formatNaira(o.totalKobo)} refunded to you`, "Back to how you paid"]
-          : o.escrow === "split"
-            ? ["Part refunded, part released", "See the refund for details"]
-            : o.bill?.state === "ready_to_pay"
-              ? [`Bill ready: ${formatNaira(o.bill.totalKobo)}`, o.bill.payBy ? `Pay by ${dayTime(o.bill.payBy)}` : "Delivery included"]
-              : o.bill?.state === "waiting_for_price"
-                ? ["Nothing to pay yet", "We'll send your bill once the delivery is priced"]
-                : ["Payment pending", "We'll update this once your payment is confirmed"];
+    o.escrow === "refunded"
+      ? [`${formatNaira(o.totalKobo)} refunded to you`, "Back to how you paid"]
+      : o.escrow === "split"
+        ? ["Part refunded", "See the refund for details"]
+        : o.paid
+          ? [`${formatNaira(o.totalKobo)} paid`, o.paidAt ? `Paid ${dayTime(o.paidAt)}` : "Paid by card or bank"]
+          : o.bill?.state === "ready_to_pay"
+            ? [`Bill ready: ${formatNaira(o.bill.totalKobo)}`, o.bill.payBy ? `Pay by ${dayTime(o.bill.payBy)}` : "Pay from your bill"]
+            : o.bill?.state === "waiting_for_price"
+              ? ["Nothing to pay yet", o.fulfilment === "delivery" ? "We'll send your bill once the delivery is priced" : "We'll send your bill once the farm accepts"]
+              : ["Payment pending", "We'll update this once your payment is confirmed"];
   const refundable = o.hasRefund;
   return (
     <Row
@@ -412,7 +420,7 @@ function ViewOnly({ o }: { o: OrderDetail }) {
               You're viewing this order
             </Text>
             <Text variant="small" color={colors.pendingInk}>
-              To confirm delivery, open it on the phone you ordered on{o.linkEmailHint ? `, or create an account with ${o.linkEmailHint}` : ""}.
+              To report a problem, open it on the phone you ordered on{o.linkEmailHint ? `, or create an account with ${o.linkEmailHint}` : ""}.
             </Text>
           </View>
         </View>
@@ -445,7 +453,6 @@ const styles = StyleSheet.create({
   hero: { gap: spacing.xs, paddingBottom: spacing.xs },
   number: { fontFamily: fonts.displayBold, letterSpacing: -0.3 },
   badges: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: spacing.xs, marginTop: spacing.xxs },
-  held: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   bill: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.lg, borderRadius: radii.lg + 4, backgroundColor: colors.pendingSoft },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
   next: { gap: spacing.xs },

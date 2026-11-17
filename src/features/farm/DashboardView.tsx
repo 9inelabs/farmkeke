@@ -56,9 +56,9 @@ export function DashboardView(p: DashboardProps) {
               <Skeleton height={190} radius={radii.lg + 10} />
             ) : (
               <Hero
-                label="Held for you"
-                value={formatNaira(d?.heldKobo ?? 0)}
-                sub="Released when buyers confirm"
+                label="Paid to you, last 30 days"
+                value={formatNaira(d?.paid30dKobo ?? 0)}
+                sub={d && d.owedKobo > 0 ? `${formatNaira(d.owedKobo)} owed for refunds comes off your next orders` : "Sent to your bank when shoppers pay"}
                 stats={[
                   { label: "New", value: String(d?.counts.new ?? 0) },
                   { label: "To prepare", value: String(d?.counts.to_prepare ?? 0) },

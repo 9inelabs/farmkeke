@@ -2,8 +2,10 @@
 
 // A-71 / A-72: one problem report. Staff read the shopper's report and the
 // farm's reply, message each side separately (each sees only their own
-// conversation with Farmkeke), keep internal notes, and decide the money:
-// no refund, a full refund, or a part refund with the rest paid to the farm.
+// conversation with Farmkeke), keep internal notes, and decide the outcome:
+// no refund, a full refund, or a part refund. The farm was paid its share when
+// the shopper paid (Paystack split), so Farmkeke sends any refund and staff
+// choose whether the farm owes its part back from its next orders.
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -38,6 +40,7 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
   const [deciding, setDeciding] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>("refunded");
   const [refund, setRefund] = useState("");
+  const [chargeFarm, setChargeFarm] = useState(true);
   const [decisionNote, setDecisionNote] = useState("");
   const [reason, setReason] = useState("");
   const [done, setDone] = useState<string | null>(null);
@@ -91,8 +94,7 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
         <div className="mb-4">
           <Notice tone="ok">
             Decided{d.decidedBy ? ` by ${d.decidedBy.name}` : ""}: {OUTCOME[d.decision.outcome]}
-            {d.decision.refundKobo ? `, ${naira(d.decision.refundKobo)} refunded` : ""}
-            {d.decision.releaseKobo ? `, ${naira(d.decision.releaseKobo)} to the farm` : ""}. {d.decision.note}
+            {d.decision.refundKobo ? `, ${naira(d.decision.refundKobo)} refunded` : ""}. {d.decision.note}
           </Notice>
         </div>
       ) : null}
@@ -205,26 +207,22 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
           <Panel title="Decision">
             <Facts2
               rows={[
-                ["Money held", naira(d.heldKobo)],
+                ["Shopper paid", naira(d.itemsTotalKobo + d.deliveryFeeKobo)],
                 ["Products", naira(d.itemsTotalKobo)],
                 ["Delivery fee", naira(d.deliveryFeeKobo)],
+                ["Sent to the farm", d.money ? naira(d.money.farmShareKobo) : "–"],
                 ["Decide by", dateTime(d.decideBy)],
               ]}
             />
-            {d.escrowHold ? (
-              <div className="mt-3">
-                <Notice tone="pend">The order&apos;s money is on hold. Release the hold under Money before deciding.</Notice>
-              </div>
-            ) : null}
             {canDecide ? (
               <Button
                 className="mt-4"
                 variant="lime"
                 fullWidth
-                disabled={d.escrowHold}
                 onClick={() => {
                   setOutcome("refunded");
                   setRefund("");
+                  setChargeFarm(true);
                   setDecisionNote("");
                   setReason("");
                   setDeciding(true);
@@ -285,8 +283,8 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
         open={deciding}
         onClose={() => setDeciding(false)}
         title={`Decide ${d.number}`}
-        description="This moves the money at once and can't be undone. Both the shopper and the farm are told."
-        confirmLabel="Decide and move the money"
+        description="A refund is sent from Farmkeke's Paystack balance at once and can't be undone. Both the shopper and the farm are told."
+        confirmLabel="Decide"
         variant="lime"
         width={560}
         onConfirm={async () => {
@@ -302,18 +300,19 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
             outcome,
             note: decisionNote,
             reason,
-            ...(refundKobo ? { refundKobo, releaseKobo: d.itemsTotalKobo - refundKobo } : {}),
+            ...(refundKobo ? { refundKobo } : {}),
+            ...(outcome === "released" ? {} : { chargeFarm }),
           });
-          setDone("Decided. The money has moved and both sides have been told.");
+          setDone(outcome === "released" ? "Decided. Both sides have been told." : "Decided. The refund is on its way and both sides have been told.");
         }}
       >
         <fieldset className="m-0 border-0 p-0">
           <legend className="lbl">Outcome</legend>
           {(
             [
-              ["refunded", `Full refund: ${naira(d.heldKobo)} back to the shopper, delivery fee included`],
-              ["split", "Part refund: some back to the shopper, the rest to the farm"],
-              ["released", `No refund: ${naira(d.itemsTotalKobo)} paid to the farm`],
+              ["refunded", `Full refund: ${naira(d.itemsTotalKobo + d.deliveryFeeKobo)} back to the shopper, delivery fee included`],
+              ["split", "Part refund: some of the products back to the shopper"],
+              ["released", "No refund: the farm keeps its payment"],
             ] as [Outcome, string][]
           ).map(([value, label]) => (
             <label key={value} className="flex min-h-12 cursor-pointer items-center gap-3 text-[15px]">
@@ -327,8 +326,19 @@ export function DisputeView({ disputeId }: { disputeId: string }) {
             label="Refund to the shopper"
             value={refund}
             onChange={setRefund}
-            hint={`From the products only (${naira(d.itemsTotalKobo)}). The farm gets the rest. The delivery fee isn't refunded.`}
+            hint={`From the products only (${naira(d.itemsTotalKobo)}). The delivery fee isn't refunded.`}
           />
+        ) : null}
+        {outcome !== "released" ? (
+          <label className="flex cursor-pointer items-start gap-3 py-2 text-[15px]">
+            <input type="checkbox" className="mt-1 size-5 accent-forest" checked={chargeFarm} onChange={(e) => setChargeFarm(e.target.checked)} />
+            <span>
+              The farm pays its part back
+              <span className="sm block">
+                The farm already has its share. Ticked, its part of the refund comes off its next orders. Untick when it wasn&apos;t the farm&apos;s fault (for example, the rider&apos;s); Farmkeke then carries the cost.
+              </span>
+            </span>
+          </label>
         ) : null}
         <TextArea
           label="Decision note"

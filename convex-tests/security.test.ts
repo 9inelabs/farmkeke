@@ -114,13 +114,13 @@ test("another shopper can't see or act on someone else's order, checkout, chat, 
   expect(await mallory.query(api.chat.thread, { orderId }).catch(() => null)).toBeNull();
   expect(await mallory.query(api.disputes.forOrder, { orderId }).catch(() => null)).toBeNull();
   // Writes are refused
-  await expect(mallory.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow();
+  await expect(mallory.mutation(api.orders.consumer.markArrived, { orderId })).rejects.toThrow();
   await expect(mallory.mutation(api.chat.send, { orderId, body: "hi", photoIds: [] })).rejects.toThrow();
   await expect(mallory.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "fake", photoIds: [], reason: "missing" })).rejects.toThrow();
   await expect(mallory.mutation(api.reviews.submit, { orderId, rating: 1, tags: [], comment: "bad" })).rejects.toThrow();
   await expect(mallory.mutation(api.payments.checkout.markPaidTest, { checkoutId })).rejects.toThrow();
   // The signed-out can't either
-  await expect(t.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow();
+  await expect(t.mutation(api.orders.consumer.markArrived, { orderId })).rejects.toThrow();
 
   // Addresses
   const addressId = await t.run(async (ctx) =>
@@ -131,7 +131,7 @@ test("another shopper can't see or act on someone else's order, checkout, chat, 
   expect(await t.run(async (ctx) => await ctx.db.get(addressId))).not.toBeNull();
 
   // The victim still can
-  await victim.mutation(api.orders.consumer.confirmReceipt, { orderId });
+  await victim.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "One was soft", photoIds: [], reason: "damaged" });
 });
 
 test("another farm can't see or act on a farm's orders, listings or payouts", async () => {

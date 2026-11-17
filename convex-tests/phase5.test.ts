@@ -8,7 +8,7 @@ import { api } from "../convex/_generated/api";
 import { resetLink } from "../convex/lib/passwordProvider";
 import schema from "../convex/schema";
 import { modules } from "./modules";
-import { billDelivery, deliver, payTest, placeDelivery, type DeliveryOpts } from "./orderFlow";
+import { billDelivery, closeOrder, deliver, payTest, placeDelivery, type DeliveryOpts } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -220,7 +220,7 @@ test("reviews keep per-item ratings", async () => {
   const orderId = placed.orders[0].orderId;
   await delivered(t, s, orderId);
   const shopper = as(t, s.guest);
-  await shopper.mutation(api.orders.consumer.confirmReceipt, { orderId });
+  await closeOrder(t, orderId);
   await expect(
     shopper.mutation(api.reviews.submit, { orderId, rating: 5, tags: [], itemRatings: [{ index: 3, rating: 4 }] }),
   ).rejects.toThrow(/INVALID_ITEM/);

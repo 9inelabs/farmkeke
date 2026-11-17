@@ -9,7 +9,7 @@ import { getViewer, requireFarmer, requireUser } from "./lib/auth";
 import { nextCounter } from "./lib/counters";
 import { disputeRow, disputeView, REASON_LABELS } from "./lib/disputes";
 import { notify, notifyConsumer, notifyFarm, notifyStaff } from "./lib/notify";
-import { deliveredByShopper, shopperCanConfirm, transition } from "./lib/orders";
+import { deliveredByShopper, reachedShopper, transition } from "./lib/orders";
 import { hitLimit } from "./lib/rateLimit";
 import { getRules, HOUR } from "./lib/settings";
 import { validateImageUpload } from "./lib/uploads";
@@ -87,15 +87,13 @@ export const open = mutation({
     // Only the identity (device) that placed it, like confirm receipt
     if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.disputeId !== undefined) throw new ConvexError({ code: "ALREADY_REPORTED" });
-    if (order.status === "completed" || order.confirmedAt !== undefined) {
-      throw new ConvexError({ code: "ALREADY_CONFIRMED" });
-    }
-    if (!shopperCanConfirm(order)) {
+    if (order.status === "completed") throw new ConvexError({ code: "ORDER_CLOSED" });
+    if (!reachedShopper(order)) {
       throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
     }
-    // Paystack split orders: problems are reported within a day of delivery or
-    // collection, after which the order closes (orders/system.flagUnconfirmed)
-    if (order.escrow !== "held" && order.deliveredAt !== undefined) {
+    // Problems are reported within a day of delivery or collection, after
+    // which the order closes (orders/system.flagUnconfirmed)
+    if (order.deliveredAt !== undefined) {
       const window = (await getRules(ctx)).unconfirmedAfterHours * HOUR;
       if (Date.now() > order.deliveredAt + window) throw new ConvexError({ code: "REPORT_WINDOW_CLOSED" });
     }

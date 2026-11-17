@@ -20,8 +20,8 @@ export function timingText(o: OrderRow, now: number): string {
     return `${stage === "collected" ? "Collected" : "Delivered"} ${relDay(lagosDay(o.deliveredAt), now)}, ${hm(o.deliveredAt)}`;
   }
   if (stage === "paid") return "Waiting for the farm to accept";
-  // Delivery orders are paid by bill once the delivery is priced
-  if (o.fulfilment === "delivery" && o.paid === false && ["accepted", "preparing", "ready"].includes(stage)) {
+  // Every order is paid by bill once the farm accepts (and delivery is priced)
+  if (o.paid === false && ["accepted", "preparing", "ready"].includes(stage)) {
     return o.billReady ? "Your bill is ready. Pay now" : "Waiting for your bill";
   }
   if (o.status === "ready_for_collection") return "Ready to collect at the farm";
@@ -38,4 +38,5 @@ export function timingText(o: OrderRow, now: number): string {
 export const badgeFor = (o: Pick<OrderRow, "status" | "fulfilment">) =>
   statusBadge({ stage: stageOf(o.status), fulfilment: o.fulfilment });
 
-export const awaitsConfirm = (o: Pick<OrderRow, "status">) => o.status === "delivered" || o.status === "collected";
+/** Reached the shopper: problems can be reported until the order closes a day later. */
+export const justArrived = (o: Pick<OrderRow, "status">) => o.status === "delivered" || o.status === "collected";

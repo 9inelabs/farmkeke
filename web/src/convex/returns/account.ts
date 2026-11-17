@@ -147,8 +147,6 @@ const ACTIVE = new Set([
   "disputed",
 ]);
 export const isActiveStatus = (s: string) => ACTIVE.has(s);
-/** Delivered or collected, and waiting for the buyer to confirm receipt. */
-export const awaitsConfirmation = (o: AccountOrder) => o.status === "delivered" || o.status === "collected";
 
 // ---------- Saved items (favorites.list) ----------
 

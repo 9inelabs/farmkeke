@@ -20,7 +20,7 @@ export type AccountDetail = {
   account: AccountRow;
   addresses: { _id: string; label: string; street: string; landmark: string; areaName?: string; lga?: string; state?: string }[];
   activity: { _id: string; _creationTime: number; action: string; reason: string; actorId: Id<"users"> }[];
-  orders: Omit<OrderRow, "consumerName" | "consumerPhone" | "escrowHold" | "riderId" | "disputeId" | "unconfirmedFlaggedAt">[];
+  orders: Omit<OrderRow, "consumerName" | "consumerPhone" | "riderId" | "disputeId" | "unconfirmedFlaggedAt">[];
   signedInDevices: number;
 };
 
@@ -78,12 +78,12 @@ export type DisputeDetail = {
   decideBy: number;
   farmResponse: { at: number; note: string; photos: string[] } | null;
   decision: { outcome: "released" | "refunded" | "split"; refundKobo: number; releaseKobo: number; note: string; at: number | null } | null;
-  heldKobo: number;
   deliveryFeeKobo: number;
   itemsTotalKobo: number;
   messages: DisputeMessage[];
   order: Pick<OrderDetail, "status" | "totalKobo" | "fulfilment"> | null;
-  escrowHold: boolean;
+  /** What Paystack sent the farm when the shopper paid; null if unpaid */
+  money: { farmShareKobo: number; commissionKobo: number; recoveredKobo: number } | null;
   consumer: { name: string; phone: string | null; email: string | null; isGuest: boolean };
   farm: { _id: Id<"farms">; name: string; phone: string } | null;
   assignee: { _id: Id<"users">; name: string } | null;

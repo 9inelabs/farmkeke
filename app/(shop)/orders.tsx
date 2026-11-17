@@ -8,11 +8,11 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Box, ChevronRight, Messages, Search, ShieldCheck } from "@/components/icons";
+import { Box, ChevronRight, Messages, Search } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
 import { Button, EmptyState, ScreenHeader, Segmented, Skeleton, StatusBadge, Text } from "@/components/ui";
 import { dayMonth } from "@/features/orders/format";
-import { awaitsConfirm, badge, timingText } from "@/features/orders/status";
+import { justArrived, badge, timingText } from "@/features/orders/status";
 import { formatNaira } from "@/lib/money";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -112,7 +112,7 @@ export default function Orders() {
 
 function ActiveCard({ o, now }: { o: Row; now: number }) {
   const b = badge(o.status, o.fulfilment, o.paid);
-  const toConfirm = awaitsConfirm(o.status);
+  const arrived = justArrived(o.status);
   const billReady = "billReady" in o && o.billReady === true;
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`Order ${o.number} from ${o.farmName}, ${b.label}`} onPress={() => open(o._id)} style={styles.card}>
@@ -127,26 +127,16 @@ function ActiveCard({ o, now }: { o: Row; now: number }) {
           </Text>
           <View style={styles.badges}>
             <StatusBadge label={b.label} tone={b.tone} />
-            {o.escrow === "held" ? (
-              <View style={styles.held}>
-                <ShieldCheck size={12} color={colors.forest} variant="solid" />
-                <Text variant="small" color={colors.forest}>
-                  Held
-                </Text>
-              </View>
-            ) : null}
           </View>
         </View>
         <ChevronRight size={18} color={colors.inkMuted} />
       </View>
       {o.itemCount > 1 ? <ItemPhotos o={o} /> : null}
-      <View style={[styles.next, (toConfirm || billReady) && styles.nextAction]}>
-        <Text variant="caption" color={toConfirm || billReady ? colors.ink : colors.inkSoft} style={styles.flex}>
-          {toConfirm ? "Check your items, then confirm to release payment to the farm." : timingText(o, now)}
+      <View style={[styles.next, billReady && styles.nextAction]}>
+        <Text variant="caption" color={billReady ? colors.ink : colors.inkSoft} style={styles.flex}>
+          {arrived ? `${timingText(o, now)}. Something wrong? Report it within a day.` : timingText(o, now)}
         </Text>
-        {toConfirm ? (
-          <Button label="Confirm" size="small" variant="dark" onPress={() => router.push({ pathname: "/order/[id]/confirm", params: { id: o._id } })} />
-        ) : billReady ? (
+        {billReady ? (
           <Button label="Pay bill" size="small" onPress={() => open(o._id)} />
         ) : null}
       </View>
@@ -222,7 +212,6 @@ const styles = StyleSheet.create({
   photo: { width: 40, height: 40, borderRadius: radii.sm, backgroundColor: colors.placeholder },
   photoMore: { alignItems: "center", justifyContent: "center" },
   badges: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
-  held: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: colors.tint, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   next: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
   nextAction: { backgroundColor: colors.tint },
   chatButton: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },

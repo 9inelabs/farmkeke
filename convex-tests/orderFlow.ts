@@ -5,7 +5,7 @@
 // placed unpaid → the farm accepts → the bill goes out → the shopper pays →
 // the farm gets it ready → the farmer hands it over with the shopper's code.
 import type { convexTest } from "convex-test";
-import { api } from "../convex/_generated/api";
+import { api, internal } from "../convex/_generated/api";
 
 type T = ReturnType<typeof convexTest>;
 type U = { id: any; sessionId: any };
@@ -123,4 +123,17 @@ export async function deliver(t: T, s: S, orderId: any, opts: { packed?: boolean
   } else {
     await as(t, s.farmerA).mutation(api.orders.farmer.confirmCollection, { orderId, code: order.pickupCode! });
   }
+}
+
+/**
+ * The order closes a day after it was delivered or collected, with no problem
+ * reported (the hourly orders/system.flagUnconfirmed job). Moves the delivery
+ * time back a day rather than the clock, so other timers aren't disturbed.
+ */
+export async function closeOrder(t: T, orderId: any) {
+  await t.run(async (ctx) => {
+    const order = (await ctx.db.get(orderId)) as any;
+    await ctx.db.patch(orderId, { deliveredAt: (order.deliveredAt ?? Date.now()) - 25 * 3_600_000 } as any);
+  });
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
 }

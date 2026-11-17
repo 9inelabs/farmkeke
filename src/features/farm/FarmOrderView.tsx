@@ -91,13 +91,15 @@ function history(o: FarmOrder): TimelineStep[] {
   if (ENDED.includes(o.status)) {
     const title = o.status === "declined" ? "You declined" : o.status === "expired" ? "Expired without a reply" : "Cancelled";
     return [
-      { key: "in", title: "Order received", detail: t(o.paidAt ?? o.placedAt), state: "done" },
+      { key: "in", title: "Order received", detail: t(o.placedAt), state: "done" },
       { key: "end", title, detail: t(o.endedAt), state: "current" },
     ];
   }
   const raw: { key: string; title: string; at: number | null }[] = [
-    { key: "in", title: "Order received", at: o.paidAt ?? o.placedAt },
+    { key: "in", title: "Order received", at: o.placedAt },
     { key: "accepted", title: "Accepted", at: o.acceptedAt },
+    // Paystack sends the farm's share the moment the shopper pays
+    { key: "paid", title: "Paid to your bank", at: o.paidAt },
     { key: "preparing", title: "Preparing", at: o.preparingAt },
     { key: "packed", title: "Packed", at: o.packedAt },
     { key: "ready", title: pickup ? "Ready to collect" : "Ready for the rider", at: o.readyAt },
@@ -107,8 +109,8 @@ function history(o: FarmOrder): TimelineStep[] {
           { key: "out", title: "With the rider", at: o.outForDeliveryAt },
           { key: "delivered", title: "Delivered", at: o.deliveredAt },
         ]),
-    { key: "confirmed", title: "Buyer confirmed", at: o.confirmedAt },
-    { key: "released", title: "Paid to you", at: o.releasedAt },
+    // A day after delivery or collection with no problem reported
+    { key: "closed", title: "Closed", at: o.status === "completed" ? o.endedAt : null },
   ];
   const current = raw.findIndex((s) => s.at === null);
   return raw.map((s, i) => ({
@@ -128,13 +130,14 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
   const ended = ENDED.includes(o.status);
   const b = farmBadge(o);
   const pct = o.money.productKobo > 0 ? Math.round((o.money.feeKobo / o.money.productKobo) * 1000) / 10 : 0;
-  const moneyState = o.money.final
-    ? { label: "Paid to you", tone: "success" as const }
-    : o.escrow === "refunded" || ended
+  // Paystack sends the farm's share the moment the shopper pays
+  const moneyState =
+    o.escrow === "refunded" || ended
       ? { label: o.escrow === "none" ? "Not charged" : "Refunded to buyer", tone: "neutral" as const }
       : o.paymentPending
         ? { label: "Not paid yet", tone: "neutral" as const }
-        : { label: "Held by Farmkeke", tone: "brand" as const };
+        : { label: "Sent to your bank", tone: "success" as const };
+  const recovered = o.money.recoveredKobo;
 
   const run = async (s: Step) => {
     if (!s.run) return;
@@ -253,6 +256,11 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
             <View style={styles.rule} />
             <MoneyLine label="Products" value={formatNaira(o.money.productKobo)} />
             <MoneyLine label={`Farmkeke fee${pct ? ` · ${pct}%` : ""}`} value={`−${formatNaira(o.money.feeKobo)}`} />
+            {recovered > 0 ? <MoneyLine label="Refund paid back" value={`−${formatNaira(recovered)}`} /> : null}
+            {recovered < 0 ? <MoneyLine label="Credit from Farmkeke" value={`+${formatNaira(-recovered)}`} /> : null}
+            {o.paymentPending ? (
+              <Text variant="small">Paystack sends this to your bank as soon as the shopper pays.</Text>
+            ) : null}
           </Card>
         )}
 

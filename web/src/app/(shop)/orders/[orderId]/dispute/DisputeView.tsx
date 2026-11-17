@@ -43,12 +43,8 @@ export function DisputeView({ orderId }: { orderId: string }) {
 
 function outcomeText(d: DisputeDetail) {
   if (!d.decision) return null;
-  const { outcome, refundKobo, releaseKobo } = d.decision;
-  return outcome === "refunded"
-    ? `Refunded ${naira(refundKobo)} to you`
-    : outcome === "split"
-      ? `${naira(refundKobo)} refunded, ${naira(releaseKobo)} to the farm`
-      : "Released to the farm";
+  const { outcome, refundKobo } = d.decision;
+  return outcome === "refunded" ? `Full refund of ${naira(refundKobo)}` : outcome === "split" ? `Part refund of ${naira(refundKobo)}` : "No refund";
 }
 
 function Case({ d }: { d: DisputeDetail }) {
@@ -67,7 +63,7 @@ function Case({ d }: { d: DisputeDetail }) {
   const replied = d.farmResponse !== null || d.status !== "open";
   const resolved = d.status === "resolved";
   const badge = resolved
-    ? { label: d.decision?.outcome === "released" ? "Released to the farm" : "Resolved", cls: d.decision?.outcome === "released" ? "b-grey" : "b-ok" }
+    ? { label: d.decision?.outcome === "released" ? "No refund" : "Resolved", cls: d.decision?.outcome === "released" ? "b-grey" : "b-ok" }
     : replied
       ? { label: "Farmkeke is reviewing", cls: "b-pend" }
       : { label: "Waiting for the farm", cls: "b-pend" };
@@ -241,7 +237,7 @@ function Case({ d }: { d: DisputeDetail }) {
                 <>
                   <div className="text-[15px] font-bold">{outcomeText(d)}</div>
                   <p className="mt-1 text-[13px] leading-[19px] text-muted">
-                    {d.decision?.note || "Any refund goes back to how you paid, and the rest is released to the farm."}
+                    {d.decision?.note || "Any refund comes from Farmkeke, back to how you paid."}
                   </p>
                   {d.decision && d.decision.refundKobo > 0 ? (
                     <Link href={routes.refund(d.orderId)} className="mt-2 inline-flex min-h-11 items-center text-[13px] font-semibold">
@@ -251,9 +247,9 @@ function Case({ d }: { d: DisputeDetail }) {
                 </>
               ) : (
                 <>
-                  <div className="text-[15px] font-bold">{naira(d.heldKobo || d.itemsTotalKobo + d.deliveryFeeKobo)} still held</div>
+                  <div className="text-[15px] font-bold">You&apos;re covered</div>
                   <p className="mt-1 text-[13px] leading-[19px] text-muted">
-                    After the decision, any refund goes back to how you paid, and the rest is released to the farm.
+                    If our team decides you&apos;re owed a refund, Farmkeke sends it back to how you paid. Banks usually take 3 to 10 working days to show it.
                   </p>
                 </>
               )}

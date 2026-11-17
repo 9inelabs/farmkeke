@@ -25,7 +25,6 @@ export const api = {
     get: makeFunctionReference<"query", Record<string, never>, any>("appConfig:get"),
   },
   areas: {
-    listPickupPoints: makeFunctionReference<"query", { "state"?: string }, any>("areas:listPickupPoints"),
     listServedStates: makeFunctionReference<"query", Record<string, never>, any>("areas:listServedStates"),
     listServiceAreas: makeFunctionReference<"query", { "state": string }, any>("areas:listServiceAreas"),
     matchLocation: makeFunctionReference<"query", { "latitude": number; "longitude": number }, any>("areas:matchLocation"),
@@ -54,10 +53,8 @@ export const api = {
   },
   checkout: {
     contactDefaults: makeFunctionReference<"query", Record<string, never>, any>("checkout:contactDefaults"),
-    deliveryWindows: makeFunctionReference<"query", { "farmIds": Array<string>; "now": number; "serviceAreaId"?: string }, any>("checkout:deliveryWindows"),
     listingForCart: makeFunctionReference<"query", { "listingId": string }, any>("checkout:listingForCart"),
-    pickupPoints: makeFunctionReference<"query", { "latitude"?: number; "longitude"?: number; "serviceAreaId"?: string; "state"?: string; "farmIds"?: Array<string>; "now"?: number }, any>("checkout:pickupPoints"),
-    place: makeFunctionReference<"mutation", { "items": Array<{ "listingId": string; "unitId": string; "quantity": number; "priceKobo": number }>; "fulfilment": "delivery" | "pickup"; "expectedTotalKobo": number; "address"?: { "addressId"?: string; "street"?: string; "landmark"?: string; "serviceAreaId"?: string; "latitude"?: number; "longitude"?: number; "saveAs"?: "home" | "work" | "other"; "note"?: string }; "pickupPointId"?: string; "window"?: { "day": string; "from": string; "to": string }; "contact"?: { "name"?: string; "phone"?: string; "email"?: string }; "replaces"?: string }, any>("checkout:place"),
+    place: makeFunctionReference<"mutation", { "items": Array<{ "listingId": string; "unitId": string; "quantity": number; "priceKobo": number }>; "fulfilment": "delivery" | "pickup"; "expectedTotalKobo": number; "address"?: { "addressId"?: string; "street"?: string; "landmark"?: string; "serviceAreaId"?: string; "latitude"?: number; "longitude"?: number; "saveAs"?: "home" | "work" | "other"; "note"?: string }; "contact"?: { "name"?: string; "phone"?: string; "email"?: string }; "replaces"?: string }, any>("checkout:place"),
     quote: makeFunctionReference<"query", { "items": Array<{ "listingId": string; "unitId": string; "quantity": number; "priceKobo"?: number }>; "fulfilment"?: "delivery" | "pickup"; "serviceAreaId"?: string }, any>("checkout:quote"),
   },
   disputes: {
@@ -84,6 +81,7 @@ export const api = {
     saveFarm: makeFunctionReference<"mutation", { "farmName"?: string; "phone"?: string; "state"?: string; "lga"?: string; "address"?: string; "latitude"?: number; "longitude"?: number; "farmSize"?: "under_1" | "1_to_5" | "5_to_20" | "over_20"; "farmType"?: "crops" | "livestock" | "poultry" | "fish" | "mixed" }, any>("farmerApplications:saveFarm"),
     savePayout: makeFunctionReference<"mutation", { "bankCode"?: string; "accountNumber"?: string; "accountName"?: string }, any>("farmerApplications:savePayout"),
     saveProduce: makeFunctionReference<"mutation", { "categoryIds": Array<Id<"categories">>; "mainCrops"?: string; "typicalVolume"?: string; "seasons": Array<"all_year" | "rainy" | "dry"> }, any>("farmerApplications:saveProduce"),
+    saveProfile: makeFunctionReference<"mutation", { "fullName"?: string; "nin"?: string; "farmName"?: string; "photoStorageId"?: Id<"_storage"> | null; "state"?: string; "lga"?: string; "address"?: string; "latitude"?: number; "longitude"?: number }, any>("farmerApplications:saveProfile"),
     start: makeFunctionReference<"mutation", Record<string, never>, any>("farmerApplications:start"),
     submit: makeFunctionReference<"mutation", { "acceptTerms": boolean }, any>("farmerApplications:submit"),
   },
@@ -128,12 +126,12 @@ export const api = {
     consumer: {
       claimGuestOrders: makeFunctionReference<"mutation", { "token": string }, any>("orders/consumer:claimGuestOrders"),
       confirmGuestOrdersLink: makeFunctionReference<"mutation", { "token": string }, any>("orders/consumer:confirmGuestOrdersLink"),
-      confirmReceipt: makeFunctionReference<"mutation", { "orderId": Id<"orders"> }, any>("orders/consumer:confirmReceipt"),
       find: makeFunctionReference<"query", { "number": string; "phone": string }, any>("orders/consumer:find"),
       get: makeFunctionReference<"query", { "orderId": string }, any>("orders/consumer:get"),
       linkGuestOrdersByEmail: makeFunctionReference<"mutation", Record<string, never>, any>("orders/consumer:linkGuestOrdersByEmail"),
       linkableGuestOrders: makeFunctionReference<"query", Record<string, never>, any>("orders/consumer:linkableGuestOrders"),
       list: makeFunctionReference<"query", Record<string, never>, any>("orders/consumer:list"),
+      markArrived: makeFunctionReference<"mutation", { "orderId": Id<"orders"> }, any>("orders/consumer:markArrived"),
       placedSummary: makeFunctionReference<"query", { "checkoutId": string }, any>("orders/consumer:placedSummary"),
       recentItems: makeFunctionReference<"query", { "limit"?: number }, any>("orders/consumer:recentItems"),
       startGuestClaim: makeFunctionReference<"mutation", Record<string, never>, any>("orders/consumer:startGuestClaim"),
@@ -156,7 +154,7 @@ export const api = {
   payments: {
     bank: {
       resolveAccount: makeFunctionReference<"action", { "accountNumber": string; "bankCode": string }, any>("payments/bank:resolveAccount"),
-      savePayoutAccount: makeFunctionReference<"action", { "accountNumber": string; "bankCode": string; "accountName"?: string }, any>("payments/bank:savePayoutAccount"),
+      savePayoutAccount: makeFunctionReference<"action", { "accountNumber": string; "bankCode": string; "accountName"?: string; "secret"?: string }, any>("payments/bank:savePayoutAccount"),
     },
     cards: {
       list: makeFunctionReference<"query", Record<string, never>, any>("payments/cards:list"),
@@ -172,13 +170,14 @@ export const api = {
     config: {
       get: makeFunctionReference<"query", Record<string, never>, any>("payments/config:get"),
     },
-    payouts: {
-      get: makeFunctionReference<"query", { "payoutId": string }, any>("payments/payouts:get"),
-      list: makeFunctionReference<"query", Record<string, never>, any>("payments/payouts:list"),
-    },
     refunds: {
       forOrder: makeFunctionReference<"query", { "orderId": string }, any>("payments/refunds:forOrder"),
     },
+  },
+  phoneAuth: {
+    checkCode: makeFunctionReference<"action", { "phone": string; "code": string }, any>("phoneAuth:checkCode"),
+    mine: makeFunctionReference<"query", Record<string, never>, any>("phoneAuth:mine"),
+    sendCode: makeFunctionReference<"action", { "phone": string }, any>("phoneAuth:sendCode"),
   },
   reviews: {
     forOrder: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("reviews:forOrder"),
@@ -190,6 +189,7 @@ export const api = {
   },
   sitePhotos: {
     auth: makeFunctionReference<"query", Record<string, never>, any>("sitePhotos:auth"),
+    farmerSignup: makeFunctionReference<"query", Record<string, never>, any>("sitePhotos:farmerSignup"),
   },
   storefront: {
     categoryListings: makeFunctionReference<"query", { "slug": string; "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "harvestedWithinDays"?: number; "minRating"?: number; "maxDistanceKm"?: number; "lat"?: number; "lng"?: number; "subtype"?: string; "today"?: string; "subtypes"?: Array<string> }, any>("storefront:categoryListings"),

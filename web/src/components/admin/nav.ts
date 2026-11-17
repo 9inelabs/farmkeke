@@ -44,6 +44,7 @@ export type Badge =
   | "disputes"
   | "support"
   | "moneyProblems"
+  | "farmsNotPayable"
   | "deliveryToPrice";
 export type NavItem = { href: string; label: string; icon: LucideIcon; any?: string[]; badge?: Badge };
 export type NavGroup = { label: string; items: NavItem[] };
@@ -93,9 +94,9 @@ export const NAV: NavGroup[] = [
   {
     label: "Money",
     items: [
-      { href: adminRoutes.money, label: "Release queue", icon: Wallet, any: ["money.view"] },
-      { href: adminRoutes.escrow, label: "Escrow ledger", icon: ArrowLeftRight, any: ["money.view"] },
-      { href: adminRoutes.payouts, label: "Payouts to farms", icon: Banknote, any: ["money.view"] },
+      { href: adminRoutes.money, label: "Money overview", icon: Wallet, any: ["money.view"] },
+      { href: adminRoutes.payments, label: "Payments", icon: ArrowLeftRight, any: ["money.view"] },
+      { href: adminRoutes.moneyFarms, label: "Farm accounts", icon: Banknote, any: ["money.view"], badge: "farmsNotPayable" },
       { href: adminRoutes.refunds, label: "Refunds", icon: RotateCcw, any: ["money.view"] },
       { href: adminRoutes.reconciliation, label: "Reconciliation", icon: Scale, any: ["money.view"], badge: "moneyProblems" },
     ],

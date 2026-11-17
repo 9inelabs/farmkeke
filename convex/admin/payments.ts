@@ -1,5 +1,6 @@
-// A-63 Refunds, A-64 Payouts, A-65 Payment reconciliation. Finance staff
-// retry failed money movements and settle mismatched or unmatched payments.
+// A-63 Refunds, A-65 Payment reconciliation. Finance staff retry failed
+// refunds and settle mismatched or unmatched payments. (Farms are paid by the
+// Paystack split, so there are no payouts to send.)
 // Every change is audited with a reason.
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
@@ -10,36 +11,8 @@ import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { BANKS } from "../lib/banks";
 import { paymentsLive, paystack } from "../lib/paystack";
-import { freshReference } from "../payments/payouts";
-import { payoutStatus, refundStatus } from "../schema";
+import { refundStatus } from "../schema";
 
-
-async function payoutRow(ctx: QueryCtx, p: Doc<"payouts">) {
-  const farm = await ctx.db.get("farms", p.farmId);
-  const items = await ctx.db
-    .query("payoutItems")
-    .withIndex("by_payoutId", (q) => q.eq("payoutId", p._id))
-    .take(50);
-  return {
-    _id: p._id,
-    farmId: p.farmId,
-    farmName: farm?.name ?? "Farm",
-    amountKobo: p.amountKobo,
-    status: p.status,
-    reference: p.reference,
-    provider: p.provider,
-    simulated: p.provider === "simulated",
-    sending: p.sending === true,
-    transferCode: p.transferCode ?? null,
-    bankName: p.bankName,
-    accountLast4: p.accountLast4,
-    failureReason: p.failureReason ?? null,
-    attempts: p.attempts,
-    createdAt: p._creationTime,
-    sentAt: p.sentAt ?? null,
-    orderCount: items.length,
-  };
-}
 
 async function refundRow(ctx: QueryCtx, r: Doc<"refunds">) {
   const order = await ctx.db.get("orders", r.orderId);
@@ -64,52 +37,10 @@ async function refundRow(ctx: QueryCtx, r: Doc<"refunds">) {
     expectedAt: r.expectedAt ?? null,
     settledAt: r.settledAt ?? null,
     disputeId: r.disputeId ?? null,
+    // What the farm owes back for this refund (taken from its next orders)
+    farmDebtKobo: r.farmDebtKobo ?? 0,
   };
 }
-
-export const payouts = query({
-  args: { paginationOpts: paginationOptsValidator, status: payoutStatus },
-  handler: async (ctx, args) => {
-    await requireStaff(ctx, "money.view");
-    const result = await ctx.db
-      .query("payouts")
-      .withIndex("by_status", (q) => q.eq("status", args.status))
-      .order("desc")
-      .paginate(args.paginationOpts);
-    return { ...result, page: await Promise.all(result.page.map((p) => payoutRow(ctx, p))) };
-  },
-});
-
-export const payout = query({
-  args: { payoutId: v.id("payouts") },
-  handler: async (ctx, args) => {
-    await requireStaff(ctx, "money.view");
-    const p = await ctx.db.get("payouts", args.payoutId);
-    if (p === null) return null;
-    const items = await ctx.db
-      .query("payoutItems")
-      .withIndex("by_payoutId", (q) => q.eq("payoutId", p._id))
-      .take(100);
-    const entries = await ctx.db
-      .query("ledgerEntries")
-      .withIndex("by_payoutId", (q) => q.eq("payoutId", p._id))
-      .take(50);
-    return {
-      ...(await payoutRow(ctx, p)),
-      recipientCode: p.recipientCode ?? null,
-      items: await Promise.all(
-        items.map(async (i) => ({
-          orderId: i.orderId,
-          orderNumber: (await ctx.db.get("orders", i.orderId))?.number ?? "",
-          itemsTotalKobo: i.itemsTotalKobo,
-          commissionKobo: i.commissionKobo,
-          amountKobo: i.amountKobo,
-        })),
-      ),
-      ledger: entries.map((e) => ({ _id: e._id, kind: e.kind, amountKobo: e.amountKobo, status: e.status, at: e._creationTime })),
-    };
-  },
-});
 
 export const refunds = query({
   args: { paginationOpts: paginationOptsValidator, status: refundStatus },
@@ -164,10 +95,6 @@ export const reconciliation = query({
       .query("refunds")
       .withIndex("by_status", (q) => q.eq("status", "failed"))
       .take(100);
-    const failedPayouts = await ctx.db
-      .query("payouts")
-      .withIndex("by_status", (q) => q.eq("status", "failed"))
-      .take(100);
     return {
       live: paymentsLive(),
       mismatches: await Promise.all(
@@ -196,7 +123,6 @@ export const reconciliation = query({
         at: e._creationTime,
       })),
       failedRefundCount: failedRefunds.length,
-      failedPayoutCount: failedPayouts.length,
     };
   },
 });
@@ -267,28 +193,6 @@ export const resolveUnmatched = mutation({
       resolvedBy: staff._id,
       resolveReason: args.reason.trim(),
     });
-  },
-});
-
-/** A-64: send a failed payout again, with a new Paystack reference. */
-export const retryPayout = mutation({
-  args: { payoutId: v.id("payouts"), reason: v.string() },
-  handler: async (ctx, args) => {
-    const staff = await requireStaff(ctx, "money.manage");
-    const payout = await ctx.db.get("payouts", args.payoutId);
-    if (payout === null) throw new ConvexError({ code: "NOT_FOUND" });
-    if (payout.status !== "failed") throw new ConvexError({ code: "NOT_FAILED", status: payout.status });
-    await writeAudit(ctx, {
-      actorId: staff._id,
-      action: "payments.retry_payout",
-      targetTable: "payouts",
-      targetId: payout._id,
-      reason: args.reason,
-      details: { reference: payout.reference, amountKobo: payout.amountKobo },
-    });
-    const reference = await freshReference(ctx, payout);
-    await ctx.scheduler.runAfter(0, internal.payments.payouts.send, { payoutId: payout._id });
-    return { reference };
   },
 });
 

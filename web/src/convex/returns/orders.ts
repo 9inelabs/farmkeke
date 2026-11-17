@@ -111,8 +111,11 @@ export type OrderDetail = {
   events: Array<{ kind: string; status: string; at: number; actorKind?: string; note: string | null }>;
   pickupCode: string | null;
   contact: { name: string; phone: string | null; email?: string };
-  canConfirm: boolean;
+  /** The rider is bringing it: the shopper can say it arrived */
+  canMarkArrived: boolean;
+  /** Problems can be reported until the order closes (a day after delivery or collection) */
   canReport: boolean;
+  reportBy: number | null;
   viewOnly: boolean;
   /** Phase 5 (W-51c, view only): the order's email, masked ("a***@gmail.com"); null without one */
   linkEmailHint?: string | null;
@@ -360,7 +363,7 @@ export function toOrderView(raw: unknown): OrderView | null {
   const dispute = obj(o, "dispute");
   const review = obj(o, "review");
   const viewOnly = bool(o, "viewOnly", "readOnly");
-  const canConfirm = bool(o, "canConfirm", "canAct", "isOwner", "mine");
+  const canAct = bool(o, "canReport", "canAct", "isOwner", "mine");
   const stage = stageOf(status);
   return {
     id,
@@ -407,7 +410,7 @@ export function toOrderView(raw: unknown): OrderView | null {
           }
         : undefined,
     contactPhone: str(contact, "phone") ?? str(o, "phone", "contactPhone"),
-    canAct: viewOnly === true ? false : canConfirm ?? true,
+    canAct: viewOnly === true ? false : canAct ?? true,
     disputeId: str(o, "disputeId") ?? str(dispute, "_id", "id"),
     hasRefund: !!(bool(o, "hasRefund") ?? obj(o, "refund")),
     reviewed: !!(bool(o, "reviewed", "hasReview") ?? review),
@@ -699,7 +702,6 @@ export type DisputeDetail = {
     stanceLabel?: string | null;
   } | null;
   decision: { outcome: "released" | "refunded" | "split"; refundKobo: number; releaseKobo: number; note: string; at: number | null } | null;
-  heldKobo: number;
   deliveryFeeKobo: number;
   itemsTotalKobo: number;
   canMessage: boolean;

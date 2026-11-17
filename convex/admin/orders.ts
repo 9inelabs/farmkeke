@@ -44,7 +44,6 @@ async function adminRow(ctx: QueryCtx, o: Doc<"orders">) {
     ...(await orderRow(ctx, o)),
     consumerName: o.contact.name,
     consumerPhone: o.contact.phone,
-    escrowHold: o.escrowHold === true,
     riderId: o.riderId ?? null,
     disputeId: o.disputeId ?? null,
     unconfirmedFlaggedAt: o.unconfirmedFlaggedAt ?? null,
@@ -127,10 +126,6 @@ export const get = query({
       .query("refunds")
       .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
       .take(20);
-    const payoutItems = await ctx.db
-      .query("payoutItems")
-      .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
-      .take(10);
     const conversation = await ctx.db
       .query("conversations")
       .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
@@ -148,8 +143,10 @@ export const get = query({
     }
     return {
       ...(await orderCore(ctx, order)),
-      escrowHold: order.escrowHold === true,
-      holdReason: order.holdReason ?? null,
+      // The Paystack split: what the farm was sent, Farmkeke's commission, and any debt taken back
+      farmShareKobo: order.farmShareKobo ?? null,
+      commissionKobo: order.commissionKobo ?? null,
+      recoveredKobo: order.recoveredKobo ?? null,
       pickupCode: order.pickupCode ?? null,
       contact: order.contact,
       street: order.address?.street ?? null,
@@ -182,8 +179,7 @@ export const get = query({
               canPrice: order.fulfilment === "delivery" && checkout.status === "awaiting_bill" && ["accepted", "preparing", "ready_for_rider"].includes(order.status),
             },
       unconfirmedFlaggedAt: order.unconfirmedFlaggedAt ?? null,
-      refunds: refunds.map((r) => ({ _id: r._id, amountKobo: r.amountKobo, kind: r.kind, status: r.status, reason: r.reason, at: r._creationTime })),
-      payoutIds: payoutItems.map((p) => p.payoutId),
+      refunds: refunds.map((r) => ({ _id: r._id, amountKobo: r.amountKobo, kind: r.kind, status: r.status, reason: r.reason, at: r._creationTime, farmDebtKobo: r.farmDebtKobo ?? 0 })),
       conversationId: conversation?._id ?? null,
       timeline: events.map((e) => ({
         _id: e._id,
@@ -227,7 +223,7 @@ export const cancel = mutation({
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (!CANCELLABLE.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     const reason = args.reason.trim();
-    const paid = order.escrow === "held" || (order.escrow === "released" && order.farmShareKobo !== undefined);
+    const paid = order.escrow === "released" && order.farmShareKobo !== undefined;
     await writeAudit(ctx, {
       actorId: staff._id,
       action: "order.cancel",
@@ -370,8 +366,6 @@ export const stuck = query({
     await scan("with_rider", (o) => ((o.handedOverAt ?? o._creationTime) < now - 24 * HOUR ? "not_at_pickup_point" : null));
     await scan("at_pickup_point", (o) => (o.collectBy !== undefined && o.collectBy < now ? "not_collected" : null));
     await scan("ready_for_collection", (o) => (o.collectBy !== undefined && o.collectBy < now ? "not_collected" : null));
-    await scan("delivered", (o) => (o.unconfirmedFlaggedAt !== undefined ? "unconfirmed" : null));
-    await scan("collected", (o) => (o.unconfirmedFlaggedAt !== undefined ? "unconfirmed" : null));
     return await Promise.all(out.map(async ({ order, reason }) => ({ ...(await adminRow(ctx, order)), reason })));
   },
 });

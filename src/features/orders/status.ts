@@ -81,7 +81,8 @@ export function timingText(o: RowLike, now: number): string {
     return `${o.status === "collected" ? "Collected" : "Delivered"} ${relDay(o.deliveredAt, now)}, ${hm(o.deliveredAt)}`;
   }
   if (o.status === "placed" || o.status === "paid") return "Waiting for the farm to accept";
-  if (o.fulfilment === "delivery" && o.paid === false && ["accepted", "preparing", "ready_for_rider"].includes(o.status)) {
+  // Every order is billed once the farm accepts (pickup too)
+  if (o.paid === false && ["accepted", "preparing", "ready_for_rider", "ready_for_collection"].includes(o.status)) {
     return o.billReady ? "Your bill is ready. Pay now" : "Waiting for your bill";
   }
   if (o.status === "ready_for_collection") return "Ready to collect at the farm";
@@ -92,4 +93,5 @@ export function timingText(o: RowLike, now: number): string {
   return `Ordered ${dayLabel(o.placedAt)}`;
 }
 
-export const awaitsConfirm = (status: string) => status === "delivered" || status === "collected";
+/** Reached the shopper: problems can be reported until the order closes a day later. */
+export const justArrived = (status: string) => status === "delivered" || status === "collected";

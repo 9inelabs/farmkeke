@@ -1438,12 +1438,6 @@
             },
             "optional": true
           },
-          "releaseKobo": {
-            "fieldType": {
-              "type": "number"
-            },
-            "optional": true
-          },
           "chargeFarm": {
             "fieldType": {
               "type": "boolean"
@@ -1532,7 +1526,7 @@
       "returns": null
     },
     {
-      "identifier": "admin/exports.js:orders",
+      "identifier": "admin/exports.js:farmShares",
       "functionType": "Query",
       "visibility": {
         "kind": "public"
@@ -1557,7 +1551,7 @@
       "returns": null
     },
     {
-      "identifier": "admin/exports.js:payouts",
+      "identifier": "admin/exports.js:orders",
       "functionType": "Query",
       "visibility": {
         "kind": "public"
@@ -2243,189 +2237,6 @@
             "optional": false
           }
         }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:list",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "paginationOpts": {
-            "fieldType": {
-              "type": "object",
-              "value": {
-                "numItems": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": false
-                },
-                "cursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": false
-                },
-                "endCursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": true
-                },
-                "id": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumRowsRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumBytesRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                }
-              }
-            },
-            "optional": false
-          },
-          "state": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "literal",
-                  "value": "none"
-                },
-                {
-                  "type": "literal",
-                  "value": "held"
-                },
-                {
-                  "type": "literal",
-                  "value": "released"
-                },
-                {
-                  "type": "literal",
-                  "value": "refunded"
-                },
-                {
-                  "type": "literal",
-                  "value": "split"
-                }
-              ]
-            },
-            "optional": true
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:release",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:releaseQueue",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:setHold",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          },
-          "hold": {
-            "fieldType": {
-              "type": "boolean"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/ledger.js:summary",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {}
       },
       "returns": null
     },
@@ -3237,6 +3048,178 @@
       "returns": null
     },
     {
+      "identifier": "admin/money.js:farms",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "show": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "owing"
+                },
+                {
+                  "type": "literal",
+                  "value": "paystack"
+                }
+              ]
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:forgiveDebt",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          },
+          "amountKobo": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:overview",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:payments",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                },
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/money.js:retryPaystack",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "farmId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "farms"
+            },
+            "optional": false
+          },
+          "reason": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/orders.js:addNote",
       "functionType": "Mutation",
       "visibility": {
@@ -3620,119 +3603,6 @@
       "returns": null
     },
     {
-      "identifier": "admin/payments.js:payout",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/payments.js:payouts",
-      "functionType": "Query",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "paginationOpts": {
-            "fieldType": {
-              "type": "object",
-              "value": {
-                "numItems": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": false
-                },
-                "cursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": false
-                },
-                "endCursor": {
-                  "fieldType": {
-                    "type": "union",
-                    "value": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "optional": true
-                },
-                "id": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumRowsRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                },
-                "maximumBytesRead": {
-                  "fieldType": {
-                    "type": "number"
-                  },
-                  "optional": true
-                }
-              }
-            },
-            "optional": false
-          },
-          "status": {
-            "fieldType": {
-              "type": "union",
-              "value": [
-                {
-                  "type": "literal",
-                  "value": "pending"
-                },
-                {
-                  "type": "literal",
-                  "value": "sent"
-                },
-                {
-                  "type": "literal",
-                  "value": "failed"
-                }
-              ]
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "admin/payments.js:reconciliation",
       "functionType": "Query",
       "visibility": {
@@ -3912,32 +3782,6 @@
             "fieldType": {
               "type": "id",
               "tableName": "unmatchedPaymentEvents"
-            },
-            "optional": false
-          },
-          "reason": {
-            "fieldType": {
-              "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "admin/payments.js:retryPayout",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "payoutId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "payouts"
             },
             "optional": false
           },

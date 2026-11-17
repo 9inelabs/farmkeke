@@ -1,7 +1,7 @@
 "use client";
 
 // W-43 Account overview: greeting, a "was delivered" banner when an order
-// waits for confirmation, three summary cards, active orders and Buy again
+// just arrived (problems can be reported for a day), three summary cards, active orders and Buy again
 // (orders.consumer.recentItems: recently bought items that can still be bought).
 import { useQuery } from "convex/react";
 import { PackageCheck } from "lucide-react";
@@ -10,10 +10,9 @@ import { useState } from "react";
 import { AccountShell, AccountTitle } from "@/components/account/AccountShell";
 import { AddListing } from "@/components/account/AddListing";
 import { Thumb } from "@/components/cart/parts";
-import { ConfirmReceiptModal } from "@/components/orders/ConfirmReceipt";
 import { firstName } from "@/components/orders/format";
-import { awaitsConfirm, badgeFor, timingText } from "@/components/orders/rows";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { justArrived, badgeFor, timingText } from "@/components/orders/rows";
+import { ButtonLink } from "@/components/ui/Button";
 import { QuietBoundary } from "@/components/system/QuietBoundary";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
@@ -44,11 +43,10 @@ function Overview() {
   const orders = useQuery(api.orders.consumer.list, {}) as OrderRow[] | undefined;
   const saved = useQuery(api.favorites.list, {}) as FavoriteItem[] | undefined;
   const addresses = useQuery(api.addresses.list, {}) as SavedAddress[] | undefined;
-  const [confirming, setConfirming] = useState<string | null>(null);
 
   const active = (orders ?? []).filter((o) => o.isActive && o.status !== "awaiting_payment");
-  const held = active.reduce((s, o) => s + (o.escrow === "held" ? o.totalKobo : 0), 0);
-  const delivered = active.find(awaitsConfirm);
+  const toPay = active.filter((o) => o.paid === false && o.billReady === true).length;
+  const delivered = active.find(justArrived);
   const backInStock = (saved ?? []).filter((s) => s.backInStock).length;
   const availableNow = (saved ?? []).filter((s) => s.available).length;
   const def = addresses?.find((a) => a.isDefault);
@@ -67,16 +65,16 @@ function Overview() {
             <div className="text-base font-bold">
               {delivered.number} from {delivered.farmName} was {delivered.status === "collected" ? "collected" : "delivered"}
             </div>
-            <div className="mt-0.5 text-sm text-on-forest">Check everything arrived, then confirm so the farmer gets paid.</div>
+            <div className="mt-0.5 text-sm text-on-forest">Check everything arrived. Something wrong? Report it within a day.</div>
           </div>
-          <Button variant="lime" className="text-sm" onClick={() => setConfirming(delivered._id)}>
-            Confirm receipt
-          </Button>
+          <ButtonLink href={routes.order(delivered._id)} variant="lime" className="text-sm">
+            View order
+          </ButtonLink>
         </section>
       ) : null}
 
       <div className="grid grid-cols-3 gap-4 m:grid-cols-1">
-        <Stat href={routes.myOrders} label="Active orders" value={orders ? String(active.length) : undefined} detail={`${naira(held)} held safely`} />
+        <Stat href={routes.myOrders} label="Active orders" value={orders ? String(active.length) : undefined} detail={toPay > 0 ? `${toPay} ${toPay === 1 ? "bill" : "bills"} to pay` : "Track them from My orders"} />
         <Stat
           href={routes.saved}
           label="Saved items"
@@ -133,15 +131,9 @@ function Overview() {
                     </div>
                   </div>
                   <span className={`badge ${badge.cls}`}>{badge.label}</span>
-                  {awaitsConfirm(o) ? (
-                    <Button variant="lime" size="sm" onClick={() => setConfirming(o._id)}>
-                      Confirm receipt
-                    </Button>
-                  ) : (
-                    <ButtonLink href={routes.order(o._id)} variant="ghost" size="sm">
-                      Track<span className="sr-only"> {o.number}</span>
-                    </ButtonLink>
-                  )}
+                  <ButtonLink href={routes.order(o._id)} variant="ghost" size="sm">
+                    Track<span className="sr-only"> {o.number}</span>
+                  </ButtonLink>
                 </li>
               );
             })}
@@ -153,7 +145,6 @@ function Overview() {
         <BuyAgain />
       </QuietBoundary>
 
-      {confirming ? <ConfirmReceiptModal orderId={confirming} open onClose={() => setConfirming(null)} /> : null}
     </>
   );
 }

@@ -64,13 +64,13 @@ export const admin = {
     list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status"?: "open" | "farmer_responded" | "resolved" }, any>("admin/disputes:list"),
     markRead: makeFunctionReference<"mutation", { "disputeId": Id<"disputes"> }, any>("admin/disputes:markRead"),
     openCount: makeFunctionReference<"query", Record<string, never>, any>("admin/disputes:openCount"),
-    resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "releaseKobo"?: number; "chargeFarm"?: boolean }, any>("admin/disputes:resolve"),
+    resolve: makeFunctionReference<"mutation", { "disputeId": Id<"disputes">; "note": string; "outcome": "released" | "refunded" | "split"; "reason": string; "refundKobo"?: number; "chargeFarm"?: boolean }, any>("admin/disputes:resolve"),
     sendMessage: makeFunctionReference<"mutation", { "audience": "consumer" | "farmer"; "body": string; "disputeId": Id<"disputes">; "photoIds": Array<Id<"_storage">> }, any>("admin/disputes:sendMessage"),
   },
   exports: {
     customers: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:customers"),
+    farmShares: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:farmShares"),
     orders: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:orders"),
-    payouts: makeFunctionReference<"query", { "from": number; "to": number }, any>("admin/exports:payouts"),
   },
   farmerRequests: {
     approve: makeFunctionReference<"mutation", { "applicationId": Id<"farmerApplications">; "reason": string }, any>("admin/farmerRequests:approve"),
@@ -95,11 +95,6 @@ export const admin = {
   },
   ledger: {
     entries: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("admin/ledger:entries"),
-    list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "state"?: "none" | "held" | "released" | "refunded" | "split" }, any>("admin/ledger:list"),
-    release: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string }, any>("admin/ledger:release"),
-    releaseQueue: makeFunctionReference<"query", Record<string, never>, any>("admin/ledger:releaseQueue"),
-    setHold: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "hold": boolean; "reason": string }, any>("admin/ledger:setHold"),
-    summary: makeFunctionReference<"query", Record<string, never>, any>("admin/ledger:summary"),
   },
   listings: {
     approve: makeFunctionReference<"mutation", { "listingId": Id<"listings">; "reason": string }, any>("admin/listings:approve"),
@@ -119,6 +114,13 @@ export const admin = {
     sendTest: makeFunctionReference<"mutation", { "side": "shop" | "farm" | "both"; "audience": "everyone" | "one"; "contact"?: string; "kind": "update" | "offer"; "title": string; "body": string; "link": { "to": "message" | "home" | "orders" | "product" | "farm" | "category" | "dashboard" | "listings" | "sales" | "earnings"; "id"?: string } }, any>("admin/messages:sendTest"),
     withdraw: makeFunctionReference<"mutation", { "broadcastId": Id<"broadcasts"> }, any>("admin/messages:withdraw"),
   },
+  money: {
+    farms: makeFunctionReference<"query", { "show": "owing" | "paystack" }, any>("admin/money:farms"),
+    forgiveDebt: makeFunctionReference<"mutation", { "farmId": Id<"farms">; "amountKobo": number; "reason": string }, any>("admin/money:forgiveDebt"),
+    overview: makeFunctionReference<"query", Record<string, never>, any>("admin/money:overview"),
+    payments: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number } }, any>("admin/money:payments"),
+    retryPaystack: makeFunctionReference<"mutation", { "farmId": Id<"farms">; "reason": string }, any>("admin/money:retryPaystack"),
+  },
   orders: {
     addNote: makeFunctionReference<"mutation", { "note": string; "orderId": Id<"orders"> }, any>("admin/orders:addNote"),
     cancel: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "reason": string; "chargeFarm"?: boolean }, any>("admin/orders:cancel"),
@@ -131,14 +133,11 @@ export const admin = {
   },
   payments: {
     checkBankList: makeFunctionReference<"action", Record<string, never>, any>("admin/payments:checkBankList"),
-    payout: makeFunctionReference<"query", { "payoutId": Id<"payouts"> }, any>("admin/payments:payout"),
-    payouts: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status": "pending" | "sent" | "failed" }, any>("admin/payments:payouts"),
     reconciliation: makeFunctionReference<"query", Record<string, never>, any>("admin/payments:reconciliation"),
     refunds: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "status": "queued" | "sending" | "processing" | "processed" | "failed" }, any>("admin/payments:refunds"),
     refundsWaiting: makeFunctionReference<"query", Record<string, never>, any>("admin/payments:refundsWaiting"),
     resolveMismatch: makeFunctionReference<"mutation", { "attemptId": Id<"paymentAttempts">; "decision": "refund" | "dismiss"; "reason": string }, any>("admin/payments:resolveMismatch"),
     resolveUnmatched: makeFunctionReference<"mutation", { "eventId": Id<"unmatchedPaymentEvents">; "reason": string }, any>("admin/payments:resolveUnmatched"),
-    retryPayout: makeFunctionReference<"mutation", { "payoutId": Id<"payouts">; "reason": string }, any>("admin/payments:retryPayout"),
     retryRefund: makeFunctionReference<"mutation", { "reason": string; "refundId": Id<"refunds"> }, any>("admin/payments:retryRefund"),
   },
   platform: {

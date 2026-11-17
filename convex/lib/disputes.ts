@@ -136,8 +136,6 @@ export async function disputeView(ctx: QueryCtx, dispute: Doc<"disputes">, viewe
             note: dispute.decisionNote ?? "",
             at: dispute.decidedAt ?? null,
           },
-    // W-54 "₦12,700 still held"
-    heldKobo: order?.escrow === "held" ? order.totalKobo : 0,
     deliveryFeeKobo: order?.deliveryFeeKobo ?? 0,
     itemsTotalKobo: order?.itemsTotalKobo ?? 0,
     canMessage: dispute.status !== "resolved",

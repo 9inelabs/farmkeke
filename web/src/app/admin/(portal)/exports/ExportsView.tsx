@@ -1,6 +1,6 @@
 "use client";
 
-// CSV downloads for spreadsheets: orders, payouts to farms, and customers,
+// CSV downloads for spreadsheets: orders, payments to farms, and customers,
 // between two dates (Lagos time), up to 5,000 rows each.
 import { useConvex } from "convex/react";
 import { Download } from "lucide-react";
@@ -13,10 +13,10 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
 import { todayInLagos } from "@/lib/format";
 
-type Kind = "orders" | "payouts" | "customers";
+type Kind = "orders" | "farmShares" | "customers";
 const KINDS: { key: Kind; label: string; permission: string; description: string }[] = [
   { key: "orders", label: "Orders", permission: "orders.view", description: "Number, dates, status, money, farm, shopper and amounts in naira." },
-  { key: "payouts", label: "Payouts to farms", permission: "money.view", description: "Date, farm, amount, status, Paystack reference and bank." },
+  { key: "farmShares", label: "Payments to farms", permission: "money.view", description: "Each farm's share of each payment as Paystack split it: date, order, farm, share, commission and any refund taken back." },
   { key: "customers", label: "Customers", permission: "customers.view", description: "Accounts that joined: name, email, phone and whether blocked." },
 ];
 
@@ -72,19 +72,21 @@ export function ExportsView() {
           total_ngn: nairaPlain(o.totalKobo as number),
           paid: iso(o.paidAt as number | null),
           delivered: iso(o.deliveredAt as number | null),
+          farm_share_ngn: o.farmShareKobo === null ? "" : nairaPlain(o.farmShareKobo as number),
+          commission_ngn: o.commissionKobo === null ? "" : nairaPlain(o.commissionKobo as number),
         }));
         capped = r.capped;
-      } else if (kind === "payouts") {
-        const r = (await convex.query(admin.exports.payouts, range)) as { rows: Record<string, number | string | boolean | null>[]; capped: boolean };
+      } else if (kind === "farmShares") {
+        const r = (await convex.query(admin.exports.farmShares, range)) as { rows: Record<string, number | string | boolean>[]; capped: boolean };
         rows = r.rows.map((p) => ({
-          created: iso(p.createdAt as number),
-          farm: p.farm,
-          amount_ngn: nairaPlain(p.amountKobo as number),
-          status: p.status,
+          paid: iso(p.paidAt as number),
           reference: p.reference,
-          bank: p.bank,
-          account_last4: p.accountLast4,
-          sent: iso(p.sentAt as number | null),
+          order: p.order,
+          farm: p.farm,
+          share_ngn: nairaPlain(p.shareKobo as number),
+          commission_ngn: nairaPlain(p.commissionKobo as number),
+          refund_taken_back_ngn: nairaPlain(p.recoveredKobo as number),
+          paystack_split: p.splitCode,
           test: p.test ? "yes" : "no",
         }));
         capped = r.capped;

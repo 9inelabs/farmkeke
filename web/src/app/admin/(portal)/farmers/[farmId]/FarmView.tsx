@@ -17,7 +17,7 @@ import { TextArea, TextField } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
 import type { Id } from "@/convex/api";
 import type { FarmDetail, FarmDocument, ListingRow } from "@/convex/returns/adminFarms";
-import { dateTime, displayPhone } from "@/lib/format";
+import { dateTime, displayPhone, naira } from "@/lib/format";
 
 type Dialog = "edit" | "trust" | "suspend" | null;
 
@@ -115,14 +115,33 @@ export function FarmView({ farmId }: { farmId: string }) {
               ]}
             />
           </Panel>
-          <Panel title="Payout account">
+          <Panel title="Bank account and Paystack">
             <Facts
               items={[
                 { label: "Bank", value: farm.bankName },
                 { label: "Account number", value: farm.accountNumber },
                 { label: "Account name", value: farm.accountName },
+                {
+                  label: "Paystack",
+                  value: farm.subaccountError ? (
+                    <span className="text-err">Can&apos;t pay this farm: {farm.subaccountError}</span>
+                  ) : farm.paystackSubaccountCode ? (
+                    `Ready (${farm.paystackSubaccountCode})`
+                  ) : (
+                    "Not set up yet. Retried every hour"
+                  ),
+                },
+                {
+                  label: "Owes for refunds",
+                  value: (farm.owedKobo ?? 0) > 0 ? naira(farm.owedKobo ?? 0) : (farm.owedKobo ?? 0) < 0 ? `Credit ${naira(-(farm.owedKobo ?? 0))}` : "Nothing",
+                },
               ]}
             />
+            {farm.subaccountError || (farm.owedKobo ?? 0) !== 0 ? (
+              <Link href={`${adminRoutes.moneyFarms}${farm.subaccountError ? "?show=paystack" : ""}`} className="mt-3 inline-flex text-sm font-semibold">
+                Open Farm accounts
+              </Link>
+            ) : null}
           </Panel>
           <Panel title="Documents">
             <DocumentGrid

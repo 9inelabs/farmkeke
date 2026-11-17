@@ -40,37 +40,45 @@ export const orders = query({
         totalKobo: o.totalKobo,
         paidAt: o.paidAt ?? null,
         deliveredAt: o.deliveredAt ?? null,
+        farmShareKobo: o.farmShareKobo ?? null,
+        commissionKobo: o.commissionKobo ?? null,
       });
     }
     return { rows: out, capped: rows.length === MAX };
   },
 });
 
-export const payouts = query({
+/** Each farm's share of each payment, as Paystack split it (the farm's money goes straight to its bank). */
+export const farmShares = query({
   args: range,
   handler: async (ctx, args) => {
     await requireStaff(ctx, "money.view");
     checkRange(args.from, args.to);
-    const rows = await ctx.db
-      .query("payouts")
-      .withIndex("by_creation_time", (q) => q.gte("_creationTime", args.from).lt("_creationTime", args.to))
+    const attempts = await ctx.db
+      .query("paymentAttempts")
+      .withIndex("by_status", (q) => q.eq("status", "success").gte("_creationTime", args.from).lt("_creationTime", args.to))
       .order("desc")
       .take(MAX);
+    const farms = new Map<string, string>();
     const out = [];
-    for (const p of rows) {
-      out.push({
-        createdAt: p._creationTime,
-        farm: (await ctx.db.get("farms", p.farmId))?.name ?? "",
-        amountKobo: p.amountKobo,
-        status: p.status,
-        reference: p.reference,
-        bank: p.bankName,
-        accountLast4: p.accountLast4,
-        sentAt: p.sentAt ?? null,
-        test: p.provider === "simulated",
-      });
+    for (const a of attempts) {
+      for (const p of a.split ?? []) {
+        if (!farms.has(p.farmId)) farms.set(p.farmId, (await ctx.db.get("farms", p.farmId))?.name ?? "");
+        out.push({
+          paidAt: a.paidAt ?? a._creationTime,
+          reference: a.reference,
+          order: (await ctx.db.get("orders", p.orderId))?.number ?? "",
+          farm: farms.get(p.farmId) ?? "",
+          shareKobo: p.shareKobo,
+          commissionKobo: p.commissionKobo,
+          // Taken back for an earlier refund (negative: a credit paid)
+          recoveredKobo: p.recoveredKobo,
+          splitCode: a.splitCode ?? "",
+          test: a.provider === "simulated",
+        });
+      }
     }
-    return { rows: out, capped: rows.length === MAX };
+    return { rows: out, capped: attempts.length === MAX };
   },
 });
 

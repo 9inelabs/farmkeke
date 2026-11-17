@@ -211,3 +211,29 @@ test("problems can be reported until the order closes a day after delivery; a fu
   expect(r.refund.farmDebtKobo ?? 0).toBe(0);
   expect(r.farm.owedKobo ?? 0).toBe(0);
 });
+
+test("farmer earnings: shares paid, the fee, refunds owed and paid back; the dashboard's last 30 days", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const farmer = as(t, s.farmerA);
+  // Two paid orders, one refunded by Farmkeke (the farm owes its share back)
+  const first = await paidOrder(t, s, s.account, "pickup", 1);
+  const second = await paidOrder(t, s, s.account, "pickup", 1);
+  await as(t, s.admin).mutation(api.admin.orders.cancel, { orderId: second, reason: "Farm can't supply" });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  // A third order pays some of the debt back
+  await paidOrder(t, s, s.account, "pickup", 1);
+
+  const summary = (await farmer.query(api.earnings.summary, {}))!;
+  // 427,500 + 427,500 shares sent; the third share was taken for the debt
+  expect(summary).toMatchObject({ earnedKobo: 855000, paidOrders: 3, commissionKobo: 67500, owedKobo: 0, creditKobo: 0, recoveredKobo: 427500, paystack: "test" });
+  const tx = await farmer.query(api.earnings.transactions, { paginationOpts: { numItems: 20, cursor: null } });
+  expect(tx.page.map((e: any) => e.direction).sort()).toEqual(["fee", "fee", "fee", "in", "in", "in", "owed", "recovered"]);
+  const dash = (await farmer.query(api.orders.farmer.dashboard, {}))!;
+  expect(dash).toMatchObject({ paid30dKobo: 855000, owedKobo: 0 });
+  // The farm's own view of an order shows what Paystack sent, and the fee
+  const view = (await farmer.query(api.orders.farmer.get, { orderId: first }))!;
+  expect(view.money).toMatchObject({ productKobo: 450000, feeKobo: 22500, recoveredKobo: 0, netKobo: 427500, final: true });
+  // Another farm sees none of it
+  expect(await as(t, s.farmerB).query(api.earnings.summary, {})).toMatchObject({ earnedKobo: 0, paidOrders: 0 });
+});

@@ -34,7 +34,7 @@ export function ReconciliationView() {
     <>
       <PageHeader
         title="Reconciliation"
-        description="Payments that need a person: amounts that didn't match, Paystack events we couldn't place, and failed money movements."
+        description="Payments that need a person: amounts that didn't match, Paystack events we couldn't place, and failed refunds."
       />
       {!data.live ? (
         <div className="mb-4">
@@ -48,10 +48,6 @@ export function ReconciliationView() {
       ) : null}
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-2 gap-4 m:grid-cols-1">
-          <Link href={adminRoutes.payouts} className="card flex flex-col gap-1 p-5 hover:shadow-[inset_0_0_0_1px_var(--color-forest)]">
-            <span className="font-display text-[24px] font-extrabold text-ink">{data.failedPayoutCount}</span>
-            <span className="text-sm text-muted">Failed payouts to farms</span>
-          </Link>
           <Link href={adminRoutes.refunds} className="card flex flex-col gap-1 p-5 hover:shadow-[inset_0_0_0_1px_var(--color-forest)]">
             <span className="font-display text-[24px] font-extrabold text-ink">{data.failedRefundCount}</span>
             <span className="text-sm text-muted">Failed refunds</span>

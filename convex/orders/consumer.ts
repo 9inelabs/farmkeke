@@ -1,6 +1,6 @@
 // Shopping side: orders (M-47, M-60 to M-66, W-50 to W-53). Guests own their
 // orders through the anonymous identity on the device that placed them, so
-// only that device can confirm. Find my order (number + phone) is view-only.
+// only that device can report a problem. Find my order (number + phone) is view-only.
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -15,12 +15,11 @@ import {
   orderCore,
   orderRow,
   pickupPointView,
-  releaseOrder,
-  shopperCanConfirm,
-  transition,
+  reachedShopper,
+  reportBy,
 } from "../lib/orders";
 import { normalizeNigerianPhone } from "../lib/phone";
-import { DAY, HOUR } from "../lib/settings";
+import { DAY, getRules, HOUR } from "../lib/settings";
 
 const CLAIM_TOKEN_MS = HOUR;
 // W-42 / W-44: the emailed link to add guest orders found by email
@@ -70,7 +69,7 @@ async function billView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) 
 
 async function consumerView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boolean) {
   const core = await orderCore(ctx, order);
-  const canConfirm = !viewOnly && shopperCanConfirm(order);
+  const closesAt = reportBy(order, await getRules(ctx));
   return {
     ...core,
     bill: await billView(ctx, order, viewOnly),
@@ -78,8 +77,11 @@ async function consumerView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boole
     pickupCode: viewOnly ? null : (order.pickupCode ?? null),
     contact: viewOnly ? { name: order.contact.name.split(/\s+/)[0] ?? "", phone: null } : order.contact,
     address: viewOnly && core.address ? { ...core.address, street: null, landmark: null, note: null } : core.address,
-    canConfirm,
-    canReport: canConfirm,
+    // The rider is bringing it: the shopper can say it arrived
+    canMarkArrived: !viewOnly && order.status === "out_for_delivery",
+    // Problems are reported until the order closes, a day after delivery or collection
+    canReport: !viewOnly && reachedShopper(order) && order.disputeId === undefined,
+    reportBy: closesAt,
     viewOnly,
     // W-51c: an account with this email picks the order up (orders are only
     // ever linked by email, never by phone). Masked; null without an email.
@@ -192,26 +194,23 @@ export const placedSummary = query({
 });
 
 /**
- * M-65 / W-52 "I received everything": completes the order and releases the
- * money. While the rider is still bringing it, this also marks it delivered.
+ * "It's arrived": the shopper marks a delivery delivered while the rider is
+ * bringing it, without waiting for staff. The farm was paid when the shopper
+ * paid (Paystack split), so this only starts the day in which a problem can be
+ * reported; the order closes by itself after that.
  */
-export const confirmReceipt = mutation({
+export const markArrived = mutation({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const order = await ctx.db.get("orders", args.orderId);
-    // Guests: only the identity (device) that placed the order can confirm.
+    // Guests: only the identity (device) that placed the order
     if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
-    if (!shopperCanConfirm(order)) {
-      throw new ConvexError({ code: "NOT_DELIVERED_YET", status: order.status });
-    }
+    if (order.status === "delivered") return null;
+    if (order.status !== "out_for_delivery") throw new ConvexError({ code: "NOT_OUT_FOR_DELIVERY", status: order.status });
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
-    const arrived = await deliveredByShopper(ctx, order, actor, "The shopper confirmed it arrived");
-    const now = Date.now();
-    const completed = await transition(ctx, arrived, "completed", actor, { confirmedAt: now, endedAt: now });
-    // A staff hold (A-62) keeps the money until it's lifted.
-    if (completed.escrow === "held" && !completed.escrowHold) await releaseOrder(ctx, completed, actor);
-    await ctx.scheduler.runAfter(DAY, internal.reviews.remind, { orderId: order._id });
+    await deliveredByShopper(ctx, order, actor, "The shopper said it arrived");
+    return null;
   },
 });
 

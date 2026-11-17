@@ -10,9 +10,8 @@ import { AccountShell, AccountTitle } from "@/components/account/AccountShell";
 import { GuestOrdersByEmail } from "@/components/account/GuestOrdersByEmail";
 import { QuietBoundary } from "@/components/system/QuietBoundary";
 import { Thumb } from "@/components/cart/parts";
-import { ConfirmReceiptModal } from "@/components/orders/ConfirmReceipt";
 import { hm, lagosDay } from "@/components/orders/format";
-import { awaitsConfirm, badgeFor, relDay, timingText } from "@/components/orders/rows";
+import { justArrived, badgeFor, relDay, timingText } from "@/components/orders/rows";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/convex/api";
@@ -69,12 +68,11 @@ function Orders() {
   const orders = useQuery(api.orders.consumer.list, {}) as OrderRow[] | undefined;
   const [tab, setTab] = useState<"active" | "past">("active");
   const [now] = useState(() => Date.now());
-  const [confirming, setConfirming] = useState<string | null>(null);
 
   if (orders === undefined)
     return (
       <>
-        <AccountTitle title="My orders" sub="Track deliveries, confirm receipt and get help with an order." />
+        <AccountTitle title="My orders" sub="Track deliveries, pay bills and get help with an order." />
         <Skeleton className="h-[200px] w-full" rounded={18} />
         <Skeleton className="h-[160px] w-full" rounded={18} />
       </>
@@ -97,7 +95,7 @@ function Orders() {
     <>
       <AccountTitle
         title="My orders"
-        sub="Track deliveries, confirm receipt and get help with an order."
+        sub="Track deliveries, pay bills and get help with an order."
         aside={
           <div role="tablist" aria-label="Orders" onKeyDown={onKey} className="flex w-max gap-1 rounded-xl bg-tabs p-1">
             {(["active", "past"] as const).map((t) => (
@@ -126,7 +124,7 @@ function Orders() {
           {active.length === 0 ? (
             <p className="card sm p-5">Nothing on the way right now. Your past orders are under Past.</p>
           ) : (
-            active.map((o) => <ActiveCard key={o._id} o={o} now={now} onConfirm={() => setConfirming(o._id)} />)
+            active.map((o) => <ActiveCard key={o._id} o={o} now={now} />)
           )}
           {past.length > 0 ? <PastList orders={past.slice(0, 3)} total={past.length} onSeeAll={() => setTab("past")} /> : null}
         </div>
@@ -136,14 +134,13 @@ function Orders() {
         </div>
       )}
 
-      {confirming ? <ConfirmReceiptModal orderId={confirming} open onClose={() => setConfirming(null)} /> : null}
     </>
   );
 }
 
-function ActiveCard({ o, now, onConfirm }: { o: OrderRow; now: number; onConfirm: () => void }) {
+function ActiveCard({ o, now }: { o: OrderRow; now: number }) {
   const badge = badgeFor(o);
-  const toConfirm = awaitsConfirm(o);
+  const arrived = justArrived(o);
   return (
     <section aria-labelledby={`o-${o._id}`} className="card p-5">
       <div className="flex flex-wrap items-center gap-3">
@@ -156,7 +153,6 @@ function ActiveCard({ o, now, onConfirm }: { o: OrderRow; now: number; onConfirm
           </div>
         </div>
         <span className={`badge ${badge.cls}`}>{badge.label}</span>
-        {o.escrow === "held" ? <span className="badge b-held">Payment held</span> : null}
       </div>
       <div className="mt-3.5 flex gap-2">
         {(o.imageUrls ?? [o.imageUrl]).map((url, i) => (
@@ -169,19 +165,19 @@ function ActiveCard({ o, now, onConfirm }: { o: OrderRow; now: number; onConfirm
           </span>
         ) : null}
       </div>
-      {toConfirm ? (
+      {arrived ? (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[14px] bg-[#F7FAF1] px-4 py-3.5">
           <span className="min-w-[220px] flex-1 text-sm text-[#2E3A28] m:min-w-0">
             {o.status === "collected" ? "Collected" : "Delivered"}
-            {o.deliveredAt ? ` ${relDay(lagosDay(o.deliveredAt), now)} at ${hm(o.deliveredAt)}` : ""}. Check your items, then
-            confirm to release payment to the farm.
+            {o.deliveredAt ? ` ${relDay(lagosDay(o.deliveredAt), now)} at ${hm(o.deliveredAt)}` : ""}. Check your items.
+            Something wrong? Report it within a day.
           </span>
           <ButtonLink href={routes.reportProblem(o._id)} variant="ghost" size="sm">
-            There&apos;s a problem
+            Report a problem
           </ButtonLink>
-          <Button variant="lime" size="sm" onClick={onConfirm}>
-            I received everything
-          </Button>
+          <ButtonLink href={routes.order(o._id)} variant="dark" size="sm">
+            View order
+          </ButtonLink>
         </div>
       ) : (
         <div className="mt-4 flex flex-wrap items-center gap-2.5">

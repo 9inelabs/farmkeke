@@ -108,6 +108,12 @@ export type FarmDetail = {
     holidayMode: boolean;
     bankName: string;
     accountNumber: string;
+    /** Paystack subaccount (the farm's share of each payment goes here) */
+    paystackSubaccountCode?: string;
+    subaccountSyncedAt?: number;
+    subaccountError?: string;
+    /** Refunds the farm owes back (negative: a credit) */
+    owedKobo?: number;
     accountName: string;
     status: "active" | "suspended";
     suspendedReason?: string;

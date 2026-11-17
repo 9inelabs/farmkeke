@@ -70,8 +70,8 @@ export default function FarmTab() {
 
             <Section title="Money">
               <Card style={styles.flush}>
-                <LinkRow icon={Bank} label="Payout account" value={farm ? `${farm.bankName} ••${farm.accountLast4}` : undefined} onPress={() => router.push("/farm/payout-account")} />
-                <LinkRow icon={Wallet} label="Payouts" onPress={() => router.push("/payouts")} />
+                <LinkRow icon={Bank} label="Bank account" value={farm ? `${farm.bankName} ••${farm.accountLast4}` : undefined} onPress={() => router.push("/farm/payout-account")} />
+                <LinkRow icon={Wallet} label="Earnings" onPress={() => router.navigate("/earnings")} />
                 <LinkRow icon={Receipt} label="Activity" onPress={() => router.push("/farm/transactions")} last />
               </Card>
             </Section>

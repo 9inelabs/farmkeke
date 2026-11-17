@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
-import { deliver, handOver, paidOrder } from "./orderFlow";
+import { closeOrder, deliver, handOver, paidOrder } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -117,11 +117,12 @@ test("dispute: reported within a day of delivery, split resolves with a part ref
   const { disputeId, number } = await guest.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "One basket was soft", photoIds: [], reason: "damaged" });
   expect(number).toBe("DSP-1001");
   await expect(guest.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "again", photoIds: [], reason: "damaged" })).rejects.toThrow(/ALREADY_REPORTED/);
-  await expect(guest.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow();
+  // An open report keeps the order from closing
+  await closeOrder(t, orderId);
+  expect((await t.run(async (ctx) => (await ctx.db.get(orderId))!)).status).toBe("disputed");
 
   const view = await guest.query(api.disputes.forOrder, { orderId });
-  // Paystack already split the payment: nothing is held
-  expect(view).toMatchObject({ status: "open", amountKobo: 900000, heldKobo: 0, reasonLabel: "Damaged or spoiled" });
+  expect(view).toMatchObject({ status: "open", amountKobo: 900000, reasonLabel: "Damaged or spoiled" });
   expect(Math.round((view!.farmReplyBy - view!.reportedAt) / 1000)).toBe(12 * 3600);
 
   const farmer = as(t, s.farmerA);
@@ -139,8 +140,8 @@ test("dispute: reported within a day of delivery, split resolves with a part ref
   expect((await farmer.query(api.disputes.get, { disputeId }))!.messages).toHaveLength(4);
   expect((await support.query(api.admin.disputes.list, { paginationOpts: page, status: "farmer_responded" })).page).toHaveLength(1);
 
-  // Amounts must add up to the product total; the delivery fee is never in a part refund
-  await expect(support.mutation(api.admin.disputes.resolve, { disputeId, outcome: "split", refundKobo: 450000, releaseKobo: 550000, note: "n", reason: "r" })).rejects.toThrow(/AMOUNTS_DONT_ADD_UP/);
+  // A part refund is less than the product total; the delivery fee is never in it
+  await expect(support.mutation(api.admin.disputes.resolve, { disputeId, outcome: "split", refundKobo: 900000, note: "n", reason: "r" })).rejects.toThrow(/INVALID_AMOUNT/);
   await expect(support.mutation(api.admin.disputes.resolve, { disputeId, outcome: "split", refundKobo: 450000, note: "n", reason: "  " })).rejects.toThrow();
   await support.mutation(api.admin.disputes.resolve, { disputeId, outcome: "split", refundKobo: 450000, note: "One basket refunded", reason: "Photos show damage" });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
@@ -178,7 +179,7 @@ test("reviews: once per completed order, stats kept per farm", async () => {
   const first = await paidOrder(t, s, s.account, "pickup", 1);
   await expect(account.mutation(api.reviews.submit, { orderId: first, rating: 5, tags: [] })).rejects.toThrow(/NOT_COMPLETED/);
   await deliver(t, s, first);
-  await account.mutation(api.orders.consumer.confirmReceipt, { orderId: first });
+  await closeOrder(t, first);
   expect(await account.query(api.reviews.forOrder, { orderId: first })).toMatchObject({ canReview: true, review: null });
   await expect(account.mutation(api.reviews.submit, { orderId: first, rating: 6, tags: [] })).rejects.toThrow(/INVALID_RATING/);
   await expect(as(t, s.guest).mutation(api.reviews.submit, { orderId: first, rating: 5, tags: [] })).rejects.toThrow(/NOT_FOUND/);
@@ -187,7 +188,7 @@ test("reviews: once per completed order, stats kept per farm", async () => {
 
   const second = await paidOrder(t, s, s.account, "pickup", 1);
   await deliver(t, s, second);
-  await account.mutation(api.orders.consumer.confirmReceipt, { orderId: second });
+  await closeOrder(t, second);
   await account.mutation(api.reviews.submit, { orderId: second, rating: 2, tags: [] });
 
   expect(await t.query(api.reviews.summary, { farmId: s.farmA })).toEqual({ average: 3.5, count: 2, stars: [0, 1, 0, 0, 1] });
@@ -323,7 +324,7 @@ test("account deletion waits for orders in progress, then finishes", async () =>
 
   // The account still works to finish the order
   await deliver(t, s, orderId);
-  await account.mutation(api.orders.consumer.confirmReceipt, { orderId });
+  await closeOrder(t, orderId);
   await t.finishAllScheduledFunctions(vi.runAllTimers);
   expect(await t.mutation(internal.accountsInternal.finishWaitingDeletions, {})).toEqual({ finished: 1 });
   expect(await t.run(async (ctx) => await ctx.db.get(s.account.id))).toBeNull();
@@ -333,7 +334,7 @@ test("account deletion waits for orders in progress, then finishes", async () =>
   expect(await t.run(async (ctx) => await ctx.db.get(orderId))).not.toBeNull();
 });
 
-test("the shopper marks a delivery received while the rider is bringing it, or reports a problem then", async () => {
+test("the shopper says a delivery arrived while the rider is bringing it, or reports a problem then; it closes a day later", async () => {
   const t = convexTest(schema, modules);
   const s = await seed(t);
   const guest = as(t, s.guest);
@@ -341,29 +342,34 @@ test("the shopper marks a delivery received while the rider is bringing it, or r
 
   // Not before the rider has it
   const orderId = await paidOrder(t, s, s.guest, "delivery");
-  expect((await guest.query(api.orders.consumer.get, { orderId }))!.canConfirm).toBe(false);
-  await expect(guest.mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow(/NOT_DELIVERED_YET/);
+  expect((await guest.query(api.orders.consumer.get, { orderId }))!).toMatchObject({ canMarkArrived: false, canReport: false, reportBy: null });
+  await expect(guest.mutation(api.orders.consumer.markArrived, { orderId })).rejects.toThrow(/NOT_OUT_FOR_DELIVERY/);
 
-  // Out for delivery: confirming marks it delivered and completes it in one go
+  // Out for delivery: the shopper can say it arrived, which marks it delivered and starts the day for reporting
   await handOver(t, s, orderId);
   expect((await read(orderId)).status).toBe("out_for_delivery");
   const view = (await guest.query(api.orders.consumer.get, { orderId }))!;
-  expect(view.canConfirm).toBe(true);
-  expect(view.canReport).toBe(true);
+  expect(view).toMatchObject({ canMarkArrived: true, canReport: true });
   // Someone else still can't
-  await expect(as(t, s.account).mutation(api.orders.consumer.confirmReceipt, { orderId })).rejects.toThrow(/NOT_FOUND/);
-  await guest.mutation(api.orders.consumer.confirmReceipt, { orderId });
-  const done = await read(orderId);
-  expect(done.status).toBe("completed");
-  expect(done.deliveredAt).toBeDefined();
-  expect(done.confirmedAt).toBeDefined();
-  expect(done.escrow).toBe("released");
+  await expect(as(t, s.account).mutation(api.orders.consumer.markArrived, { orderId })).rejects.toThrow(/NOT_FOUND/);
+  await guest.mutation(api.orders.consumer.markArrived, { orderId });
+  // Saying it twice changes nothing
+  await guest.mutation(api.orders.consumer.markArrived, { orderId });
+  const arrived = await read(orderId);
+  expect(arrived.status).toBe("delivered");
+  const after = (await guest.query(api.orders.consumer.get, { orderId }))!;
+  expect(after).toMatchObject({ canMarkArrived: false, canReport: true, reportBy: arrived.deliveredAt! + 24 * 3_600_000 });
   const events = await t.run(async (ctx) => await ctx.db.query("orderEvents").withIndex("by_orderId", (q) => q.eq("orderId", orderId)).collect());
   const delivered = events.find((e) => e.kind === "delivered")!;
   expect(delivered.actorKind).toBe("guest");
-  expect(delivered.note).toBe("The shopper confirmed it arrived");
+  expect(delivered.note).toBe("The shopper said it arrived");
   // Staff can't mark it delivered after that
   await expect(as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" })).rejects.toThrow(/WRONG_STATUS/);
+  // A day later it closes, and can't be reported any more
+  await closeOrder(t, orderId);
+  expect((await read(orderId)).status).toBe("completed");
+  expect((await guest.query(api.orders.consumer.get, { orderId }))!.canReport).toBe(false);
+  await expect(guest.mutation(api.disputes.open, { orderId, itemIndexes: [], note: "Late", photoIds: [], reason: "not_received" })).rejects.toThrow(/ORDER_CLOSED/);
 
   // A problem reported while it's out for delivery: delivered, then disputed (already split, so nothing held)
   const second = await paidOrder(t, s, s.guest, "delivery");

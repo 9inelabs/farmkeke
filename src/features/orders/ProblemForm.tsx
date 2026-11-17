@@ -67,8 +67,8 @@ export function ProblemForm({ o }: { o: OrderDetail }) {
         form:
           code === "ALREADY_REPORTED"
             ? "You've already reported a problem with this order."
-            : code === "ALREADY_CONFIRMED"
-              ? "This order is already confirmed, so the payment has gone to the farm. Contact support and we'll help."
+            : code === "ORDER_CLOSED" || code === "REPORT_WINDOW_CLOSED"
+              ? "This order has closed. Problems can be reported within a day of delivery or collection. Contact support and we'll help."
               : code === "NOTE_TOO_LONG"
                 ? "That's a bit long. Keep it under 2,000 characters."
                 : "We couldn't send your report. Check your connection and try again.",

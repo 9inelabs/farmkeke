@@ -101,7 +101,7 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   expect(await t.run(async (ctx) => (await ctx.db.get(placed.checkoutId))!.status)).toBe("awaiting_bill");
   await expect(payTest(t, s.guest, placed.checkoutId)).rejects.toThrow(/BILL_NOT_READY/);
   const placedA = await guest.query(api.orders.consumer.get, { orderId: orderA });
-  expect(placedA).toMatchObject({ status: "placed", escrow: "none", paid: false, canConfirm: false });
+  expect(placedA).toMatchObject({ status: "placed", escrow: "none", paid: false, canMarkArrived: false, canReport: false });
   expect(placedA!.respondBy).toBeGreaterThan(Date.now());
 
   // Farms see unpaid delivery orders straight away, and say so
@@ -170,8 +170,8 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   // Another device (different identity) only gets the view-only Find my order
   expect(await other.query(api.orders.consumer.get, { orderId: orderA })).toBeNull();
   const found = await other.query(api.orders.consumer.find, { number: "FK-10001", phone: "08031112222" });
-  expect(found).toMatchObject({ viewOnly: true, canConfirm: false, pickupCode: null });
-  await expect(other.mutation(api.orders.consumer.confirmReceipt, { orderId: orderA })).rejects.toThrow(/NOT_FOUND/);
+  expect(found).toMatchObject({ viewOnly: true, canMarkArrived: false, canReport: false, pickupCode: null });
+  await expect(other.mutation(api.disputes.open, { orderId: orderA, itemIndexes: [0], note: "x", photoIds: [], reason: "damaged" })).rejects.toThrow(/NOT_FOUND/);
 
   // No problem reported within a day: the order closes by itself
   vi.advanceTimersByTime(23 * HOUR);
@@ -523,7 +523,8 @@ test("live Paystack path: split, start, signed webhook, refund", async () => {
   await hook({ event: "refund.processed", data: { id: 77, status: "processed", transaction_reference: "CK-10002-1", amount: 450000 } });
   refund = await t.run(async (ctx) => (await ctx.db.query("refunds").first())!);
   expect(refund.status).toBe("processed");
-  const unmatched = await hook({ event: "transfer.success", data: { reference: "NOPE" } });
+  // A refund event for nothing we know is kept for staff
+  const unmatched = await hook({ event: "refund.processed", data: { id: 999, status: "processed", transaction_reference: "NOPE", amount: 100 } });
   expect(unmatched.status).toBe(200);
   expect(await t.run(async (ctx) => (await ctx.db.query("unmatchedPaymentEvents").collect()).length)).toBe(1);
 

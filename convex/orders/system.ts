@@ -119,10 +119,8 @@ export const remindFarmers = internalMutation({
 
 /**
  * Cron: a day after delivery or collection, with no problem reported, an
- * order closes (completed) and the shopper is asked for a review. Older
- * orders still held in escrow go to the A-61 release queue instead, with a
- * reminder to the shopper. Pickup orders left past their 3 days are flagged
- * for staff too.
+ * order closes (completed) and the shopper is asked for a review. Pickup
+ * orders left past their 3 days are flagged for staff too.
  */
 export const flagUnconfirmed = internalMutation({
   args: {},
@@ -137,21 +135,10 @@ export const flagUnconfirmed = internalMutation({
         .withIndex("by_status_and_deliveredAt", (q) => q.eq("status", status).lte("deliveredAt", cutoff))
         .take(200);
       for (const order of late) {
-        if (order.escrow !== "held") {
-          await transition(ctx, order, "completed", SYSTEM, { endedAt: now }, "Closed a day after delivery, with no problem reported");
-          await ctx.scheduler.runAfter(0, internal.reviews.remind, { orderId: order._id });
-          flagged++;
-          continue;
-        }
-        if (order.unconfirmedFlaggedAt !== undefined) continue;
-        await ctx.db.patch("orders", order._id, { unconfirmedFlaggedAt: now });
-        await notifyConsumer(
-          ctx,
-          order,
-          "confirm_reminder",
-          `Did order ${order.number} arrive?`,
-          "Please confirm you received everything, or tell us about a problem. The farm is paid once you confirm.",
-        );
+        // No problem reported within the day: the order closes (the farm was
+        // paid when the shopper paid) and the shopper is asked for a review
+        await transition(ctx, order, "completed", SYSTEM, { endedAt: now }, "Closed a day after delivery, with no problem reported");
+        await ctx.scheduler.runAfter(0, internal.reviews.remind, { orderId: order._id });
         flagged++;
       }
     }

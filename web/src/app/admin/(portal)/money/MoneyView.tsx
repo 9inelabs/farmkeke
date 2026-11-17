@@ -1,112 +1,78 @@
 "use client";
 
-// A-61 Release queue. Money never releases on its own: shoppers confirm, or
-// staff release here after checking. Three lists: confirmed but still held,
-// delivered but not confirmed after a day, and blocked by a problem report.
-import { useQuery } from "convex/react";
+// A-60 Money overview. Farmkeke doesn't hold shoppers' money: Paystack splits
+// each payment at once, the farm's share to the farm's subaccount and the
+// rest (commission and delivery fee) to Farmkeke. This shows the last 30 days
+// of payments, where the money went, and what needs a person: refunds in
+// progress or failed, farms that owe money back, farms Paystack can't pay.
+import { usePaginatedQuery, useQuery } from "convex/react";
 import Link from "next/link";
-import { useState } from "react";
-import { MoneyActions } from "@/components/admin/MoneyActions";
-import { ORDER_STATUS } from "@/components/admin/labels";
 import { adminRoutes } from "@/components/admin/routes";
-import { DataTable, FilterTabs, Notice, PageHeader, Panel, StatusBadge, TableSkeleton, type Column } from "@/components/admin/ui";
+import { Notice, PageHeader, Panel, TableSkeleton } from "@/components/admin/ui";
 import { admin } from "@/convex/admin";
-import type { LedgerRow, MoneySummary, ReleaseQueue } from "@/convex/returns/adminMoney";
-import { dateTime, naira } from "@/lib/format";
-
-type Tab = "confirmed" | "unconfirmed" | "disputed";
+import type { MoneyOverview, PaymentRow } from "@/convex/returns/adminMoney";
+import { naira } from "@/lib/format";
+import { PaymentsTable } from "./payments/PaymentsView";
 
 export function MoneyView() {
-  const queue = useQuery(admin.ledger.releaseQueue, {}) as ReleaseQueue | undefined;
-  const summary = useQuery(admin.ledger.summary, {}) as MoneySummary | undefined;
-  const [tab, setTab] = useState<Tab>("unconfirmed");
-  const [done, setDone] = useState<string | null>(null);
-
-  const columns: Column<LedgerRow>[] = [
-    { key: "n", label: "Order", render: (r) => r.number },
-    { key: "farm", label: "Farm", render: (r) => r.farmName },
-    { key: "shopper", label: "Shopper", render: (r) => r.consumerName },
-    { key: "amount", label: "Held", render: (r) => <strong>{naira(r.amountKobo)}</strong> },
-    {
-      key: "status",
-      label: "Status",
-      render: (r) => (
-        <span className="flex flex-wrap gap-1.5">
-          <StatusBadge map={ORDER_STATUS} status={r.status} />
-          {r.escrowHold ? <span className="badge b-err">On hold</span> : null}
-        </span>
-      ),
-    },
-    { key: "when", label: tab === "confirmed" ? "Confirmed" : "Delivered", render: (r) => dateTime((tab === "confirmed" ? r.confirmedAt : r.deliveredAt) ?? r.heldSince ?? 0) },
-    {
-      key: "act",
-      label: "Action",
-      render: (r) =>
-        tab === "disputed" ? (
-          r.disputeId ? (
-            <Link href={adminRoutes.dispute(r.disputeId)} className="font-semibold">
-              Decide the report
-            </Link>
-          ) : null
-        ) : (
-          <MoneyActions order={r} onDone={setDone} />
-        ),
-    },
-  ];
+  const o = useQuery(admin.money.overview, {}) as MoneyOverview | undefined;
+  const recent = usePaginatedQuery(admin.money.payments, {}, { initialNumItems: 10 });
 
   return (
     <>
       <PageHeader
-        title="Release queue"
-        description="Money Farmkeke holds that needs a person. Shoppers confirming releases it automatically; these didn't, or are on hold."
+        title="Money"
+        description="Paystack splits every payment when it's made: the farm's share goes straight to the farm, Farmkeke keeps its commission and the delivery fee. Nothing is held."
       />
-      {summary ? (
-        <div className="mb-6 grid grid-cols-4 gap-4 m:grid-cols-2">
-          <Tile label={`Held for ${summary.heldOrders}${summary.capped ? "+" : ""} orders`} value={naira(summary.heldKobo)} />
-          <Tile label="Waiting to pay out to farms" value={naira(summary.pendingPayoutKobo)} />
-          <Tile label="Orders on hold" value={String(summary.onHold)} />
-          <Tile label="Failed payouts and refunds" value={String(summary.failedPayouts + summary.failedRefunds)} href={adminRoutes.reconciliation} />
+      {o && !o.live ? (
+        <div className="mb-4">
+          <Notice tone="pend">Payments are in test mode: no Paystack secret key is set on the server, so no real money moves and no split is made.</Notice>
         </div>
       ) : null}
-      {done ? (
-        <div className="mb-4">
-          <Notice tone="ok">{done}</Notice>
-        </div>
-      ) : null}
-      <FilterTabs
-        label="Show"
-        value={tab}
-        onChange={setTab}
-        tabs={[
-          { key: "unconfirmed", label: "Delivered, not confirmed", count: queue?.unconfirmed.length },
-          { key: "confirmed", label: "Confirmed, still held", count: queue?.confirmed.length },
-          { key: "disputed", label: "Problem reported", count: queue?.disputed.length },
-        ]}
-      />
-      {tab === "unconfirmed" ? (
-        <div className="mb-4">
-          <Notice tone="info">Call the shopper first. If they got everything, release; if not, ask them to report the problem.</Notice>
-        </div>
-      ) : tab === "confirmed" ? (
-        <div className="mb-4">
-          <Notice tone="info">The shopper confirmed, but the money is on hold. Lift the hold to pay the farm.</Notice>
-        </div>
-      ) : null}
-      <Panel padded={false}>
-        {queue === undefined ? (
-          <TableSkeleton />
-        ) : (
-          <DataTable caption="Release queue" columns={columns} rows={queue[tab]} rowKey={(r) => r.orderId} rowHref={(r) => adminRoutes.order(r.orderId)} empty="Nothing here." />
-        )}
+      {o === undefined ? (
+        <TableSkeleton />
+      ) : (
+        <>
+          <h2 className="mb-3 text-sm font-semibold text-muted">Last 30 days{o.capped ? " (first 2,000 payments)" : ""}</h2>
+          <div className="mb-6 grid grid-cols-4 gap-4 m:grid-cols-2">
+            <Tile label={`Paid by shoppers · ${o.payments} ${o.payments === 1 ? "payment" : "payments"}`} value={naira(o.collectedKobo)} href={adminRoutes.payments} />
+            <Tile label="Sent to farms" value={naira(o.farmSharesKobo)} />
+            <Tile label="Farmkeke commission" value={naira(o.commissionKobo)} />
+            <Tile label="Delivery fees" value={naira(o.deliveryKobo)} />
+          </div>
+          <h2 className="mb-3 text-sm font-semibold text-muted">Needs a person</h2>
+          <div className="mb-6 grid grid-cols-4 gap-4 m:grid-cols-2">
+            <Tile label={`Refunds in progress · ${naira(o.refundsOpenKobo)}`} value={String(o.refundsOpen)} href={adminRoutes.refunds} />
+            <Tile label="Failed refunds" value={String(o.refundsFailed)} href={adminRoutes.reconciliation} tone={o.refundsFailed > 0 ? "err" : undefined} />
+            <Tile label={`Farms that owe for refunds · ${o.farmsOwing}`} value={naira(o.owedKobo)} href={adminRoutes.moneyFarms} />
+            <Tile
+              label={o.farmsWithProblem > 0 ? `Farms Paystack can't pay · ${o.farmsWithProblem} with a problem` : "Farms Paystack can't pay yet"}
+              value={String(o.farmsNotReady)}
+              href={`${adminRoutes.moneyFarms}?show=paystack`}
+              tone={o.farmsWithProblem > 0 ? "err" : undefined}
+            />
+          </div>
+        </>
+      )}
+      <Panel
+        title="Latest payments"
+        padded={false}
+        actions={
+          <Link href={adminRoutes.payments} className="text-sm font-semibold">
+            See all
+          </Link>
+        }
+      >
+        {recent.status === "LoadingFirstPage" ? <TableSkeleton /> : <PaymentsTable rows={recent.results as PaymentRow[]} />}
       </Panel>
     </>
   );
 }
 
-function Tile({ label, value, href }: { label: string; value: string; href?: string }) {
+function Tile({ label, value, href, tone }: { label: string; value: string; href?: string; tone?: "err" }) {
   const body = (
     <>
-      <span className="font-display text-[24px] leading-8 font-extrabold text-ink">{value}</span>
+      <span className={`font-display text-[24px] leading-8 font-extrabold ${tone === "err" ? "text-err" : "text-ink"}`}>{value}</span>
       <span className="text-sm font-medium text-muted">{label}</span>
     </>
   );

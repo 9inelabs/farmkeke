@@ -81,9 +81,9 @@ const SHOP: Alert[] = [
   {
     alert: "reminders",
     title: "Reminders",
-    description: "Pay your bill and review your order",
+    description: "Asking how your order was",
     defaults: { push: true, sms: false, email: true },
-    kinds: ["confirm_reminder", "review_reminder"],
+    kinds: ["review_reminder"],
   },
   {
     alert: "back_in_stock",
@@ -120,11 +120,11 @@ const FARM: Alert[] = [
   },
   {
     alert: "payments",
-    title: "Payments and payouts",
-    description: "Orders paid, refunds taken from your share, payout account changed",
+    title: "Payments",
+    description: "Refunds taken from your share, bank account changed",
     locked: true,
     defaults: { push: true, sms: true, email: true },
-    kinds: ["payment_released", "payout_sent", "payout_failed", "payout_account_changed", "order_paid", "farm_debt"],
+    kinds: ["payout_account_changed", "farm_debt"],
   },
   {
     alert: "messages",

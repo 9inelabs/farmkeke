@@ -100,7 +100,7 @@ test("permissions: a role only reaches the functions it allows", async () => {
   const s = await seed(t);
   // Operations can see areas and money, but not staff
   await as(t, s.ops).query(api.admin.areas.listAllServiceAreas, {});
-  await as(t, s.ops).query(api.admin.ledger.releaseQueue, {});
+  await as(t, s.ops).query(api.admin.money.overview, {});
   await expect(as(t, s.ops).query(api.admin.staff.pendingCount, {})).rejects.toThrow(/FORBIDDEN/);
   await expect(as(t, s.ops).query(api.admin.staff.listMembers, {})).rejects.toThrow(/FORBIDDEN/);
   // Shoppers are never staff
@@ -603,44 +603,66 @@ test("customers: find, staff can't be blocked, sign out everywhere, reset link; 
 // ---------------------------------------------------------------------------
 // Phase 5: money summary
 
-test("money summary: held money, holds, and what needs a person; Operations can see but not move money", async () => {
+test("money: the Paystack split by payment, farms that owe for refunds or can't be paid; Operations can see but not move money", async () => {
   mailbox();
   const t = convexTest(schema, modules);
   const s = await seed(t);
-  await t.run(async (ctx) => {
+  const ids = await t.run(async (ctx) => {
     const contact = { name: "Ada Obi", phone: "+2348031112222" };
     const appId = await ctx.db.insert("farmerApplications", { userId: s.applicant.id, status: "approved", categoryIds: [], seasons: [], collectionHours: [] } as any);
-    const farmId = await ctx.db.insert("farms", {
-      userId: s.applicant.id, applicationId: appId, name: "Ada Greens", phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
-      farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: [], leadTimeHours: 4,
-      openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
-      status: "active", trusted: false,
+    const farm = async (name: string, extra: Record<string, unknown>) =>
+      await ctx.db.insert("farms", {
+        userId: s.applicant.id, applicationId: appId, name, phone: "+2348030000009", state: "Imo", lga: "Owerri North", address: "x",
+        farmSize: "1_to_5", farmType: "crops", categoryIds: [], collectionAddress: "x", collectionHours: [], leadTimeHours: 4,
+        openDays: [1], holidayMode: false, bankCode: "058", bankName: "GTBank", accountNumber: "0123456789", accountName: "x",
+        status: "active", trusted: false, ...extra,
+      } as any);
+    const ada = await farm("Ada Greens", { paystackSubaccountCode: "ACCT_ADA", owedKobo: 120000 });
+    const okafor = await farm("Okafor Farms", { subaccountError: "Account details are invalid" });
+    const money = { itemsTotalKobo: 900000, deliveryFeeKobo: 100000, totalKobo: 1000000 };
+    const checkoutId = await ctx.db.insert("checkouts", { userId: s.shopper.id, reference: "CK-1", status: "paid", fulfilment: "delivery", contact, ...money } as any);
+    const orderId = await ctx.db.insert("orders", {
+      number: "FK-1", checkoutId, userId: s.shopper.id, farmId: ada, fulfilment: "delivery", items: [], contact, ...money,
+      status: "completed", escrow: "released", farmShareKobo: 775000, commissionKobo: 45000, recoveredKobo: 80000,
     } as any);
-    const order = async (n: string, totalKobo: number, extra: Record<string, unknown>) => {
-      const money = { itemsTotalKobo: totalKobo, deliveryFeeKobo: 0, totalKobo };
-      const checkoutId = await ctx.db.insert("checkouts", { userId: s.shopper.id, reference: `CK-${n}`, status: "paid", fulfilment: "pickup", contact, ...money });
-      await ctx.db.insert("orders", { number: `FK-${n}`, checkoutId, userId: s.shopper.id, farmId, fulfilment: "pickup", items: [], contact, ...money, ...extra } as any);
-    };
-    await order("1", 500000, { status: "paid", escrow: "held" });
-    await order("2", 300000, { status: "completed", escrow: "held", escrowHold: true, holdReason: "Checking" });
-    await order("3", 200000, { status: "delivered", escrow: "held", unconfirmedFlaggedAt: Date.now() });
-    await order("4", 900000, { status: "completed", escrow: "released" });
+    await ctx.db.insert("paymentAttempts", {
+      checkoutId, userId: s.shopper.id, reference: "CK-1-1", provider: "paystack", method: "card", status: "success", amountKobo: 1000000,
+      paidAmountKobo: 1000000, currency: "NGN", email: "ada@example.com", startedAt: Date.now(), paidAt: Date.now(), splitCode: "SPL_1",
+      split: [{ orderId, farmId: ada, subaccount: "ACCT_ADA", shareKobo: 775000, commissionKobo: 45000, recoveredKobo: 80000 }],
+    } as any);
+    return { ada, okafor };
   });
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_x";
   const ops = as(t, s.ops);
-  expect(await ops.query(api.admin.ledger.summary, {})).toMatchObject({
-    heldKobo: 1000000,
-    heldOrders: 3,
-    onHold: 1,
-    toRelease: 1,
-    unconfirmed: 1,
-    failedPayouts: 0,
-    failedRefunds: 0,
+  expect(await ops.query(api.admin.money.overview, {})).toMatchObject({
+    payments: 1,
+    collectedKobo: 1000000,
+    farmSharesKobo: 775000,
+    commissionKobo: 45000,
+    recoveredKobo: 80000,
+    deliveryKobo: 100000,
+    farmsOwing: 1,
+    owedKobo: 120000,
+    farmsNotReady: 1,
+    farmsWithProblem: 1,
+    refundsFailed: 0,
   });
-  const queue = await ops.query(api.admin.ledger.releaseQueue, {});
-  expect(queue.confirmed.map((r: any) => r.number)).toEqual(["FK-2"]);
-  expect(queue.unconfirmed.map((r: any) => r.number)).toEqual(["FK-3"]);
+  const payments = await ops.query(api.admin.money.payments, { paginationOpts: { numItems: 10, cursor: null } });
+  expect(payments.page[0]).toMatchObject({ reference: "CK-1-1", amountKobo: 1000000, farmkekeKobo: 225000, splitCode: "SPL_1", parts: [{ farmName: "Ada Greens", orderNumber: "FK-1", shareKobo: 775000 }] });
+  expect((await ops.query(api.admin.money.farms, { show: "owing" })).map((f: any) => [f.name, f.owedKobo])).toEqual([["Ada Greens", 120000]]);
+  expect((await ops.query(api.admin.money.farms, { show: "paystack" })).map((f: any) => [f.name, f.paystack, f.subaccountError])).toEqual([["Okafor Farms", "problem", "Account details are invalid"]]);
+
   // Operations can see money but not move it
-  await expect(ops.mutation(api.admin.ledger.setHold, { orderId: queue.unconfirmed[0].orderId, hold: true, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+  await expect(ops.mutation(api.admin.money.forgiveDebt, { farmId: ids.ada, amountKobo: 1000, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+  await expect(ops.mutation(api.admin.money.retryPaystack, { farmId: ids.okafor, reason: "x" })).rejects.toThrow(/FORBIDDEN/);
+  // The Founder can: forgive part of a debt (never more than owed), and retry Paystack
+  const founder = as(t, s.founder);
+  await expect(founder.mutation(api.admin.money.forgiveDebt, { farmId: ids.ada, amountKobo: 200000, reason: "x" })).rejects.toThrow(/INVALID_AMOUNT/);
+  expect(await founder.mutation(api.admin.money.forgiveDebt, { farmId: ids.ada, amountKobo: 20000, reason: "Goodwill" })).toEqual({ owedKobo: 100000 });
+  await founder.mutation(api.admin.money.retryPaystack, { farmId: ids.okafor, reason: "Bank fixed" });
+  const audit = await t.run(async (ctx) => (await ctx.db.query("auditLog").collect()).map((a) => a.action));
+  expect(audit).toEqual(expect.arrayContaining(["farm.forgiveDebt", "farm.paystackRetry"]));
+  delete process.env.PAYSTACK_SECRET_KEY;
 });
 
 test("dashboard, global search and exports, each limited by role", async () => {
@@ -704,7 +726,7 @@ test("dashboard, global search and exports, each limited by role", async () => {
   expect(orders.rows[0].farm).toBe("Sunrise Greens");
   const customers = await ops.query(api.admin.exports.customers, range);
   expect(customers.rows.map((r) => r.email)).toContain("ada@example.com");
-  expect((await fin.query(api.admin.exports.payouts, range)).rows).toEqual([]);
+  expect((await fin.query(api.admin.exports.farmShares, range)).rows).toEqual([]);
   await expect(fin.query(api.admin.exports.customers, range)).rejects.toThrow(/FORBIDDEN/);
   await expect(ops.query(api.admin.exports.orders, { from: range.to, to: range.from })).rejects.toThrow(/INVALID_RANGE/);
   await expect(ops.query(api.admin.exports.orders, { from: 0, to: Date.now() })).rejects.toThrow(/RANGE_TOO_LONG/);

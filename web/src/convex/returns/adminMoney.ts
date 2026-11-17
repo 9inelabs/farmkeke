@@ -1,79 +1,63 @@
-// Return shapes for the portal's money screens (convex/admin/ledger.ts and
-// convex/admin/payments.ts).
+// Return shapes for the portal's money screens (convex/admin/money.ts,
+// convex/admin/ledger.ts and convex/admin/payments.ts).
 import type { Id } from "../api";
 
-export type LedgerRow = {
-  orderId: Id<"orders">;
-  number: string;
-  status: string;
-  escrow: string;
-  escrowHold: boolean;
-  holdReason: string | null;
-  farmId: Id<"farms">;
-  farmName: string;
-  consumerName: string;
-  amountKobo: number;
-  itemsTotalKobo: number;
-  deliveryFeeKobo: number;
-  heldSince: number | null;
-  deliveredAt: number | null;
-  confirmedAt: number | null;
-  releasedAt: number | null;
-  unconfirmedFlaggedAt: number | null;
-  disputeId: Id<"disputes"> | null;
+export type MoneyOverview = {
+  payments: number;
+  collectedKobo: number;
+  farmSharesKobo: number;
+  commissionKobo: number;
+  deliveryKobo: number;
+  recoveredKobo: number;
+  refundsOpen: number;
+  refundsOpenKobo: number;
+  refundsFailed: number;
+  farmsOwing: number;
+  owedKobo: number;
+  farmsNotReady: number;
+  farmsWithProblem: number;
+  live: boolean;
+  capped: boolean;
 };
 
-export type ReleaseQueue = { confirmed: LedgerRow[]; unconfirmed: LedgerRow[]; disputed: LedgerRow[] };
+export type PaymentRow = {
+  _id: string;
+  reference: string;
+  checkoutReference: string;
+  shopperName: string;
+  paidAt: number;
+  amountKobo: number;
+  channel: string | null;
+  simulated: boolean;
+  splitCode: string | null;
+  parts: { orderId: Id<"orders">; orderNumber: string; farmId: Id<"farms">; farmName: string; shareKobo: number; commissionKobo: number; recoveredKobo: number }[];
+  farmkekeKobo: number;
+  firstOrderId: Id<"orders"> | null;
+};
 
-export type MoneySummary = {
-  heldKobo: number;
-  heldOrders: number;
-  onHold: number;
-  toRelease: number;
-  unconfirmed: number;
-  pendingPayoutKobo: number;
-  failedPayouts: number;
-  failedRefunds: number;
-  capped: boolean;
+export type MoneyFarmRow = {
+  farmId: Id<"farms">;
+  name: string;
+  owedKobo: number;
+  paystack: "ready" | "setting_up" | "problem" | "test";
+  subaccountCode: string | null;
+  subaccountError: string | null;
+  syncedAt: number | null;
+  bankName: string;
+  accountLast4: string;
+  accountName: string;
 };
 
 export type LedgerEntry = {
   _id: string;
   at: number;
-  kind: "hold" | "release" | "commission" | "delivery_fee" | "refund" | "payout";
+  kind: "farm_share" | "commission" | "delivery_fee" | "debt_recovered" | "refund" | "farm_debt" | string;
   amountKobo: number;
   status: string;
   note: string | null;
   simulated: boolean;
   refundId: string | null;
-  payoutId: string | null;
   actorName: string | null;
-};
-
-export type PayoutRow = {
-  _id: Id<"payouts">;
-  farmId: Id<"farms">;
-  farmName: string;
-  amountKobo: number;
-  status: "pending" | "sent" | "failed";
-  reference: string;
-  provider: string;
-  simulated: boolean;
-  sending: boolean;
-  transferCode: string | null;
-  bankName: string;
-  accountLast4: string;
-  failureReason: string | null;
-  attempts: number;
-  createdAt: number;
-  sentAt: number | null;
-  orderCount: number;
-};
-
-export type PayoutDetail = PayoutRow & {
-  recipientCode: string | null;
-  items: { orderId: Id<"orders">; orderNumber: string; itemsTotalKobo: number; commissionKobo: number; amountKobo: number }[];
-  ledger: { _id: string; kind: string; amountKobo: number; status: string; at: number }[];
 };
 
 export type RefundRow = {
@@ -97,6 +81,8 @@ export type RefundRow = {
   expectedAt: number | null;
   settledAt: number | null;
   disputeId: Id<"disputes"> | null;
+  /** What the farm owes back for this refund */
+  farmDebtKobo: number;
 };
 
 export type Reconciliation = {
@@ -115,7 +101,6 @@ export type Reconciliation = {
   }[];
   unmatched: { _id: Id<"unmatchedPaymentEvents">; event: string; reference: string; amountKobo: number | null; status: string | null; at: number }[];
   failedRefundCount: number;
-  failedPayoutCount: number;
 };
 
 export type BankCheck = {

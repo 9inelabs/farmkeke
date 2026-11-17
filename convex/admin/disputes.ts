@@ -9,7 +9,7 @@ import { writeAudit } from "../lib/audit";
 import { isStaffWith, requireStaff } from "../lib/auth";
 import { disputeRow, disputeView } from "../lib/disputes";
 import { naira, notify, notifyConsumer, notifyFarm } from "../lib/notify";
-import { orderCore, refundOrder, releaseOrder, transition } from "../lib/orders";
+import { orderCore, refundOrder, transition } from "../lib/orders";
 import { validateImageUpload } from "../lib/uploads";
 import { disputeStatus } from "../schema";
 
@@ -79,7 +79,11 @@ export const get = query({
     return {
       ...(await disputeView(ctx, dispute, "staff", staff._id)),
       order: order === null ? null : await orderCore(ctx, order),
-      escrowHold: order?.escrowHold === true,
+      // The farm's share Paystack sent, Farmkeke's commission and any debt taken
+      money:
+        order === null || order.farmShareKobo === undefined
+          ? null
+          : { farmShareKobo: order.farmShareKobo, commissionKobo: order.commissionKobo ?? 0, recoveredKobo: order.recoveredKobo ?? 0 },
       consumer: {
         name: order?.contact.name ?? consumer?.name ?? "",
         phone: order?.contact.phone ?? null,
@@ -192,22 +196,23 @@ export const sendMessage = mutation({
 });
 
 /**
- * A-72: decide the money.
- * - released: no refund; the farm is paid for the products.
+ * A-72: decide the money. The farm was paid its share when the shopper paid
+ * (Paystack split), so refunds come from Farmkeke and, unless chargeFarm is
+ * false, the farm's part is owed back from its next orders.
+ * - released: no refund; the farm keeps its share.
  * - refunded: full refund, delivery fee included; the order is cancelled.
- * - split: part refund of the products (never the delivery fee) and the rest
- *   released to the farm. refundKobo + releaseKobo must equal the product total.
+ * - split: part refund of the products (never the delivery fee).
  */
 export const resolve = mutation({
   args: {
     disputeId: v.id("disputes"),
     note: v.string(),
+    // released: no refund; refunded: full refund (order cancelled); split: part refund of the products
     outcome: v.union(v.literal("released"), v.literal("refunded"), v.literal("split")),
     reason: v.string(),
     refundKobo: v.optional(v.number()),
-    releaseKobo: v.optional(v.number()),
-    // Paystack split orders: whether the farm owes back its share of a refund
-    // (default yes; no when it wasn't the farm's fault, e.g. the rider's)
+    // Whether the farm owes back its part of the refund, taken from its next
+    // orders (default yes; no when it wasn't the farm's fault, e.g. the rider's)
     chargeFarm: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -217,11 +222,9 @@ export const resolve = mutation({
     const order = await ctx.db.get("orders", dispute.orderId);
     if (order === null) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.status !== "disputed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
-    // Paystack split orders (17 Nov 2026) were never held: the farm has its
-    // share, so "released" means no refund and refunds come from Farmkeke
-    const splitPaid = order.escrow === "released" && order.farmShareKobo !== undefined;
-    if (order.escrow !== "held" && !splitPaid) throw new ConvexError({ code: "NOT_HELD", escrow: order.escrow });
-    if (order.escrowHold) throw new ConvexError({ code: "ESCROW_ON_HOLD" });
+    // Paystack split the payment when it was made: the farm has its share,
+    // so any refund comes from Farmkeke
+    if (order.farmShareKobo === undefined) throw new ConvexError({ code: "NOT_PAID", escrow: order.escrow });
     const chargeFarm = args.chargeFarm !== false;
     const note = args.note.trim();
     if (note.length === 0) throw new ConvexError({ code: "NOTE_REQUIRED" });
@@ -229,20 +232,14 @@ export const resolve = mutation({
     const actor = { kind: "staff" as const, id: staff._id };
     const now = Date.now();
     let refundKobo = 0;
-    let releaseKobo = 0;
-
     if (args.outcome === "split") {
+      // A part refund covers some of the products; the delivery fee is never in it
       refundKobo = args.refundKobo ?? 0;
-      releaseKobo = args.releaseKobo ?? order.itemsTotalKobo - refundKobo;
-      const whole = (n: number) => Number.isInteger(n) && n > 0;
-      if (!whole(refundKobo) || !whole(releaseKobo)) throw new ConvexError({ code: "INVALID_AMOUNT" });
-      if (refundKobo + releaseKobo !== order.itemsTotalKobo) {
-        throw new ConvexError({ code: "AMOUNTS_DONT_ADD_UP", itemsTotalKobo: order.itemsTotalKobo });
+      if (!Number.isInteger(refundKobo) || refundKobo <= 0 || refundKobo >= order.itemsTotalKobo) {
+        throw new ConvexError({ code: "INVALID_AMOUNT", itemsTotalKobo: order.itemsTotalKobo });
       }
     } else if (args.outcome === "refunded") {
       refundKobo = order.totalKobo;
-    } else {
-      releaseKobo = order.itemsTotalKobo;
     }
 
     // Audit first: it also checks that a reason was given.
@@ -252,7 +249,7 @@ export const resolve = mutation({
       targetTable: "disputes",
       targetId: dispute._id,
       reason: args.reason,
-      details: { number: dispute.number, orderNumber: order.number, outcome: args.outcome, refundKobo, releaseKobo },
+      details: { number: dispute.number, orderNumber: order.number, outcome: args.outcome, refundKobo, chargeFarm: refundKobo > 0 ? chargeFarm : null },
     });
 
     const label = `Dispute ${dispute.number}: ${args.outcome}`;
@@ -266,7 +263,7 @@ export const resolve = mutation({
         label,
       );
       await refundOrder(ctx, ended, { kind: "full", reason: label, actor, disputeId: dispute._id, chargeFarm });
-    } else if (splitPaid) {
+    } else {
       const done = await transition(
         ctx,
         order,
@@ -278,39 +275,35 @@ export const resolve = mutation({
       if (args.outcome === "split") {
         await refundOrder(ctx, done, { kind: "part", amountKobo: refundKobo, reason: label, actor, disputeId: dispute._id, chargeFarm });
       }
-    } else {
-      const done = await transition(ctx, order, "completed", actor, { endedAt: now }, label);
-      if (args.outcome === "split") {
-        await refundOrder(ctx, done, { kind: "part", amountKobo: refundKobo, reason: label, actor, disputeId: dispute._id });
-        await releaseOrder(ctx, done, actor, { releaseItemsKobo: releaseKobo, split: true, note: label });
-      } else {
-        await releaseOrder(ctx, done, actor, { note: label });
-      }
     }
 
     await ctx.db.patch("disputes", dispute._id, {
       status: "resolved",
       outcome: args.outcome,
       refundKobo,
-      releaseKobo,
+      // What the farm keeps of the products
+      releaseKobo: args.outcome === "refunded" ? 0 : order.itemsTotalKobo - refundKobo,
       decisionNote: note,
       decidedAt: now,
       decidedBy: staff._id,
       staffReadAt: now,
     });
     const after = (await ctx.db.get("orders", order._id))!;
-    const summary = splitPaid
-      ? args.outcome === "refunded"
-        ? `Full refund of ${naira(refundKobo)}.`
+    const refund = refundKobo > 0 ? await ctx.db.query("refunds").withIndex("by_orderId", (q) => q.eq("orderId", order._id)).order("desc").first() : null;
+    const debt = refund?.farmDebtKobo ?? 0;
+    const shopper =
+      args.outcome === "refunded"
+        ? `Full refund of ${naira(refundKobo)}. Banks usually take 3 to 10 working days to show it.`
         : args.outcome === "split"
-          ? `Part refund of ${naira(refundKobo)} for the affected items.`
-          : "No refund. The order arrived as described."
-      : args.outcome === "refunded"
-        ? `Full refund of ${naira(refundKobo)}.`
-        : args.outcome === "split"
-          ? `Part refund of ${naira(refundKobo)}; ${naira(releaseKobo)} released to the farm.`
-          : "No refund. The payment is released to the farm.";
-    await notifyConsumer(ctx, after, "dispute_resolved", `Decision on ${dispute.number}`, summary);
-    await notifyFarm(ctx, after, "dispute_resolved", `Decision on ${dispute.number}`, summary);
+          ? `Part refund of ${naira(refundKobo)} for the affected items. Banks usually take 3 to 10 working days to show it.`
+          : "No refund. The order arrived as described.";
+    const farm =
+      args.outcome === "released"
+        ? "No refund. You keep the full payment."
+        : debt > 0
+          ? `Farmkeke refunded the shopper ${naira(refundKobo)}. ${naira(debt)} of it comes off your next orders.`
+          : `Farmkeke refunded the shopper ${naira(refundKobo)}. You don't owe anything for it.`;
+    await notifyConsumer(ctx, after, "dispute_resolved", `Decision on ${dispute.number}`, shopper);
+    await notifyFarm(ctx, after, "dispute_resolved", `Decision on ${dispute.number}`, farm);
   },
 });

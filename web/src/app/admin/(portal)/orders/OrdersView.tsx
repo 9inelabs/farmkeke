@@ -34,7 +34,6 @@ const base: Column<OrderRow>[] = [
     render: (o) => (
       <span className="flex flex-wrap gap-1.5">
         <StatusBadge map={ORDER_STATUS} status={o.status} />
-        {o.escrowHold ? <span className="badge b-err">Money on hold</span> : null}
       </span>
     ),
   },

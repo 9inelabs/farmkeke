@@ -109,15 +109,13 @@ export const replaceEmail = internalMutation({
   },
 });
 
-/** How many orders are still in progress (or have money still held); these block deletion. */
+/** How many orders are still in progress; these block deletion. */
 async function ordersInProgress(ctx: MutationCtx, userId: Id<"users">) {
   const orders = await ctx.db
     .query("orders")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
     .take(500);
-  return orders.filter(
-    (o) => (!ENDED.includes(o.status) && o.status !== "awaiting_payment") || o.escrow === "held",
-  ).length;
+  return orders.filter((o) => !ENDED.includes(o.status) && o.status !== "awaiting_payment").length;
 }
 
 async function hasOrdersInProgress(ctx: MutationCtx, userId: Id<"users">) {

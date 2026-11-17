@@ -1,7 +1,8 @@
-// The order timeline (M-63), the same steps the website shows (W-51, W-51b):
-// delivery orders are placed, accepted, billed, paid, packed, delivered and
-// confirmed; pickup orders are paid, packed, collected at the farm and
-// confirmed. Orders that ended early show how they ended.
+// The order timeline (M-63), the same steps the website shows (W-51, W-51b).
+// Every order is placed, accepted, billed and paid (Paystack splits the
+// payment at once), then delivered or collected at the farm, and closes a
+// day later unless a problem is reported. Orders that ended early show how
+// they ended.
 import type { ReactNode } from "react";
 import type { TimelineStep } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
@@ -15,10 +16,12 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
   const r = RANK[o.status] ?? 0;
   const state = (done: boolean, current: boolean): TimelineStep["state"] => (done ? "done" : current ? "current" : "todo");
   const farm = o.farmName;
-  const billFirst = o.fulfilment === "delivery" && (o.bill != null || o.paidAt === null);
+  const pickup = o.fulfilment === "pickup";
+  // Older pickup orders were paid at checkout, with no bill
+  const billFirst = o.bill != null || o.paidAt === null;
   const placed: TimelineStep = billFirst
     ? { key: "placed", title: "Order placed", detail: at(o.placedAt), state: "done" }
-    : { key: "paid", title: "Order placed and paid", detail: [at(o.paidAt ?? o.placedAt), "Money held by Farmkeke"].filter(Boolean).join(" · "), state: "done" };
+    : { key: "paid", title: "Order placed and paid", detail: at(o.paidAt ?? o.placedAt), state: "done" };
 
   if (ENDED.includes(o.status)) {
     const title =
@@ -40,24 +43,59 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
     ];
   }
 
-  const confirm: TimelineStep = {
-    key: "confirm",
-    title: o.status === "disputed" ? "We're looking into your report" : "You confirm receipt",
-    detail: o.status === "disputed" ? "Your payment stays held until it's resolved" : `Then ${farm} is paid`,
+  // A day after delivery or collection the order closes, unless a problem is reported
+  const close: TimelineStep = {
+    key: "close",
+    title: o.status === "disputed" ? "We're looking into your report" : r >= 6 ? "Closed" : "Order closes",
+    detail:
+      o.status === "disputed"
+        ? "We'll text you with the outcome"
+        : r >= 6
+          ? at(o.endedAt)
+          : o.reportBy
+            ? `${dayTime(o.reportBy)}, unless you report a problem`
+            : "A day after it reaches you, unless you report a problem",
     state: state(r >= 6, r === 5),
   };
 
-  if (o.fulfilment === "pickup") {
+  const isPaid = o.paid;
+  const accepted: TimelineStep = {
+    key: "accepted",
+    title: r >= 2 ? `Accepted by ${farm}` : `Waiting for ${farm} to accept`,
+    detail: r >= 2 ? at(o.acceptedAt) : o.respondBy ? `They have until ${dayTime(o.respondBy)}` : undefined,
+    state: state(r >= 2, r < 2),
+  };
+  const bill: TimelineStep[] = billFirst
+    ? [
+        {
+          key: "bill",
+          title: isPaid ? "Bill paid" : o.bill?.state === "ready_to_pay" ? "Pay your bill" : pickup ? "We send your bill" : "We price the delivery and send your bill",
+          detail: isPaid
+            ? at(o.paidAt)
+            : o.bill?.state === "ready_to_pay"
+              ? `${formatNaira(o.bill.totalKobo)}${pickup ? "" : ", delivery included"}. Pay by ${o.bill.payBy ? dayTime(o.bill.payBy) : "the time on your bill"}`
+              : r >= 2
+                ? pickup
+                  ? "By email, text and in the app"
+                  : "By email, text and in the app, once a rider is arranged"
+                : undefined,
+          state: state(isPaid, r >= 2 && !isPaid),
+        },
+      ]
+    : [];
+
+  if (pickup) {
     // Older orders went to a pickup point; new ones are collected at the farm.
     const point = o.pickupPoint?.name;
     const waiting = point ? `Waiting at ${point}` : `Ready to collect at ${farm}`;
     return [
       placed,
+      ...(billFirst ? [accepted, ...bill] : []),
       {
         key: "packed",
-        title: r >= 4 ? `Accepted and packed by ${farm}` : r <= 1 ? `Waiting for ${farm} to accept` : `${farm} is preparing your order`,
-        detail: r >= 4 ? at(o.readyAt ?? o.packedAt ?? o.acceptedAt) : r <= 1 && o.respondBy ? `They have until ${dayTime(o.respondBy)}` : at(o.acceptedAt),
-        state: state(r >= 4.5, r < 4.5),
+        title: r >= 4 ? `Packed by ${farm}` : `${farm} is preparing your order`,
+        detail: r >= 4 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt ?? o.acceptedAt) : undefined,
+        state: state(r >= 4.5, r >= 2 && r < 4.5 && isPaid),
       },
       {
         key: "ready",
@@ -66,35 +104,13 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
         state: state(r >= 5, r >= 4.5 && r < 5),
       },
       { key: "collected", title: o.status === "disputed" ? "Collected · Problem reported" : "Collected", detail: at(o.deliveredAt), state: state(r >= 5, false) },
-      confirm,
+      close,
     ];
   }
 
-  const isPaid = o.escrow !== "none";
-  const bill: TimelineStep[] = billFirst
-    ? [
-        {
-          key: "bill",
-          title: isPaid ? "Bill paid" : o.bill?.state === "ready_to_pay" ? "Pay your bill" : "We price the delivery and send your bill",
-          detail: isPaid
-            ? [at(o.paidAt), "Money held by Farmkeke"].filter(Boolean).join(" · ")
-            : o.bill?.state === "ready_to_pay"
-              ? `${formatNaira(o.bill.totalKobo)}, delivery included. Pay by ${o.bill.payBy ? dayTime(o.bill.payBy) : "the time on your bill"}`
-              : r >= 2
-                ? "By email, text and in the app, once a rider is arranged"
-                : undefined,
-          state: state(isPaid, r >= 2 && !isPaid),
-        },
-      ]
-    : [];
   return [
     placed,
-    {
-      key: "accepted",
-      title: r >= 2 ? `Accepted by ${farm}` : `Waiting for ${farm} to accept`,
-      detail: r >= 2 ? at(o.acceptedAt) : o.respondBy ? `They have until ${dayTime(o.respondBy)}` : undefined,
-      state: state(r >= 2, r < 2),
-    },
+    accepted,
     ...bill,
     {
       key: "packed",
@@ -104,6 +120,6 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
     },
     { key: "out", title: "Out for delivery", detail: r === 4 ? riderCard : undefined, state: state(r >= 5, r === 4) },
     { key: "delivered", title: o.status === "disputed" ? "Delivered · Problem reported" : "Delivered", detail: at(o.deliveredAt), state: state(r >= 5, false) },
-    confirm,
+    close,
   ];
 }
