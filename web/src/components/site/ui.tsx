@@ -1,16 +1,16 @@
 // Shared pieces of the landing and information pages (Main, W-60, W-80 to W-87).
-// Class strings port the designs' own type scale and surfaces exactly:
-// the landing page (Main) uses a larger scale than the information pages.
+// The 2026-11 redesign: smaller, lighter headings (Plus Jakarta Sans 600),
+// soft panels and pill buttons. The home headline alone stays extra-bold.
 import { Check, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 /** Landing page (Main) type scale */
 export const L = {
-  h1: "font-display font-extrabold text-[68px] leading-[76px] tracking-[-0.035em] m:text-[36px] m:leading-[42px] m:tracking-[-0.03em]",
-  h2: "font-display font-bold text-[42px] leading-[50px] tracking-[-0.025em] m:text-[26px] m:leading-[32px] m:tracking-[-0.02em]",
-  h3: "font-display font-bold text-[19px] leading-[26px] tracking-[-0.01em] m:text-base m:leading-[22px]",
-  /** .sec: 120px above each section, 56px on phones */
-  sec: "pt-[120px] m:pt-14",
+  h1: "font-display font-extrabold text-[56px] leading-[62px] tracking-[-0.035em] m:text-[34px] m:leading-[40px] m:tracking-[-0.03em]",
+  h2: "font-display font-semibold text-[36px] leading-[44px] tracking-[-0.025em] m:text-[24px] m:leading-[30px] m:tracking-[-0.02em]",
+  h3: "font-display font-semibold text-[17px] leading-[24px] tracking-[-0.01em] m:text-[15px] m:leading-[21px]",
+  /** 104px above each section, 56px on phones */
+  sec: "pt-[104px] m:pt-14",
   card: "rounded-[22px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px]",
   /** .panel: 32px radius, 64px padding; phones 22px radius, 26/18px padding */
   panel: "rounded-[32px] p-16 m:rounded-[22px] m:px-[18px] m:py-[26px]",
@@ -19,9 +19,9 @@ export const L = {
 
 /** Information pages (W-60, W-80 to W-87) type scale */
 export const S = {
-  h1: "font-display font-extrabold text-[52px] leading-[60px] tracking-[-0.03em] m:text-[30px] m:leading-[37px]",
-  h2: "font-display font-bold text-[34px] leading-[42px] tracking-[-0.02em] m:text-[24px] m:leading-[30px]",
-  h3: "font-display font-bold text-[18px] leading-[25px] tracking-[-0.01em] m:text-base m:leading-[22px]",
+  h1: "font-display font-semibold text-[42px] leading-[50px] tracking-[-0.03em] m:text-[28px] m:leading-[35px]",
+  h2: "font-display font-semibold text-[30px] leading-[38px] tracking-[-0.02em] m:text-[22px] m:leading-[28px]",
+  h3: "font-display font-semibold text-[17px] leading-[24px] tracking-[-0.01em] m:text-[15px] m:leading-[21px]",
   /** .sec: 96px above each section, 48px on phones */
   sec: "pt-24 m:pt-12",
   card: "rounded-[20px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px]",
@@ -31,23 +31,23 @@ export const S = {
 };
 
 /** Lead size without colour, for coloured panels */
-export const leadSize = "m-0 text-lg leading-[29px] m:text-[15px] m:leading-[23px]";
+export const leadSize = "m-0 text-base leading-[26px] m:text-sm m:leading-[22px]";
 export const lead = `${leadSize} text-muted`;
 /** Heading base without size, for headings the design resizes inline */
-export const h3b = "font-display font-bold tracking-[-0.01em]";
+export const h3b = "font-display font-semibold tracking-[-0.01em]";
 /** Surface used by .card and .panel together (no radius) */
 export const surface = "bg-surface shadow-[inset_0_0_0_1px_var(--color-line)]";
-export const para = "m-0 text-[15px] leading-6 text-muted m:text-sm m:leading-[21px]";
+export const para = "m-0 text-sm leading-[22px] text-muted m:text-[13px] m:leading-5";
 export const cap = "text-xs leading-4 text-subtle";
 /** Design .btn is 48px tall (.btn.sm 40px) */
-export const btn = "btn h-12 px-[22px] text-[15px] m:h-11 m:px-[18px] m:text-sm";
+export const btn = "btn h-12 px-[22px] text-sm m:h-11 m:px-[18px]";
 export const btnSm = "btn sm px-4 text-sm";
 /** Design .chip (34px in the design, 40px here for tapping) */
 export const chip =
   "inline-flex min-h-10 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-medium text-ink shadow-[inset_0_0_0_1px_var(--color-line-2)]";
 /** Design .num step circle (40px on information pages) */
 export const num =
-  "flex size-10 flex-none items-center justify-center rounded-full bg-forest font-display text-base font-bold text-white m:size-8 m:text-sm";
+  "flex size-9 flex-none items-center justify-center rounded-full bg-tint font-display text-sm font-semibold text-forest m:size-8 m:text-[13px]";
 
 /** Small rounded label above headings (.eyebrow with its .dot icon). */
 export function Eyebrow({
@@ -63,14 +63,14 @@ export function Eyebrow({
 }) {
   return (
     <span
-      className={`inline-flex h-8 items-center gap-2 rounded-full pr-3.5 pl-1.5 text-[13px] font-medium ${
+      className={`inline-flex h-7 items-center gap-1.5 rounded-full pr-3 pl-1 text-xs font-semibold ${
         dark
-          ? "bg-white/8 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)]"
-          : "bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-field)]"
+          ? "bg-lime/14 text-on-forest-lime shadow-[inset_0_0_0_1px_rgba(169,214,84,0.3)]"
+          : "bg-tint text-forest"
       } ${className ?? ""}`}
     >
       <span
-        className={`flex size-5 items-center justify-center rounded-full ${dark ? "bg-lime text-forest" : "bg-tint text-forest"}`}
+        className={`flex size-5 items-center justify-center rounded-full ${dark ? "bg-lime text-forest" : "bg-surface text-forest"}`}
       >
         <Icon aria-hidden size={12} strokeWidth={2.25} />
       </span>

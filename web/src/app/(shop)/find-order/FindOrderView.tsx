@@ -60,7 +60,7 @@ export function FindOrderView() {
           <span aria-hidden className="flex size-14 items-center justify-center rounded-2xl bg-tint text-forest">
             <Package className="size-[26px]" strokeWidth={1.75} />
           </span>
-          <h1 className="m-0 mt-5 font-display text-[26px] leading-[34px] font-extrabold tracking-[-0.02em]">Find my order</h1>
+          <h1 className="m-0 mt-5 font-display text-[24px] leading-8 font-bold tracking-[-0.02em]">Find my order</h1>
           <p className="p mt-2">Ordered as a guest? Look up your order with the order number and the phone number you used.</p>
           <form noValidate onSubmit={submit} className="mt-6 flex flex-col gap-[18px]">
             <TextField

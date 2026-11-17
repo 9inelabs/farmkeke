@@ -53,7 +53,7 @@ export default function GetTheAppPage() {
               <div className="flex size-full flex-col overflow-hidden rounded-[35px] bg-[#F7F7F5]">
                 <div className="px-[18px] pt-[38px]">
                   <div className="text-xs text-subtle">Good morning, Adaeze</div>
-                  <div className="mt-0.5 font-display text-[19px] font-extrabold">What are you buying today?</div>
+                  <div className="mt-0.5 font-display text-[19px] font-bold">What are you buying today?</div>
                   <div className="mt-3.5 flex h-10 items-center gap-2 rounded-full bg-surface px-3.5 text-xs text-[#9A9E95] shadow-[inset_0_0_0_1px_var(--color-field)]">
                     <Search size={14} strokeWidth={2} />
                     Search produce or farms
@@ -74,7 +74,7 @@ export default function GetTheAppPage() {
                       <div key={n} className="rounded-xl bg-surface p-[7px] shadow-[inset_0_0_0_1px_#ECEEE8]">
                         <div className="h-[78px] rounded-lg" style={{ background: bg }} />
                         <div className="mt-1.5 text-[11px] font-semibold">{n}</div>
-                        <div className="font-display text-xs font-extrabold text-forest">{p}</div>
+                        <div className="font-display text-xs font-bold text-forest">{p}</div>
                       </div>
                     ))}
                   </div>

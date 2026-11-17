@@ -105,7 +105,7 @@ export default async function LegalPage({ params }: Props) {
           <article className="rounded-[20px] bg-surface px-12 py-11 shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px] m:px-4 m:py-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="font-display text-[36px] leading-[44px] font-extrabold tracking-[-0.03em] m:text-2xl m:leading-[30px]">
+                <h1 className="font-display text-[36px] leading-[44px] font-bold tracking-[-0.03em] m:text-2xl m:leading-[30px]">
                   {d.title}
                 </h1>
                 <div className="mt-2 text-[13px] leading-4 text-subtle">

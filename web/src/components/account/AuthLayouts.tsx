@@ -88,7 +88,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
       )}
       {side === "signin" ? (
         <>
-          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
+          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-bold tracking-[-0.02em]">
             From the farm directly to your home
           </div>
           <div className="relative flex max-w-[380px] flex-col gap-3">
@@ -98,7 +98,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
                 <div className="text-sm font-semibold">Fresh tomatoes</div>
                 <div className="text-xs text-on-forest">Okafor Farms · Harvested today</div>
               </div>
-              <span className="font-display font-extrabold text-lime">₦4,500</span>
+              <span className="font-display font-bold text-lime">₦4,500</span>
             </div>
             <div className="flex items-center gap-3 rounded-2xl bg-[rgba(20,42,14,0.55)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] backdrop-blur-md">
               <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-forest">
@@ -110,7 +110,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
         </>
       ) : (
         <>
-          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-extrabold tracking-[-0.02em]">
+          <div className="relative max-w-[440px] font-display text-[38px] leading-[46px] font-bold tracking-[-0.02em]">
             Fresh food, fairer prices, every week
           </div>
           <div className="relative flex max-w-[380px] flex-col gap-3">
@@ -160,9 +160,9 @@ export function AuthCard({
   return (
     <div className="min-h-dvh bg-canvas">
       <header
-        className={`flex items-center justify-between gap-4 bg-surface px-10 shadow-[inset_0_-1px_0_var(--color-line)] m:px-4 ${headerRight ? "h-[76px]" : "h-[72px]"}`}
+        className={`dark-bar on-dark flex items-center justify-between gap-4 px-10 m:px-4 [&_a]:text-white [&_a:hover]:text-lime ${headerRight ? "h-[76px]" : "h-[72px]"}`}
       >
-        <HomeLogo height={22} />
+        <HomeLogo height={20} tone="light" />
         {headerRight}
       </header>
       <main
@@ -186,7 +186,7 @@ export function AuthCard({
   );
 }
 
-export const authTitle = "m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7 tracking-[-0.02em]";
+export const authTitle = "m-0 font-display text-[26px] leading-[34px] font-bold m:text-[22px] m:leading-7 tracking-[-0.02em]";
 
 export function BackLink({ href, children }: { href: string; children: ReactNode }) {
   return (

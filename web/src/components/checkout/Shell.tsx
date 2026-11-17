@@ -17,7 +17,7 @@ import { routes } from "@/lib/routes";
 import { draft, looksLikeEmail, validPhone, type CheckoutDraft } from "./draft";
 
 export const checkoutWrap = `${NARROW_WRAP} pt-8 m:pt-4`;
-export const checkoutH1 = "m-0 font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-[22px] m:leading-7";
+export const checkoutH1 = "m-0 font-display text-[28px] leading-9 font-bold tracking-[-0.02em] m:text-[22px] m:leading-7";
 export const checkoutCard = "rounded-[20px] bg-surface shadow-[inset_0_0_0_1px_var(--color-line)] m:rounded-[18px]";
 
 export function CheckoutShell({
@@ -152,7 +152,7 @@ export function ItemsSummary({ lines, quote }: { lines: CartLine[]; quote: Quote
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">Total so far</span>
-        <span className="font-display text-[22px] font-extrabold text-forest m:text-xl">{naira(items)}</span>
+        <span className="font-display text-[22px] font-bold text-forest m:text-xl">{naira(items)}</span>
       </div>
     </aside>
   );
@@ -205,7 +205,7 @@ export function FarmsSummary({
       </div>
       <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">{fulfilment === "delivery" ? "Products total" : "Total"}</span>
-        <span className="font-display text-[22px] font-extrabold text-forest m:text-xl">{naira(items)}</span>
+        <span className="font-display text-[22px] font-bold text-forest m:text-xl">{naira(items)}</span>
       </div>
       {fulfilment === "delivery" ? (
         <p className="cap mt-2.5">

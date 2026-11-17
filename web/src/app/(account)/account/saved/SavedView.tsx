@@ -72,7 +72,7 @@ function Saved() {
           <span aria-hidden className="flex size-20 items-center justify-center rounded-3xl bg-tint text-forest">
             <Heart className="size-9" strokeWidth={1.5} />
           </span>
-          <h2 className="m-0 mt-1 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">Keep a list of produce you love</h2>
+          <h2 className="m-0 mt-1 font-display text-2xl leading-8 font-bold m:text-xl m:leading-7">Keep a list of produce you love</h2>
           <p className="p max-w-[420px]">
             Tap the heart on any product to save it here. We&apos;ll tell you when a saved item is back in stock.
           </p>
@@ -160,7 +160,7 @@ function SavedCard({ item, tag }: { item: FavoriteItem; tag: { text: string; ton
         </div>
         <div className="text-xs text-muted-2">{item.farmName}</div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="font-display text-[17px] font-extrabold text-forest">
+          <div className="font-display text-[17px] font-bold text-forest">
             {naira(item.priceKobo)} <span className="font-sans text-xs font-medium text-subtle">/ {item.unit}</span>
           </div>
           {soldOut ? (

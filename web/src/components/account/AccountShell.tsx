@@ -117,7 +117,7 @@ export function AccountTitle({ title, sub, aside }: { title: string; sub?: React
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="m-0 font-display text-[28px] leading-9 font-extrabold tracking-[-0.02em] m:text-[22px] m:leading-7">
+        <h1 className="m-0 font-display text-[24px] leading-8 font-bold tracking-[-0.02em] m:text-[22px] m:leading-7">
           {title}
         </h1>
         {sub ? <p className="p mt-1">{sub}</p> : null}

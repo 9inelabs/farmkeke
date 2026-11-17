@@ -32,12 +32,13 @@ export default async function ShopHome() {
       <CategoryBar />
       <div className="wrap pt-7 m:pt-4">
         <section className="grid grid-cols-[minmax(0,8fr)_minmax(0,4fr)] gap-5 m:grid-cols-1 m:gap-3">
-          <div className="grid min-h-[340px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center gap-7 rounded-3xl bg-forest p-11 m:min-h-0 m:grid-cols-1 m:rounded-[20px] m:p-5">
+          <div className="dark-surface on-dark grid min-h-[340px] grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center gap-7 overflow-hidden rounded-3xl bg-[radial-gradient(55%_80%_at_90%_10%,rgba(169,214,84,0.24)_0%,rgba(169,214,84,0)_70%),linear-gradient(160deg,#10230B_0%,#1E3B16_100%)] p-11 m:min-h-0 m:grid-cols-1 m:rounded-[20px] m:p-5">
+            <div aria-hidden className="grid-lines opacity-70" />
             <div className="flex flex-col items-start gap-4 m:gap-3">
               <span className="badge bg-[rgba(169,214,84,0.18)] text-on-forest-lime">
                 {banner?.tag ?? "Harvested this week"}
               </span>
-              <h1 className="h1 text-[38px] leading-[46px] text-white m:text-2xl m:leading-[30px]">
+              <h1 className="h1 text-[34px] leading-[42px] text-white m:text-2xl m:leading-[30px]">
                 {banner?.title ?? "Fresh picks from farms near you"}
               </h1>
               <p className="p text-on-forest">

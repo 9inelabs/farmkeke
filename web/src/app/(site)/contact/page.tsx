@@ -29,7 +29,7 @@ export default function ContactPage() {
       <FadeUp>
         <div className="max-w-[680px]">
           <Eyebrow icon={Mail}>Contact</Eyebrow>
-          <h1 className="mt-3.5 font-display text-[44px] leading-[52px] font-extrabold tracking-[-0.03em] m:mt-3 m:text-[30px] m:leading-[37px]">
+          <h1 className="mt-3.5 font-display text-[44px] leading-[52px] font-bold tracking-[-0.03em] m:mt-3 m:text-[30px] m:leading-[37px]">
             We&apos;re here to help
           </h1>
           <p className="m-0 mt-2.5 text-lg leading-[29px] text-muted m:mt-2 m:text-[15px] m:leading-[23px]">

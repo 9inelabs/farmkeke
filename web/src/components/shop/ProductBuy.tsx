@@ -224,7 +224,7 @@ export function BuyBox({
 
       {unit ? (
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-[34px] font-extrabold tracking-[-0.02em] text-forest m:text-[28px]">{naira(unit.priceKobo)}</span>
+          <span className="font-display text-[34px] font-bold tracking-[-0.02em] text-forest m:text-[28px]">{naira(unit.priceKobo)}</span>
           <span className="p">per {unit.singular}</span>
         </div>
       ) : null}

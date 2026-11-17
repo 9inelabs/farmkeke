@@ -14,7 +14,7 @@ import { routes } from "@/lib/routes";
 export function OrdersLink({ orderId }: { orderId: string }) {
   const { status } = useViewer();
   return (
-    <Link href={status === "signed-in" ? routes.myOrders : routes.order(orderId)} className="inline-flex min-h-11 items-center text-sm font-semibold">
+    <Link href={status === "signed-in" ? routes.myOrders : routes.order(orderId)} className="inline-flex min-h-11 items-center text-sm font-semibold text-white hover:text-lime">
       {status === "signed-in" ? "My orders" : "Your order"}
     </Link>
   );
@@ -34,7 +34,7 @@ export function FocusSkeleton({ orderId, width = 540 }: { orderId: string; width
 export function FocusMissing({ orderId }: { orderId: string }) {
   return (
     <AuthCard width={540} top={64} padding="40px 36px" center headerRight={<OrdersLink orderId={orderId} />}>
-      <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">We couldn&apos;t open this order</h1>
+      <h1 className="m-0 font-display text-[24px] leading-8 font-bold m:text-[22px] m:leading-7">We couldn&apos;t open this order</h1>
       <p className="p mt-2">It may belong to another account or device. Find it with your order number and phone number.</p>
       <ButtonLink href={routes.findOrder} variant="lime" className="mt-6">
         Find my order
@@ -57,8 +57,8 @@ export function FocusShell({
 }) {
   return (
     <div className="min-h-dvh bg-canvas">
-      <header className="flex h-[76px] items-center justify-between gap-4 bg-surface px-10 shadow-[inset_0_-1px_0_var(--color-line)] m:px-4">
-        <HomeLogo height={22} />
+      <header className="dark-bar on-dark flex h-[76px] items-center justify-between gap-4 px-10 m:px-4">
+        <HomeLogo height={20} tone="light" />
         <OrdersLink orderId={orderId} />
       </header>
       <main id="main" tabIndex={-1} className={`mx-auto outline-none ${className}`} style={{ maxWidth: width }}>

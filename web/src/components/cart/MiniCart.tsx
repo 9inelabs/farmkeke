@@ -42,7 +42,7 @@ export function MiniCart() {
             <>
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted">Subtotal</span>
-                <span className="font-display text-[22px] font-extrabold text-forest">{naira(itemsTotalKobo)}</span>
+                <span className="font-display text-[22px] font-bold text-forest">{naira(itemsTotalKobo)}</span>
               </div>
               <div className="-mt-2 text-xs text-subtle">Delivery is priced once the farm accepts</div>
               <div className="grid grid-cols-2 gap-2.5">

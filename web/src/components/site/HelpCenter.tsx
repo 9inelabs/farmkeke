@@ -174,7 +174,7 @@ export function HelpCenter() {
   return (
     <>
       <div className="on-dark rounded-[28px] bg-forest p-14 text-center m:rounded-[20px] m:px-4 m:py-6">
-        <h1 className="font-display text-[44px] leading-[52px] font-extrabold tracking-[-0.03em] text-white m:text-[28px] m:leading-[35px]">
+        <h1 className="font-display text-[44px] leading-[52px] font-bold tracking-[-0.03em] text-white m:text-[28px] m:leading-[35px]">
           How can we help?
         </h1>
         <p className="m-0 mt-2.5 text-lg leading-[29px] text-on-forest m:mt-1.5 m:text-sm m:leading-[21px]">

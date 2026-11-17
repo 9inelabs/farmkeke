@@ -11,7 +11,7 @@
 
 @theme {
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-montserrat), system-ui, sans-serif;
+  --font-display: var(--font-jakarta), system-ui, sans-serif;
 
   /* Brand */
   --color-forest: #1e3b16;
@@ -157,30 +157,30 @@
   /* Heading sizes differ per design; a page picks its scale with a type-* class below. */
   .h1 {
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: var(--h1-size, 34px);
-    line-height: var(--h1-lh, 42px);
+    font-weight: 700;
+    font-size: var(--h1-size, 30px);
+    line-height: var(--h1-lh, 38px);
     letter-spacing: -0.025em;
     margin: 0;
   }
   .h2 {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: var(--h2-size, 24px);
-    line-height: var(--h2-lh, 32px);
+    font-weight: 600;
+    font-size: var(--h2-size, 22px);
+    line-height: var(--h2-lh, 30px);
     letter-spacing: var(--h2-ls, -0.02em);
     margin: 0;
   }
   .h3 {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 17px;
-    line-height: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
     margin: 0;
   }
   .p {
-    font-size: 15px;
-    line-height: 24px;
+    font-size: 14px;
+    line-height: 22px;
     color: var(--color-muted);
     margin: 0;
   }
@@ -196,12 +196,12 @@
   }
   @media (max-width: 760px) {
     .h1 {
-      font-size: var(--h1-size-m, 24px);
-      line-height: var(--h1-lh-m, 31px);
+      font-size: var(--h1-size-m, 22px);
+      line-height: var(--h1-lh-m, 29px);
     }
     .h2 {
-      font-size: var(--h2-size-m, 19px);
-      line-height: var(--h2-lh-m, 26px);
+      font-size: var(--h2-size-m, 18px);
+      line-height: var(--h2-lh-m, 25px);
     }
     .h3 {
       font-size: 15px;
@@ -215,31 +215,31 @@
   /* Per-design heading scales, from each design's own .h1/.h2 rules */
   .type-search {
     /* W-04, W-04b */
-    --h1-size: 30px;
-    --h1-lh: 38px;
-    --h1-size-m: 22px;
-    --h1-lh-m: 29px;
-    --h2-size: 20px;
-    --h2-lh: 28px;
+    --h1-size: 26px;
+    --h1-lh: 34px;
+    --h1-size-m: 21px;
+    --h1-lh-m: 28px;
+    --h2-size: 18px;
+    --h2-lh: 26px;
     --h2-ls: -0.015em;
-    --h2-size-m: 17px;
-    --h2-lh-m: 24px;
+    --h2-size-m: 16px;
+    --h2-lh-m: 23px;
   }
   .type-product {
     /* W-06 */
-    --h2-size: 20px;
-    --h2-lh: 28px;
+    --h2-size: 18px;
+    --h2-lh: 26px;
     --h2-ls: -0.015em;
     --h2-size-m: 17px;
     --h2-lh-m: 24px;
   }
   .type-compact {
     /* W-07 farm profile; W-20 and W-20c cart */
-    --h1-size: 32px;
-    --h1-lh: 40px;
-    --h1-size-m: 22px;
-    --h1-lh-m: 29px;
-    --h2-size: 18px;
+    --h1-size: 28px;
+    --h1-lh: 36px;
+    --h1-size-m: 21px;
+    --h1-lh-m: 28px;
+    --h2-size: 17px;
     --h2-lh: 26px;
     --h2-ls: -0.01em;
     --h2-size-m: 16px;
@@ -260,9 +260,9 @@
     gap: 8px;
     min-height: 44px;
     padding: 0 20px;
-    border-radius: 12px;
+    border-radius: 999px;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 20px;
     border: 0;
     cursor: pointer;
@@ -477,6 +477,62 @@
     color: var(--color-err);
     margin-top: 6px;
     font-weight: 500;
+  }
+
+  /* Dark forest surfaces (headers, the home hero, footers): a deep gradient,
+     a faint grid and a soft lime glow */
+  .dark-surface {
+    position: relative;
+    isolation: isolate;
+    color: #fff;
+    background:
+      radial-gradient(50% 42% at 50% 40%, rgba(169, 214, 84, 0.2) 0%, rgba(169, 214, 84, 0) 72%),
+      linear-gradient(180deg, #0a1606 0%, #10230b 48%, #1a3513 100%);
+  }
+  .dark-bar {
+    color: #fff;
+    background: linear-gradient(180deg, #0a1606 0%, #12260d 100%);
+  }
+  .grid-lines {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 88px 88px;
+    mask-image: radial-gradient(70% 60% at 50% 30%, #000 25%, transparent 78%);
+  }
+  .lime-text {
+    background: linear-gradient(90deg, #ddf1b4 0%, #a9d654 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Small rounded label above section headings */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--color-tint);
+    color: var(--color-forest);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  /* Soft green-grey panel used by feature cards */
+  .soft-panel {
+    border-radius: 24px;
+    background: linear-gradient(180deg, #f6f7f3 0%, #f0f2ec 100%);
+  }
+  .lime-panel {
+    background: linear-gradient(150deg, #e9f5cf 0%, #c9e58f 100%);
+  }
+  .lime-orb {
+    background: radial-gradient(circle at 32% 28%, #e9f5cf 0%, #c9e58f 55%, #a9d654 100%);
   }
 
   .sr-only-focusable:not(:focus) {

@@ -55,7 +55,7 @@ export function ProductCard({
     <Leaf aria-hidden className="size-11" strokeWidth={1.3} />
   );
   const price = (
-    <div className="min-w-0 font-display text-[17px] leading-[22px] font-extrabold text-forest m:text-[15px] m:leading-5">
+    <div className="min-w-0 font-display text-[17px] leading-[22px] font-bold text-forest m:text-[15px] m:leading-5">
       {naira(item.priceKobo)}{" "}
       <span className="font-sans text-xs font-medium text-subtle m:block m:truncate m:text-[11px] m:leading-[15px]">/ {item.unit}</span>
     </div>
