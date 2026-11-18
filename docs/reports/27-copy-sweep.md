@@ -142,6 +142,11 @@ Phases 1 and 2 changed how money moves: Farmkeke no longer holds shoppers' money
 - `cd web && npx eslint src`: no errors (the one existing warning in `adminOps.ts`).
 - `node scripts/render-email-previews.mjs`: 49 emails rendered. A search of the output for held, escrow, confirm receipt, released to, payout and "few working days" finds nothing except a file name.
 - `node scripts/sync-legal.mjs`: 7 legal documents copied to the app.
+- **Merged `origin/main`** (another session's website redesign and new home page copy). Four conflicts:
+  - **Home page**: took `main`'s version. It was already rewritten for split payments, and scans clean.
+  - **Checkout review** and **problem-sent page**: `main`'s lighter type with this phase's wording.
+  - **"Payment released" page**: stays deleted.
+  - After the merge, `web` `tsc` and `eslint` pass again.
 - **Final search** of `app`, `src`, `web/src` and `convex` for "held safely", "stays held", "until you confirm", "confirm receipt or delivery", "before you confirm", "I received everything", "5 to 10", "7 working days", "few working days", "escrow protection" and "released to": no visible copy left. The only remaining hit is the old audit label for staff releases made before the split.
 
 ## 5. Open questions and guesses
