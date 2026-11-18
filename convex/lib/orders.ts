@@ -267,6 +267,49 @@ export async function markCheckoutPaid(
       await notifyConsumer(ctx, paid, "order_placed", `Order ${order.number} placed`, "Thank you, we've received your payment.");
     }
   }
+
+  // An order cancelled after the payment page opened, but paid for anyway:
+  // Paystack's split already sent that farm its share. Record it, refund the
+  // shopper for the whole order (from Farmkeke), and the farm owes its share
+  // back from its next orders.
+  for (const part of parts) {
+    if (orders.some((o) => o._id === part.orderId)) continue;
+    const order = await ctx.db.get("orders", part.orderId);
+    if (order === null || order.escrow !== "none" || !ENDED.includes(order.status)) continue;
+    const money = {
+      escrow: "released" as const,
+      paidAt: payment.paidAt,
+      releasedAt: payment.paidAt,
+      farmShareKobo: part.shareKobo,
+      commissionKobo: part.commissionKobo,
+      recoveredKobo: part.recoveredKobo,
+    };
+    await ctx.db.patch("orders", order._id, money);
+    const paid = { ...order, ...money };
+    await logOrderEvent(ctx, order._id, "paid", SYSTEM, "Paid after it was cancelled: refunded in full");
+    await ledger(ctx, paid, { kind: "farm_share", amountKobo: part.shareKobo, status: "done", note: "Sent by Paystack", simulated });
+    if (part.commissionKobo > 0) await ledger(ctx, paid, { kind: "commission", amountKobo: part.commissionKobo, status: "done", simulated });
+    if (order.deliveryFeeKobo > 0) await ledger(ctx, paid, { kind: "delivery_fee", amountKobo: order.deliveryFeeKobo, status: "done", simulated });
+    if (part.recoveredKobo !== 0) {
+      await ledger(ctx, paid, { kind: "debt_recovered", amountKobo: part.recoveredKobo, status: "done", simulated });
+      const farm = await ctx.db.get("farms", order.farmId);
+      if (farm !== null) await ctx.db.patch("farms", farm._id, { owedKobo: (farm.owedKobo ?? 0) - part.recoveredKobo });
+    }
+    await ctx.db.patch("orders", order._id, { escrow: "refunded" });
+    await refundOrder(ctx, { ...paid, escrow: "refunded" }, {
+      kind: "full",
+      reason: "The order was cancelled before the payment went through",
+      actor: SYSTEM,
+      chargeFarm: true,
+    });
+    await notifyConsumer(
+      ctx,
+      paid,
+      "order_cancelled",
+      `Refund for order ${order.number}`,
+      `Order ${order.number} was cancelled before your payment went through, so Farmkeke is refunding ${naira(order.totalKobo)} in full. Banks usually take 3 to 10 working days to show it.`,
+    );
+  }
   return true;
 }
 

@@ -237,3 +237,184 @@ test("farmer earnings: shares paid, the fee, refunds owed and paid back; the das
   // Another farm sees none of it
   expect(await as(t, s.farmerB).query(api.earnings.summary, {})).toMatchObject({ earnedKobo: 0, paidOrders: 0 });
 });
+
+test("a farm's order cancelled after the bill went out: the bill is re-totalled; with nothing left it closes", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const shopper = as(t, s.account);
+  const admin = as(t, s.admin);
+  const placed = await shopper.mutation(api.checkout.place, {
+    items: [
+      { listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 },
+      { listingId: s.yams, unitId: s.unitId, quantity: 1, priceKobo: 300000 },
+    ],
+    fulfilment: "pickup", expectedTotalKobo: 750000, contact: { name: "Ada Obi", phone: "08031112222" },
+  });
+  const [a, b] = placed.orders;
+  await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: a.orderId });
+  await as(t, s.farmerB).mutation(api.orders.farmer.accept, { orderId: b.orderId });
+  const checkout = async () => (await t.run(async (ctx) => await ctx.db.get(placed.checkoutId)))!;
+  expect(await checkout()).toMatchObject({ status: "awaiting_payment", totalKobo: 750000 });
+
+  // Farmkeke cancels farm B's order before the shopper pays: the bill drops to farm A's order
+  await admin.mutation(api.admin.orders.cancel, { orderId: b.orderId, reason: "Farm B ran out" });
+  expect(await checkout()).toMatchObject({ status: "awaiting_payment", totalKobo: 450000, itemsTotalKobo: 450000 });
+  const changed = await t.run(async (ctx) => (await ctx.db.query("notifications").collect()).filter((n) => n.title.includes("changed")));
+  expect(changed).toHaveLength(1);
+  expect(changed[0]!.body).toContain("₦4,500");
+  const bill = await shopper.query(api.payments.checkout.get, { checkoutId: placed.checkoutId });
+  expect(bill).toMatchObject({ totalKobo: 450000 });
+  await shopper.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
+  const after = await t.run(async (ctx) => ({ a: (await ctx.db.get(a.orderId))!, b: (await ctx.db.get(b.orderId))!, refunds: await ctx.db.query("refunds").collect() }));
+  expect(after.a).toMatchObject({ escrow: "released", farmShareKobo: 427500 });
+  expect(after.b).toMatchObject({ status: "cancelled", escrow: "none" });
+  expect(after.refunds).toHaveLength(0);
+
+  // Every order cancelled after the bill: the checkout closes and can't be paid
+  const second = await shopper.mutation(api.checkout.place, {
+    items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
+    fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Ada Obi", phone: "08031112222" },
+  });
+  await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: second.orders[0].orderId });
+  await admin.mutation(api.admin.orders.cancel, { orderId: second.orders[0].orderId, reason: "Gone bad" });
+  expect((await t.run(async (ctx) => await ctx.db.get(second.checkoutId)))!).toMatchObject({ status: "abandoned", abandonReason: "no_orders_left" });
+  await expect(shopper.mutation(api.payments.checkout.markPaidTest, { checkoutId: second.checkoutId })).rejects.toThrow(/CHECKOUT_EXPIRED/);
+});
+
+test("paid on Paystack after one farm's order was cancelled: that farm's share is owed back and the shopper refunded for it", async () => {
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_secret";
+  const calls: { url: string; body: any }[] = [];
+  let txAmount = 0;
+  vi.stubGlobal("fetch", async (url: string, init?: { body?: string }) => {
+    const body = init?.body ? JSON.parse(init.body) : undefined;
+    calls.push({ url, body });
+    const ok = (data: unknown) => new Response(JSON.stringify({ status: true, message: "ok", data }), { status: 200 });
+    if (url.endsWith("/split")) return ok({ split_code: "SPL_1" });
+    if (url.endsWith("/transaction/initialize")) {
+      txAmount = body.amount;
+      return ok({ authorization_url: "https://checkout.paystack.com/x", access_code: "x", reference: body.reference });
+    }
+    if (url.includes("/transaction/verify/")) {
+      const reference = decodeURIComponent(url.split("/transaction/verify/")[1]!);
+      return ok({ reference, status: "success", amount: txAmount, currency: "NGN", channel: "card", paid_at: new Date().toISOString(), customer: { email: "x@y.z" } });
+    }
+    if (url.endsWith("/refund")) return ok({ id: 91, status: "pending" });
+    return new Response(JSON.stringify({ status: false, message: "unexpected" }), { status: 400 });
+  });
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const shopper = as(t, s.account);
+  const placed = await shopper.mutation(api.checkout.place, {
+    items: [
+      { listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 },
+      { listingId: s.yams, unitId: s.unitId, quantity: 1, priceKobo: 300000 },
+    ],
+    fulfilment: "pickup", expectedTotalKobo: 750000, contact: { name: "Ada Obi", phone: "08031112222" },
+  });
+  const [a, b] = placed.orders;
+  await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: a.orderId });
+  await as(t, s.farmerB).mutation(api.orders.farmer.accept, { orderId: b.orderId });
+  // The shopper opens Paystack: the split covers both farms
+  await shopper.action(api.payments.checkout.start, { checkoutId: placed.checkoutId, method: "card" });
+  expect(calls.find((c) => c.url.endsWith("/split"))!.body.subaccounts).toEqual([
+    { subaccount: "ACCT_A", share: 427500 },
+    { subaccount: "ACCT_B", share: 285000 },
+  ]);
+  // Farmkeke cancels farm B's order while the payment page is open, then the shopper pays the old total
+  await as(t, s.admin).mutation(api.admin.orders.cancel, { orderId: b.orderId, reason: "Farm B ran out" });
+  expect(await shopper.action(api.payments.checkout.verify, { checkoutId: placed.checkoutId })).toEqual({ status: "paid", paid: true });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+  const r = await t.run(async (ctx) => ({
+    a: (await ctx.db.get(a.orderId))!,
+    b: (await ctx.db.get(b.orderId))!,
+    farmB: (await ctx.db.get(s.farmB))!,
+    refunds: await ctx.db.query("refunds").collect(),
+    ledgerB: (await ctx.db.query("ledgerEntries").withIndex("by_orderId", (q) => q.eq("orderId", b.orderId)).collect()).map((e) => [e.kind, e.amountKobo]),
+  }));
+  expect(r.a).toMatchObject({ status: "accepted", escrow: "released", farmShareKobo: 427500 });
+  // Farm B got its share from Paystack anyway: it owes it back; the shopper gets farm B's whole order back
+  expect(r.b).toMatchObject({ status: "cancelled", escrow: "refunded", farmShareKobo: 285000 });
+  expect(r.farmB.owedKobo).toBe(285000);
+  expect(r.refunds).toHaveLength(1);
+  expect(r.refunds[0]).toMatchObject({ orderId: b.orderId, kind: "full", amountKobo: 300000, farmDebtKobo: 285000 });
+  expect(calls.find((c) => c.url.endsWith("/refund"))!.body).toMatchObject({ amount: 300000 });
+  expect(r.ledgerB).toEqual([["farm_share", 285000], ["commission", 15000], ["farm_debt", 285000], ["refund", 300000]]);
+});
+
+test("approving a farm sets it up with Paystack; a saved-card payment carries the split too", async () => {
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_secret";
+  const calls: { url: string; method: string; body: any }[] = [];
+  vi.stubGlobal("fetch", async (url: string, init?: { body?: string; method?: string }) => {
+    const body = init?.body ? JSON.parse(init.body) : undefined;
+    calls.push({ url, method: init?.method ?? "GET", body });
+    const ok = (data: unknown) => new Response(JSON.stringify({ status: true, message: "ok", data }), { status: 200 });
+    if (url.endsWith("/subaccount")) return ok({ subaccount_code: "ACCT_GREEN" });
+    if (url.endsWith("/split")) return ok({ split_code: "SPL_9" });
+    if (url.endsWith("/transaction/charge_authorization")) {
+      return ok({ reference: body.reference, status: "success", amount: body.amount, currency: "NGN", channel: "card", paid_at: new Date().toISOString(),
+        authorization: { authorization_code: body.authorization_code, card_type: "visa", last4: "4081", exp_month: "12", exp_year: "2030", reusable: true, signature: "SIG_1" },
+        customer: { email: "ada@example.com" } });
+    }
+    // Emails and texts: accepted, not checked here
+    return new Response(JSON.stringify({ id: "x" }), { status: 200 });
+  });
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const app = await t.run(async (ctx) => {
+    const id = await ctx.db.insert("users", { name: "Bola Ade", email: "bola@example.com" });
+    const appId = await ctx.db.insert("farmerApplications", {
+      userId: id, status: "submitted", reference: "FA-10001", farmName: "Green Acres", nin: "12345678901", phone: "+2348030000044", state: "Imo", lga: "Owerri North",
+      address: "12 Ring Road", farmSize: "1_to_5", farmType: "crops", categoryIds: [await ctx.db.insert("categories", { name: "Vegetables", slug: "veg", illustration: "veg", sortOrder: 1, hidden: false })],
+      mainCrops: "Peppers", seasons: ["all_year"], collectionAddress: "12 Ring Road", collectionHours: hours, leadTimeHours: 4,
+      bankCode: "058", bankName: "GTBank", accountNumber: "0123456780", accountName: "Bola Ade", submittedAt: Date.now(),
+    } as any);
+    for (const kind of ["government_id", "farm_photo", "farm_photo", "farm_photo", "proof_of_address", "association_letter"] as const) {
+      const storageId = await ctx.storage.store(new Blob(["x"]));
+      await ctx.db.insert("farmerDocuments", { userId: id, applicationId: appId, kind, storageId, status: "pending" });
+    }
+    return { id, appId };
+  });
+  await as(t, s.admin).mutation(api.admin.farmerRequests.approve, { applicationId: app.appId, reason: "All checks passed" });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  const farm = await t.run(async (ctx) => await ctx.db.query("farms").withIndex("by_userId", (q) => q.eq("userId", app.id)).unique());
+  expect(farm).toMatchObject({ name: "Green Acres", paystackSubaccountCode: "ACCT_GREEN" });
+  expect(calls.find((c) => c.url.endsWith("/subaccount"))).toMatchObject({ method: "POST", body: { business_name: "Green Acres", settlement_bank: "058", account_number: "0123456780" } });
+
+  // A saved card: charge_authorization with the same split_code, paid at once
+  const cardId = await t.run(async (ctx) =>
+    await ctx.db.insert("savedCards", { userId: s.account.id, authorizationCode: "AUTH_SAVED", email: "ada@example.com", brand: "visa", last4: "4081", expMonth: "12", expYear: "2030" }),
+  );
+  const shopper = as(t, s.account);
+  const placed = await shopper.mutation(api.checkout.place, {
+    items: [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }],
+    fulfilment: "pickup", expectedTotalKobo: 450000, contact: { name: "Ada Obi", phone: "08031112222" },
+  });
+  await as(t, s.farmerA).mutation(api.orders.farmer.accept, { orderId: placed.orders[0].orderId });
+  await shopper.action(api.payments.checkout.start, { checkoutId: placed.checkoutId, method: "saved_card", savedCardId: cardId });
+  expect(calls.find((c) => c.url.endsWith("/transaction/charge_authorization"))!.body).toMatchObject({
+    amount: 450000, authorization_code: "AUTH_SAVED", split_code: "SPL_9",
+  });
+  expect(await t.run(async (ctx) => (await ctx.db.get(placed.orders[0].orderId))!)).toMatchObject({ escrow: "released", farmShareKobo: 427500 });
+});
+
+test("the report window: still open just before a day after delivery, closed just after; pickup can't be marked arrived", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const guest = as(t, s.guest);
+  const report = (orderId: any) => guest.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "Soft", photoIds: [], reason: "damaged" });
+  const late = await paidOrder(t, s, s.guest, "pickup", 1, "g@example.com");
+  await deliver(t, s, late);
+  await expect(guest.mutation(api.orders.consumer.markArrived, { orderId: late })).rejects.toThrow(/NOT_OUT_FOR_DELIVERY/);
+  vi.advanceTimersByTime(24 * HOUR + 60_000);
+  await expect(report(late)).rejects.toThrow(/REPORT_WINDOW_CLOSED/);
+
+  const inTime = await paidOrder(t, s, s.guest, "pickup", 1, "g@example.com");
+  await deliver(t, s, inTime);
+  vi.advanceTimersByTime(24 * HOUR - 60_000);
+  const view = (await guest.query(api.orders.consumer.get, { orderId: inTime }))!;
+  expect(view.canReport).toBe(true);
+  expect(view.reportBy! - Date.now()).toBe(60_000);
+  await report(inTime);
+  expect((await t.run(async (ctx) => (await ctx.db.get(inTime))!)).status).toBe("disputed");
+});

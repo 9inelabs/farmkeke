@@ -90,6 +90,41 @@ export async function checkBill(ctx: MutationCtx, checkoutId: Id<"checkouts">) {
   );
 }
 
+/**
+ * A bill already sent, and one of its orders was cancelled before it was
+ * paid: the bill covers only the orders still to pay for, so the shopper is
+ * never asked to pay for a cancelled order. With nothing left, the checkout
+ * closes (open payment pages are abandoned). The pay link stays the same.
+ */
+export async function rebillAfterCancel(ctx: MutationCtx, checkoutId: Id<"checkouts">) {
+  const checkout = await ctx.db.get("checkouts", checkoutId);
+  if (checkout === null || checkout.status !== "awaiting_payment") return;
+  const live = (await ordersOf(ctx, checkoutId)).filter(awaitingPayment);
+  if (live.length === 0) {
+    await ctx.db.patch("checkouts", checkoutId, { status: "abandoned", abandonedAt: Date.now(), abandonReason: "no_orders_left" });
+    const attempts = await ctx.db
+      .query("paymentAttempts")
+      .withIndex("by_checkoutId", (q) => q.eq("checkoutId", checkoutId))
+      .take(20);
+    for (const a of attempts) {
+      if (a.status === "started" || a.status === "opened") await ctx.db.patch("paymentAttempts", a._id, { status: "abandoned" });
+    }
+    return;
+  }
+  const itemsTotalKobo = live.reduce((sum, o) => sum + o.itemsTotalKobo, 0);
+  const deliveryFeeKobo = live.reduce((sum, o) => sum + o.deliveryFeeKobo, 0);
+  if (itemsTotalKobo + deliveryFeeKobo === checkout.totalKobo) return;
+  await ctx.db.patch("checkouts", checkoutId, { itemsTotalKobo, deliveryFeeKobo, totalKobo: itemsTotalKobo + deliveryFeeKobo });
+  await notifyConsumer(
+    ctx,
+    live[0]!,
+    "bill_ready",
+    `Your bill for order ${live.map((o) => o.number).join(", ")} changed`,
+    `An order was cancelled, so your bill is now ${naira(itemsTotalKobo + deliveryFeeKobo)}. Pay by the same time: ${shortLink(links.pay(checkout.payToken ?? ""))}`,
+    checkout.payToken ? { href: `/pay/${checkout.payToken}` } : undefined,
+  );
+}
+
 /** Six hours in: one reminder if the bill is still unpaid. */
 export async function remindBill(ctx: MutationCtx, checkout: Doc<"checkouts">) {
   if (checkout.status !== "awaiting_payment" || checkout.payToken === undefined || checkout.payBy === undefined) return;

@@ -6,7 +6,7 @@ import type { Doc } from "../_generated/dataModel";
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
-import { checkBill } from "../lib/bill";
+import { checkBill, rebillAfterCancel } from "../lib/bill";
 import { notifyConsumer, notifyFarm } from "../lib/notify";
 import { endWithFullRefund, logOrderEvent, orderCore, orderRow, restoreStock, transition, type OrderStatus } from "../lib/orders";
 import { HOUR } from "../lib/settings";
@@ -236,6 +236,7 @@ export const cancel = mutation({
     if (order.status === "awaiting_payment") {
       await transition(ctx, order, "cancelled", actor, { endedAt: Date.now(), cancelReason: reason }, reason);
       await restoreStock(ctx, order);
+      await rebillAfterCancel(ctx, order.checkoutId);
       return;
     }
     const ended = await endWithFullRefund(
@@ -258,8 +259,9 @@ export const cancel = mutation({
         : "Farmkeke cancelled this order. You weren't charged.",
     );
     await notifyFarm(ctx, ended, "order_cancelled", `Order ${order.number} was cancelled`, `Farmkeke cancelled this order: ${reason}`);
-    // An unpaid delivery checkout may now be ready to bill (or have nothing left)
+    // An unpaid checkout may now be ready to bill, or its bill covers less (or nothing)
     await checkBill(ctx, order.checkoutId);
+    if (!paid) await rebillAfterCancel(ctx, order.checkoutId);
   },
 });
 
