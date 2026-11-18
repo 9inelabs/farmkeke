@@ -1,10 +1,12 @@
 // M-06 Choose your area. Also opened from Home's location chip (?from=home)
 // and from checkout (?from=checkout); both go back where they came from.
+// Every Nigerian state is listed: where Farmkeke delivers first, then the
+// rest, which lead to M-07 ("We don't deliver to … yet", notify me).
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { ChevronDown, Offline, Search } from "@/components/icons";
+import { ChevronDown, Offline, Pin, Search } from "@/components/icons";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import {
@@ -20,6 +22,7 @@ import {
   Text,
   useIsOffline,
 } from "@/components/ui";
+import { NIGERIAN_STATES } from "@/content/nigeria";
 import { usePrefs } from "@/store/prefs";
 import { fonts } from "@/theme/typography";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
@@ -60,6 +63,10 @@ export default function ChooseArea() {
   };
 
   const loading = states === undefined || (state !== null && areas === undefined);
+  const served = states ?? [];
+  const comingSoon = NIGERIAN_STATES.filter((s) => !served.some((x) => x.toLowerCase() === s.toLowerCase()));
+  // A state with no delivery areas yet
+  const unserved = state !== null && areas !== undefined && areas.length === 0;
 
   return (
     <Screen
@@ -108,6 +115,14 @@ export default function ChooseArea() {
               <Skeleton key={i} height={56} radius={radii.md} />
             ))}
           </View>
+        ) : unserved ? (
+          <EmptyState
+            icon={Pin}
+            title={`We don't deliver in ${state} yet`}
+            message="Leave your email and we'll tell you as soon as delivery reaches you."
+            actionLabel="Tell me when you arrive"
+            onAction={() => router.push({ pathname: "/outside-area", params: { place: state ?? "", state: state ?? "" } })}
+          />
         ) : (
           <ListGroup title={`Areas we deliver to in ${state ?? ""}`}>
             {visible.length === 0 ? (
@@ -144,20 +159,37 @@ export default function ChooseArea() {
 
       <BottomSheet visible={statePicker} onClose={() => setStatePicker(false)}>
         <Text variant="heading">Choose a state</Text>
-        <ListGroup>
-          {(states ?? []).map((s) => (
-            <RadioRow
-              key={s}
-              title={s}
-              selected={s === state}
-              onPress={() => {
-                setState(s);
-                setSelected(null);
-                setStatePicker(false);
-              }}
-            />
-          ))}
-        </ListGroup>
+        <ScrollView style={styles.stateList} showsVerticalScrollIndicator={false}>
+          <ListGroup title="We deliver in">
+            {served.map((s) => (
+              <RadioRow
+                key={s}
+                title={s}
+                selected={s === state}
+                onPress={() => {
+                  setState(s);
+                  setSelected(null);
+                  setStatePicker(false);
+                }}
+              />
+            ))}
+          </ListGroup>
+          <ListGroup title="Coming soon">
+            {comingSoon.map((s) => (
+              <RadioRow
+                key={s}
+                title={s}
+                subtitle="Not delivering yet"
+                selected={s === state}
+                onPress={() => {
+                  setState(s);
+                  setSelected(null);
+                  setStatePicker(false);
+                }}
+              />
+            ))}
+          </ListGroup>
+        </ScrollView>
       </BottomSheet>
     </Screen>
   );
@@ -189,4 +221,5 @@ const styles = StyleSheet.create({
   skeletons: { gap: spacing.sm },
   none: { padding: spacing.lg },
   hint: { marginTop: -spacing.sm },
+  stateList: { maxHeight: 460 },
 });
