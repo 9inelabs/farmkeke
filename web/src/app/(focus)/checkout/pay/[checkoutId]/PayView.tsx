@@ -298,14 +298,14 @@ export function PayView({ checkoutId: fromPath, payToken }: { checkoutId?: strin
 
 function PayHeader({ right }: { right?: ReactNode }) {
   return (
-    <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
+    <header className="dark-bar on-dark">
       <div className="mx-auto flex h-[72px] max-w-[1160px] items-center justify-between gap-4 px-8 m:px-4">
-        <HomeLogo height={22} />
-        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-forest m:hidden">
+        <HomeLogo height={20} tone="light" />
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-on-forest-lime m:hidden">
           <Lock aria-hidden className="size-4" strokeWidth={2} />
           Secure checkout
         </span>
-        <span className="flex min-w-[90px] justify-end">{right}</span>
+        <span className="flex min-w-[90px] justify-end text-white [&_a]:text-white [&_a:hover]:text-lime">{right}</span>
       </div>
     </header>
   );
@@ -329,7 +329,7 @@ function Page({ children, right, top = 170 }: { children: ReactNode; right?: Rea
 }
 
 const panel = "flex w-[540px] max-w-full flex-col items-center rounded-[24px] bg-surface px-10 py-11 text-center shadow-[inset_0_0_0_1px_var(--color-line)] m:px-5 m:py-8";
-const title = "m-0 mt-6 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7 tracking-[-0.02em] m:text-[23px] m:leading-[30px]";
+const title = "m-0 mt-6 font-display text-[26px] leading-[34px] font-bold m:text-[22px] m:leading-7 tracking-[-0.02em] m:text-[23px] m:leading-[30px]";
 
 export function PaySkeleton() {
   return (
@@ -391,7 +391,7 @@ function Choose({
               <div className="min-w-0">
                 {checkout.contact.email ? <div className="truncate text-xs text-subtle">{checkout.contact.email}</div> : null}
                 <h1 id="pay-title" className="m-0 text-sm font-semibold">
-                  Pay <span className="font-display font-extrabold">{total}</span> to Farmkeke
+                  Pay <span className="font-display font-bold">{total}</span> to Farmkeke
                 </h1>
               </div>
             </div>
@@ -502,7 +502,7 @@ function Confirming({ checkout }: { checkout: CheckoutForPay }) {
         <p className="p mt-2.5">This usually takes a few seconds. Please don&apos;t close or refresh this page.</p>
         <div className="mt-7 flex w-full items-center justify-between rounded-[14px] bg-soft px-[18px] py-4 text-sm">
           <span className="text-muted">{methodLabel(checkout.lastAttempt)}</span>
-          <span className="font-display text-lg font-extrabold">{naira(checkout.totalKobo)}</span>
+          <span className="font-display text-lg font-bold">{naira(checkout.totalKobo)}</span>
         </div>
         <div className="mt-[18px] flex items-center gap-2 text-[13px] font-semibold text-forest">
           <ShieldCheck aria-hidden className="size-4" strokeWidth={1.75} />
@@ -682,7 +682,7 @@ function BillSummary({ checkout }: { checkout: CheckoutForPay }) {
       </ul>
       <div className="mt-1.5 flex justify-between gap-3 pt-2 shadow-[inset_0_1px_0_#EEF0EB]">
         <span className="font-semibold">Total</span>
-        <span className="font-display text-base font-extrabold text-forest">{naira(checkout.totalKobo)}</span>
+        <span className="font-display text-base font-bold text-forest">{naira(checkout.totalKobo)}</span>
       </div>
       {checkout.payBy ? (
         <p className="cap mt-2">

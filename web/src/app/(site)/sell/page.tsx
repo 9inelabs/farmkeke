@@ -132,7 +132,7 @@ export default function SellPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className={cap}>New order</div>
-                  <div className="mt-0.5 font-display text-lg font-extrabold">FK-10234</div>
+                  <div className="mt-0.5 font-display text-lg font-bold">FK-10234</div>
                 </div>
                 <span className="badge b-pend">
                   <Clock aria-hidden size={13} strokeWidth={2} />

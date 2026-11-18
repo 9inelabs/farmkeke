@@ -197,7 +197,7 @@ async function ProductContent({ params }: Props) {
           <div className="mt-5 grid grid-cols-[minmax(0,4fr)_minmax(0,8fr)] gap-10 m:mt-3 m:grid-cols-1 m:gap-4">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-[44px] leading-[48px] font-extrabold m:text-[34px] m:leading-10">{avg}</span>
+                <span className="font-display text-[44px] leading-[48px] font-bold m:text-[34px] m:leading-10">{avg}</span>
                 <span className="sm">out of 5</span>
               </div>
               <RatingBars summary={summary} />

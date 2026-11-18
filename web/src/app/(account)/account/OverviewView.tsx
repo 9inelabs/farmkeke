@@ -156,7 +156,7 @@ function Stat({ href, label, value, detail }: { href: string; label: string; val
       {value === undefined ? (
         <Skeleton className="mt-2 h-8 w-12" />
       ) : (
-        <div className="mt-1 font-display text-[28px] font-extrabold">{value}</div>
+        <div className="mt-1 font-display text-[28px] font-bold">{value}</div>
       )}
       <div className="sm mt-0.5">{detail}</div>
     </Link>

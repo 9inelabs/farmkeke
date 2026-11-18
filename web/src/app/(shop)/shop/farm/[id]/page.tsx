@@ -94,7 +94,7 @@ async function FarmContent({ params }: Props) {
             photoUrl={farm.photoUrl}
             size={112}
             className="rounded-[28px] shadow-[0_0_0_6px_#FFFFFF] m:!size-[72px] m:!rounded-[20px] m:text-xl m:shadow-[0_0_0_4px_#FFFFFF]"
-            textClass="text-[34px] font-extrabold"
+            textClass="text-[34px] font-bold"
           />
           <div className="min-w-[260px] flex-1 pb-1 m:min-w-0 m:basis-full m:pb-0">
             <div className="flex flex-wrap items-center gap-2.5 m:gap-2">
@@ -202,7 +202,7 @@ async function FarmContent({ params }: Props) {
             {count > 0 && avg ? (
               <>
                 <div className="mt-2.5 flex items-baseline gap-2">
-                  <span className="font-display text-4xl leading-10 font-extrabold">{avg}</span>
+                  <span className="font-display text-4xl leading-10 font-bold">{avg}</span>
                   <span className="sm">
                     from {count} {count === 1 ? "review" : "reviews"}
                   </span>

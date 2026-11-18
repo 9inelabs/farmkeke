@@ -10,14 +10,14 @@ export const NARROW_WRAP = "mx-auto max-w-[1160px] px-8 m:px-4";
 /** Checkout header (W-21 to W-25): wordmark · Secure checkout · Back to cart. */
 export function CheckoutHeader({ wrapClassName = "wrap" }: { wrapClassName?: string } = {}) {
   return (
-    <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
+    <header className="dark-bar on-dark">
       <div className={`${wrapClassName} flex h-[72px] items-center justify-between gap-4`}>
-        <HomeLogo height={22} />
-        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-forest m:hidden">
+        <HomeLogo height={20} tone="light" />
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-on-forest-lime m:hidden">
           <Lock aria-hidden className="size-4" />
           Secure checkout
         </span>
-        <Link href={routes.cart} className="inline-flex min-h-11 items-center text-sm font-semibold">
+        <Link href={routes.cart} className="inline-flex min-h-11 items-center text-sm font-semibold text-white hover:text-lime">
           Back to cart
         </Link>
       </div>
@@ -31,9 +31,9 @@ export function CheckoutHeader({ wrapClassName = "wrap" }: { wrapClassName?: str
  */
 export function MinimalHeader({ right, wrapClassName = "wrap" }: { right?: ReactNode; wrapClassName?: string }) {
   return (
-    <header className="bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
+    <header className="dark-bar on-dark">
       <div className={`${wrapClassName} flex h-[72px] items-center justify-between gap-4`}>
-        <HomeLogo height={22} />
+        <HomeLogo height={20} tone="light" />
         {right}
       </div>
     </header>

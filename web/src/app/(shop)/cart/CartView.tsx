@@ -187,7 +187,7 @@ export function CartView() {
           </div>
           <div className="mt-2.5 flex items-baseline justify-between pt-4 shadow-[inset_0_1px_0_#EEF0EB]">
             <span className="font-semibold">Subtotal</span>
-            <span className="font-display text-2xl font-extrabold text-forest">{naira(itemsKobo)}</span>
+            <span className="font-display text-2xl font-bold text-forest">{naira(itemsKobo)}</span>
           </div>
           <Button
             variant="lime"
@@ -302,7 +302,7 @@ function CartRow({
       ) : (
         <div className="flex items-center gap-4 m:w-full m:justify-between m:pl-[88px]">
           <QtyStepper line={{ ...l, quantity }} />
-          <div className="w-[110px] text-right font-display text-base font-extrabold m:w-auto">
+          <div className="w-[110px] text-right font-display text-base font-bold m:w-auto">
             {naira(priceKobo * quantity)}
           </div>
         </div>
@@ -319,7 +319,7 @@ function EmptyCart() {
           <span className="flex size-[88px] items-center justify-center rounded-[28px] bg-tint text-forest" aria-hidden>
             <ShoppingBasket className="size-10" strokeWidth={1.5} />
           </span>
-          <h1 className="m-0 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em] m:text-[26px] m:leading-[34px]">
+          <h1 className="m-0 font-display text-[24px] leading-8 font-bold tracking-[-0.02em] m:text-[26px] m:leading-[34px]">
             Your cart is ready for fresh picks
           </h1>
           <p className="p max-w-[460px]">

@@ -34,7 +34,7 @@ export function ErrorView({ error, retry }: { error: unknown; retry: () => void 
         <span aria-hidden className="tile mt-2 size-16 rounded-[20px]">
           <TriangleAlert className="size-[30px]" strokeWidth={1.75} />
         </span>
-        <h1 className="m-0 mt-6 max-w-[640px] font-display text-[40px] leading-[48px] font-extrabold tracking-[-0.03em] m:text-[30px] m:leading-[38px]">
+        <h1 className="m-0 mt-6 max-w-[640px] font-display text-[40px] leading-[48px] font-bold tracking-[-0.03em] m:text-[30px] m:leading-[38px]">
           Something went wrong on our side
         </h1>
         <p className="mt-3 max-w-[540px] text-lg leading-[29px] text-muted m:text-base m:leading-[26px]">

@@ -1,7 +1,8 @@
 "use client";
 
-// Landing and information pages header (Main, W-60, W-80 to W-88): a floating
-// white bar with section links, "Shop on the web" and "Get the app".
+// Landing and information pages header (Main, W-60, W-80 to W-88): the dark
+// forest bar with section links, "Shop on the web" and "Get the app". On the
+// home page it sits transparently over the dark hero.
 // On phones the links fold into a "Menu" button (text label, not icon-only).
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -44,17 +45,16 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const overHero = pathname === routes.home;
   return (
-    <header className="wrap-site relative z-40 pt-5 m:pt-3">
-      <nav
-        aria-label="Main"
-        className="flex h-[66px] items-center gap-5 rounded-[18px] bg-surface pr-3 pl-5 shadow-[inset_0_0_0_1px_var(--color-line)] m:h-14 m:gap-2 m:rounded-2xl m:pr-2 m:pl-3.5"
-      >
+    <header className={`on-dark z-40 ${overHero ? "absolute inset-x-0 top-0" : "dark-bar relative"}`}>
+      <div className="wrap-site relative">
+      <nav aria-label="Main" className="flex h-[76px] items-center gap-5 m:h-[60px] m:gap-2">
         <span className="contents m:hidden">
-          <HomeLogo height={24} />
+          <HomeLogo height={22} tone="light" />
         </span>
         <span className="hidden m:contents">
-          <HomeLogo height={19} />
+          <HomeLogo height={18} tone="light" />
         </span>
         <div className="flex flex-1 justify-center gap-8 m:hidden">
           {LINKS.map((l) => (
@@ -62,7 +62,7 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
               key={l.href}
               href={l.href}
               aria-current={pathname === l.href ? "page" : undefined}
-              className="inline-flex min-h-11 items-center text-sm font-medium text-ink-3 hover:text-ink aria-[current=page]:text-forest aria-[current=page]:shadow-[inset_0_-2px_0_var(--color-lime)]"
+              className="inline-flex min-h-11 items-center text-sm text-white/75 hover:text-white aria-[current=page]:text-white aria-[current=page]:shadow-[inset_0_-2px_0_var(--color-lime)]"
             >
               {l.label}
             </Link>
@@ -70,18 +70,18 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
         </div>
         <div className="hidden flex-1 m:block" />
         <m.span {...pressable} className="m:hidden">
-          <Link href={routes.shop} className="btn sm ghost">
+          <Link href={routes.shop} className="btn sm min-h-10 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] hover:bg-white/8 hover:text-white">
             Shop on the web
           </Link>
         </m.span>
         <m.span {...pressable}>
-          <Link href={routes.getTheApp} className="btn sm lime m:min-h-10 m:px-3 m:text-[13px]">
+          <Link href={routes.getTheApp} className="btn sm lime min-h-10 m:px-3.5 m:text-[13px]">
             Get the app
           </Link>
         </m.span>
         <button
           type="button"
-          className="btn sm ghost hidden m:inline-flex m:min-h-10 m:px-3 m:text-[13px] max-[360px]:px-2.5"
+          className="btn sm hidden text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] m:inline-flex m:min-h-10 m:px-3 m:text-[13px] max-[360px]:px-2.5"
           aria-expanded={open}
           aria-controls="site-menu"
           onClick={() => setOpen((o) => !o)}
@@ -95,7 +95,7 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
         {open ? (
           <m.div
             id="site-menu"
-            className="absolute inset-x-5 top-[94px] rounded-[18px] bg-surface p-2 shadow-[inset_0_0_0_1px_var(--color-line),0_18px_40px_rgba(20,28,16,0.14)]"
+            className="absolute inset-x-5 top-[66px] rounded-[18px] text-ink bg-surface p-2 shadow-[inset_0_0_0_1px_var(--color-line),0_18px_40px_rgba(20,28,16,0.14)]"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -120,6 +120,7 @@ function SiteHeaderInner({ pathname }: { pathname: string }) {
           </m.div>
         ) : null}
       </AnimatePresence>
+      </div>
     </header>
   );
 }

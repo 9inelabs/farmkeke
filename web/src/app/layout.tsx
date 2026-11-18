@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AreaPicker } from "@/components/area/AreaPicker";
 import { SessionKeeper } from "@/components/account/SessionKeeper";
 import { MiniCart } from "@/components/cart/MiniCart";
@@ -12,12 +12,7 @@ import { SITE_URL } from "@/lib/siteUrl";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-inter", display: "swap" });
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-montserrat",
-  display: "swap",
-});
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["500", "600", "700", "800"], variable: "--font-jakarta", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -45,7 +40,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-NG" className={`${inter.variable} ${montserrat.variable}`}>
+    <html lang="en-NG" className={`${inter.variable} ${jakarta.variable}`}>
       <body>
         <a
           href="#main"

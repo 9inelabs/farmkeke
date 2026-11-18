@@ -198,7 +198,7 @@ function Review() {
           </div>
           <div className="mt-2 flex items-baseline justify-between pt-3.5 shadow-[inset_0_1px_0_#EEF0EB]">
             <span className="font-semibold">{delivery ? "Products total" : "Total"}</span>
-            <span className="font-display text-[26px] font-extrabold text-forest m:text-[22px]">{total !== undefined ? naira(total) : "…"}</span>
+            <span className="font-display text-[26px] font-bold text-forest m:text-[22px]">{total !== undefined ? naira(total) : "…"}</span>
           </div>
           <p className="cap mt-2">
             Nothing to pay now. Once the {farms.length > 1 ? "farms accept" : "farm accepts"}, {delivery ? "we price the delivery and " : ""}we
@@ -323,7 +323,7 @@ function Review() {
           <ol className="m-0 mt-3.5 grid list-none grid-cols-3 gap-3 p-0 m:mt-2.5 m:grid-cols-1 m:gap-2">
             {(delivery ? PROTECTION_DELIVERY : PROTECTION).map((s, i) => (
               <li key={s.title} className="rounded-[14px] bg-soft p-3.5 m:grid m:grid-cols-[22px_minmax(0,1fr)] m:gap-x-2 m:rounded-xl m:p-3">
-                <div className="font-display text-lg font-extrabold text-lime m:row-span-2 m:text-base m:leading-[18px]" aria-hidden>
+                <div className="font-display text-lg font-bold text-lime m:row-span-2 m:text-base m:leading-[18px]" aria-hidden>
                   {i + 1}
                 </div>
                 <div className="mt-1 text-sm font-semibold m:mt-0 m:text-[13px] m:leading-[18px]">{s.title}</div>

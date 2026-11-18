@@ -16,13 +16,13 @@ import { m, pressable } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
 const hlink =
-  "inline-flex min-h-11 items-center gap-2 rounded-[10px] px-2.5 text-sm font-medium whitespace-nowrap text-ink hover:bg-canvas hover:text-ink";
+  "inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium whitespace-nowrap text-white/85 hover:bg-white/8 hover:text-white";
 
 export function ShopHeader() {
   return (
-    <header className="shop-header bg-surface shadow-[inset_0_-1px_0_var(--color-line)]">
+    <header className="shop-header dark-bar on-dark">
       <div className="wrap flex h-[76px] items-center gap-4 m:h-auto m:flex-wrap m:gap-x-2 m:gap-y-2 m:pt-2.5 m:pb-3">
-        <HomeLogo height={24} />
+        <HomeLogo height={22} tone="light" />
         <AreaChip />
         <Suspense fallback={<SearchBox initial="" />}>
           <SearchFromUrl />
@@ -44,12 +44,12 @@ function AreaChip() {
     <button
       type="button"
       onClick={areaPicker.open}
-      className="inline-flex h-[46px] cursor-pointer items-center gap-2 rounded-xl bg-surface px-3.5 text-left text-sm whitespace-nowrap text-ink shadow-[inset_0_0_0_1px_var(--color-field)] hover:bg-soft m:order-4 m:h-10 m:w-full m:rounded-[10px] m:px-3 m:text-[13px]"
+      className="inline-flex h-[46px] cursor-pointer items-center gap-2 rounded-full bg-white/6 px-4 text-left text-sm whitespace-nowrap text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)] hover:bg-white/10 m:order-4 m:h-10 m:w-full m:px-3.5 m:text-[13px]"
       aria-haspopup="dialog"
     >
-      <MapPin aria-hidden className="size-[18px] text-forest m:size-4" strokeWidth={1.75} />
+      <MapPin aria-hidden className="size-[18px] text-lime m:size-4" strokeWidth={1.75} />
       <span className="m:flex m:gap-1.5">
-        <span className="cap block leading-3 m:leading-4">Deliver to</span>
+        <span className="block text-[11px] leading-3 text-white/60 m:text-xs m:leading-4">Deliver to</span>
         <span className="font-semibold">{chosen ? chosen.name : "Choose your area"}</span>
       </span>
       <ChevronDown aria-hidden className="size-4 m:ml-auto" />
@@ -76,7 +76,7 @@ function SearchBox({ initial }: { initial: string }) {
     <form
       role="search"
       onSubmit={submit}
-      className="flex h-[46px] flex-1 items-center gap-2.5 rounded-xl bg-canvas pr-1.5 pl-4 text-[15px] text-faint shadow-[inset_0_0_0_1px_var(--color-field)] focus-within:shadow-[inset_0_0_0_2px_var(--color-forest)] m:order-3 m:h-11 m:min-w-0 m:basis-full m:gap-2 m:rounded-[10px] m:pl-3 m:text-base"
+      className="flex h-[46px] flex-1 items-center gap-2.5 rounded-full bg-surface pr-1.5 pl-4 text-sm text-faint focus-within:shadow-[0_0_0_3px_rgba(169,214,84,0.6)] m:order-3 m:h-11 m:min-w-0 m:basis-full m:gap-2 m:pl-3.5 m:text-base"
     >
       <Search aria-hidden className="size-[18px] flex-none" />
       <input
@@ -89,7 +89,7 @@ function SearchBox({ initial }: { initial: string }) {
         enterKeyHint="search"
         className="min-w-0 flex-1 border-0 bg-transparent text-ink outline-none placeholder:text-faint"
       />
-      <m.button type="submit" className="btn sm dark m:min-h-8 m:rounded-lg m:px-3 m:text-[13px]" {...pressable}>
+      <m.button type="submit" className="btn sm dark min-h-9 m:min-h-8 m:px-3 m:text-[13px]" {...pressable}>
         Search
       </m.button>
     </form>
@@ -101,7 +101,7 @@ function AccountLink() {
   if (status === "signed-in" && viewer) {
     const name = viewer.name?.split(" ")[0] || "Account";
     return (
-      <Link href={routes.account} className={`${hlink} bg-tint m:ml-auto`}>
+      <Link href={routes.account} className={`${hlink} bg-white/8 m:ml-auto`}>
         <span
           aria-hidden
           className="flex size-[30px] items-center justify-center rounded-full bg-lime-soft text-xs font-bold text-forest"
@@ -126,7 +126,7 @@ function CartButton() {
     <m.button
       type="button"
       onClick={miniCart.open}
-      className={`${hlink} cursor-pointer bg-canvas`}
+      className={`${hlink} cursor-pointer bg-white/8`}
       aria-haspopup="dialog"
       {...pressable}
     >

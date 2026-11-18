@@ -52,7 +52,7 @@ function CantReport({ orderId, why }: { orderId: string; why: "other-device" | "
   return (
     <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">
       <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">Report a problem</h1>
+        <h1 className="m-0 font-display text-[24px] leading-8 font-bold m:text-[22px] m:leading-7">Report a problem</h1>
         <p className="p">{text}</p>
         <div className="mt-2 flex flex-wrap justify-center gap-2.5">
           {why === "reported" ? (

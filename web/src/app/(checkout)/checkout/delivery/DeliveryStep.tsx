@@ -190,7 +190,7 @@ function Option({
             </span>
             {title}
           </span>
-          <span className="font-display text-base font-extrabold m:text-[13px] m:leading-[18px] m:text-forest">{price}</span>
+          <span className="font-display text-base font-bold m:text-[13px] m:leading-[18px] m:text-forest">{price}</span>
         </span>
         <span className="mt-1 block text-sm text-muted m:text-[13px] m:leading-[19px]">{body}</span>
         {meta ? <span className="mt-1.5 block text-xs text-subtle m:mt-1 m:text-[11.5px]">{meta}</span> : null}

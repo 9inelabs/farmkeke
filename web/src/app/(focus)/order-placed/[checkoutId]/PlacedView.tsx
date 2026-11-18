@@ -36,7 +36,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <MinimalHeader
         wrapClassName={NARROW_WRAP}
         right={
-          <Link href={routes.shop} className="inline-flex min-h-11 items-center text-sm font-semibold">
+          <Link href={routes.shop} className="inline-flex min-h-11 items-center text-sm font-semibold text-white hover:text-lime">
             Continue shopping
           </Link>
         }
@@ -103,7 +103,7 @@ function NotFound() {
   return (
     <Shell>
       <section className={`${card} mx-auto flex max-w-[560px] flex-col items-center gap-3 px-8 py-12 text-center m:px-5`}>
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">We couldn&apos;t find this order</h1>
+        <h1 className="m-0 font-display text-[24px] leading-8 font-bold m:text-[22px] m:leading-7">We couldn&apos;t find this order</h1>
         <p className="p">
           It may have been placed on another device or account. Find it with your order number and phone number.
         </p>
@@ -171,7 +171,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
             <Check className="size-9" strokeWidth={2.5} />
           </span>
           <div className="min-w-[280px] flex-1 m:min-w-0">
-            <h1 className="m-0 font-display text-[32px] leading-10 font-extrabold tracking-[-0.025em] m:text-[26px] m:leading-[34px]">
+            <h1 className="m-0 font-display text-[24px] leading-8 font-bold tracking-[-0.025em] m:text-[26px] m:leading-[34px]">
               Order placed. Thank you{name ? `, ${name}` : ""}
             </h1>
             <p className="p mt-1">

@@ -58,7 +58,7 @@ function Missing() {
   return (
     <div className="mx-auto max-w-[560px] px-5 pt-16 pb-24">
       <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
-        <h1 className="m-0 font-display text-[26px] leading-[34px] font-extrabold m:text-[22px] m:leading-7">We couldn&apos;t open this order</h1>
+        <h1 className="m-0 font-display text-[24px] leading-8 font-bold m:text-[22px] m:leading-7">We couldn&apos;t open this order</h1>
         <p className="p">
           It may belong to another account or device. Look it up with the order number and phone number, or sign in to see
           your orders.
@@ -321,7 +321,7 @@ function Tracking({ order: o }: { order: OrderDetail }) {
                     <span
                       key={i}
                       aria-hidden
-                      className="flex h-[68px] w-14 items-center justify-center rounded-[14px] bg-white font-display text-[34px] font-extrabold text-forest m:h-14 m:w-12 m:text-[28px]"
+                      className="flex h-[68px] w-14 items-center justify-center rounded-[14px] bg-white font-display text-[34px] font-bold text-forest m:h-14 m:w-12 m:text-[28px]"
                     >
                       {d}
                     </span>
@@ -766,7 +766,7 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
       <section className="card p-6 m:p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="m-0 font-display text-2xl leading-8 font-extrabold m:text-xl m:leading-7">Order {o.number}</h1>
+            <h1 className="m-0 font-display text-2xl leading-8 font-bold m:text-xl m:leading-7">Order {o.number}</h1>
             <div className="mt-0.5 text-sm text-muted">
               {o.farmName} · Ordered {dayLabel(o.placedAt)}
             </div>

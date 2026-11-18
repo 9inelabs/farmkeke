@@ -28,7 +28,7 @@ export default function NotFound() {
         tabIndex={-1}
         className="wrap-site flex flex-col items-center pt-[72px] pb-16 text-center outline-none"
       >
-        <div aria-hidden className="mont text-[120px] leading-[120px] font-extrabold tracking-[-0.04em] text-[#DCE6CB]">
+        <div aria-hidden className="mont text-[120px] leading-[120px] font-bold tracking-[-0.04em] text-[#DCE6CB]">
           404
         </div>
         <span className="tile mt-2 size-16 rounded-[20px]" aria-hidden>
