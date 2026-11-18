@@ -19,6 +19,7 @@ import type { LocationMatch } from "@/convex/returns/area";
 import type { ServiceArea } from "@/convex/returns/common";
 import { area, areaPicker, type ChosenArea } from "@/lib/area";
 import { errorCode } from "@/lib/auth";
+import { NIGERIAN_STATES } from "@/lib/nigeria";
 
 type View = "choose" | "primer" | "outside";
 
@@ -246,11 +247,21 @@ export function AreaPicker() {
                 setSelected(undefined);
               }}
             >
-              {states.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
+              {/* Every state: where Farmkeke delivers first, then the rest (they get "Tell me when you do") */}
+              <optgroup label="We deliver in">
+                {states.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Coming soon">
+                {NIGERIAN_STATES.filter((s) => !states.some((x) => x.toLowerCase() === s.toLowerCase())).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           ) : (
             <Skeleton className="h-12 w-full" rounded={12} />

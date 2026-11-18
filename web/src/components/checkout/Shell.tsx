@@ -85,24 +85,30 @@ export function useCheckoutGuard(step: 1 | 2 | 3 | 4) {
   return hydrated && !target;
 }
 
+/** The order summary card: deep forest with a lime glow, like the site's premium panels. */
+const summaryCard =
+  "dark-surface on-dark relative overflow-hidden rounded-[22px] bg-[radial-gradient(70%_55%_at_100%_0%,rgba(169,214,84,0.26)_0%,rgba(169,214,84,0)_70%),linear-gradient(160deg,#0B1A07_0%,#152E10_55%,#1E3B16_100%)] p-6 text-white shadow-[0_24px_60px_rgba(16,35,11,0.22)] m:rounded-[18px] m:p-4";
+const rule = "shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]";
+
 function SummaryHead({ meta }: { meta: string }) {
   return (
     <>
+      <div aria-hidden className="grid-lines opacity-40" />
       <div className="flex items-baseline justify-between">
-        <h2 className="h3 text-lg leading-[26px]">Order summary</h2>
-        <Link href={routes.cart} className="inline-flex min-h-11 items-center text-[13px] font-semibold">
+        <h2 className="h3 text-lg leading-[26px] text-white">Order summary</h2>
+        <Link href={routes.cart} className="inline-flex min-h-11 items-center text-[13px] font-semibold text-lime hover:text-white">
           Edit<span className="sr-only"> your cart</span>
         </Link>
       </div>
-      <div className="cap -mt-2.5">{meta}</div>
+      <div className="-mt-2.5 text-xs text-on-forest">{meta}</div>
     </>
   );
 }
 
 const Row = ({ label, value, valueClass }: { label: ReactNode; value: ReactNode; valueClass?: string }) => (
-  <div className="flex justify-between gap-3 py-1.5 text-sm text-ink-3">
+  <div className="flex justify-between gap-3 py-1.5 text-sm text-on-forest">
     <span>{label}</span>
-    <span className={valueClass}>{value}</span>
+    <span className={valueClass ?? "font-medium text-white"}>{value}</span>
   </div>
 );
 
@@ -123,37 +129,41 @@ export function ItemsSummary({ lines, quote }: { lines: CartLine[]; quote: Quote
   const groups = groupByFarm(rows);
   const items = rows.reduce((s, l) => s + l.priceKobo * l.quantity, 0);
   return (
-    <aside aria-label="Order summary" className={`${checkoutCard} p-6 m:p-4`}>
+    <aside aria-label="Order summary" className={summaryCard}>
       <SummaryHead meta={`${plural(groups.length, "farm")} · ${plural(lines.length, "item")}`} />
       <div className="mt-3.5">
         {groups.map((g, gi) => (
           <div key={g.farmId}>
-            <div className={`cap font-semibold text-ink-3 ${gi > 0 ? "mt-2.5" : ""}`}>{g.farmName}</div>
+            <div className={`text-xs font-semibold tracking-[0.02em] text-on-forest-lime ${gi > 0 ? "mt-2.5" : ""}`}>{g.farmName}</div>
             <ul className="m-0 list-none p-0">
               {g.lines.map((l) => (
                 <li key={`${l.listingId}:${l.unitId}`} className="flex items-center gap-3 py-2">
                   <Thumb id={l.listingId} imageUrl={l.imageUrl} size={44} radius={10} />
                   <div className="min-w-0 flex-1 text-sm">
-                    <div className="font-semibold">{l.name}</div>
-                    <div className="cap">
+                    <div className="font-semibold text-white">{l.name}</div>
+                    <div className="text-xs text-on-forest">
                       {capitalise(l.unitSingular)} × {l.quantity}
                     </div>
                   </div>
-                  <span className="text-sm font-semibold">{naira(l.priceKobo * l.quantity)}</span>
+                  <span className="text-sm font-semibold text-white">{naira(l.priceKobo * l.quantity)}</span>
                 </li>
               ))}
             </ul>
           </div>
         ))}
       </div>
-      <div className="mt-3 pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
+      <div className={`mt-3 pt-3 ${rule}`}>
         <Row label="Items" value={naira(items)} />
-        <Row label="Delivery" value="Priced after the farm accepts" valueClass="text-subtle" />
+        <Row label="Delivery" value="Priced after the farm accepts" valueClass="text-on-forest" />
       </div>
-      <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
-        <span className="font-semibold">Total so far</span>
-        <span className="font-display text-[22px] font-bold text-forest m:text-xl">{naira(items)}</span>
+      <div className={`mt-1.5 flex items-baseline justify-between pt-3 ${rule}`}>
+        <span className="font-semibold text-white">Total so far</span>
+        <span className="font-display text-[24px] font-bold text-lime m:text-xl">{naira(items)}</span>
       </div>
+      <p className="mt-3 mb-0 flex items-center gap-1.5 text-xs text-on-forest">
+        <span aria-hidden className="size-1.5 rounded-full bg-lime" />
+        Nothing to pay until the farm accepts your order.
+      </p>
     </aside>
   );
 }
@@ -182,7 +192,7 @@ export function FarmsSummary({
     .filter(Boolean)
     .join(" · ");
   return (
-    <aside aria-label="Order summary" className={`${checkoutCard} p-6 m:p-4`}>
+    <aside aria-label="Order summary" className={summaryCard}>
       <SummaryHead meta={meta} />
       <div className="mt-4">
         {groups.map((g) => (
@@ -193,25 +203,24 @@ export function FarmsSummary({
           />
         ))}
       </div>
-      <div className="mt-2.5 pt-2.5 shadow-[inset_0_1px_0_#EEF0EB]">
+      <div className={`mt-2.5 pt-2.5 ${rule}`}>
         <Row label="Items" value={naira(items)} />
         {fulfilment === "pickup" ? (
-          <Row label="Pickup at the farm" value="No fee" valueClass="font-semibold text-ok" />
+          <Row label="Pickup at the farm" value="No fee" valueClass="font-semibold text-lime" />
         ) : fulfilment === "delivery" ? (
-          <Row label={`Delivery (${plural(groups.length, "order")})`} value="Added to your bill" valueClass="text-subtle" />
+          <Row label={`Delivery (${plural(groups.length, "order")})`} value="Added to your bill" valueClass="text-on-forest" />
         ) : (
-          <Row label="Delivery" value="Choose below" valueClass="text-subtle" />
+          <Row label="Delivery" value="Choose below" valueClass="text-on-forest" />
         )}
       </div>
-      <div className="mt-1.5 flex items-baseline justify-between pt-3 shadow-[inset_0_1px_0_#EEF0EB]">
-        <span className="font-semibold">{fulfilment === "delivery" ? "Products total" : "Total"}</span>
-        <span className="font-display text-[22px] font-bold text-forest m:text-xl">{naira(items)}</span>
+      <div className={`mt-1.5 flex items-baseline justify-between pt-3 ${rule}`}>
+        <span className="font-semibold text-white">{fulfilment === "delivery" ? "Products total" : "Total"}</span>
+        <span className="font-display text-[24px] font-bold text-lime m:text-xl">{naira(items)}</span>
       </div>
-      {fulfilment === "delivery" ? (
-        <p className="cap mt-2.5">
-          Nothing to pay now. Once the farm accepts, we price the delivery and send your bill. You&apos;ll have 12 hours to pay.
-        </p>
-      ) : null}
+      <p className="mt-3 mb-0 text-xs leading-[18px] text-on-forest">
+        Nothing to pay now. Once the farm accepts, {fulfilment === "delivery" ? "we price the delivery and " : ""}we send your bill. You&apos;ll
+        have 12 hours to pay.
+      </p>
     </aside>
   );
 }

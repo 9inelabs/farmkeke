@@ -207,9 +207,7 @@ export function BuyBox({
           ) : soldOut ? (
             <span className="badge b-err">Sold out</span>
           ) : (
-            <span className="badge b-ok">
-              In stock · {unit.stock} {unit.stock === 1 ? unit.singular : unit.plural} left
-            </span>
+            <span className="badge b-ok">In stock</span>
           )}
         </div>
         <h1 className="h1 mt-3 m:mt-2">{product.name}</h1>
@@ -248,7 +246,8 @@ export function BuyBox({
                 >
                   <span className="text-sm font-semibold first-letter:uppercase">{u.singular}</span>
                   <span className="cap">
-                    {naira(u.priceKobo)} · {out ? "Sold out" : u.minOrder > 1 ? `min ${u.minOrder}` : `${u.stock} left`}
+                    {naira(u.priceKobo)}
+                    {out ? " · Sold out" : u.minOrder > 1 ? ` · min ${u.minOrder}` : ""}
                   </span>
                 </button>
               );

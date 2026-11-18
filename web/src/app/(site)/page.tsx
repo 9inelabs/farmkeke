@@ -21,11 +21,13 @@ import {
   Smartphone,
   Sprout,
   Star,
+  Tag,
   Truck,
   User,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { StoreButtons } from "@/components/brand/StoreButtons";
 import { QrCode } from "@/components/site/QrCode";
@@ -103,6 +105,12 @@ const PRICES: Array<[string, string, string, string]> = [
   ["Fresh tomatoes", "₦4,500", "basket", "linear-gradient(135deg,#F9DCD2,#F2BFAE)"],
   ["Yam tubers", "₦5,500", "tuber", "linear-gradient(135deg,#EFE6CF,#DCCDA6)"],
   ["Ugwu leaves", "₦800", "bunch", "linear-gradient(135deg,#E4F2C7,#C9E58F)"],
+];
+
+const FARM_PERKS: Array<[LucideIcon, string, string]> = [
+  [Tag, "Your prices", "You set the price for every pack you sell."],
+  [ShieldCheck, "Paid by Paystack", "Your share goes straight to your bank."],
+  [Truck, "We deliver", "Farmkeke riders collect from your farm."],
 ];
 
 const CHECKS = ["Government ID", "Farm photos", "Association letter", "Bank details"];
@@ -208,8 +216,13 @@ export default function Landing() {
           </div>
 
           <HeroPhone />
-          <div className="absolute inset-x-0 bottom-0 z-[3] h-[180px] bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.85)_70%,#fff_100%)] m:h-[120px]" />
         </div>
+        {/* Fades the whole hero into the white page below, edge to edge (it used to
+            sit inside the 1000px phone area, so wide screens showed hard dark sides) */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[220px] bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_45%,rgba(255,255,255,0.92)_78%,#fff_100%)] m:h-[120px]"
+        />
       </section>
 
       {/* Trust strip */}
@@ -408,62 +421,108 @@ export default function Landing() {
       {/* For farmers */}
       <section id="farmers" aria-labelledby="farm-h" className="wrap-site pb-[104px] m:pb-14">
         <FadeUp>
-          <div className="dark-surface on-dark flex flex-wrap items-center gap-12 overflow-hidden rounded-[32px] bg-[radial-gradient(45%_70%_at_92%_10%,rgba(169,214,84,0.26)_0%,rgba(169,214,84,0)_70%),linear-gradient(160deg,#10230B_0%,#1E3B16_100%)] p-14 m:gap-6 m:rounded-3xl m:px-5 m:py-7">
-            <div aria-hidden className="grid-lines opacity-70" />
-            <div className="flex flex-[1_1_380px] flex-col gap-3.5 m:gap-3">
-              <Eyebrow icon={Sprout} dark className="self-start">
-                For farmers
-              </Eyebrow>
-              <h2 id="farm-h" className={`${L.h2} m-0 text-white`}>
-                Sell your harvest to homes across Nigeria
-              </h2>
-              <p className="m-0 max-w-[440px] text-[15px] leading-6 text-on-forest m:text-sm m:leading-[22px]">
-                List your produce in the Farmkeke app. We find the buyers, handle payments and deliver for you.
-              </p>
-              <ul className="m-0 mt-2 flex list-none flex-col gap-2.5 p-0 text-sm text-[#E7EFDF] m:mt-1 m:text-[13px]">
-                {["Reach buyers beyond your local market", "Paid straight to your bank through Paystack", "Farmkeke riders handle delivery for you"].map((t) => (
-                  <li key={t} className="flex items-center gap-2.5">
-                    <Check aria-hidden size={18} strokeWidth={2} className="flex-none text-lime" />
-                    {t}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3.5 flex flex-wrap gap-2.5 m:mt-2 m:flex-col">
-                <Link href={`${routes.home}#download`} className="btn lime h-11 px-5">
-                  Download the app to apply
-                </Link>
-                <Link
-                  href={routes.sell}
-                  className="btn h-11 px-5 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.26)] hover:bg-white/8 hover:text-white"
-                >
-                  Learn about selling
-                </Link>
+          <div className="overflow-hidden rounded-[32px] bg-surface shadow-[0_0_0_1px_#E7EAE2,0_30px_80px_rgba(16,35,11,0.10)] m:rounded-3xl">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] max-[900px]:grid-cols-1">
+              {/* The farmer, on a soft lime field, with what her phone tells her */}
+              <div className="relative min-h-[520px] overflow-hidden bg-[radial-gradient(70%_60%_at_50%_45%,#F4FAE6_0%,#E6F2CC_60%,#D9EBB4_100%)] max-[900px]:min-h-[380px] m:min-h-[320px]">
+                <div aria-hidden className="absolute -top-16 -left-16 size-56 rounded-full bg-lime/30 blur-3xl" />
+                <div aria-hidden className="absolute -right-10 -bottom-20 size-64 rounded-full bg-[#BFE07A]/40 blur-3xl" />
+                <Image
+                  src="/illustrations/farmer-harvest.jpg"
+                  alt="A Farmkeke farmer holding a basket of fresh tomatoes, greens and sweet potatoes"
+                  width={1024}
+                  height={1024}
+                  sizes="(max-width: 900px) 90vw, 520px"
+                  className="absolute inset-x-0 bottom-[-6%] mx-auto w-[108%] max-w-none mix-blend-multiply max-[900px]:w-[78%] m:w-[100%]"
+                />
+                <div className="absolute top-8 left-8 flex w-[230px] items-center gap-3 rounded-2xl bg-white/92 p-3.5 shadow-[0_18px_40px_rgba(16,35,11,0.14)] backdrop-blur-sm m:top-4 m:left-4 m:w-[190px] m:p-2.5">
+                  <span className="flex size-9 flex-none items-center justify-center rounded-xl bg-forest text-lime m:size-8">
+                    <Bell aria-hidden size={16} strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-medium text-muted-2">New order · FK-10251</div>
+                    <div className="truncate text-[13px] font-semibold text-ink m:text-xs">2 baskets of tomatoes</div>
+                  </div>
+                </div>
+                <div className="absolute right-8 bottom-10 flex w-[240px] items-center gap-3 rounded-2xl bg-forest p-3.5 text-white shadow-[0_18px_40px_rgba(16,35,11,0.28)] m:right-4 m:bottom-5 m:w-[200px] m:p-2.5">
+                  <span className="flex size-9 flex-none items-center justify-center rounded-xl bg-lime text-forest m:size-8">
+                    <Check aria-hidden size={18} strokeWidth={2.5} />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-on-forest-lime">Paid to your bank</div>
+                    <div className="font-display text-lg font-bold m:text-base">₦17,100</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* The pitch */}
+              <div className="dark-surface on-dark flex flex-col justify-center gap-4 bg-[radial-gradient(60%_70%_at_100%_0%,rgba(169,214,84,0.22)_0%,rgba(169,214,84,0)_70%),linear-gradient(160deg,#10230B_0%,#1E3B16_100%)] px-14 py-14 max-[900px]:px-8 m:gap-3 m:px-5 m:py-8">
+                <div aria-hidden className="grid-lines opacity-60" />
+                <Eyebrow icon={Sprout} dark className="self-start">
+                  For farmers
+                </Eyebrow>
+                <h2 id="farm-h" className={`${L.h2} m-0 text-white`}>
+                  Sell your harvest to homes <span className="lime-text">across Nigeria</span>
+                </h2>
+                <p className="m-0 max-w-[460px] text-[15px] leading-6 text-on-forest m:text-sm m:leading-[22px]">
+                  List your produce in the Farmkeke app. We find the buyers, take the payment and deliver for you. You just grow and pack.
+                </p>
+                <ul className="m-0 mt-1 grid list-none grid-cols-3 gap-2.5 p-0 m:grid-cols-1 m:gap-2">
+                  {FARM_PERKS.map(([Icon, title, text]) => (
+                    <li key={title} className="rounded-2xl bg-white/6 p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.10)] m:flex m:items-center m:gap-3 m:p-3">
+                      <span className="flex size-9 items-center justify-center rounded-xl bg-lime/16 text-lime m:flex-none">
+                        <Icon aria-hidden size={18} strokeWidth={1.75} />
+                      </span>
+                      <div className="mt-3 m:mt-0">
+                        <div className="text-sm font-semibold text-white">{title}</div>
+                        <div className="mt-0.5 text-xs leading-[18px] text-on-forest">{text}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 flex flex-wrap gap-2.5 m:mt-1 m:flex-col">
+                  <Link href={`${routes.home}#download`} className="btn lime h-12 px-6 shadow-[0_10px_28px_rgba(169,214,84,0.25)]">
+                    Download the app to apply
+                    <ArrowRight aria-hidden size={18} strokeWidth={1.75} />
+                  </Link>
+                  <Link
+                    href={routes.sell}
+                    className="btn h-12 px-6 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.26)] hover:bg-white/8 hover:text-white"
+                  >
+                    Learn about selling
+                  </Link>
+                </div>
               </div>
             </div>
-            <div className="flex-[1_1_360px] rounded-[22px] bg-surface p-[26px] text-ink shadow-[0_24px_60px_rgba(0,0,0,0.3)] m:rounded-2xl m:p-4">
-              <h3 className="m-0 font-display text-[17px] font-semibold m:text-[15px]">How to apply</h3>
-              <ol className="m-0 mt-4 flex list-none flex-col gap-3.5 p-0 m:mt-3 m:gap-3">
-                {APPLY.map(([title, text], i) => (
-                  <li key={title} className="flex gap-3">
-                    <span
-                      className={`flex size-[26px] flex-none items-center justify-center rounded-full text-xs font-semibold ${
-                        i === APPLY.length - 1 ? "bg-forest text-lime" : "bg-tint text-forest"
-                      }`}
-                    >
-                      {i + 1}
-                    </span>
-                    <div>
-                      <div className="text-sm font-semibold m:text-[13px]">{title}</div>
-                      <div className="text-xs text-muted-2">{text}</div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <div className="mt-[18px] pt-4 shadow-[inset_0_1px_0_#F0F0F0]">
-                <h4 className="m-0 mb-2 text-xs font-medium text-muted-2">You&apos;ll need</h4>
-                <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
+
+            {/* How to apply, and what you need */}
+            <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-10 px-14 py-10 max-[900px]:grid-cols-1 max-[900px]:px-8 m:gap-6 m:px-5 m:py-7">
+              <div>
+                <h3 className="m-0 font-display text-[17px] font-semibold m:text-[15px]">How to apply</h3>
+                <ol className="m-0 mt-4 grid list-none grid-cols-4 gap-4 p-0 max-[900px]:grid-cols-2 m:grid-cols-1 m:gap-3">
+                  {APPLY.map(([title, text], i) => (
+                    <li key={title} className="flex flex-col gap-2 m:flex-row m:gap-3">
+                      <span
+                        className={`flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold ${
+                          i === APPLY.length - 1 ? "bg-forest text-lime" : "bg-tint text-forest"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      <div>
+                        <div className="text-sm font-semibold m:text-[13px]">{title}</div>
+                        <div className="mt-0.5 text-xs leading-[18px] text-muted-2">{text}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <div className="rounded-2xl bg-[#F6F8F2] p-5 m:p-4">
+                <h3 className="m-0 text-xs font-semibold tracking-[0.04em] text-muted-2 uppercase">You&apos;ll need</h3>
+                <ul className="m-0 mt-3 flex list-none flex-wrap gap-1.5 p-0">
                   {NEEDS.map((n) => (
-                    <li key={n} className="inline-flex h-[26px] items-center rounded-full bg-[#F7F7F7] px-2.5 text-xs">
+                    <li key={n} className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface px-3 text-xs shadow-[inset_0_0_0_1px_#E7EAE2]">
+                      <Check aria-hidden size={12} strokeWidth={2.5} className="text-success" />
                       {n}
                     </li>
                   ))}

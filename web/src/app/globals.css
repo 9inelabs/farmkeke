@@ -552,6 +552,37 @@ body:has([data-category-bar]) .shop-header {
 }
 
 /*
+ * The web store's top stays put while shopping: the header (logo, area,
+ * search, saved, account, cart) and, on browse pages, the category bar
+ * under it. Jump links (e.g. "See fresh picks") stop below them.
+ */
+.shop-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+[data-category-bar] {
+  position: sticky;
+  top: 76px;
+  z-index: 39;
+}
+html:has(.shop-header) {
+  scroll-padding-top: 76px;
+}
+html:has([data-category-bar]) {
+  scroll-padding-top: 136px;
+}
+@media (max-width: 760px) {
+  /* The phone header wraps to two rows, so only it stays (the bar scrolls) */
+  [data-category-bar] {
+    position: static;
+  }
+  html:has(.shop-header) {
+    scroll-padding-top: 128px;
+  }
+}
+
+/*
  * Phones: a row of cards you swipe sideways instead of a tall stack.
  * It bleeds to the screen edges (the page gutter) and snaps per card.
  * Set --swipe-w on the row to change the card width. Unlayered, so on
