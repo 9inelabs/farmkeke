@@ -61,7 +61,7 @@ function stepFor(o: FarmOrder): Step | null {
   const pickup = o.fulfilment === "pickup" && o.pickupPoint === null;
   switch (o.next) {
     case "accept":
-      return { title: "Accept this order", note: o.fulfilment === "delivery" ? "We'll arrange the rider and bill the buyer." : "Paid and held by Farmkeke.", button: "Accept order", run: "accept", done: "Order accepted" };
+      return { title: "Accept this order", note: o.fulfilment === "delivery" ? "We'll arrange the rider and bill the buyer." : "We'll bill the buyer. You're paid when they pay.", button: "Accept order", run: "accept", done: "Order accepted" };
     case "start_preparing":
       return { title: "Start preparing", note: "The buyer is told you're on it.", button: "Start preparing", run: "startPreparing", done: "Marked as preparing" };
     case "mark_packed":
@@ -78,9 +78,9 @@ function stepFor(o: FarmOrder): Step | null {
       return { title: "Buyer collecting", note: o.collectBy ? `Collect by ${dayTime(o.collectBy)}` : "Ask for their 4-digit code.", button: "Enter pickup code", sheet: "code" };
     default:
       // After the hand-over there's nothing for the farm to do; say where it's up to
-      if (o.status === "out_for_delivery" || o.status === "with_rider" || o.status === "at_pickup_point") return { title: "On its way", note: "You're paid once the buyer confirms." };
-      if (o.status === "delivered" || o.status === "collected") return { title: "Waiting for the buyer", note: "They confirm everything arrived, then you're paid." };
-      if (o.status === "completed") return { title: "Order complete", note: o.releasedAt ? `Released ${dayTime(o.releasedAt)}` : "Your money is on its way." };
+      if (o.status === "out_for_delivery" || o.status === "with_rider" || o.status === "at_pickup_point") return { title: "On its way", note: "You've been paid. The buyer can report a problem for a day after it arrives." };
+      if (o.status === "delivered" || o.status === "collected") return { title: "With the buyer", note: "They can report a problem for a day. Then the order closes." };
+      if (o.status === "completed") return { title: "Order complete", note: o.endedAt ? `Closed ${dayTime(o.endedAt)}` : "Nothing more to do." };
       return null;
   }
 }
@@ -194,7 +194,7 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
               </View>
               <View style={styles.flex}>
                 <Text variant="label">Problem reported</Text>
-                <Text variant="small">Payment held until it's decided</Text>
+                <Text variant="small">Reply with your side. Farmkeke decides</Text>
               </View>
               <Text variant="label" color={colors.error}>
                 View

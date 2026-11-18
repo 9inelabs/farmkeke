@@ -141,7 +141,7 @@ async function deletionEmail(
 /**
  * M-95: removes a user's personal data and every way to sign in as them.
  * Accounts with orders still in progress are recorded as "waiting_for_orders"
- * and kept working (to confirm receipt or report a problem); the hourly
+ * and kept working (to pay a bill or report a problem); the hourly
  * finishWaitingDeletions job deletes them once those orders have ended.
  */
 export const deleteUserData = internalMutation({

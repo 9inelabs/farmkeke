@@ -126,7 +126,11 @@ test("each shop status change sends the right email (delivery)", async () => {
   mail.clear();
   await as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" });
   await flush(t);
-  expect(mail.to(shopper)).toEqual(["Order FK-10001 delivered. Please check and confirm"]);
+  expect(mail.to(shopper)).toEqual(["Order FK-10001 delivered. Please check it"]);
+  // It gives the time the order closes: a day to report a problem
+  const delivered = mail.sent.find((m) => m.subject.startsWith("Order FK-10001 delivered"))!;
+  expect(delivered.text).toMatch(/Something wrong\? Report a problem by .+\. Our team looks into it/);
+  expect(delivered.text).not.toMatch(/held|confirm receipt/i);
 
   // A day later with no problem reported: the order closes and the review ask goes out.
   // The farm was paid in the split, so no release or payout emails follow.

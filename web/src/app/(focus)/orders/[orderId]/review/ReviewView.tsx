@@ -36,7 +36,7 @@ export function ReviewView({ orderId }: { orderId: string }) {
           body={data.review.comment ? `"${data.review.comment}"` : "Thanks for your review. It helps other shoppers."}
         />
       ) : !data.canReview ? (
-        <Note title="You can review this order once it's complete" body="Confirm receipt first, then tell other shoppers how it went." />
+        <Note title="You can review this order once it's complete" body="Orders close a day after they arrive. Then tell other shoppers how it went." />
       ) : (
         <Form data={data} />
       )}

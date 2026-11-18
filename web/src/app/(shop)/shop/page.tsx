@@ -16,7 +16,7 @@ import { routes } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Shop fresh produce from verified farms",
   description:
-    "Buy straight from verified farmers in Owerri. Delivery or pickup, and your money is held safely until your order arrives.",
+    "Buy straight from verified farmers in Owerri. Delivery or pickup, and you pay only once the farm accepts your order.",
   alternates: { canonical: `${siteUrl}${routes.shop}` },
 };
 
@@ -41,7 +41,7 @@ export default async function ShopHome() {
                 {banner?.title ?? "Fresh picks from farms near you"}
               </h1>
               <p className="p text-on-forest">
-                Buy straight from verified farmers in Owerri. Your money is held safely until your order arrives.
+                Buy straight from verified farmers in Owerri. You pay only once the farm accepts your order.
               </p>
               <ButtonLink href={banner ? routes.product(banner.listing.id) : "#fresh"} size="lg" className="mt-1.5 m:mt-0.5 m:min-h-11 m:text-sm">
                 {banner?.buttonLabel ?? "Shop fresh picks"}
@@ -78,15 +78,15 @@ export default async function ShopHome() {
                 <ShieldCheck aria-hidden className="size-[22px]" strokeWidth={1.75} />
               </span>
               <div>
-                <h2 className="h3">Your money is protected</h2>
+                <h2 className="h3">Buyer protection</h2>
                 <p className="sm mt-1.5 m:mt-1">
-                  We hold your payment and release it to the farmer only after you confirm delivery.
+                  You pay only once the farm accepts. Something wrong? Report it within a day and we&apos;ll sort it out.
                 </p>
                 <Link
-                  href={routes.escrow}
+                  href={routes.buyerProtection}
                   className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold m:mt-0 m:min-h-9 m:text-[13px]"
                 >
-                  How escrow works
+                  How it works
                 </Link>
               </div>
             </div>

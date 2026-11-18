@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s · Farmkeke",
   },
   description:
-    "Buy fresh produce straight from verified Nigerian farmers. Delivery or pickup, and your money is held safely until your order arrives.",
+    "Buy fresh produce straight from verified Nigerian farmers. Delivery or pickup, and you pay only once the farm accepts your order.",
   applicationName: "Farmkeke",
   openGraph: {
     type: "website",

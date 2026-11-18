@@ -1,4 +1,4 @@
-// M-68 Problem reported: the case number, the payment still held, and when
+// M-68 Problem reported: the case number, and when
 // the farm and Farmkeke will reply.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
@@ -35,7 +35,7 @@ export default function ProblemSent() {
     <StatusScreen
       icon={ShieldCheck}
       title="We've got your report"
-      message="Your payment stays held while we look into it. We'll update you by text, email and in the app."
+      message="Our team is looking into it. If you're owed a refund, Farmkeke sends it. We'll update you by text, email and in the app."
       actions={
         <>
           <Button label="Follow this case" variant="dark" size="large" pill fullWidth onPress={() => router.replace({ pathname: "/order/[id]/dispute", params: { id } })} />

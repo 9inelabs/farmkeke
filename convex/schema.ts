@@ -843,7 +843,9 @@ export default defineSchema({
     reviewedAt: v.optional(v.number()),
   }).index("by_active", ["active"]),
 
-  // A-60 escrow ledger: one row per money movement on an order.
+  // A-60 money ledger: one row per money movement on an order. Since the
+  // Paystack split: farm_share, commission, delivery_fee, debt_recovered,
+  // refund and farm_debt. hold, release and payout are from the old model.
   ledgerEntries: defineTable({
     orderId: v.id("orders"),
     checkoutId: v.id("checkouts"),

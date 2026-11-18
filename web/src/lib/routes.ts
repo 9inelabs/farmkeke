@@ -6,7 +6,7 @@ export const routes = {
   home: "/",
   sell: "/sell",
   howItWorks: "/how-it-works",
-  escrow: "/escrow",
+  buyerProtection: "/buyer-protection",
   pickupLocations: "/pickup-locations",
   getTheApp: "/get-the-app",
   about: "/about",
@@ -55,7 +55,6 @@ export const routes = {
   // Orders after checkout (W-50 to W-58)
   findOrder: "/find-order",
   order: (orderId: string) => `/orders/${orderId}`,
-  orderReleased: (orderId: string) => `/orders/${orderId}/released`,
   reportProblem: (orderId: string) => `/orders/${orderId}/problem`,
   problemReported: (orderId: string) => `/orders/${orderId}/problem/sent`,
   dispute: (orderId: string) => `/orders/${orderId}/dispute`,

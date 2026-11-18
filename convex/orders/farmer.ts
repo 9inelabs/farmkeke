@@ -330,7 +330,7 @@ export const decline = mutation({
       `Order ${order.number} declined`,
       order.status === "placed"
         ? `${farm.name} couldn't take your order. You haven't been charged for it.`
-        : `${farm.name} couldn't take your order. Your money will be refunded in full.`,
+        : `${farm.name} couldn't take your order. Farmkeke is refunding you in full.`,
     );
     await checkBill(ctx, order.checkoutId);
   },

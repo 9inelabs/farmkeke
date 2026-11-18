@@ -193,7 +193,7 @@ export function ProblemForm({ o }: { o: OrderDetail }) {
       <View style={styles.held}>
         <ShieldCheck size={20} color={colors.forest} variant="solid" />
         <Text variant="caption" color={colors.ink} style={styles.flex}>
-          Your {formatNaira(o.totalKobo)} stays held while we look into it. The farm can reply, and Farmkeke decides, usually within a day.
+          {`The farm can reply, and Farmkeke decides, usually within a day. If you're owed money for your ${formatNaira(o.totalKobo)} order, Farmkeke refunds you.`}
         </Text>
       </View>
     </Screen>

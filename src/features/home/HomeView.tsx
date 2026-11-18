@@ -1,5 +1,5 @@
 // M-10 Home, following the Figma "Home Dashboard" design: area chip, search,
-// escrow promise, categories, the product rows (Fresh Picks, Near You, Almost
+// buyer protection promise, categories, the product rows (Fresh Picks, Near You, Almost
 // Gone, Best Sellers This Week, Top-Rated Farms, Buy Again or Great Value;
 // see convex/lib/homeSections.ts), the featured banner and Farmers Near You. The layout is fluid: blocks fill the screen's width,
 // the rows scroll sideways, and text follows the phone's font size.
@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Stagger } from "@/components/motion/reveal";
-import { BellButton, CategoryTile, EscrowCard, LocationChip, PressableScale, ProductCard, SearchPill, Skeleton, Text } from "@/components/ui";
+import { BellButton, CategoryTile, ProtectionCard, LocationChip, PressableScale, ProductCard, SearchPill, Skeleton, Text } from "@/components/ui";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { useScreenWidth } from "@/theme/useScreenSize";
@@ -173,7 +173,7 @@ export function HomeView(props: Props) {
 
         <SearchPill mode="button" onPress={props.onSearch} />
 
-        <EscrowCard />
+        <ProtectionCard />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={row.style} contentContainerStyle={[styles.categories, { paddingHorizontal: side - CATEGORY_INSET }]}>
           {props.categories === undefined

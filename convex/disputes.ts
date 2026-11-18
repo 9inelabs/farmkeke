@@ -1,6 +1,7 @@
 // Problem reports (M-67 to M-69, W-53, W-54, F-48). The shopper reports a
-// problem before confirming receipt; the money stays held. The farm has 12
-// hours to reply and Farmkeke decides within about a day (admin/disputes).
+// problem within a day of delivery or collection (then the order closes). The
+// farm has 12 hours to reply and Farmkeke decides within about a day
+// (admin/disputes); any refund comes from Farmkeke.
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
@@ -84,7 +85,7 @@ export const open = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const order = await ctx.db.get("orders", args.orderId);
-    // Only the identity (device) that placed it, like confirm receipt
+    // Only the identity (device) that placed it
     if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.disputeId !== undefined) throw new ConvexError({ code: "ALREADY_REPORTED" });
     if (order.status === "completed") throw new ConvexError({ code: "ORDER_CLOSED" });
@@ -149,7 +150,7 @@ export const open = mutation({
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
     // Reported while the rider is bringing it: the delivery ends here
     const arrived = await deliveredByShopper(ctx, order, actor, "The shopper reported a problem on delivery");
-    // Escrow stays held; the order can't be confirmed or released while disputed.
+    // A disputed order doesn't close until Farmkeke decides.
     const disputed = await transition(ctx, arrived, "disputed", actor, { disputeId }, REASON_LABELS[args.reason]);
 
     await notifyFarm(
@@ -164,7 +165,7 @@ export const open = mutation({
       disputed,
       "dispute_opened",
       `We've got your report (${number})`,
-      `Your payment stays held. The farm has ${rules.disputeReplyHours} hours to reply.`,
+      `The farm has ${rules.disputeReplyHours} hours to reply, then Farmkeke decides. If you're owed money, Farmkeke refunds you.`,
     );
     // A-12: staff alert, then the farm's reply clock (reminder 2h before, overdue at the deadline)
     await notifyStaff(ctx, {

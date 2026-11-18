@@ -422,7 +422,7 @@ export function DispatchView() {
           stepping?.step === "collected_by_consumer"
             ? "Ask for the shopper's pickup code and enter it."
             : stepping?.step === "delivered"
-              ? "The shopper is asked to check their order and confirm receipt."
+              ? "The shopper is asked to check their order. They can report a problem for a day, then it closes."
               : stepping?.step === "dropped_at_pickup_point"
                 ? "The shopper gets their pickup code and the time they have to collect."
                 : "The shopper is told their order is on its way."

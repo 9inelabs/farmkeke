@@ -153,7 +153,7 @@ function GuestAccount() {
             <ListRow icon={Messages} title="Messages" subtitle="Your chats with farmers about orders" onPress={() => router.push("/messages")} />
             <ListRow icon={Headphone} title="Contact Support" subtitle="Message the farmkeke team" onPress={() => router.push("/support")} />
             <ListRow icon={Help} title="Help and FAQ" subtitle="About orders, delivery and payment" onPress={() => router.push("/help")} />
-            <ListRow icon={Book} title="How Farmkeke works" subtitle="Ordering, pickup and how your money is held" onPress={() => router.push("/how-it-works")} />
+            <ListRow icon={Book} title="How Farmkeke works" subtitle="Ordering, pickup and buyer protection" onPress={() => router.push("/how-it-works")} />
             <ListRow icon={Document} title="Terms and policies" subtitle="Terms, privacy, refunds and disputes" onPress={() => router.push("/legal")} />
             <ListRow icon={Info} title="About Farmkeke" subtitle={`App version ${APP_VERSION}`} onPress={() => router.push("/about")} />
           </ListGroup>

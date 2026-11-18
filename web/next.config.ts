@@ -34,6 +34,14 @@ const nextConfig: NextConfig = {
     // Product, farm and profile photos are served from Convex file storage.
     remotePatterns: [{ protocol: "https", hostname: "*.convex.cloud", pathname: "/api/storage/**" }],
   },
+  // The page was /escrow before the Paystack split (Farmkeke no longer holds payments)
+  async redirects() {
+    return [
+      { source: "/escrow", destination: "/buyer-protection", permanent: true },
+      // The "payment released" page went with the confirm step
+      { source: "/orders/:orderId/released", destination: "/orders/:orderId", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return { title: "Category not found", robots: { index: false } };
   return {
     title: `${data.category.name}: buy fresh from verified farms`,
-    description: `Shop ${plural(data.total, "product")} in ${data.category.name} straight from verified Nigerian farmers. Delivery or pickup, with your payment held safely until your order arrives.`,
+    description: `Shop ${plural(data.total, "product")} in ${data.category.name} straight from verified Nigerian farmers. Delivery or pickup, and you pay only once the farm accepts your order.`,
     alternates: { canonical: `${siteUrl}${routes.category(slug)}` },
   };
 }

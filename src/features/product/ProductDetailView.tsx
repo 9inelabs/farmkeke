@@ -1,13 +1,13 @@
 // The product page from the "Product detail" design: a big photo with the
 // quantity stepper and photo count on it, then a rounded card with the name,
-// price, units, the farm and the escrow promise. Used for the shopper's
+// price, units, the farm and the buyer protection promise. Used for the shopper's
 // product page (M-17) and the farmer's listing preview (F-25), which leaves
 // out the stepper, the heart and the farm link.
 import { Image } from "expo-image";
 import { Heart, Image as ImageIcon, Leaf, Shop, Star, Truck, Verified } from "@/components/icons";
 import { useState } from "react";
 import { FlatList, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
-import { Avatar, EscrowCard, PressableScale, QuantityStepper, Text } from "@/components/ui";
+import { Avatar, ProtectionCard, PressableScale, QuantityStepper, Text } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
 import { borders, colors, radii, shadow, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -229,7 +229,7 @@ export function ProductDetailView(props: Props) {
           </View>
         ) : null}
 
-        <EscrowCard />
+        <ProtectionCard />
       </View>
     </View>
   );

@@ -506,7 +506,7 @@ function Confirming({ checkout }: { checkout: CheckoutForPay }) {
         </div>
         <div className="mt-[18px] flex items-center gap-2 text-[13px] font-semibold text-forest">
           <ShieldCheck aria-hidden className="size-4" strokeWidth={1.75} />
-          Your money will be held safely until delivery
+          Secured by Paystack
         </div>
       </section>
     </Page>
@@ -704,8 +704,7 @@ function PaidThanks({ checkout }: { checkout: CheckoutForPay }) {
         </span>
         <h1 className={title}>Paid. Thank you</h1>
         <p className="p mt-2.5">
-          {naira(checkout.totalKobo)} is held safely by Farmkeke. {checkout.contact.name || "The shopper"} will hear when the rider is on
-          the way.
+          {naira(checkout.totalKobo)} is paid. {checkout.contact.name || "The shopper"} will hear when the order is on its way.
         </p>
         <ButtonLink href={routes.home} variant="ghost" size="lg" fullWidth className="mt-6 min-h-[54px]">
           Go to Farmkeke

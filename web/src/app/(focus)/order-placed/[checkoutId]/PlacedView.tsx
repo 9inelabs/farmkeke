@@ -122,8 +122,8 @@ function Placed({ summary }: { summary: PlacedSummary }) {
   const name = firstName(summary.contact.name);
   const orders = summary.orders;
   const delivery = summary.fulfilment === "delivery";
-  // Delivery: not paid until the bill; the bill is ready once every delivery is priced
-  const unpaid = delivery && summary.status !== "paid";
+  // Every order is paid by bill once the farms accept (and, for delivery, it's priced)
+  const unpaid = summary.status !== "paid";
   const billReady = unpaid && summary.status === "awaiting_payment" && !!summary.payToken;
   // From the server (Phase 5); this browser's checkout only if the backend predates it
   const street = summary.address !== undefined ? summary.address?.street : mine?.street;
@@ -149,13 +149,17 @@ function Placed({ summary }: { summary: PlacedSummary }) {
         ]
       : [
           {
+            title: "We send your bill",
+            detail: "By email, text and in the app. You'll have 12 hours to pay.",
+          },
+          {
             title: orders.length > 1 ? "Collect each order at its farm" : "Collect your order at the farm",
             detail: "We'll send the farm's address and your 4-digit code when it's ready. You have 3 days.",
           },
         ]),
     {
-      title: delivery ? "You check everything and confirm receipt" : "You check everything and confirm receipt",
-      detail: `Then ${orders.length > 1 ? "each farm is" : "the farm is"} paid. Something wrong? Report it before confirming.`,
+      title: "You check everything",
+      detail: "Something wrong? Report it within a day. After that, your order closes.",
     },
   ];
 
@@ -203,7 +207,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
                 ) : (
                   <span className="badge b-held">
                     <ShieldCheck aria-hidden className="size-[13px]" strokeWidth={2} />
-                    {naira(summary.totalKobo)} held safely
+                    {naira(summary.totalKobo)} paid
                   </span>
                 )}
               </div>
@@ -420,7 +424,7 @@ function SaveAccount({ summary }: { summary: PlacedSummary }) {
         ) : null}
       </form>
       <p className="cap mt-3.5">
-        Without an account, only this device can confirm delivery. You can still look up your orders with{" "}
+        Without an account, only this device can report a problem with your order. You can still look up your orders with{" "}
         <Link href={routes.findOrder} className="font-semibold">
           Find my order
         </Link>

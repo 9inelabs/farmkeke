@@ -1,16 +1,15 @@
-// M-41 Order review, with M-42 "How escrow works". Pickup: "Pay" places the
-// cart with checkout.place (one checkout, one order per farm, stock held for
-// an hour) and opens the payment screen. Delivery: "Place order" sends the
-// orders to the farms unpaid; the shopper pays the bill once the deliveries
-// are priced. Guests get a guest identity on this phone first, which is what
-// lets only this phone confirm delivery later.
+// M-41 Order review, with M-42 "Buyer protection". "Place order" sends the
+// orders to the farms unpaid (checkout.place: one checkout, one order per
+// farm); the shopper pays one bill once the farms accept (and, for delivery,
+// the deliveries are priced). Guests get a guest identity on this phone
+// first, which is what lets only this phone report a problem later.
 import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Image } from "expo-image";
 import { router, type Href } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Lock, Pin, Send, ShieldCheck, Truck, User, type IconComponent } from "@/components/icons";
+import { Pin, Send, ShieldCheck, Truck, User, type IconComponent } from "@/components/icons";
 import { BottomSheet, Button, Notice, Text } from "@/components/ui";
 import { Card, CheckoutShell } from "@/features/checkout/CheckoutShell";
 import { useCheckoutDraft } from "@/features/checkout/draft";
@@ -23,29 +22,29 @@ import { quoteItems } from "@/store/cart";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
-const ESCROW = [
-  { title: "You pay Farmkeke", body: "Not the farm directly" },
-  { title: "We hold it safely", body: "While the farm prepares your order" },
-  { title: "You confirm, they're paid", body: "Problem? Report it and we step in" },
+const PROTECTION = [
+  { title: "The farm accepts", body: "You don't pay anything before that" },
+  { title: "You pay your bill", body: "Within 12 hours, through Paystack" },
+  { title: "A day to report", body: "Something wrong? We step in" },
 ];
-const ESCROW_DELIVERY = [
-  { title: "The farm accepts", body: "And packs your order" },
+const PROTECTION_DELIVERY = [
+  { title: "The farm accepts", body: "And we price your delivery" },
   { title: "You pay your bill", body: "Products plus delivery, within 12 hours" },
-  { title: "You confirm, they're paid", body: "We hold your money until then" },
+  { title: "A day to report", body: "Something wrong? We step in" },
 ];
 
 type Problem = { message: string; fix?: { href: Href; label: string } };
 
-function problemFor(e: unknown): Problem {
+function problemFor(e: unknown, delivery: boolean): Problem {
   switch (errorCode(e)) {
     case "TOTAL_CHANGED":
       return { message: `The total changed to ${formatNaira(errorData<{ totalKobo: number }>(e).totalKobo ?? 0)} while you were checking out. Check the new total, then try again.` };
     case "NOTE_TOO_LONG":
       return { message: "Your note for the rider is too long. Keep it to 200 characters.", fix: { href: "/checkout/details", label: "Edit your note" } };
     case "EMAIL_REQUIRED":
-      return { message: "Add your email so we can send your bill once the delivery is priced.", fix: { href: "/checkout/details", label: "Add your email" } };
+      return { message: "Add your email so we can send your bill once the farm accepts.", fix: { href: delivery ? "/checkout/details" : "/checkout", label: "Add your email" } };
     case "TOO_MANY_UNPAID":
-      return { message: "You already have unpaid delivery orders waiting for their bill. Pay one of those first, or choose pickup.", fix: { href: "/orders", label: "See your orders" } };
+      return { message: "You already have unpaid orders waiting for their bill. Pay one of those first.", fix: { href: "/orders", label: "See your orders" } };
     case "FULFILMENT_NOT_OFFERED":
       return { message: "One of the farms doesn't offer this option for an item in your cart. Choose delivery or pickup again.", fix: { href: "/checkout/method", label: "Change delivery or pickup" } };
     case "AREA_NOT_SERVED":
@@ -78,7 +77,7 @@ export default function Review() {
   const ensureIdentity = useEnsureIdentity();
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [escrowOpen, setEscrowOpen] = useState(false);
+  const [protectionOpen, setProtectionOpen] = useState(false);
 
   const total = quote?.totalKobo;
   const phone = validPhone(d.contact.phone);
@@ -113,7 +112,7 @@ export default function Review() {
       });
       const placed = { checkoutId: result.checkoutId as string, street: delivery ? d.address.street : undefined };
       if (result.payNow === false) {
-        // Delivery: nothing to pay yet. The bill comes once the deliveries are priced.
+        // Nothing to pay yet: the bill comes once the farms accept (and delivery is priced)
         d.finish(placed);
         // The checkout steps are done with: back to the tabs, then the confirmation on top
         if (router.canDismiss()) router.dismissAll();
@@ -126,7 +125,7 @@ export default function Review() {
     } catch (e) {
       setBusy(false);
       if (errorCode(e) === "CART_CHANGED") return router.replace("/cart");
-      setProblem(problemFor(e));
+      setProblem(problemFor(e, delivery));
     }
   };
 
@@ -134,7 +133,7 @@ export default function Review() {
     <CheckoutShell
       step={4}
       title="Check your order"
-      subtitle={delivery ? "Make sure everything is right before you place it." : "Make sure everything is right before you pay."}
+      subtitle="Make sure everything is right before you place it."
       footer={
         <>
           {problem ? (
@@ -150,15 +149,15 @@ export default function Review() {
             </Notice>
           ) : null}
           <View style={styles.totalRow}>
-            <Text variant="bodyMedium">{delivery ? "Products total" : "Total to pay"}</Text>
+            <Text variant="bodyMedium">{delivery ? "Products total" : "Total"}</Text>
             <Text variant="title" style={styles.total}>
               {total !== undefined ? formatNaira(total) : "…"}
             </Text>
           </View>
           <Button
-            label={delivery ? "Place order" : total !== undefined ? `Pay ${formatNaira(total)}` : "Pay"}
-            icon={delivery ? Send : Lock}
-            variant={delivery ? "primary" : "dark"}
+            label="Place order"
+            icon={Send}
+            variant="primary"
             size="large"
             pill
             fullWidth
@@ -167,7 +166,7 @@ export default function Review() {
             onPress={() => void submit()}
           />
           <Text variant="small" align="center">
-            {delivery ? "Nothing to pay now. " : "Card, bank transfer or USSD · Secured by Paystack. "}By {delivery ? "placing your order" : "paying"} you agree to the{" "}
+            Nothing to pay now. We send your bill once the {farms.length > 1 ? "farms accept" : "farm accepts"}. By placing your order you agree to the{" "}
             <Text variant="small" color={colors.forest} style={styles.underline} onPress={() => router.push("/legal/terms")}>
               Terms
             </Text>{" "}
@@ -254,15 +253,11 @@ export default function Review() {
         );
       })}
 
-      <Pressable accessibilityRole="button" onPress={() => setEscrowOpen(true)} style={styles.escrow}>
+      <Pressable accessibilityRole="button" onPress={() => setProtectionOpen(true)} style={styles.protection}>
         <ShieldCheck size={22} color={colors.forest} variant="solid" />
         <View style={styles.flex}>
-          <Text variant="label">Your money is held safely</Text>
-          <Text variant="small">
-            {delivery
-              ? `If a farm declines or doesn't accept within 24 hours, that order is left off your bill.`
-              : `If a farm declines or doesn't accept within 24 hours, that order is refunded in full.`}
-          </Text>
+          <Text variant="label">Buyer protection</Text>
+          <Text variant="small">{"If a farm declines or doesn't accept within 24 hours, that order is left off your bill."}</Text>
         </View>
         <Text variant="label" color={colors.limeInk}>
           How?
@@ -272,13 +267,13 @@ export default function Review() {
         {plural(lines.length, "item")} from {plural(farms.length, "farm")}. Each farm becomes its own order.
       </Text>
 
-      <BottomSheet visible={escrowOpen} onClose={() => setEscrowOpen(false)}>
+      <BottomSheet visible={protectionOpen} onClose={() => setProtectionOpen(false)}>
         <Text variant="title" style={styles.sheetTitle}>
-          How your money is protected
+          Buyer protection
         </Text>
-        {(delivery ? ESCROW_DELIVERY : ESCROW).map((s, i) => (
-          <View key={s.title} style={styles.escrowStep}>
-            <View style={styles.escrowNum}>
+        {(delivery ? PROTECTION_DELIVERY : PROTECTION).map((s, i) => (
+          <View key={s.title} style={styles.protectionStep}>
+            <View style={styles.protectionNum}>
               <Text variant="label" style={styles.bold}>
                 {i + 1}
               </Text>
@@ -289,7 +284,7 @@ export default function Review() {
             </View>
           </View>
         ))}
-        <Button label="Got it" variant="dark" size="large" pill fullWidth onPress={() => setEscrowOpen(false)} style={styles.gotIt} />
+        <Button label="Got it" variant="dark" size="large" pill fullWidth onPress={() => setProtectionOpen(false)} style={styles.gotIt} />
       </BottomSheet>
     </CheckoutShell>
   );
@@ -326,7 +321,7 @@ const styles = StyleSheet.create({
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   thumb: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: colors.placeholder },
   subtotal: { flexDirection: "row", alignItems: "center", backgroundColor: colors.tint, borderRadius: radii.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  escrow: {
+  protection: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
@@ -340,8 +335,8 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   total: { fontFamily: fonts.bold },
   sheetTitle: { marginTop: spacing.md, marginBottom: spacing.xs },
-  escrowStep: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
-  escrowNum: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
+  protectionStep: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
+  protectionNum: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
   gotIt: { marginTop: spacing.sm, marginBottom: spacing.sm },
 });
 

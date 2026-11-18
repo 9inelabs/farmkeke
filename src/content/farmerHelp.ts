@@ -10,7 +10,7 @@ export const FARMER_GUIDES: { title: string; body: string }[] = [
   },
   {
     title: "Accepting orders in time",
-    body: "You have 24 hours to accept or decline each order. If you don't respond, the order expires and the buyer is refunded. Turn on notifications so you don't miss new orders.",
+    body: "You have 24 hours to accept or decline each order. If you don't respond, the order expires. The buyer only pays after you accept. Turn on notifications so you don't miss new orders.",
   },
   {
     title: "Getting ready for the rider",
@@ -18,7 +18,7 @@ export const FARMER_GUIDES: { title: string; body: string }[] = [
   },
   {
     title: "When you get paid",
-    body: "Farmkeke holds the buyer's money until they confirm delivery, then releases it to you. If there's a problem, the money stays held until Farmkeke support decides.",
+    body: "When the buyer pays, which is after you accept, Paystack sends your share straight to your bank, usually by the next working day. If Farmkeke later refunds the buyer for a problem with your order, your part of it comes off your next orders.",
   },
   {
     title: "Going on holiday",

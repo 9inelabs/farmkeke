@@ -14,8 +14,8 @@ crons.interval("flag unconfirmed and overdue orders", { hours: 1 }, internal.ord
 crons.interval("abandon unpaid checkouts", { minutes: 15 }, internal.checkout.abandonStale, { olderThanMinutes: 60 });
 // Farms whose Paystack subaccount isn't set up yet (they can't be paid without one)
 crons.interval("sync farm subaccounts", { hours: 1 }, internal.payments.subaccounts.syncMissing, {});
-// Refunds (and older payouts) whose send never ran
-crons.interval("resend stuck refunds and payouts", { minutes: 10 }, internal.payments.processor.run, {});
+// Refunds whose send never ran
+crons.interval("resend stuck refunds", { minutes: 10 }, internal.payments.processor.run, {});
 
 // Old message-email and low-stock throttle rows
 crons.interval("prune notification throttles", { hours: 24 }, internal.notifications.store.pruneThrottles, {});

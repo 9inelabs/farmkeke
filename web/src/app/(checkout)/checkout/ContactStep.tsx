@@ -138,8 +138,8 @@ function ContactForm() {
         </StepActions>
         {status === "signed-in" ? null : (
           <p className="cap mt-4">
-            Your order is remembered on this device. Only this device can confirm delivery, unless you save an account
-            after ordering.
+            Your order is remembered on this device. Only this device can report a problem with it, unless you save an
+            account after ordering.
           </p>
         )}
       </section>

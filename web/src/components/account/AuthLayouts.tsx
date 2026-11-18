@@ -104,7 +104,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
               <span className="flex size-9 flex-none items-center justify-center rounded-full bg-lime text-forest">
                 <ShieldCheck className="size-[18px]" strokeWidth={2} />
               </span>
-              <div className="text-sm leading-5">Your money is held safely until you confirm delivery</div>
+              <div className="text-sm leading-5">You pay only once the farm accepts your order</div>
             </div>
           </div>
         </>
@@ -128,7 +128,7 @@ export function AuthPanel({ side, photo, className }: { side: "signin" | "signup
           </div>
         </>
       )}
-      <div className="relative text-[13px] text-on-forest">Verified farmers · Protected payments · Delivery or pickup</div>
+      <div className="relative text-[13px] text-on-forest">Verified farmers · Buyer protection · Delivery or pickup</div>
     </aside>
   );
 }

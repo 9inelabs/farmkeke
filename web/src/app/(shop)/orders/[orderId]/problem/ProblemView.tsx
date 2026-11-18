@@ -332,8 +332,11 @@ function Form({ order: o }: { order: OrderDetail }) {
               <ShieldCheck className="size-5" strokeWidth={1.75} />
             </span>
             <div>
-              <div className="text-[15px] font-bold">Your {naira(o.totalKobo)} stays held</div>
-              <p className="mt-1 text-[13px] leading-[19px] text-muted">Nothing is paid to the farm until this is resolved.</p>
+              <div className="text-[15px] font-bold">You&apos;re covered</div>
+              <p className="mt-1 text-[13px] leading-[19px] text-muted">
+                If we decide you&apos;re owed money for your {naira(o.totalKobo)} order, Farmkeke refunds you. Banks usually take 3 to 10
+                working days to show it.
+              </p>
             </div>
           </section>
           <section aria-labelledby="next-title" className="card p-[22px]">

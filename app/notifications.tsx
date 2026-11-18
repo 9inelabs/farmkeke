@@ -62,7 +62,7 @@ export default function Notifications() {
           onEndReached={() => status === "CanLoadMore" && loadMore(PAGE)}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
-            <EmptyState icon={Bell} title="Nothing new yet" message={side === "farm" ? "New orders, payouts and reviews will show up here." : "Order updates, bills and pickup codes will show up here."} />
+            <EmptyState icon={Bell} title="Nothing new yet" message={side === "farm" ? "New orders, payments and reviews will show up here." : "Order updates, bills and pickup codes will show up here."} />
           }
           renderItem={({ item: n }) => {
             const fromFarmkeke = FROM_FARMKEKE[n.kind];

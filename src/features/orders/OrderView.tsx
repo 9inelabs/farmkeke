@@ -382,7 +382,7 @@ function Ended({ o }: { o: OrderDetail }) {
       : o.status === "expired"
         ? "Farms have 24 hours to accept an order. This one ran out of time."
         : "";
-  const money = o.escrow === "none" ? "You weren't charged for this order." : o.escrow === "refunded" ? `${formatNaira(o.totalKobo)} has been refunded to you in full.` : `Your ${formatNaira(o.totalKobo)} is coming back to you in full. Banks can take a few working days to show it.`;
+  const money = o.escrow === "none" ? "You weren't charged for this order." : o.escrow === "refunded" ? `${formatNaira(o.totalKobo)} has been refunded to you in full.` : `Farmkeke is refunding your ${formatNaira(o.totalKobo)} in full. Banks usually take 3 to 10 working days to show it.`;
   return (
     <StatusScreen
       icon={o.status === "expired" ? Clock : CloseCircle}

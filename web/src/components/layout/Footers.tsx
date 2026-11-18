@@ -16,7 +16,7 @@ const SITE_COLUMNS: Col[] = [
     links: [
       { href: routes.about, label: "About" },
       { href: routes.howItWorks, label: "How it works" },
-      { href: routes.escrow, label: "Escrow protection" },
+      { href: routes.buyerProtection, label: "Buyer protection" },
     ],
   },
   {

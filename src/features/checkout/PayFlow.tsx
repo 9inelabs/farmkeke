@@ -291,7 +291,7 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
       <StatusScreen
         icon={ShieldCheck}
         title="Bill paid. Thank you"
-        message={`${formatNaira(checkout.totalKobo)} is held safely by Farmkeke until ${checkout.contact.name || "the shopper"} confirms the order arrived.`}
+        message={`${formatNaira(checkout.totalKobo)} is paid. ${checkout.contact.name || "The shopper"} will hear when the order is on its way.`}
         actions={<Button label="Shop on Farmkeke" variant="dark" size="large" pill fullWidth onPress={() => router.replace("/home")} />}
       />
     );
@@ -372,13 +372,13 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <View style={styles.amount}>
           <Text variant="small" color="rgba(255,255,255,0.7)">
-            {isBill ? `Bill for ${checkout.isOwner ? "your delivery" : `${checkout.contact.name || "a Farmkeke"}'s order`}` : "Total to pay"}
+            {isBill ? `Bill for ${checkout.isOwner ? "your order" : `${checkout.contact.name || "a Farmkeke"}'s order`}` : "Total to pay"}
           </Text>
           <Text style={styles.amountText}>{formatNaira(checkout.totalKobo)}</Text>
           <View style={styles.held}>
             <ShieldCheck size={16} color={colors.lime} variant="solid" />
             <Text variant="small" color={colors.white}>
-              Held safely until you confirm you've got your order
+              Secured by Paystack. Something wrong? Report it within a day
             </Text>
           </View>
         </View>

@@ -80,7 +80,7 @@ const PANELS: Panel[] = [
     progress: 3,
     button: "Next",
     title: "Your money stays safe",
-    body: [{ text: "We hold your payment and only pay the farmer after you confirm you got everything." }],
+    body: [{ text: "You only pay once the farm accepts, and we step in if anything arrives wrong." }],
     image: require("../../assets/illustrations/onboarding-escrow.jpg"),
     art: { x: -98, y: 161, width: 769, height: 769 },
   },

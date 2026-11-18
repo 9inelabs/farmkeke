@@ -208,7 +208,8 @@ export function CartView() {
               <div className="mt-[18px] flex gap-2.5 rounded-xl bg-[#F4F7EE] p-3.5">
                 <ShieldCheck aria-hidden className="size-5 flex-none text-forest" strokeWidth={1.75} />
                 <div className="sm text-[#2E3A28]">
-                  Your payment is held by Farmkeke and released to each farm only after you confirm delivery.
+                  You don&apos;t pay yet. Each farm accepts first, then we send your bill. Something wrong when it arrives? Report it
+                  within a day.
                 </div>
               </div>
               {status === "signed-in" ? null : (
@@ -322,7 +323,7 @@ function EmptyCart() {
             Your cart is ready for fresh picks
           </h1>
           <p className="p max-w-[460px]">
-            Add produce from verified farms near you. Your payment stays protected until your order arrives.
+            Add produce from verified farms near you. You pay only once the farm accepts your order.
           </p>
           <ButtonLink href={routes.shop} variant="lime" className="mt-2">
             Start shopping

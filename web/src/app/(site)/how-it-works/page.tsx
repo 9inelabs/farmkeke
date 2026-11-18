@@ -22,7 +22,7 @@ import { routes } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "How it works",
   description:
-    "Fresh food from the farm in four steps: choose your produce, pay securely, receive your order, then confirm to release payment to the farmer.",
+    "Fresh food from the farm in four steps: choose your produce, pay once the farm accepts, receive your order, and report any problem within a day.",
 };
 
 const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: string[] }> = [
@@ -39,11 +39,11 @@ const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: stri
   {
     icon: Lock,
     title: "Pay securely",
-    body: "Pay with card, bank transfer or USSD through Paystack. Farmkeke holds the money safely. For home delivery, you pay once the farm accepts and we've priced the delivery.",
+    body: "You pay only once the farm accepts (and, for home delivery, once we've priced the delivery). Pay your bill by card, bank transfer or USSD through Paystack.",
     points: [
       "No account needed. Check out as a guest",
       "Each farm gets its own order, and has 24 hours to accept",
-      "If a farm doesn't accept, you get a full refund",
+      "If a farm doesn't accept, you aren't charged",
     ],
   },
   {
@@ -58,11 +58,11 @@ const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: stri
   },
   {
     icon: ShieldCheck,
-    title: "Confirm and release",
-    body: "Check everything arrived as expected, then confirm. Only then is the farmer paid.",
+    title: "Check everything",
+    body: "Check everything arrived as expected. Your order closes a day after it reaches you.",
     points: [
-      "Something wrong? Report it before you confirm",
-      "Your money stays held while we look into it",
+      "Something wrong? Report it within a day",
+      "If you're owed a refund, Farmkeke sends it",
       "Rate the farm to help other shoppers",
     ],
   },
@@ -77,7 +77,7 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
       ["Delivery fee", "Priced per order once the farm accepts"],
       ["When you pay", "Within 12 hours of your bill, before the rider collects"],
       ["You need", "Your address and phone number"],
-      ["To confirm", "Check items when the rider arrives"],
+      ["When it arrives", "Check items when the rider arrives"],
     ],
     cta: ["See where we deliver", routes.shop],
   },
@@ -89,7 +89,7 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
       ["Pickup fee", "Free"],
       ["When", "Within 3 days of it being ready"],
       ["You need", "Your 4-digit pickup code"],
-      ["To confirm", "Check items at the farm"],
+      ["When you collect", "Check items at the farm"],
     ],
     cta: ["Start shopping", routes.shop],
   },
@@ -97,11 +97,11 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
 
 const STATUSES: Array<[string, string, string]> = [
   ["b-pend", "Waiting for the farm", "The farm has up to 24 hours to accept your order."],
-  ["b-held", "Accepted", "The farm is preparing your produce."],
+  ["b-held", "Accepted", "We send your bill. Once it's paid, the farm prepares your produce."],
   ["b-held", "Packed", "A rider is on the way to collect it from the farm."],
   ["b-pend", "Out for delivery", "Your order is on its way to you."],
-  ["b-ok", "Delivered", "Check your items, then confirm to release payment."],
-  ["b-err", "Problem reported", "Your money stays held while Farmkeke reviews it."],
+  ["b-ok", "Delivered", "Check your items. Something wrong? Report it within a day."],
+  ["b-err", "Problem reported", "Farmkeke reviews it and decides on any refund."],
 ];
 
 const textLink = "mt-2.5 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold m:mt-0.5 m:min-h-10 m:text-[13px]";
@@ -119,9 +119,9 @@ export default function HowItWorksPage() {
               <Store aria-hidden size={18} strokeWidth={2} />
               Start shopping
             </Link>
-            <Link href={routes.escrow} className="btn ghost h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
+            <Link href={routes.buyerProtection} className="btn ghost h-12 px-[22px] text-[15px] m:h-11 m:text-sm">
               <ShieldCheck aria-hidden size={18} strokeWidth={2} />
-              How payments are protected
+              Buyer protection
             </Link>
           </div>
         </FadeUp>
@@ -227,7 +227,7 @@ export default function HowItWorksPage() {
               <div>
                 <h3 className={`${h3b} text-[17px] leading-[25px] m:text-[15px] m:leading-[21px]`}>Shopping as a guest?</h3>
                 <p className="m-0 mt-1.5 text-sm leading-6 text-muted m:mt-1 m:text-[13px] m:leading-5">
-                  Only the phone or browser you ordered on can confirm delivery. On another device, use Find my order to see
+                  Only the phone or browser you ordered on can report a problem. On another device, use Find my order to see
                   your order status.
                 </p>
                 <Link href={routes.findOrder} className={textLink}>

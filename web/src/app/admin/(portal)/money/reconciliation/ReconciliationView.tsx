@@ -2,7 +2,7 @@
 
 // A-65 Reconciliation: payments that didn't match their checkout (wrong
 // amount or currency), Paystack events Farmkeke couldn't place, failed
-// payouts and refunds, and a check of the bank list against Paystack's.
+// refunds, and a check of the bank list against Paystack's.
 import { useAction, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useState } from "react";

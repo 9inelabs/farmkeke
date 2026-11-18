@@ -36,7 +36,7 @@ import { routes } from "@/lib/routes";
 export const metadata: Metadata = {
   title: { absolute: "Farmkeke · From the farm directly to your home" },
   description:
-    "Farmkeke connects households with verified Nigerian farmers. Shop fresh produce at fair prices, and your money stays protected until your order arrives.",
+    "Farmkeke connects households with verified Nigerian farmers. Shop fresh produce at fair prices, and pay only once the farm accepts your order.",
 };
 
 const FAQS = [
@@ -46,7 +46,7 @@ const FAQS = [
   },
   {
     q: "How does Farmkeke protect my money?",
-    a: "When you pay, Farmkeke holds the money. The farmer is paid only after you confirm your order arrived as expected.",
+    a: "You pay only after the farm accepts your order, through Paystack. If anything arrives wrong, report it within a day and our team sorts it out, with a refund from Farmkeke if you're owed one.",
   },
   {
     q: "Where does Farmkeke deliver?",
@@ -58,7 +58,7 @@ const FAQS = [
   },
   {
     q: "What if something is wrong with my order?",
-    a: "Report the problem before you confirm receipt. Your money stays held while our team reviews it and works out the right outcome.",
+    a: "Report it from your order within a day of delivery or collection. The farm can reply, then our team decides: a full refund, a part refund, or no refund. Refunds come from Farmkeke.",
   },
   {
     q: "How do I become a Farmkeke farmer?",
@@ -68,7 +68,7 @@ const FAQS = [
 
 const TRUST: Array<[LucideIcon, string, string]> = [
   [BadgeCheck, "Verified farmers", "Every farm checked by our team"],
-  [ShieldCheck, "Protected payments", "Held until you confirm delivery"],
+  [ShieldCheck, "Buyer protection", "Pay only after the farm accepts"],
   [Truck, "Farmkeke riders", "Our own team delivers"],
   [MapPin, "Pickup at the farm", "Collect within 3 days, no fee"],
 ];
@@ -82,8 +82,8 @@ const WHAT: Array<[LucideIcon, string, string]> = [
   ],
   [
     Shield,
-    "Protected payments",
-    "Your money is held by Farmkeke and released to the farmer only after you confirm your order arrived.",
+    "Buyer protection",
+    "You pay only once the farm accepts. If something arrives wrong, report it within a day and Farmkeke sorts it out.",
   ],
 ];
 
@@ -98,9 +98,9 @@ const SHOPPERS: Array<[LucideIcon, string, string]> = [
 
 const STEPS: Array<[string, string]> = [
   ["Choose your produce", "Browse farms near you and add items to your cart."],
-  ["Pay securely", "Pay with Paystack. Farmkeke holds the money safely."],
+  ["Pay securely", "Once the farm accepts, pay your bill through Paystack."],
   ["Receive your order", "At your door, or collected from the farm."],
-  ["Confirm and release", "Confirm it all arrived, and the farmer gets paid."],
+  ["Check everything", "Something wrong? Report it within a day and we'll sort it out."],
 ];
 
 const APPLY: Array<[string, string]> = [
@@ -110,7 +110,7 @@ const APPLY: Array<[string, string]> = [
   ["Get approved and start selling", "Our team reviews your application, then you can list produce."],
 ];
 
-const NEEDS = ["Government ID", "Farm photos", "Proof of address", "Farmers association letter", "Bank details for payouts"];
+const NEEDS = ["Government ID", "Farm photos", "Proof of address", "Farmers association letter", "Your bank account"];
 
 const heroCard =
   "w-80 flex-none rounded-[22px] bg-surface p-5 m:rounded-[18px] m:p-4";
@@ -131,8 +131,8 @@ export default function Landing() {
               </span>
             </h1>
             <p className={`${lead} max-w-[640px]`}>
-              Farmkeke connects households with verified farmers. Shop fresh produce at fair prices, and your money stays
-              protected until your order arrives.
+              Farmkeke connects households with verified farmers. Shop fresh produce at fair prices, and pay only once the
+              farm accepts your order.
             </p>
             <StoreButtons className="mt-2 justify-center m:mt-1 m:w-full" />
             <Link href={routes.shop} className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-semibold m:text-sm">
@@ -173,10 +173,10 @@ export default function Landing() {
             <div className={`${heroCard} shadow-[inset_0_0_0_1px_var(--color-line),0_24px_48px_rgba(30,59,22,0.10)] m:shadow-[inset_0_0_0_1px_var(--color-line)]`}>
               <div className="rounded-[14px] bg-[#F7F8F4] p-4">
                 <div className="flex items-center justify-between">
-                  <span className={cap}>Order total</span>
+                  <span className={cap}>Your bill</span>
                   <span className="badge b-held">
                     <Shield aria-hidden size={13} strokeWidth={2} />
-                    Held safely
+                    Farm accepted
                   </span>
                 </div>
                 <div className="mt-1.5 font-display text-[30px] leading-[38px] font-extrabold tracking-[-0.02em]">₦12,400</div>
@@ -187,13 +187,13 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock aria-hidden size={15} strokeWidth={2} className="text-forest" />
-                    Released when you confirm
+                    A day to report any problem
                   </div>
                 </div>
               </div>
               <div className="mt-[18px] pt-4 shadow-[inset_0_1px_0_var(--color-line-soft)]">
                 <div className={cap}>Step 2</div>
-                <div className="mt-[3px] text-sm font-semibold">Pay safely. We hold your money until it arrives</div>
+                <div className="mt-[3px] text-sm font-semibold">Pay only once the farm accepts your order</div>
               </div>
             </div>
 
@@ -332,8 +332,8 @@ export default function Landing() {
             <div className="mt-12 flex items-center gap-3.5 rounded-2xl bg-[#F4F7EE] px-[22px] py-[18px] m:mt-6 m:items-start m:gap-3 m:px-4 m:py-3.5">
               <ShieldAlert aria-hidden size={22} strokeWidth={1.75} className="flex-none text-forest m:size-5" />
               <p className={`m-0 text-[15px] leading-6 text-[#2E3A28] m:text-[13px] m:leading-5`}>
-                Something wrong with your order? Report it before you confirm. Your money stays held while our team looks
-                into it.
+                Something wrong with your order? Report it within a day of delivery and our team looks into it. If you&apos;re
+                owed a refund, Farmkeke sends it.
               </p>
             </div>
           </div>
@@ -549,7 +549,7 @@ function OrderScreen() {
       <div className="font-display text-base font-extrabold">Order FK-10234</div>
       <div className="flex gap-1.5">
         <span className="badge b-ok h-5 text-[10px]">Out for delivery</span>
-        <span className="badge b-held h-5 text-[10px]">₦12,400 held</span>
+        <span className="badge b-held h-5 text-[10px]">₦12,400 paid</span>
       </div>
       <div className="flex flex-col gap-2.5 rounded-xl bg-surface p-3 text-[11px] shadow-[inset_0_0_0_1px_#ECEEE8]">
         <div className="flex items-center gap-2">

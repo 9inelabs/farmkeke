@@ -38,11 +38,11 @@ const TOPICS: Topic[] = [
       ],
       [
         "How do I find my order as a guest?",
-        "Go to Find my order and enter your order number and phone number. On a different device, you can view the order but not confirm it.",
+        "Go to Find my order and enter your order number and phone number. On a different device, you can view the order, but only the device you ordered on can report a problem.",
       ],
       [
         "Can I change or cancel my order?",
-        "You can cancel for a full refund until the farm accepts it. After that, contact support and we will check with the farm.",
+        "Until the farm accepts, you haven't paid anything. After that, contact support and we will check with the farm. If we cancel a paid order, you get a full refund.",
       ],
     ],
   },
@@ -51,10 +51,21 @@ const TOPICS: Topic[] = [
     icon: ShieldCheck,
     faqs: [
       ["How can I pay?", "Card, bank transfer or USSD, all through Paystack. Farmkeke never sees your full card number."],
-      ["When is the farmer paid?", "Only after you confirm your order arrived as expected. Until then, Farmkeke holds the money."],
+      [
+        "When do I pay?",
+        "Only after the farm accepts your order. We send you a bill by email, text and in the app, and you have 12 hours to pay it.",
+      ],
+      [
+        "When is the farmer paid?",
+        "When you pay. Paystack sends the farm its share straight away, and Farmkeke keeps its fee and the delivery fee. Farmkeke doesn't hold your money.",
+      ],
       [
         "What if the farm does not accept my order?",
-        "Farms have 24 hours to accept. If they do not, your payment is refunded in full automatically.",
+        "Farms have 24 hours to accept. If they do not, the order is cancelled. You haven't paid anything, so there is nothing to refund.",
+      ],
+      [
+        "What protects me if something goes wrong?",
+        "Report it within a day of delivery or collection. Our team looks into it, and if you're owed money, Farmkeke refunds you.",
       ],
       [
         "A farmer asked me to pay them directly. What should I do?",
@@ -81,7 +92,7 @@ const TOPICS: Topic[] = [
       ],
       [
         "Can someone else collect for me?",
-        "Yes. Share the pickup code and order number with them. Only confirm once you know everything is correct.",
+        "Yes. Share the pickup code and order number with them, and ask them to check everything before they leave the farm.",
       ],
     ],
   },
@@ -91,7 +102,7 @@ const TOPICS: Topic[] = [
     faqs: [
       [
         "Something is wrong with my order. What do I do?",
-        "Open your order and choose Report a problem before you confirm. Add photos and tell us which items were affected. Your money stays held.",
+        "Open your order and choose Report a problem within a day of delivery or collection. Add photos and tell us which items were affected.",
       ],
       [
         "How long does a problem report take?",
@@ -99,15 +110,15 @@ const TOPICS: Topic[] = [
       ],
       [
         "Will the delivery fee be refunded?",
-        "For a part refund, you are refunded for the affected items only. The delivery fee is not refunded because the delivery still happened.",
+        "For a part refund, you are refunded for the affected items only. The delivery fee is not refunded because the delivery still happened. A full refund includes it.",
       ],
       [
         "Where does my refund go?",
-        "Back to the card or bank account you paid with. Your bank may take a few working days to show it.",
+        "Back to the card or bank account you paid with. Farmkeke sends it, and banks usually take 3 to 10 working days to show it.",
       ],
       [
-        "I already confirmed. Can I still report a problem?",
-        "Confirming releases the money to the farm and cannot be undone. Contact support and we will try to help with the farm.",
+        "It's been more than a day. Can I still report a problem?",
+        "Your order closes a day after it's delivered or collected, and can't be reported after that. Contact support and we will try to help with the farm.",
       ],
     ],
   },
@@ -143,7 +154,7 @@ const TOPICS: Topic[] = [
       ],
       [
         "What documents do I need?",
-        "Government ID, farm photos, proof of address, a farmers association letter and bank details for payouts.",
+        "Government ID, farm photos, proof of address, a farmers association letter and the bank account you want to be paid into.",
       ],
       ["Can I sell on the website?", "Not yet. Farmers apply and manage everything in the Farmkeke app."],
     ],
@@ -209,7 +220,7 @@ export function HelpCenter() {
             <Package aria-hidden size={15} strokeWidth={2} />
             Find my order
           </Link>
-          <Link href={routes.escrow} className={heroChip}>
+          <Link href={routes.buyerProtection} className={heroChip}>
             <ShieldCheck aria-hidden size={15} strokeWidth={2} />
             How refunds work
           </Link>
@@ -305,7 +316,7 @@ export function HelpCenter() {
             <div>
               <h2 className="m-0 text-[15px] font-semibold">Problem with an order?</h2>
               <p className="m-0 mt-0.5 text-sm leading-6 text-muted m:text-[13px] m:leading-5">
-                Report it from your order page before you confirm, so your money stays held.
+                Report it from your order page within a day of delivery or collection.
               </p>
               <Link href={routes.myOrders} className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold m:mt-0.5 m:min-h-10 m:text-[13px]">
                 Go to my orders

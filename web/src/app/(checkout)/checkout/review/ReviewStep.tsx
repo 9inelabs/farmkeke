@@ -1,13 +1,12 @@
 "use client";
 
-// W-25 Checkout · Review. Pickup: "Pay" places the cart with checkout.place
-// (one checkout, one order per farm, stock held for an hour) and opens the
-// payment page. Delivery: "Place order" sends the orders to the farms unpaid;
-// the shopper pays the bill once the deliveries are priced. Guests get an
-// anonymous identity on this browser first, which is what lets only this
-// device confirm delivery later.
+// W-25 Checkout · Review. "Place order" sends the orders to the farms unpaid
+// (checkout.place: one checkout, one order per farm). The shopper pays one
+// bill once the farms accept (and, for delivery, the deliveries are priced).
+// Guests get an anonymous identity on this browser first, which is what lets
+// only this device report a problem later.
 import { useMutation } from "convex/react";
-import { Lock, MapPin, Send, Truck, User } from "lucide-react";
+import { MapPin, Send, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,15 +26,15 @@ export function ReviewStep() {
   return ready ? <Review /> : <CheckoutSkeleton />;
 }
 
-const ESCROW = [
-  { title: "You pay Farmkeke", body: "Not the farm directly" },
-  { title: "We hold it safely", body: "While the farm prepares and delivers" },
-  { title: "You confirm, they're paid", body: "Problem? Report it and we step in" },
+const PROTECTION = [
+  { title: "The farm accepts", body: "You don't pay anything before that" },
+  { title: "You pay your bill", body: "Within 12 hours, through Paystack" },
+  { title: "A day to report", body: "Something wrong? We step in" },
 ];
-const ESCROW_DELIVERY = [
-  { title: "The farm accepts", body: "And packs your order" },
+const PROTECTION_DELIVERY = [
+  { title: "The farm accepts", body: "And we price your delivery" },
   { title: "You pay your bill", body: "Products plus delivery, within 12 hours" },
-  { title: "You confirm, they're paid", body: "We hold your money until then" },
+  { title: "A day to report", body: "Something wrong? We step in" },
 ];
 
 type Problem = { message: string; fix?: { href: string; label: string } };
@@ -54,7 +53,7 @@ function problemFor(e: unknown): Problem {
       };
     case "EMAIL_REQUIRED":
       return {
-        message: "Add your email so we can send your bill once the delivery is priced.",
+        message: "Add your email so we can send your bill once the farm accepts.",
         fix: { href: routes.checkoutDetails, label: "Add your email" },
       };
     case "TOO_MANY_UNPAID":
@@ -198,32 +197,24 @@ function Review() {
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between pt-3.5 shadow-[inset_0_1px_0_#EEF0EB]">
-            <span className="font-semibold">{delivery ? "Products total" : "Total to pay"}</span>
+            <span className="font-semibold">{delivery ? "Products total" : "Total"}</span>
             <span className="font-display text-[26px] font-extrabold text-forest m:text-[22px]">{total !== undefined ? naira(total) : "…"}</span>
           </div>
-          {delivery ? (
-            <p className="cap mt-2">
-              Nothing to pay now. Once the {farms.length > 1 ? "farms accept" : "farm accepts"}, we price the delivery and send your bill
-              by email, text and in the app. You&apos;ll have 12 hours to pay.
-            </p>
-          ) : null}
+          <p className="cap mt-2">
+            Nothing to pay now. Once the {farms.length > 1 ? "farms accept" : "farm accepts"}, {delivery ? "we price the delivery and " : ""}we
+            send your bill by email, text and in the app. You&apos;ll have 12 hours to pay.
+          </p>
           <Button
             variant="lime"
             size="lg"
             fullWidth
             className="mt-5 min-h-[54px] m:mt-4 m:min-h-12"
-            icon={
-              delivery ? (
-                <Send aria-hidden className="size-[18px]" strokeWidth={2} />
-              ) : (
-                <Lock aria-hidden className="size-[18px]" strokeWidth={2} />
-              )
-            }
+            icon={<Send aria-hidden className="size-[18px]" strokeWidth={2} />}
             loading={busy}
             disabled={!quote}
             onClick={pay}
           >
-            {delivery ? "Place order" : total !== undefined ? `Pay ${naira(total)}` : "Pay"}
+            Place order
           </Button>
           {problem ? (
             <div role="alert" className="mt-3 rounded-xl bg-err-bg px-3.5 py-3 text-[13px] leading-[18px] text-err">
@@ -237,7 +228,7 @@ function Review() {
           ) : null}
           <div className="cap mt-2.5 text-center">Card, bank transfer or USSD · Secured by Paystack</div>
           <p className="cap mt-4 text-center">
-            By {delivery ? "placing your order" : "paying"} you agree to the{" "}
+            By placing your order you agree to the{" "}
             <Link href={routes.legal("terms")} className="font-semibold">
               Terms of use
             </Link>{" "}
@@ -325,12 +316,12 @@ function Review() {
           })}
         </section>
 
-        <section aria-labelledby="escrow-title" className={`${checkoutCard} p-6 m:p-4`}>
-          <h2 id="escrow-title" className="h3 text-lg leading-[26px]">
-            How your money is protected
+        <section aria-labelledby="protection-title" className={`${checkoutCard} p-6 m:p-4`}>
+          <h2 id="protection-title" className="h3 text-lg leading-[26px]">
+            Buyer protection
           </h2>
           <ol className="m-0 mt-3.5 grid list-none grid-cols-3 gap-3 p-0 m:mt-2.5 m:grid-cols-1 m:gap-2">
-            {(delivery ? ESCROW_DELIVERY : ESCROW).map((s, i) => (
+            {(delivery ? PROTECTION_DELIVERY : PROTECTION).map((s, i) => (
               <li key={s.title} className="rounded-[14px] bg-soft p-3.5 m:grid m:grid-cols-[22px_minmax(0,1fr)] m:gap-x-2 m:rounded-xl m:p-3">
                 <div className="font-display text-lg font-extrabold text-lime m:row-span-2 m:text-base m:leading-[18px]" aria-hidden>
                   {i + 1}
@@ -340,11 +331,7 @@ function Review() {
               </li>
             ))}
           </ol>
-          <p className="cap mt-3.5">
-            {delivery
-              ? "If a farm declines or doesn't accept within 24 hours, that order is left off your bill."
-              : "If a farm declines or doesn't accept within 24 hours, that order is refunded in full."}
-          </p>
+          <p className="cap mt-3.5">If a farm declines or doesn&apos;t accept within 24 hours, that order is left off your bill.</p>
         </section>
       </div>
     </CheckoutShell>

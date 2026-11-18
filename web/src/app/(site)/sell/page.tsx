@@ -38,16 +38,16 @@ export const metadata: Metadata = {
 const WHY: Array<[LucideIcon, string, string]> = [
   [Users, "More buyers", "Reach households across your city, not just the people who visit your market stall."],
   [Tag, "Your prices", "You decide what to charge for every item and pack size. Change prices any time."],
-  [ShieldCheck, "Guaranteed payment", "Buyers pay before you pack. The money is released once they confirm delivery."],
+  [ShieldCheck, "Paid when they pay", "Buyers pay once you accept. Paystack sends your share straight to your bank."],
   [Truck, "Delivery handled", "Our riders collect from your farm and deliver to the customer. Pickup buyers collect from you with a code."],
 ];
 
 const FLOW: Array<[string, string]> = [
-  ["Receive an order", "You get an alert by push notification and SMS. The buyer has already paid."],
-  ["Accept within 24 hours", "If you don't accept in time, the buyer gets a full refund."],
+  ["Receive an order", "You get an alert by push notification and SMS."],
+  ["Accept within 24 hours", "Once you accept, the buyer gets the bill. If you don't accept in time, the order is cancelled."],
+  ["Get paid", "When the buyer pays, Paystack sends your share to your bank, minus Farmkeke's commission."],
   ["Pack the order", "Mark it as packed and a Farmkeke rider is sent to collect it."],
   ["Rider delivers", "The buyer receives it at home, or collects it from your farm."],
-  ["Get paid", "Once the buyer confirms, the money goes to your bank account, minus the Farmkeke commission."],
 ];
 
 const NEEDS: Array<[LucideIcon, string, string]> = [
@@ -55,7 +55,7 @@ const NEEDS: Array<[LucideIcon, string, string]> = [
   [Camera, "Farm photos", "At least three photos of your farm and produce"],
   [House, "Proof of address", "A recent utility bill or a letter from your community"],
   [File, "Farmers association letter", "A letter from your local farmers association or cooperative"],
-  [Banknote, "Bank details for payouts", "An account in your name or your registered farm name"],
+  [Banknote, "Your bank account", "In your name or your registered farm name. Your money is paid into it"],
 ];
 
 const APPLY: Array<[string, string]> = [
@@ -76,11 +76,11 @@ const QUESTIONS: Array<[string, string]> = [
   ],
   [
     "When do I get paid?",
-    "As soon as the buyer confirms they received the order. The money is sent to the bank account you registered.",
+    "When the buyer pays, which is after you accept. Paystack sends your share straight to the bank account you registered, usually by the next working day.",
   ],
   [
     "What if a buyer reports a problem?",
-    "You'll get an alert and have 12 hours to reply with your side. Farmkeke then decides the outcome, usually within a day.",
+    "You'll get an alert and have 12 hours to reply with your side. Farmkeke then decides the outcome, usually within a day. If the buyer is refunded, Farmkeke pays it and your part comes off your next orders.",
   ],
   ["Can I manage my farm on the website?", "Not yet. Farmers apply, list produce and manage orders in the Farmkeke app."],
 ];
@@ -99,8 +99,8 @@ export default function SellPage() {
               </Eyebrow>
               <h1 className={`${S.h1} text-white`}>Sell your harvest straight to homes</h1>
               <p className={`${leadSize} text-on-forest`}>
-                Set your own prices, get orders from households near you, and know the buyer has already paid before you
-                pack a single item.
+                Set your own prices, get orders from households near you, and get paid to your bank as soon as the buyer
+                pays.
               </p>
               <ul className="m-0 flex list-none flex-col gap-3 p-0 m:gap-2.5">
                 {[
@@ -155,7 +155,7 @@ export default function SellPage() {
               </div>
               <div className="mt-3.5 flex items-center gap-2.5 rounded-xl bg-held-bg px-3.5 py-3 text-[13px] font-medium text-forest">
                 <ShieldCheck aria-hidden size={16} strokeWidth={2} />
-                ₦11,500 paid and held by Farmkeke
+                ₦11,500 paid. Your share goes to your bank
               </div>
               <div aria-hidden className="mt-4 grid grid-cols-2 gap-2.5">
                 <span className="btn sm ghost">

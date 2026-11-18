@@ -10,10 +10,10 @@ type Props = {
   message?: string;
 };
 
-/** The "Your money is held safely" card from the Home and Product detail frames. */
-export function EscrowCard({
-  title = "Your money is held safely",
-  message = "We only pay the farmer after you confirm delivery",
+/** The buyer protection card from the Home and Product detail frames. */
+export function ProtectionCard({
+  title = "Buyer protection",
+  message = "Pay only once the farm accepts. Something wrong? We step in",
 }: Props) {
   return (
     <LinearGradient

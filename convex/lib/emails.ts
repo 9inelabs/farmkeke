@@ -64,7 +64,7 @@ const MUTED = "#5A5E56";
 const TINT = "#F2F8E6";
 const LINE = "#E6E8E2"; // card borders
 const DIVIDER = "#EEF0EB"; // rows inside a card (W-30, W-56)
-const HELD_BG = "#E7EEE4"; // "held" badge (W-30, W-51)
+const HELD_BG = "#E7EEE4"; // status badge (W-30, W-51)
 
 const HEAD_FONT = "Montserrat, Arial, Helvetica, sans-serif";
 const BODY_FONT = "Inter, Arial, Helvetica, sans-serif";
@@ -163,7 +163,7 @@ const H2 = (html: string) =>
 const LINK = (url: string, label: string) =>
   `<a href="${esc(url)}" style="color:${FOREST};font-weight:600;text-decoration:underline;">${esc(label)}</a>`;
 
-/** A tinted box for the key fact (money held, refund amount, etc.). */
+/** A tinted box for the key fact (amount paid, refund amount, etc.). */
 const NOTE = (html: string) =>
   `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
 <tr><td bgcolor="${TINT}" style="background:${TINT};border-radius:12px;padding:14px 16px;font-family:${BODY_FONT};font-size:15px;line-height:22px;color:${INK};">${html}</td></tr>
@@ -200,7 +200,7 @@ const BUTTON = (url: string, label: string) =>
 </td></tr>
 </table>`;
 
-/** Small "held" badge, as on W-30 / W-51 ("₦19,400 held safely"). Plain text in. */
+/** Small status badge, as on W-30 / W-51 ("₦19,400 paid"). Plain text in. */
 const BADGE = (label: string) =>
   `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">
 <tr><td bgcolor="${HELD_BG}" style="background:${HELD_BG};border-radius:8px;padding:5px 10px;font-family:${BODY_FONT};font-size:13px;line-height:16px;font-weight:600;color:${FOREST};">${esc(label)}</td></tr>
@@ -358,9 +358,9 @@ export function welcomeEmail(p: { to: string; name?: string }): Email {
     P("Here is how it works:"),
     ROWS([
       { label: "1. Choose", value: "Pick fresh produce from verified farms." },
-      { label: "2. Pay safely", value: "Farmkeke holds your money." },
+      { label: "2. Pay safely", value: "Once the farm accepts, through Paystack." },
       { label: "3. Receive", value: "Delivery to your door, or pickup." },
-      { label: "4. Confirm", value: "Then the farm is paid." },
+      { label: "4. Check", value: "Something wrong? Report it within a day." },
     ]),
     BUTTON(cta.url, cta.label),
     SMALL(`You can change your details any time in ${LINK(links.account(), "your account")}.`),
@@ -374,9 +374,9 @@ export function welcomeEmail(p: { to: string; name?: string }): Email {
       "",
       "How it works:",
       "1. Choose fresh produce from verified farms.",
-      "2. Pay safely. Farmkeke holds your money.",
+      "2. Pay safely once the farm accepts, through Paystack.",
       "3. Get it delivered to your door, or pick it up.",
-      "4. Confirm you got everything. Then the farm is paid.",
+      "4. Check everything. Something wrong? Report it within a day.",
     ],
     cta,
     extra: [`Your account: ${links.account()}`],
@@ -511,16 +511,16 @@ export function orderConfirmationEmail(p: {
 
   const guestHtml = p.isGuest
     ? NOTE(
-        `<strong>You ordered as a guest.</strong> Only the phone or computer you ordered on can confirm delivery. ` +
-          `On another device, use ${LINK(links.findOrder(), "Find my order")} with your order number${p.phone ? ` and ${esc(p.phone)}` : " and phone number"}. You can see your order there, but not confirm it.`,
+        `<strong>You ordered as a guest.</strong> Only the phone or computer you ordered on can report a problem. ` +
+          `On another device, use ${LINK(links.findOrder(), "Find my order")} with your order number${p.phone ? ` and ${esc(p.phone)}` : " and phone number"}. You can see your order there.`,
       )
     : "";
   const guestText = p.isGuest
     ? [
         "",
-        "You ordered as a guest. Only the phone or computer you ordered on can confirm delivery.",
+        "You ordered as a guest. Only the phone or computer you ordered on can report a problem.",
         `On another device, use Find my order with your order number${p.phone ? ` and ${p.phone}` : " and phone number"}: ${links.findOrder()}`,
-        "You can see your order there, but not confirm it.",
+        "You can see your order there.",
       ]
     : [];
 
@@ -530,19 +530,21 @@ export function orderConfirmationEmail(p: {
       ? `thank you. The ${many ? "farms are" : "farm is"} getting your ${many ? "orders" : "order"} ready for you to collect.`
       : `thank you. The ${many ? "farms have" : "farm has"} your ${many ? "orders" : "order"} ready, and a Farmkeke rider will collect and deliver ${many ? "them" : "it"}.`
     : `thank you. We've sent your ${many ? "orders" : "order"} to the ${many ? "farms" : "farm"}.`;
-  const acceptLine = p.paidBill ? "" : "Farms have 24 hours to accept. If a farm doesn't, that order is refunded in full.";
+  const acceptLine = p.paidBill ? "" : "Farms have 24 hours to accept. If a farm doesn't, that order is cancelled and you aren't charged.";
   const body = [
     H1(heading),
     P(`${esc(hi(p.name))} ${esc(intro)}`),
     NOTE(
-      `<strong>${esc(naira(p.totalKobo))} is held safely by Farmkeke.</strong> The farm is paid only after you confirm you got everything.`,
+      p.paidBill
+        ? `<strong>${esc(naira(p.totalKobo))} paid.</strong> Paystack has sent each farm its share.`
+        : "<strong>Nothing to pay yet.</strong> We'll send your bill once the farm accepts.",
     ),
     orderCards,
-    many ? ROWS([{ label: "Total paid", value: naira(p.totalKobo), strong: true }]) : "",
+    many ? ROWS([{ label: p.paidBill ? "Total paid" : "Total", value: naira(p.totalKobo), strong: true }]) : "",
     H2("What happens next"),
-    acceptLine ? P(`Farms have <strong>24 hours</strong> to accept. If a farm doesn't, that order is refunded in full.`) : "",
+    acceptLine ? P(`Farms have <strong>24 hours</strong> to accept. If a farm doesn't, that order is cancelled and you aren't charged.`) : "",
     where ? P(where) : "",
-    P("When it arrives, check everything. Then confirm receipt. Something wrong? Report it before you confirm."),
+    P("When it arrives, check everything. Something wrong? Report it within a day. After that, your order closes."),
     guestHtml,
     BUTTON(cta.url, cta.label),
   ].join("\n");
@@ -564,14 +566,14 @@ export function orderConfirmationEmail(p: {
       heading,
       "",
       `${hi(p.name)} ${intro}`,
-      `${naira(p.totalKobo)} is held safely by Farmkeke. The farm is paid only after you confirm you got everything.`,
+      p.paidBill ? `${naira(p.totalKobo)} paid. Paystack has sent each farm its share.` : "Nothing to pay yet. We'll send your bill once the farm accepts.",
       ...orderText,
-      ...(many ? ["", `Total paid: ${naira(p.totalKobo)}`] : []),
+      ...(many ? ["", `${p.paidBill ? "Total paid" : "Total"}: ${naira(p.totalKobo)}`] : []),
       "",
       "What happens next",
       ...(acceptLine ? [acceptLine] : []),
       ...(whereText ? [whereText] : []),
-      "When it arrives, check everything. Then confirm receipt. Something wrong? Report it before you confirm.",
+      "When it arrives, check everything. Something wrong? Report it within a day. After that, your order closes.",
       ...guestText,
     ],
     cta,
@@ -590,7 +592,7 @@ export function orderConfirmationEmail(p: {
     html: page({
       preheader: p.paidBill
         ? `${naira(p.totalKobo)} paid. ${p.fulfilment === "pickup" ? "We'll tell you when it's ready to collect." : "A rider is on the way to the farm."}`
-        : `${naira(p.totalKobo)} held safely until you confirm. Farms have 24 hours to accept.`,
+        : "Nothing to pay yet. Farms have 24 hours to accept.",
       body,
       reason,
     }),
@@ -644,7 +646,7 @@ export function orderAcceptedEmail(
         : p.pickupPointName
           ? `It will go to ${p.pickupPointName}. We'll email your pickup code when it's ready.`
           : "You'll collect it at the farm. We'll email the address and your pickup code when it's ready.";
-  const moneyNote = p.unpaid ? "You haven't paid anything yet." : "Your money is still held safely by Farmkeke.";
+  const moneyNote = p.unpaid ? "You haven't paid anything yet." : "You've paid. The farm has its share.";
   const body = [
     H1("Your order was accepted"),
     P(`${esc(hi(p.name))} <strong>${esc(p.farmName)}</strong> accepted order <strong>${esc(p.number)}</strong>. They're getting it ready now.`),
@@ -695,7 +697,7 @@ export function outForDeliveryEmail(
     H1("Your order is on its way"),
     P(`${esc(hi(p.name))} a Farmkeke rider is bringing order <strong>${esc(p.number)}</strong>.`),
     ROWS(rows),
-    P("Please check every item when it arrives. Then confirm receipt on the order page."),
+    P("Please check every item when it arrives. Something wrong? Report it from the order page within a day."),
     BUTTON(cta.url, cta.label),
   ].join("\n");
   const text = plain({
@@ -705,7 +707,7 @@ export function outForDeliveryEmail(
       `${hi(p.name)} a Farmkeke rider is bringing order ${p.number}.`,
       ...rows.map((r) => `${r.label}: ${r.value}`),
       "",
-      "Please check every item when it arrives. Then confirm receipt on the order page.",
+      "Please check every item when it arrives. Something wrong? Report it from the order page within a day.",
     ],
     cta,
     reason,
@@ -752,7 +754,7 @@ export function readyForPickupEmail(
     SMALL(`Show this code at ${place}. Only share it when you are collecting your order.`, "text-align:center;margin:-8px 0 20px;"),
     ROWS(rows),
     NOTE(`Please collect within <strong>${days} days</strong>, by <strong>${esc(p.collectBy)}</strong>.`),
-    P(`Check everything at ${place}. Something wrong? Report it before you confirm.`),
+    P(`Check everything at ${place}. Something wrong? Report it within a day of collecting.`),
     BUTTON(cta.url, cta.label),
   ].join("\n");
   const text = plain({
@@ -770,7 +772,7 @@ export function readyForPickupEmail(
       ...(pt.phone ? [`Phone: ${pt.phone}`] : []),
       "",
       `Please collect within ${days} days, by ${p.collectBy}.`,
-      `Check everything at ${place}. Something wrong? Report it before you confirm.`,
+      `Check everything at ${place}. Something wrong? Report it within a day of collecting.`,
     ],
     cta,
     reason,
@@ -784,57 +786,57 @@ export function readyForPickupEmail(
 }
 
 // ---------------------------------------------------------------------------
-// 7. Delivered or collected: check, then confirm (or report a problem first)
+// 7. Delivered or collected: check everything; a day to report a problem
 // ---------------------------------------------------------------------------
 
 export function orderDeliveredEmail(
   p: OrderRef & {
     /** "delivered" for delivery orders, "collected" for pickup. */
     how: "delivered" | "collected";
-    /** Money held for this order. */
-    heldKobo?: number;
+    /** When the order closes, e.g. "Tue 18 Nov, 4:30pm" (a day after delivery). */
+    reportBy?: string;
     isGuest?: boolean;
   },
 ): Email {
-  const cta = { label: "Check and confirm", url: links.order(p.orderId) };
+  const cta = { label: "View your order", url: links.order(p.orderId) };
   const reason = orderReason(p.number);
   const word = p.how === "collected" ? "collected" : "delivered";
+  const until = p.reportBy ? `by ${p.reportBy}` : "within a day";
   const body = [
     H1(`Your order was ${word}`),
-    P(`${esc(hi(p.name))} order <strong>${esc(p.number)}</strong> from ${esc(p.farmName)} was ${word}.`),
-    P("<strong>1.</strong> Check every item.<br><strong>2.</strong> If all is well, confirm receipt. Then the farm is paid."),
+    P(`${esc(hi(p.name))} order <strong>${esc(p.number)}</strong> from ${esc(p.farmName)} was ${word}. Please check every item.`),
     NOTE(
-      `Something wrong? ${LINK(links.reportProblem(p.orderId), "Report a problem")} <strong>before</strong> you confirm. Confirming can't be undone.` +
-        (p.heldKobo ? ` Until then, ${esc(naira(p.heldKobo))} stays held by Farmkeke.` : ""),
+      `Something wrong? ${LINK(links.reportProblem(p.orderId), "Report a problem")} <strong>${esc(until)}</strong>. ` +
+        "Our team looks into it, and if you're owed money, Farmkeke refunds you. After that, your order closes.",
     ),
-    p.isGuest ? SMALL("You ordered as a guest, so please confirm on the phone or computer you ordered on.") : "",
+    p.isGuest ? SMALL("You ordered as a guest, so report it on the phone or computer you ordered on.") : "",
     BUTTON(cta.url, cta.label),
   ].join("\n");
   const text = plain({
     lines: [
       `Your order was ${word}`,
       "",
-      `${hi(p.name)} order ${p.number} from ${p.farmName} was ${word}.`,
-      "1. Check every item.",
-      "2. If all is well, confirm receipt. Then the farm is paid.",
+      `${hi(p.name)} order ${p.number} from ${p.farmName} was ${word}. Please check every item.`,
       "",
-      `Something wrong? Report a problem BEFORE you confirm. Confirming can't be undone.${p.heldKobo ? ` Until then, ${naira(p.heldKobo)} stays held by Farmkeke.` : ""}`,
+      `Something wrong? Report a problem ${until}. Our team looks into it, and if you're owed money, Farmkeke refunds you. After that, your order closes.`,
       `Report a problem: ${links.reportProblem(p.orderId)}`,
-      ...(p.isGuest ? ["", "You ordered as a guest, so please confirm on the phone or computer you ordered on."] : []),
+      ...(p.isGuest ? ["", "You ordered as a guest, so report it on the phone or computer you ordered on."] : []),
     ],
     cta,
     reason,
   });
   return {
     to: p.to,
-    subject: oneLine(`Order ${p.number} ${word}. Please check and confirm`),
-    html: page({ preheader: "Check everything, then confirm. Something wrong? Report it first.", body, reason }),
+    subject: oneLine(`Order ${p.number} ${word}. Please check it`),
+    html: page({ preheader: `Something wrong? Report it ${until}.`, body, reason }),
     text,
   };
 }
 
 // ---------------------------------------------------------------------------
-// 8. The farm did not accept (declined or 24 hours passed): full refund
+// 8. The farm did not accept (declined or 24 hours passed). Orders are paid
+// only after the farm accepts, so nothing was charged; older paid orders get
+// a full refund.
 // ---------------------------------------------------------------------------
 
 export function farmDidNotAcceptEmail(
@@ -844,39 +846,44 @@ export function farmDidNotAcceptEmail(
     why: "declined" | "timeout";
     /** How they paid, e.g. "card ending 4081" or "bank account". Optional. */
     paymentMethod?: string;
+    /** Not paid yet (every order since the Paystack split): nothing to refund. */
+    unpaid?: boolean;
   },
 ): Email {
-  const cta = { label: "See your refund", url: links.refund(p.orderId) };
+  const cta = p.unpaid ? { label: "Shop again", url: links.shop() } : { label: "See your refund", url: links.refund(p.orderId) };
   const reason = orderReason(p.number);
   const what =
     p.why === "timeout"
       ? `${p.farmName} didn't accept order ${p.number} within 24 hours.`
       : `${p.farmName} couldn't take order ${p.number}.`;
   const back = p.paymentMethod ? `your ${p.paymentMethod}` : "the way you paid";
+  const money = p.unpaid
+    ? "You haven't paid anything for this order, so you weren't charged."
+    : `You'll get a full refund of ${naira(p.refundKobo)}. It goes back to ${back}.`;
   const body = [
     H1("Your order wasn't accepted"),
     P(`${esc(hi(p.name))} sorry. ${esc(what)}`),
-    NOTE(`<strong>You'll get a full refund of ${esc(naira(p.refundKobo))}.</strong> It goes back to ${esc(back)}.`),
-    P("Card and bank refunds can take a few working days to show."),
+    NOTE(`<strong>${esc(money)}</strong>`),
+    p.unpaid ? "" : P("Banks usually take 3 to 10 working days to show a refund."),
     BUTTON(cta.url, cta.label),
-    SMALL(`Other farms may have what you need. ${LINK(links.shop(), "Shop again")}.`),
+    p.unpaid ? SMALL("Other farms may have what you need.") : SMALL(`Other farms may have what you need. ${LINK(links.shop(), "Shop again")}.`),
   ].join("\n");
   const text = plain({
     lines: [
       "Your order wasn't accepted",
       "",
       `${hi(p.name)} sorry. ${what}`,
-      `You'll get a full refund of ${naira(p.refundKobo)}. It goes back to ${back}.`,
-      "Card and bank refunds can take a few working days to show.",
+      money,
+      ...(p.unpaid ? [] : ["Banks usually take 3 to 10 working days to show a refund."]),
     ],
     cta,
-    extra: [`Shop again: ${links.shop()}`],
+    extra: p.unpaid ? [] : [`Shop again: ${links.shop()}`],
     reason,
   });
   return {
     to: p.to,
-    subject: oneLine(`Order ${p.number} wasn't accepted. Full refund on the way`),
-    html: page({ preheader: `Full refund of ${naira(p.refundKobo)} on the way.`, body, reason }),
+    subject: oneLine(p.unpaid ? `Order ${p.number} wasn't accepted. You weren't charged` : `Order ${p.number} wasn't accepted. Full refund on the way`),
+    html: page({ preheader: p.unpaid ? "You weren't charged." : `Full refund of ${naira(p.refundKobo)} on the way.`, body, reason }),
     text,
   };
 }
@@ -893,8 +900,6 @@ export function problemReportReceivedEmail(
     problem: string;
     /** When the farm must reply by, e.g. "Sun 18 Oct, 23:20" (12 hours). */
     farmReplyBy: string;
-    /** Money held for this order. */
-    heldKobo?: number;
   },
 ): Email {
   const cta = { label: "Follow this case", url: links.dispute(p.orderId) };
@@ -905,12 +910,12 @@ export function problemReportReceivedEmail(
     { label: "Problem", value: p.problem },
     { label: "Farm can reply by", value: p.farmReplyBy },
   ];
-  const held = p.heldKobo ? `${naira(p.heldKobo)} stays held` : "Your payment stays held";
+  const covered = "If you're owed money, Farmkeke refunds you.";
   const body = [
     H1("We've got your report"),
     P(`${esc(hi(p.name))} thanks for telling us. Here is what happens now:`),
     P("<strong>1.</strong> The farm has <strong>12 hours</strong> to reply.<br><strong>2.</strong> Farmkeke decides within <strong>about 1 day</strong>."),
-    NOTE(`<strong>${esc(held)}</strong> by Farmkeke until we decide. The farm isn't paid yet.`),
+    NOTE(`<strong>${esc(covered)}</strong> Banks usually take 3 to 10 working days to show a refund.`),
     ROWS(rows),
     BUTTON(cta.url, cta.label),
   ].join("\n");
@@ -921,7 +926,7 @@ export function problemReportReceivedEmail(
       `${hi(p.name)} thanks for telling us. Here is what happens now:`,
       "1. The farm has 12 hours to reply.",
       "2. Farmkeke decides within about 1 day.",
-      `${held} by Farmkeke until we decide. The farm isn't paid yet.`,
+      `${covered} Banks usually take 3 to 10 working days to show a refund.`,
       "",
       ...rows.map((r) => `${r.label}: ${r.value}`),
     ],
@@ -931,7 +936,7 @@ export function problemReportReceivedEmail(
   return {
     to: p.to,
     subject: oneLine(`We've got your report (case ${p.caseNumber})`),
-    html: page({ preheader: "Your payment stays held while we look into it.", body, reason }),
+    html: page({ preheader: "We're looking into it. The farm has 12 hours to reply.", body, reason }),
     text,
   };
 }
@@ -950,10 +955,8 @@ export function problemDecisionEmail(
     outcome: "full_refund" | "part_refund" | "no_refund";
     /** Why, in plain words from Farmkeke support. */
     reason: string;
-    /** Refund to the shopper (full or part). */
+    /** Refund to the shopper (full or part), sent by Farmkeke. */
     refundKobo?: number;
-    /** Paid to the farm. */
-    releasedKobo?: number;
     /** Delivery fee on the order (not refunded on a part refund). */
     deliveryFeeKobo?: number;
   },
@@ -970,16 +973,15 @@ export function problemDecisionEmail(
       ? `You'll get a full refund of ${naira(p.refundKobo ?? 0)}.`
       : p.outcome === "part_refund"
         ? `You'll get a part refund of ${naira(p.refundKobo ?? 0)}.`
-        : `This time there's no refund. The payment goes to ${p.farmName}.`;
+        : "This time there's no refund.";
   const rows: Row[] = [
     { label: "Case number", value: p.caseNumber },
     { label: "Order", value: `${p.number} · ${p.farmName}` },
     { label: "Decision", value: title, strong: true },
     ...(refunding && p.refundKobo !== undefined ? [{ label: "Refund to you", value: naira(p.refundKobo) }] : []),
-    ...(p.releasedKobo ? [{ label: `Paid to ${p.farmName}`, value: naira(p.releasedKobo) }] : []),
   ];
   const extraLines: string[] = [];
-  if (refunding) extraLines.push("The refund goes back to the card or bank account you paid with. Banks can take a few working days.");
+  if (refunding) extraLines.push("Farmkeke sends the refund back to the card or bank account you paid with. Banks usually take 3 to 10 working days to show it.");
   if (p.outcome === "part_refund")
     extraLines.push(
       `The delivery fee${p.deliveryFeeKobo ? ` (${naira(p.deliveryFeeKobo)})` : ""} isn't refunded, because the delivery still happened.`,
@@ -1049,10 +1051,10 @@ export function refundSentEmail(
     H1("Your refund is on its way"),
     P(`${esc(hi(p.name))} we've sent <strong>${esc(naira(p.amountKobo))}</strong> back to your ${esc(p.method)}.`),
     ROWS(rows),
-    NOTE("Card and bank refunds can take a few working days to show on your statement."),
+    NOTE("Banks usually take 3 to 10 working days to show a refund on your statement."),
     partLine ? P(esc(partLine)) : "",
     SMALL(
-      `Not there after 7 working days? Share the refund reference with your bank, or reply to this email and we'll check.`,
+      `Not there after 10 working days? Share the refund reference with your bank, or reply to this email and we'll check.`,
     ),
     BUTTON(cta.url, cta.label),
   ].join("\n");
@@ -1064,9 +1066,9 @@ export function refundSentEmail(
       "",
       ...rows.map((r) => `${r.label}: ${r.value}`),
       "",
-      "Card and bank refunds can take a few working days to show on your statement.",
+      "Banks usually take 3 to 10 working days to show a refund on your statement.",
       ...(partLine ? [partLine] : []),
-      "Not there after 7 working days? Share the refund reference with your bank, or reply to this email and we'll check.",
+      "Not there after 10 working days? Share the refund reference with your bank, or reply to this email and we'll check.",
     ],
     cta,
     reason,
@@ -1074,40 +1076,7 @@ export function refundSentEmail(
   return {
     to: p.to,
     subject: oneLine(`Your refund of ${naira(p.amountKobo)} is on its way`),
-    html: page({ preheader: `Back to your ${p.method}. It can take a few working days.`, body, reason }),
-    text,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// 12. Payment released to the farm: thanks, leave a review
-// ---------------------------------------------------------------------------
-
-export function paymentReleasedEmail(p: OrderRef & { amountKobo: number }): Email {
-  const cta = { label: "Leave a review", url: links.review(p.orderId) };
-  const reason = orderReason(p.number);
-  const body = [
-    H1("Thanks for confirming"),
-    P(`${esc(hi(p.name))} <strong>${esc(naira(p.amountKobo))}</strong> has been paid to <strong>${esc(p.farmName)}</strong> for order <strong>${esc(p.number)}</strong>.`),
-    P("How was your order? Your review helps other shoppers, and helps the farm grow."),
-    BUTTON(cta.url, cta.label),
-    SMALL(`Fancy more? ${LINK(links.shop(), "Shop again")}.`),
-  ].join("\n");
-  const text = plain({
-    lines: [
-      "Thanks for confirming",
-      "",
-      `${hi(p.name)} ${naira(p.amountKobo)} has been paid to ${p.farmName} for order ${p.number}.`,
-      "How was your order? Your review helps other shoppers, and helps the farm grow.",
-    ],
-    cta,
-    extra: [`Shop again: ${links.shop()}`],
-    reason,
-  });
-  return {
-    to: p.to,
-    subject: oneLine(`Thanks for confirming order ${p.number}`),
-    html: page({ preheader: `How was your order from ${p.farmName}? Leave a quick review.`, body, reason }),
+    html: page({ preheader: `Back to your ${p.method}. Banks usually take 3 to 10 working days.`, body, reason }),
     text,
   };
 }
@@ -1251,7 +1220,7 @@ export function orderPreparingEmail(
     blocks: [
       b.p(hi(p.name), " ", { b: p.farmName }, " has started preparing order ", { b: p.number }, "."),
       b.p(...next),
-      b.note(p.unpaid ? "You haven't paid anything yet." : "Your money is still held safely by Farmkeke."),
+      b.note(p.unpaid ? "You haven't paid anything yet." : "You've paid. The farm has its share."),
     ],
     cta: { label: "Track your order", url: links.order(p.orderId) },
     reason: optionalOrderReason(p.number, p.isGuest),
@@ -1259,14 +1228,14 @@ export function orderPreparingEmail(
 }
 
 // ---------------------------------------------------------------------------
-// 14. Order cancelled by Farmkeke (A-52): full refund, delivery fee included
+// 14. Order cancelled by Farmkeke (A-52): full refund from Farmkeke if paid, delivery fee included
 // ---------------------------------------------------------------------------
 
 export function orderCancelledEmail(
   p: OrderRef & { refundKobo: number; deliveryFeeKobo?: number; paymentMethod?: string; unpaid?: boolean },
 ): Email {
   const back = p.paymentMethod ? `your ${p.paymentMethod}` : "the way you paid";
-  // A delivery order cancelled before its bill was paid: nothing to refund
+  // Cancelled before its bill was paid: nothing to refund
   if (p.unpaid) {
     return compose({
       to: p.to,
@@ -1293,7 +1262,7 @@ export function orderCancelledEmail(
         p.deliveryFeeKobo ? ", delivery fee included" : "",
         `. It goes back to ${back}.`,
       ),
-      b.p("Card and bank refunds can take a few working days to show. We'll email you when it's sent."),
+      b.p("Farmkeke sends the refund. Banks usually take 3 to 10 working days to show it. We'll email you when it's sent."),
     ],
     cta: { label: "See your refund", url: links.refund(p.orderId) },
     after: [b.small("Other farms may have what you need. ", { link: links.shop(), label: "Shop again" }, ".")],
@@ -1321,7 +1290,15 @@ const billRows = (o: BillOrder, withDelivery: boolean): Row[] => [
   ...(withDelivery ? [{ label: "Delivery", value: naira(o.deliveryFeeKobo) }] : []),
 ];
 
-export function orderReceivedEmail(p: { to: string; name?: string; orders: BillOrder[]; address: string; isGuest: boolean }): Email {
+export function orderReceivedEmail(p: {
+  to: string;
+  name?: string;
+  orders: BillOrder[];
+  address: string;
+  isGuest: boolean;
+  /** Pickup orders are billed as soon as the farm accepts (no delivery to price). */
+  pickup?: boolean;
+}): Email {
   const many = p.orders.length > 1;
   const first = p.orders[0]!;
   const numbers = p.orders.map((o) => o.number).join(", ");
@@ -1329,19 +1306,28 @@ export function orderReceivedEmail(p: { to: string; name?: string; orders: BillO
   return compose({
     to: p.to,
     subject: `We've got your order ${numbers}`,
-    preheader: "Nothing to pay yet. Your bill comes once the delivery is priced.",
+    preheader: p.pickup ? "Nothing to pay yet. Your bill comes once the farm accepts." : "Nothing to pay yet. Your bill comes once the delivery is priced.",
     title: many ? "We've got your orders" : "We've got your order",
     blocks: [
       b.p(hi(p.name), " thank you. We've sent ", many ? "your orders to the farms" : `your order to ${first.farmName}`, "."),
-      b.note({ b: "Nothing to pay yet." }, " Products come to ", { b: naira(productsKobo) }, ". Delivery is priced once a rider is arranged."),
+      b.note({ b: "Nothing to pay yet." }, " Products come to ", { b: naira(productsKobo) }, p.pickup ? ". Pickup at the farm is free." : ". Delivery is priced once a rider is arranged."),
       ...p.orders.flatMap((o) => [b.h2(`${o.number} · ${o.farmName}`), b.rows(billRows(o, false))]),
       b.h2("What happens next"),
-      b.steps([
-        { title: "The farm accepts", note: "Farms have 24 hours to accept." },
-        { title: "We arrange a rider and price the delivery", note: `To ${p.address}.` },
-        { title: "You get your bill", note: "By email, text and in the app. You'll have 12 hours to pay." },
-        { title: "The rider brings your order", note: "Your money is held safely until you confirm it arrived." },
-      ]),
+      b.steps(
+        p.pickup
+          ? [
+              { title: "The farm accepts", note: "Farms have 24 hours to accept. If one doesn't, you aren't charged for it." },
+              { title: "You get your bill", note: "By email, text and in the app. You'll have 12 hours to pay." },
+              { title: "You collect at the farm", note: "We send the address and your 4-digit pickup code when it's ready." },
+              { title: "A day to report a problem", note: "Check everything. Something wrong? Report it within a day." },
+            ]
+          : [
+              { title: "The farm accepts", note: "Farms have 24 hours to accept. If one doesn't, you aren't charged for it." },
+              { title: "We arrange a rider and price the delivery", note: `To ${p.address}.` },
+              { title: "You get your bill", note: "By email, text and in the app. You'll have 12 hours to pay." },
+              { title: "The rider brings your order", note: "Check everything. Something wrong? Report it within a day." },
+            ],
+      ),
     ],
     cta: { label: many ? "See your orders" : "See your order", url: many && !p.isGuest ? links.account() : links.order(first.orderId) },
     reason: `You're getting this email because you placed ${many ? "orders" : "order"} ${numbers} on Farmkeke.`,
@@ -1363,22 +1349,26 @@ export function billEmail(p: {
   return compose({
     to: p.to,
     subject: p.reminder ? `Reminder: pay ${naira(p.totalKobo)} for order ${numbers}` : `Your bill for order ${numbers}: ${naira(p.totalKobo)}`,
-    preheader: `${naira(p.totalKobo)}, delivery included. Pay by ${p.payBy}.`,
+    preheader: `${naira(p.totalKobo)}${p.deliveryFeeKobo > 0 ? ", delivery included" : ""}. Pay by ${p.payBy}.`,
     title: p.reminder ? "Your bill is still waiting" : "Your bill is ready",
     blocks: [
       b.p(
         hi(p.name),
         p.reminder
-          ? " your order is packed and waiting at the farm. Pay now so the rider can bring it."
-          : " the farm has accepted your order and a rider is arranged. Here's your bill, delivery included.",
+          ? p.deliveryFeeKobo > 0
+            ? " your order is waiting at the farm. Pay now so the rider can bring it."
+            : " your order is waiting at the farm. Pay now so they can get it ready for you."
+          : p.deliveryFeeKobo > 0
+            ? " the farm has accepted your order and a rider is arranged. Here's your bill, delivery included."
+            : " the farm has accepted your order. Here's your bill.",
       ),
       ...p.orders.flatMap((o) => [b.h2(`${o.number} · ${o.farmName}`), b.rows(billRows(o, true))]),
       b.rows([
-        { label: "Delivery", value: naira(p.deliveryFeeKobo) },
+        ...(p.deliveryFeeKobo > 0 ? [{ label: "Delivery", value: naira(p.deliveryFeeKobo) }] : []),
         { label: "Total to pay", value: naira(p.totalKobo), strong: true },
       ]),
       b.note({ b: `Pay by ${p.payBy}.` }, " If it isn't paid by then, the order is cancelled and the farm is told."),
-      b.p("Your money is held safely by Farmkeke. The farm is paid only after you confirm you got everything."),
+      b.p("Pay securely through Paystack. Something wrong when your order arrives? Report it within a day and we'll sort it out."),
     ],
     cta: { label: `Pay ${naira(p.totalKobo)}`, url: p.link },
     after: [b.small("The link works on any phone or computer. Anyone you share it with can pay this bill, so keep it to yourself.")],
@@ -1437,7 +1427,7 @@ export function pickupReminderEmail(
 // 16. Pickup window ended (pickup_overdue)
 // ---------------------------------------------------------------------------
 
-export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKobo?: number; atFarm?: boolean }): Email {
+export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; atFarm?: boolean }): Email {
   return compose({
     to: p.to,
     subject: p.atFarm ? `Order ${p.number} is still waiting at the farm` : `Order ${p.number} is still at the pickup point`,
@@ -1449,10 +1439,6 @@ export function pickupWindowEndedEmail(p: OrderRef & { pointName: string; heldKo
       b.steps([
         { title: "Contact Farmkeke support", note: "Reply to this email, or use the help page, so we can sort it out." },
         { title: "We agree what happens to your order", note: "A new time to collect, or what to do if the food can't wait." },
-        {
-          title: "Your money stays held",
-          note: p.heldKobo ? `${naira(p.heldKobo)} stays with Farmkeke until it's sorted.` : "Farmkeke keeps holding it until it's sorted.",
-        },
       ]),
     ],
     cta: { label: "See your order", url: links.order(p.orderId) },
@@ -1624,7 +1610,7 @@ export function accountDeletionEmail(
       blocks: [
         b.p(hi(p.name), " you asked us to delete your Farmkeke account."),
         b.note("You have ", { b: `${n} in progress` }, `. We'll delete your account automatically once ${isAre} finished, and email you when it's done.`),
-        b.p("Until then you can still sign in to confirm receipt or report a problem. Your money stays held safely until each order is finished."),
+        b.p("Until then you can still sign in to pay a bill or report a problem."),
         b.h2("What happens when we delete it"),
         b.steps([
           { title: "Your saved addresses, saved items and preferences are erased" },
@@ -1670,7 +1656,7 @@ export function guestOrdersAddedEmail(p: { to: string; name?: string; numbers: s
       b.p(hi(p.name), " we've added ", { b: n }, " you placed as a guest to your Farmkeke account."),
       b.rows(shown.map((number, i) => ({ label: i === 0 ? "Orders" : "", value: number }))),
       ...(p.total > shown.length ? [b.small(`And ${p.total - shown.length} more.`)] : []),
-      b.p("You can now track them, confirm receipt and report problems from any phone or computer you sign in on."),
+      b.p("You can now track them, pay bills and report problems from any phone or computer you sign in on."),
       b.small("Didn't do this? Reply to this email straight away."),
     ],
     cta: { label: "See your orders", url: `${siteUrl()}/account/orders` },
@@ -1691,7 +1677,7 @@ export function guestOrdersConfirmEmail(p: { to: string; name?: string; total: n
     title: "Add your guest orders",
     blocks: [
       b.p(hi(p.name), " we found ", { b: n }, " placed as a guest with ", { b: p.to }, "."),
-      b.p("Confirm this is your email and we'll add them to your Farmkeke account. You can then track them, confirm receipt and report problems from any device."),
+      b.p("Confirm this is your email and we'll add them to your Farmkeke account. You can then track them, pay bills and report problems from any device."),
       b.small("The link works once, for 24 hours, while you're signed in to your account. Didn't ask for this? You can ignore this email."),
     ],
     cta: { label: "Add them to my account", url: p.link },
@@ -1874,12 +1860,12 @@ export function farmNewOrderEmail(
       ]),
       b.note(
         { b: `Accept or decline within ${p.hours} hours, by ${p.acceptBy}.` },
-        p.unpaid ? " If you don't answer in time, the order expires." : " If you don't answer in time, the order expires and the shopper is refunded.",
+        " If you don't answer in time, the order expires.",
       ),
       b.p(
         p.unpaid
-          ? "It isn't paid yet. Once you accept, Farmkeke prices the delivery and the shopper pays. The rider only collects after they've paid, and you're paid once they confirm they got everything."
-          : "The money is already held safely by Farmkeke. You're paid once the shopper confirms they got everything.",
+          ? "It isn't paid yet. Once you accept, the shopper gets the bill. When they pay, Paystack sends your share straight to your bank. Hand it over only once it's paid."
+          : "It's paid. Paystack has sent your share to your bank.",
       ),
       b.inApp(farmOrderPath(p.number)),
     ],
@@ -1926,17 +1912,17 @@ export function farmOrderEndedEmail(p: FarmRef & { number: string; why: "cancell
   return compose({
     to: p.to,
     subject: cancelled ? `Order ${p.number} was cancelled` : `Order ${p.number} expired`,
-    preheader: cancelled ? "Farmkeke cancelled this order. Please don't send it." : "It wasn't answered in time, so the shopper was refunded.",
+    preheader: cancelled ? "Farmkeke cancelled this order. Please don't send it." : "It wasn't answered in time, so it expired.",
     title: cancelled ? `Order ${p.number} was cancelled` : `Order ${p.number} expired`,
     blocks: cancelled
       ? [
-          b.p(hi(p.name), " Farmkeke cancelled order ", { b: p.number }, ". The shopper gets a full refund."),
+          b.p(hi(p.name), " Farmkeke cancelled order ", { b: p.number }, ". If the shopper had paid, Farmkeke refunds them."),
           ...(p.reason ? [b.quote("Reason", p.reason)] : []),
           b.note({ b: "Please don't prepare or hand over this order." }, " If a rider was booked, they won't come for it."),
           b.inApp(farmOrderPath(p.number)),
         ]
       : [
-          b.p(hi(p.name), " order ", { b: p.number }, " wasn't accepted or declined in time, so it expired. The shopper was refunded in full."),
+          b.p(hi(p.name), " order ", { b: p.number }, " wasn't accepted or declined in time, so it expired. The shopper wasn't charged."),
           b.p("Answering quickly helps shoppers trust your farm. If you can't take orders for a while, turn on holiday mode."),
           b.inApp(["Switch to farmer mode", "Farm", "Availability"]),
         ],
@@ -1974,7 +1960,7 @@ export function farmProblemReportedEmail(
   return compose({
     to: p.to,
     subject: `Problem reported on order ${p.number}: reply within ${p.replyHours} hours`,
-    preheader: `Reply by ${p.replyBy}. The payment is held until Farmkeke decides.`,
+    preheader: `Reply by ${p.replyBy}. Farmkeke then decides.`,
     title: "A shopper reported a problem",
     blocks: [
       b.p(hi(p.name), " the shopper reported a problem with order ", { b: p.number }, "."),
@@ -1986,7 +1972,7 @@ export function farmProblemReportedEmail(
       ...(p.note ? [b.quote("The shopper wrote", p.note)] : []),
       b.note(
         { b: `Please reply within ${p.replyHours} hours.` },
-        " Tell your side and add photos if you can. Farmkeke then decides within about 1 day. The payment is held until then.",
+        " Tell your side and add photos if you can. Farmkeke then decides within about 1 day. If the shopper is refunded, your part of it may come off your next orders.",
       ),
       b.inApp(farmOrderPath(p.number, "Problem report")),
     ],
@@ -2027,15 +2013,19 @@ export function farmProblemDecisionEmail(
     outcome: "full_refund" | "part_refund" | "no_refund";
     reason: string;
     refundKobo?: number;
-    releasedKobo?: number;
+    /** What the farm owes back for the refund, taken from its next orders */
+    farmDebtKobo?: number;
   },
 ): Email {
   const headline =
-    p.outcome === "full_refund"
-      ? "The shopper gets a full refund. No payment is released for this order."
-      : p.outcome === "part_refund"
-        ? `Part refund to the shopper. ${naira(p.releasedKobo ?? 0)} of the order is released to you.`
-        : "No refund. The payment is released to you.";
+    p.outcome === "no_refund"
+      ? "No refund. You keep your payment."
+      : `Farmkeke refunded the shopper ${naira(p.refundKobo ?? 0)}${p.outcome === "part_refund" ? " for the affected items" : ""}.`;
+  const debtLine = p.farmDebtKobo
+    ? `Your part of the refund, ${naira(p.farmDebtKobo)}, comes off your next orders before the rest is sent to you.`
+    : p.outcome === "no_refund"
+      ? ""
+      : "You don't owe anything for this refund.";
   return compose({
     to: p.to,
     subject: `Decision on case ${p.caseNumber}`,
@@ -2049,9 +2039,9 @@ export function farmProblemDecisionEmail(
       b.rows([
         { label: "Case number", value: p.caseNumber },
         ...(p.refundKobo ? [{ label: "Refund to the shopper", value: naira(p.refundKobo) }] : []),
-        ...(p.releasedKobo ? [{ label: "Released to you", value: naira(p.releasedKobo), strong: true }] : []),
+        ...(p.farmDebtKobo ? [{ label: "You owe back", value: naira(p.farmDebtKobo), strong: true }] : []),
       ]),
-      ...(p.releasedKobo ? [b.p("Released money goes to your payout account, less Farmkeke's commission. We'll email you when it's sent.")] : []),
+      ...(debtLine ? [b.p(debtLine)] : []),
       b.inApp(farmOrderPath(p.number, "Problem report")),
     ],
     cta: openApp(),
@@ -2098,18 +2088,18 @@ export function farmMessageEmail(
 export function farmPayoutAccountChangedEmail(p: FarmRef & { bank: string; accountName?: string; at: string }): Email {
   return compose({
     to: p.to,
-    subject: "Your Farmkeke payout account was changed",
+    subject: "Your Farmkeke bank account was changed",
     preheader: "If this wasn't you, contact Farmkeke support now.",
-    title: "Your payout account was changed",
+    title: "Your bank account was changed",
     blocks: [
       b.p(hi(p.name), ` the bank account ${p.farmName} is paid into was changed on `, { b: p.at }, "."),
       b.rows([
-        { label: "New payout account", value: p.bank, strong: true },
+        { label: "New bank account", value: p.bank, strong: true },
         ...(p.accountName ? [{ label: "Account name", value: p.accountName }] : []),
       ]),
-      b.p("From now on, released payments go to this account."),
+      b.p("From now on, Paystack sends your share of each payment to this account."),
       b.note({ b: "Didn't make this change?" }, " Reply to this email or contact Farmkeke support now, and change your password."),
-      b.inApp(["Switch to farmer mode", "Earnings", "Payout account"]),
+      b.inApp(["Switch to farmer mode", "Earnings", "Bank account"]),
     ],
     cta: openApp(),
     reason: `${SECURITY_REASON} It's about where ${p.farmName} is paid.`,

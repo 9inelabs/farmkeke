@@ -45,7 +45,7 @@ export const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valu
 
 /**
  * Before a guest's first order: a guest identity on this phone (anonymous
- * sign-in), which is what lets only this phone confirm delivery later. Does
+ * sign-in), which is what lets only this phone report a problem later. Does
  * nothing when someone (guest or account) is already signed in.
  */
 export function useEnsureIdentity() {

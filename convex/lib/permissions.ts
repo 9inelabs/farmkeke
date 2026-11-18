@@ -37,15 +37,15 @@ export const PERMISSIONS = [
   // Care
   { key: "disputes.view", group: "Customer care", label: "See problem reports", description: "Disputes and their messages." },
   { key: "disputes.manage", group: "Customer care", label: "Handle problem reports", description: "Assign, add notes, message both sides. Gets problem alerts." },
-  { key: "disputes.decide", group: "Customer care", label: "Decide problem reports", description: "Refund, partial refund or release to the farm." },
+  { key: "disputes.decide", group: "Customer care", label: "Decide problem reports", description: "Full refund, part refund or no refund, and whether the farm pays its part back." },
   { key: "support.view", group: "Customer care", label: "See the support inbox", description: "Messages from the contact form and the app." },
   { key: "support.manage", group: "Customer care", label: "Reply to support messages", description: "Reply, assign and resolve." },
   { key: "chat.view", group: "Customer care", label: "Read order chats", description: "Messages between shoppers and farms." },
   { key: "messages.send", group: "Customer care", label: "Send messages", description: "Notifications to every shopper, every farmer or one person, in the app and by push." },
 
   // Money
-  { key: "money.view", group: "Money", label: "See money", description: "Escrow ledger, payouts, refunds and reconciliation." },
-  { key: "money.manage", group: "Money", label: "Move money", description: "Release escrow, holds, retry payouts and refunds, fix mismatches." },
+  { key: "money.view", group: "Money", label: "See money", description: "Payments and how they were split, refunds, farm debts and reconciliation." },
+  { key: "money.manage", group: "Money", label: "Move money", description: "Retry refunds, forgive farm debts, retry Paystack set-up, fix mismatches." },
   { key: "commission.manage", group: "Money", label: "Set the commission", description: "Farmkeke's share of each order." },
 
   // Platform
@@ -131,7 +131,7 @@ export const BUILT_IN_ROLES: { key: string; name: string; description: string; p
   {
     key: "finance",
     name: "Finance",
-    description: "Escrow, payouts, refunds, reconciliation and the commission.",
+    description: "Payments, refunds, farm debts, reconciliation and the commission.",
     permissions: [
       "dashboard.view",
       "farmers.view",

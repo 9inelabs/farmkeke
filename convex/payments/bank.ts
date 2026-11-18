@@ -94,7 +94,7 @@ export const applyPayoutAccount = internalMutation({
       userId: user._id,
       side: "farm",
       kind: "payout_account_changed",
-      title: "Payout account changed",
+      title: "Bank account changed",
       body: `Your earnings now go to ${name} ••${args.accountNumber.slice(-4)}. If this wasn't you, contact Farmkeke support now.`,
       href: "/farm/payout-account",
       smsTo: farm.phone,

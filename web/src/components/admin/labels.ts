@@ -70,10 +70,13 @@ const ACTIONS: Record<string, string> = {
   "dispute.resolve": "Problem report decided",
   "support.assign": "Support message assigned",
   "support.resolve": "Support message resolved",
+  // Older entries, from before the Paystack split
   "ledger.release": "Money released to the farm",
   "ledger.hold": "Money put on hold",
   "ledger.unhold": "Hold lifted",
   "payments.retry_payout": "Payout sent again",
+  "farm.forgiveDebt": "Farm debt forgiven",
+  "farm.paystackRetry": "Farm set up with Paystack again",
   "payments.retry_refund": "Refund sent again",
   "payments.mismatch_refund": "Mismatched payment refunded",
   "payments.mismatch_dismiss": "Mismatched payment dismissed",
@@ -223,7 +226,7 @@ export const SECTION: Record<string, string> = {
   produce: "What you grow",
   collection: "Collection details",
   documents: "Documents",
-  payout: "Payout details",
+  payout: "Bank account",
 };
 export const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 

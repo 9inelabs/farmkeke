@@ -18,7 +18,7 @@ import { fonts } from "@/theme/typography";
 const BENEFITS: { icon: IconComponent; title: string; body: string }[] = [
   { icon: People, title: "Reach buyers beyond your area", body: "Households across the city order from your farm on the app and farmkeke.com" },
   { icon: Truck, title: "We collect from your farm", body: "Farmkeke riders pick up each order at your farm gate. You don't deliver." },
-  { icon: Lock, title: "Paid for every order", body: "Buyers pay before you prepare anything. Farmkeke holds the money and pays you once they confirm delivery." },
+  { icon: Lock, title: "Paid for every order", body: "Buyers pay once you accept. Paystack sends your share straight to your bank, before you hand anything over." },
 ];
 
 export default function SellOnFarmkeke() {

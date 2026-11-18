@@ -2,7 +2,7 @@
   "title": "Farmer terms",
   "nav": "Farmer terms",
   "draft": false,
-  "description": "The rules for farmers who sell on Farmkeke: applying, listing, orders, payouts, commission and problem reports.",
+  "description": "The rules for farmers who sell on Farmkeke: applying, listing, orders, getting paid, commission and problem reports.",
   "short": "**In short:** you sell your own produce at your own prices, and sign in to farmer mode with your phone number and a 4-digit PIN. Shoppers pay through Paystack after you accept their order, and Paystack sends your share straight to your bank account. You accept orders within 24 hours, keep listings honest, and reply to problem reports within 12 hours. Farmkeke keeps a 5% commission on the products you sell.",
   "sections": [
     {
@@ -96,7 +96,7 @@
       "id": "s5"
     },
     {
-      "title": "Payment, commission and payouts",
+      "title": "Payment and commission",
       "blocks": [
         {
           "ul": [

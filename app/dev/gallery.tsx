@@ -17,7 +17,7 @@ import {
   CategoryTile,
   Chip,
   EmptyState,
-  EscrowCard,
+  ProtectionCard,
   LocationChip,
   ProductCard,
   QuantityStepper,
@@ -63,7 +63,7 @@ export default function Gallery() {
           <AlertsPill unread={2} onPress={() => {}} />
         </View>
         <SearchPill mode="button" onPress={() => {}} />
-        <EscrowCard />
+        <ProtectionCard />
       </Section>
 
       <Section title="Buttons">
@@ -150,7 +150,7 @@ export default function Gallery() {
         </ListGroup>
         <Notice>No account needed. This phone will remember your order.</Notice>
         <Notice tone="error">That email and password don't match. Check them and try again.</Notice>
-        <Notice tone="pending">Viewing only. Confirm delivery on the phone that placed this order.</Notice>
+        <Notice tone="pending">Viewing only. Report a problem on the phone that placed this order.</Notice>
         <PasswordRules password="fresh1" />
         <Checkbox label="Make this my default address" checked={checked} onChange={setChecked} />
         <ListGroup>

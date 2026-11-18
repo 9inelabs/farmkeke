@@ -59,7 +59,7 @@ export function GuestOrdersByEmail({ className = "" }: { className?: string }) {
         </p>
       ) : null}
       <p className="mt-2.5 text-center text-xs leading-[17px] text-subtle">
-        Once added, you can confirm delivery from any device you&apos;re signed in on.
+        Once added, you can pay bills and report problems from any device you&apos;re signed in on.
       </p>
     </div>
   );

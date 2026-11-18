@@ -1,4 +1,4 @@
-// The order state machine, timeline, escrow ledger, refunds and release.
+// The order state machine, timeline, money ledger, payment (Paystack split) and refunds.
 // Every status change goes through `transition`, which writes an orderEvents
 // row with its actor. Every money movement writes a ledgerEntries row.
 import { ConvexError, type Infer } from "convex/values";

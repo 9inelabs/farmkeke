@@ -7,7 +7,7 @@ export { Checkbox, RadioRow } from "./Choice";
 export { Chip } from "./Chip";
 export { ChipGroup } from "./ChipGroup";
 export { EmptyState } from "./EmptyState";
-export { EscrowCard } from "./EscrowCard";
+export { ProtectionCard } from "./ProtectionCard";
 export { AlertsPill, BellButton, LocationChip } from "./HeaderPills";
 export { ListGroup, ListRow } from "./ListRow";
 export { Notice } from "./Notice";

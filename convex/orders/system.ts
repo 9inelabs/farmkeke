@@ -2,8 +2,6 @@
 // (crons.ts) as a safety net. Since the Paystack split (17 Nov 2026) the farm
 // has its share from the moment the order is paid, so a delivered or
 // collected order simply closes 24 hours later unless a problem is reported.
-// Older orders still held in escrow are never released here: they go to
-// staff (A-61).
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";

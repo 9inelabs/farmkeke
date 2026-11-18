@@ -55,7 +55,7 @@ type AddressErrors = Partial<Record<"street" | "landmark" | "email", string>>;
 const BILL_STEPS = [
   { icon: Truck, title: "The farm accepts", body: "Farms have up to 24 hours. They start packing straight away." },
   { icon: Receipt, title: "We send your bill", body: "Products plus delivery, once a rider is arranged. By email, text and in the app." },
-  { icon: Mail, title: "You pay within 12 hours", body: "Then the rider brings your order. Your money is held until you confirm." },
+  { icon: Mail, title: "You pay within 12 hours", body: "Then the rider brings your order. Something wrong? Report it within a day." },
 ];
 
 function DeliveryDetails() {
@@ -283,14 +283,33 @@ function PickupDetails() {
   const { quote, lines } = useQuote("pickup");
   const farms = groupByFarm(lines);
   const quoted = new Map((quote?.farms ?? []).map((f) => [f.farmId, f]));
+  const { status } = useViewer();
+  // The bill goes out once the farm accepts: guests need an email to get it
+  const [email, setEmail] = useState(() => draft.get().contact.email);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const needsEmail = status !== "signed-in" && !draft.get().contact.email.trim();
+  const next = () => {
+    if (needsEmail) {
+      if (!looksLikeEmail(email)) {
+        setEmailError("Add your email so we can send your bill, e.g. ada@example.com.");
+        emailRef.current?.focus();
+        return;
+      }
+      const d = draft.get();
+      draft.patch({ contact: { ...d.contact, email: email.trim() } });
+    }
+    router.push(routes.checkoutReview);
+  };
 
   return (
     <CheckoutShell step={3} pickup aside={<FarmsSummary lines={lines} quote={quote} fulfilment="pickup" />}>
       <section className={`${checkoutCard} p-8 m:p-4`}>
         <h1 className={checkoutH1}>Collect from the {farms.length > 1 ? "farms" : "farm"}</h1>
         <p className="p mt-1.5">
-          You pay now. When {farms.length > 1 ? "each order is" : "your order is"} ready, we send the farm&apos;s address and your
-          4-digit pickup code. Show the code at the farm. You have 3 days to collect.
+          Nothing to pay now. Once the {farms.length > 1 ? "farms accept" : "farm accepts"}, we send your bill, and you have 12 hours to
+          pay. When {farms.length > 1 ? "each order is" : "your order is"} ready, we send the farm&apos;s address and your 4-digit pickup
+          code. Show the code at the farm. You have 3 days to collect.
         </p>
         <ul className="m-0 mt-[22px] flex list-none flex-col gap-2.5 p-0 m:mt-4 m:gap-2">
           {farms.map((g) => {
@@ -314,8 +333,26 @@ function PickupDetails() {
             );
           })}
         </ul>
+        {needsEmail ? (
+          <div className="mt-[18px] m:mt-3">
+            <TextField
+              ref={emailRef}
+              label="Email for your bill"
+              type="email"
+              autoComplete="email"
+              placeholder="ada@example.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError(undefined);
+              }}
+              error={emailError}
+              hint="We'll also text it to your phone."
+            />
+          </div>
+        ) : null}
         <StepActions back={routes.checkoutDelivery}>
-          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]" onClick={() => router.push(routes.checkoutReview)}>
+          <Button variant="lime" size="lg" className="min-h-[54px] min-w-[220px] px-6 m:min-h-12 m:min-w-0 m:flex-1 m:max-w-[240px]" onClick={next}>
             Continue to review
           </Button>
         </StepActions>

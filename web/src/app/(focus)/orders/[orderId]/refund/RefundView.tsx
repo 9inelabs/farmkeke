@@ -75,17 +75,16 @@ function Refund({ refund: r, order: o, dispute: d }: { refund: RefundRow; order:
     {
       key: "bank",
       title: "With your bank",
-      detail: sent && !settled ? "Banks can take a few working days to show it on your statement" : undefined,
+      detail: sent && !settled ? "Banks usually take 3 to 10 working days to show it on your statement" : undefined,
       state: settled ? "done" : sent ? "current" : "todo",
     },
     { key: "account", title: "In your account", detail: r.settledAt ? dayTime(r.settledAt) : undefined, state: settled ? "done" : "todo" },
   ];
 
-  const released = d?.decision?.releaseKobo ?? (r.kind === "part" ? Math.max(0, o.totalKobo - r.amountKobo) : 0);
   const rows: Array<[string, string]> = [
     ["Refund method", r.methodLabel],
     ["Refund reference", r.reference],
-    ...(released > 0 ? ([[`Released to ${o.farmName}`, `${naira(released)} for items delivered`]] as Array<[string, string]>) : []),
+    ["Refunded by", "Farmkeke"],
     ...(o.fulfilment === "delivery" ? ([["Delivery fee", naira(o.deliveryFeeKobo)]] as Array<[string, string]>) : []),
     ["Order total", naira(o.totalKobo)],
   ];
@@ -126,7 +125,7 @@ function Refund({ refund: r, order: o, dispute: d }: { refund: RefundRow; order:
       </section>
       <section className="card flex flex-wrap items-center gap-3.5 px-[22px] py-[18px]">
         <div className="min-w-[240px] flex-1 m:min-w-0">
-          <div className="text-[15px] font-semibold">Not received after 7 working days?</div>
+          <div className="text-[15px] font-semibold">Not received after 10 working days?</div>
           <div className="cap mt-0.5">Share the refund reference with your bank, or ask us to check.</div>
         </div>
         <ButtonLink href={routes.contact} variant="dark" size="sm">

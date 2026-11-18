@@ -43,7 +43,7 @@ const ROWS = [
     y: 659,
     textX: 66,
     title: "Pay safely",
-    body: "Your money is held until you confirm delivery",
+    body: "Pay only once the farm accepts your order",
     circle: { x: 41, y: 676, size: 20 },
     Icon: PayIcon,
     icon: { x: 44, y: 681, w: 13, h: 9 },

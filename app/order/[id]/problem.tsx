@@ -1,5 +1,5 @@
 // M-67 Report a problem (disputes.open). Only for a delivered or collected
-// order, from the account or phone that placed it. The payment stays held.
+// order, from the account or phone that placed it, within a day of delivery.
 // Each item can be partly affected ("1 of 2 baskets"), so the amount at stake
 // is the value of those units, never the delivery fee.
 import { router, useLocalSearchParams } from "expo-router";

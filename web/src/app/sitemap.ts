@@ -14,7 +14,7 @@ const STATIC: Array<{ path: string; priority: number; changeFrequency: "daily" |
   { path: routes.allProducts, priority: 0.8, changeFrequency: "daily" },
   { path: routes.sell, priority: 0.6, changeFrequency: "monthly" },
   { path: routes.howItWorks, priority: 0.6, changeFrequency: "monthly" },
-  { path: routes.escrow, priority: 0.6, changeFrequency: "monthly" },
+  { path: routes.buyerProtection, priority: 0.6, changeFrequency: "monthly" },
   { path: routes.getTheApp, priority: 0.6, changeFrequency: "monthly" },
   { path: routes.about, priority: 0.5, changeFrequency: "monthly" },
   { path: routes.help, priority: 0.5, changeFrequency: "monthly" },

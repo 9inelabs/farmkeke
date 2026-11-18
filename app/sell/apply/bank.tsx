@@ -122,7 +122,7 @@ export default function BankDetails() {
       ) : null}
 
       <View style={styles.card}>
-        <Row icon={Cash} text="Paid automatically when buyers confirm delivery" />
+        <Row icon={Cash} text="Paid straight to this account when buyers pay" />
         <Row icon={Lock} text="Only Farmkeke's finance team sees these details" />
       </View>
       {errors.form ? (

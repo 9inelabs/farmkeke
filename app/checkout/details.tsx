@@ -1,8 +1,8 @@
 // M-34 Delivery address (with M-35's drop-off pin) or the pickup summary,
 // depending on M-33. Delivery has no time slot: the shopper can say when
 // suits them in the note, and staff agree the time with the rider when they
-// price the delivery. The bill comes by email and text, so guests give an
-// email here if they didn't at the contact step.
+// price the delivery. The bill (delivery and pickup alike) comes by email
+// and text, so guests give an email here if they didn't at the contact step.
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import * as Location from "expo-location";
@@ -27,7 +27,7 @@ export default function Details() {
 const BILL_STEPS: { icon: IconComponent; title: string; body: string }[] = [
   { icon: Truck, title: "The farm accepts", body: "Farms have up to 24 hours. They start packing straight away." },
   { icon: Receipt, title: "We send your bill", body: "Products plus delivery, once a rider is arranged. By email, text and in the app." },
-  { icon: Mail, title: "You pay within 12 hours", body: "Then the rider brings your order. Your money is held until you confirm." },
+  { icon: Mail, title: "You pay within 12 hours", body: "Then the rider brings your order. Something wrong? Report it within a day." },
 ];
 
 type Errors = Partial<Record<"street" | "landmark" | "email", string>>;
@@ -213,13 +213,45 @@ function PickupDetails() {
   const farms = groupByFarm(lines);
   const quoted = new Map((quote?.farms ?? []).map((f) => [f.farmId as string, f]));
   const many = farms.length > 1;
+  const viewer = useQuery(api.users.viewer);
+  const signedIn = viewer != null && !viewer.isGuest;
+  const draft = useCheckoutDraft();
+  // The bill goes out once the farm accepts: guests need an email to get it
+  const [email, setEmail] = useState(draft.contact.email);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const needsEmail = viewer !== undefined && !signedIn && !draft.contact.email.trim();
+  const next = () => {
+    if (needsEmail) {
+      if (!isEmail(email)) return setEmailError("Add your email so we can send your bill, e.g. ada@example.com.");
+      draft.patch({ contact: { ...draft.contact, email: email.trim() } });
+    }
+    router.push("/checkout/review");
+  };
   return (
     <CheckoutShell
       step={3}
       title={`Collect from the ${many ? "farms" : "farm"}`}
-      subtitle={`You pay now. When ${many ? "each order is" : "your order is"} ready, we send the farm's address and your 4-digit pickup code. Show the code at the farm. You have 3 days to collect.`}
-      footer={<Button label="Continue to review" size="large" pill fullWidth onPress={() => router.push("/checkout/review")} />}
+      subtitle={`Nothing to pay now. Once the ${many ? "farms accept" : "farm accepts"}, we send your bill, and you have 12 hours to pay. When ${many ? "each order is" : "your order is"} ready, we send the farm's address and your 4-digit pickup code. You have 3 days to collect.`}
+      footer={<Button label="Continue to review" size="large" pill fullWidth onPress={next} />}
     >
+      {needsEmail ? (
+        <Card>
+          <TextField
+            label="Email for your bill"
+            placeholder="ada@example.com"
+            value={email}
+            onChangeText={(v) => {
+              setEmail(v);
+              if (emailError) setEmailError(undefined);
+            }}
+            error={emailError}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            helper="We'll also text it to your phone."
+          />
+        </Card>
+      ) : null}
       {farms.map((g) => {
         const f = quoted.get(g.farmId);
         return (

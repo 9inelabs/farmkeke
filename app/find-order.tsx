@@ -85,7 +85,7 @@ export default function FindOrder() {
         returnKeyType="search"
         onSubmitEditing={() => void submit()}
       />
-      <Text variant="small">On another phone you can follow the order, but only the phone that placed it can confirm delivery.</Text>
+      <Text variant="small">On another phone you can follow the order, but only the phone that placed it can pay or report a problem.</Text>
     </Screen>
   );
 }

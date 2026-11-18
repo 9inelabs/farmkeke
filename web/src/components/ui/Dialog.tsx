@@ -2,7 +2,7 @@
 
 // Modal (centred) and Drawer (side panel; bottom sheet on phones), used by the
 // mini-cart (W-08), area picker (W-09), filters (W-05), address form (W-46b),
-// confirm receipt (W-52), cookie settings (W-88) and others.
+// cookie settings (W-88) and others.
 // Accessible: role="dialog", aria-modal, labelled by its title, Escape closes,
 // focus moves in and is trapped, focus returns to the opener, page scroll locks.
 // Motion: opacity + transform only, 250ms in; drawers 300ms.

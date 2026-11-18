@@ -1,5 +1,5 @@
-// F-10 Dashboard: what needs doing now. The money held for the farm and the
-// order pipeline up top; orders waiting for a reply (with their countdown);
+// F-10 Dashboard: what needs doing now. What Paystack sent the farm lately and
+// the order pipeline up top; orders waiting for a reply (with their countdown);
 // orders to prepare; stock running low.
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";

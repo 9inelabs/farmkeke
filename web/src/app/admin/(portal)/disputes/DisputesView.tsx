@@ -1,7 +1,7 @@
 "use client";
 
-// A-70 Problem reports: shoppers report a problem before confirming receipt;
-// the order's money stays held until staff decide.
+// A-70 Problem reports: shoppers report a problem within a day of delivery
+// or collection; staff decide on any refund (paid by Farmkeke).
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 import { DISPUTE_STATUS, OUTCOME } from "@/components/admin/labels";
@@ -50,7 +50,7 @@ export function DisputesView() {
     <>
       <PageHeader
         title="Problem reports"
-        description="The money stays held until you decide. The farm has a set time to reply; you can decide without their reply once it's passed."
+        description="Shoppers report problems within a day of delivery. The farm has a set time to reply; you can decide without their reply once it's passed. Refunds come from Farmkeke."
       />
       <FilterTabs
         label="Show"

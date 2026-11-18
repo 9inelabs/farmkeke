@@ -17,7 +17,7 @@ const EMPTY: Record<FarmTab, { icon: IconComponent; title: string; note: string 
   new: { icon: Clipboard, title: "No new orders", note: "You'll have 24 hours to reply to each one." },
   to_prepare: { icon: Box, title: "Nothing to prepare", note: "Accepted orders wait here." },
   with_rider: { icon: TruckFast, title: "Nothing on the way", note: "Orders with a rider or buyer show here." },
-  completed: { icon: Verified, title: "No completed orders", note: "Confirmed orders and their payouts." },
+  completed: { icon: Verified, title: "No completed orders", note: "Orders that have closed." },
   disputed: { icon: Flag, title: "No problems reported", note: "Reports from buyers show here." },
   cancelled: { icon: Ban, title: "Nothing cancelled", note: "Declined and expired orders." },
 };

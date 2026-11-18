@@ -27,7 +27,7 @@ const COPY: Record<Side, { title: string; note: string; samples: { icon: IconCom
     note: "You have 24 hours to reply to each one. We'll tell you the moment it lands.",
     samples: [
       { icon: Clipboard, title: "New order FK-10234", body: "2 baskets of tomatoes · reply within 24h", when: "now" },
-      { icon: CashIn, title: "Payment released", body: "₦10,260 is on its way to your bank", when: "1d" },
+      { icon: CashIn, title: "Order FK-10234 is paid", body: "₦10,260 is on its way to your bank", when: "1d" },
     ],
   },
 };

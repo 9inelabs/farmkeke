@@ -121,7 +121,7 @@ export default function Contact() {
       </Card>
       {viewer !== undefined && !signedIn ? (
         <Text variant="small" style={styles.note}>
-          Your order is remembered on this phone. Only this phone can confirm delivery, unless you save an account after
+          Your order is remembered on this phone. Only this phone can report a problem with it, unless you save an account after
           ordering.
         </Text>
       ) : null}

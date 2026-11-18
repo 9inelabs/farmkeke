@@ -84,7 +84,8 @@ export default function OrderPlaced() {
   const first = summary.contact.name.trim().split(/\s+/)[0] ?? "";
   const orders = summary.orders;
   const delivery = summary.fulfilment === "delivery";
-  const unpaid = delivery && summary.status !== "paid";
+  // Every order is paid by bill once the farms accept (and, for delivery, it's priced)
+  const unpaid = summary.status !== "paid";
   const billReady = unpaid && summary.status === "awaiting_payment" && !!summary.payToken;
   const street = summary.address?.street ?? (draft.placed?.checkoutId === checkoutId ? draft.placed.street : undefined);
   const many = orders.length > 1;
@@ -96,8 +97,11 @@ export default function OrderPlaced() {
           { title: "We price the delivery and send your bill", detail: "By email, text and in the app. You'll have 12 hours to pay." },
           { title: street ? `A Farmkeke rider delivers to ${street}` : "A Farmkeke rider delivers to your address", detail: "Once you've paid" },
         ]
-      : [{ title: many ? "Collect each order at its farm" : "Collect your order at the farm", detail: "We'll send the farm's address and your 4-digit code when it's ready. You have 3 days." }]),
-    { title: "You check everything and confirm receipt", detail: `Then ${many ? "each farm is" : "the farm is"} paid. Something wrong? Report it before confirming.` },
+      : [
+          { title: "We send your bill", detail: "By email, text and in the app. You'll have 12 hours to pay." },
+          { title: many ? "Collect each order at its farm" : "Collect your order at the farm", detail: "We'll send the farm's address and your 4-digit code when it's ready. You have 3 days." },
+        ]),
+    { title: "You check everything", detail: "Something wrong? Report it within a day. After that, your order closes." },
   ];
 
   return (
@@ -136,7 +140,7 @@ export default function OrderPlaced() {
               <View style={[styles.badge, unpaid ? styles.badgePending : styles.badgeHeld]}>
                 {unpaid ? null : <ShieldCheck size={14} color={colors.forest} variant="solid" />}
                 <Text variant="small" color={unpaid ? colors.pendingInk : colors.forest} style={styles.semibold}>
-                  {unpaid ? (billReady ? "Bill ready" : "Bill coming soon") : `${formatNaira(summary.totalKobo)} held safely`}
+                  {unpaid ? (billReady ? "Bill ready" : "Bill coming soon") : `${formatNaira(summary.totalKobo)} paid`}
                 </Text>
               </View>
             </View>
@@ -289,7 +293,7 @@ function SaveDetails({ name, email: initialEmail, count }: { name: string; email
       ) : null}
       {errors.form ? <Notice tone="error">{errors.form}</Notice> : null}
       <Button label="Create account" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />
-      <Text variant="small">Without an account, only this phone can confirm delivery.</Text>
+      <Text variant="small">Without an account, only this phone can pay bills and report problems for this order.</Text>
     </View>
   );
 }

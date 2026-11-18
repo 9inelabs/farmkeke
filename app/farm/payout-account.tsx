@@ -67,7 +67,7 @@ export default function PayoutAccount() {
     try {
       const saved = await save({ accountNumber: number, bankCode, accountName: check.state === "manual" ? name.trim() : undefined, secret: value });
       setConfirming(false);
-      showToast({ message: `Payouts now go to ${saved.bankName} ••${saved.accountLast4}` });
+      showToast({ message: `Your earnings now go to ${saved.bankName} ••${saved.accountLast4}` });
       router.back();
     } catch (e) {
       const code = errorCode(e);

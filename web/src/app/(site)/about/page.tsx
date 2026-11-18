@@ -75,8 +75,8 @@ export default function AboutPage() {
               markup, and farmers see only a small part of what families pay.
             </p>
             <p className={bodyLg}>
-              Farmkeke lets families buy directly from farmers. We check every farm, hold every payment safely until the
-              order arrives, and run our own riders, so both sides can trust each other.
+              Farmkeke lets families buy directly from farmers. We check every farm, take payment only once a farm has
+              accepted, step in when something goes wrong, and run our own riders, so both sides can trust each other.
             </p>
             <p className={bodyLg}>We&apos;re starting in Owerri and growing one community at a time.</p>
           </div>

@@ -254,7 +254,7 @@ export const cancel = mutation({
       "order_cancelled",
       `Order ${order.number} was cancelled`,
       paid
-        ? "Farmkeke cancelled this order. You'll get a full refund to your original payment method."
+        ? "Farmkeke cancelled this order. Farmkeke is refunding you in full to your original payment method. Banks usually take 3 to 10 working days to show it."
         : "Farmkeke cancelled this order. You weren't charged.",
     );
     await notifyFarm(ctx, ended, "order_cancelled", `Order ${order.number} was cancelled`, `Farmkeke cancelled this order: ${reason}`);

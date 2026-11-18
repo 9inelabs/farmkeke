@@ -1,7 +1,7 @@
 // M-69 Dispute detail: where the case is (reported, the farm's reply,
 // Farmkeke's decision), what it's about, and the messages between the
-// shopper, the farm and Farmkeke support. The payment stays held until it's
-// decided; a refund links to its status (M-72).
+// shopper, the farm and Farmkeke support. Any refund comes from Farmkeke and
+// links to its status (M-72).
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";

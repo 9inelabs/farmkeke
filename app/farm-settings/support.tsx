@@ -18,7 +18,7 @@ export default function FarmerSupport() {
         <Text variant="displaySmall" accessibilityRole="header">
           How can we help?
         </Text>
-        <Text variant="caption">Questions about your application, listings, orders or payouts.</Text>
+        <Text variant="caption">Questions about your application, listings, orders or payments.</Text>
         <ListGroup>
           <ListRow
             icon={Headphone}

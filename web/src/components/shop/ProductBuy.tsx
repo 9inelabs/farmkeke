@@ -308,11 +308,11 @@ export function BuyBox({
         <DeliveryRow id={product.id} today={today} delivery={product.delivery} pickup={product.pickup} />
         <Row
           icon={<ShieldCheck aria-hidden className="mt-px size-5 flex-none text-forest" strokeWidth={1.75} />}
-          title="Your payment is held until you confirm"
+          title="Buyer protection"
           sub={
             <>
-              The farmer is paid only after your order arrives.{" "}
-              <Link href={routes.escrow} className="font-semibold">
+              You pay only after the farm accepts. Something wrong? Report it within a day.{" "}
+              <Link href={routes.buyerProtection} className="font-semibold">
                 How it works
               </Link>
             </>

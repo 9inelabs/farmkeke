@@ -99,7 +99,7 @@ export function FindOrderView() {
           <div className="mt-[22px] flex gap-2.5 rounded-xl bg-soft px-4 py-3.5 text-[13px] leading-[19px] text-ink-3">
             <Info aria-hidden className="size-[18px] flex-none text-forest" strokeWidth={1.75} />
             <span>
-              On this device you can view the order. To confirm delivery, use the phone or browser you ordered on, or{" "}
+              On this device you can view the order. To pay or report a problem, use the phone or browser you ordered on, or{" "}
               <Link href={routes.signUp()} className="font-semibold">
                 create an account
               </Link>

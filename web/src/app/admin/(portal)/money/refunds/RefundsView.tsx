@@ -57,7 +57,7 @@ export function RefundsView() {
 
   return (
     <>
-      <PageHeader title="Refunds" description="Money going back to shoppers through Paystack. Banks usually take 5 to 10 working days." />
+      <PageHeader title="Refunds" description="Money going back to shoppers through Paystack. Farmkeke pays them from its Paystack balance. Banks usually take 3 to 10 working days." />
       {message ? (
         <div className="mb-4">
           <Notice tone="ok">{message}</Notice>

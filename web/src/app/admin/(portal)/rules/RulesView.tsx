@@ -15,11 +15,11 @@ import type { Rules } from "@/convex/returns/adminOps";
 import { dateTime } from "@/lib/format";
 
 const RULES = [
-  { key: "farmerResponseHours", label: "Farm must accept within", unit: "hours", min: 1, max: 72, note: "Otherwise the order expires and the shopper is refunded." },
-  { key: "unconfirmedAfterHours", label: "Delivered but not confirmed: flag after", unit: "hours", min: 1, max: 168, note: "The order shows under Orders, Needs attention." },
+  { key: "farmerResponseHours", label: "Farm must accept within", unit: "hours", min: 1, max: 72, note: "Otherwise the order expires. The shopper hasn't paid yet, so nothing is refunded." },
+  { key: "unconfirmedAfterHours", label: "Shoppers can report a problem for", unit: "hours", min: 1, max: 168, note: "After delivery or collection. Then the order closes by itself." },
   { key: "pickupHoldDays", label: "Pickup orders wait at the farm for", unit: "days", min: 1, max: 14, note: "The shopper's time to collect once the farm has it ready." },
   { key: "disputeReplyHours", label: "Farm must reply to a problem report within", unit: "hours", min: 1, max: 72, note: "After that, staff decide without the farm's reply." },
-  { key: "disputeDecideHours", label: "Farmkeke decides a problem report within", unit: "hours", min: 1, max: 168, note: "Shown to the shopper and the farm as the decision time. The payment stays held until then." },
+  { key: "disputeDecideHours", label: "Farmkeke decides a problem report within", unit: "hours", min: 1, max: 168, note: "Shown to the shopper and the farm as the decision time." },
 ] as const;
 type RuleKey = (typeof RULES)[number]["key"];
 

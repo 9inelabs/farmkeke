@@ -527,7 +527,7 @@ function NextStep({ order: o }: { order: OrderDetail }) {
     body =
       o.escrow === "none"
         ? "You weren't charged for this order."
-        : "Your money comes back to you in full. Banks can take a few working days to show it.";
+        : "Farmkeke is refunding you in full. Banks usually take 3 to 10 working days to show it.";
     action = o.hasRefund ? (
       <ButtonLink href={routes.refund(o._id)} variant="lime" fullWidth className="mt-4 min-h-[52px] rounded-[14px]">
         View refund
@@ -758,8 +758,8 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
           <div className="mt-0.5 text-[13px] leading-[19px] text-[#7A5A1E]">
             {/* Orders are added to an account by the email they were placed with, never by phone number alone */}
             {o.linkEmailHint
-              ? "To confirm delivery or report a problem, open it on the phone or browser you ordered on, or create an account with the same email."
-              : "To confirm delivery or report a problem, open it on the phone or browser you ordered on."}
+              ? "To pay or report a problem, open it on the phone or browser you ordered on, or create an account with the same email."
+              : "To pay or report a problem, open it on the phone or browser you ordered on."}
           </div>
         </div>
       </div>
@@ -800,15 +800,13 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
             {plural(o.items.length, "item")} · {naira(o.totalKobo)}
           </span>
           <span className="font-semibold text-forest">
-            {o.escrow === "held"
-              ? "Payment held by Farmkeke"
-              : o.escrow === "released"
-                ? "Paid to the farm"
-                : o.escrow === "refunded"
-                  ? "Refunded"
-                  : o.escrow === "split"
-                    ? "Part refunded"
-                    : "Payment pending"}
+            {o.escrow === "released"
+              ? "Paid"
+              : o.escrow === "refunded"
+                ? "Refunded"
+                : o.escrow === "split"
+                  ? "Paid, part refunded"
+                  : "Not paid yet"}
           </span>
         </div>
       </section>

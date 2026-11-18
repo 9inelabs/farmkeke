@@ -63,14 +63,13 @@ export default function Refund() {
           : "Usually within a few minutes",
       state: sent ? "done" : "current",
     },
-    { key: "bank", title: "With your bank", detail: sent && !settled ? "Banks can take a few working days to show it on your statement" : undefined, state: settled ? "done" : sent ? "current" : "todo" },
+    { key: "bank", title: "With your bank", detail: sent && !settled ? "Banks usually take 3 to 10 working days to show it on your statement" : undefined, state: settled ? "done" : sent ? "current" : "todo" },
     { key: "account", title: "In your account", detail: r.settledAt ? dayTime(r.settledAt) : undefined, state: settled ? "done" : "todo" },
   ];
-  const released = r.kind === "part" ? Math.max(0, o.totalKobo - r.amountKobo) : 0;
   const rows: [string, string][] = [
     ["Refund method", r.methodLabel],
     ["Refund reference", r.reference],
-    ...(released > 0 ? ([[`Released to ${o.farmName}`, formatNaira(released)]] as [string, string][]) : []),
+    ["Refunded by", "Farmkeke"],
     ["Order total", formatNaira(o.totalKobo)],
   ];
 
@@ -107,7 +106,7 @@ export default function Refund() {
           ))}
         </View>
         <View style={styles.card}>
-          <Text variant="label">Not received after 7 working days?</Text>
+          <Text variant="label">Not received after 10 working days?</Text>
           <Text variant="small">Share the refund reference with your bank, or ask us to check.</Text>
           <Button label="Contact support" variant="secondary" size="small" onPress={() => void Linking.openURL(`mailto:support@farmkeke.com?subject=${encodeURIComponent(`Refund for order ${o.number}`)}`)} style={styles.support} />
         </View>

@@ -42,7 +42,6 @@ import {
   orderPreparingEmail,
   orderReceivedEmail,
   outForDeliveryEmail,
-  paymentReleasedEmail,
   pickupReminderEmail,
   pickupWindowEndedEmail,
   problemDecisionEmail,
@@ -58,6 +57,7 @@ import {
   type PickupPoint,
 } from "../lib/emails";
 import { claimSlot, markReadBatch, notify } from "../lib/notify";
+import { reportBy } from "../lib/orders";
 import { DAY, getRules, HOUR } from "../lib/settings";
 
 /** Message emails: at most one per thread in this window. */
@@ -388,6 +388,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         orders: await billOrders(ctx, siblings),
         address: order.address ? `${order.address.street}, ${order.address.areaName}` : "your address",
         isGuest,
+        pickup: order.fulfilment === "pickup",
       });
     }
     case "bill_ready":
@@ -453,12 +454,16 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
       });
     }
     case "order_delivered":
-    case "order_collected":
+    case "order_collected": {
+      // A day to report a problem; then the order closes (orders/system.flagUnconfirmed)
+      const closesAt = reportBy(order, await getRules(ctx));
       return orderDeliveredEmail({
         ...ref,
         how: n.kind === "order_collected" ? "collected" : "delivered",
+        reportBy: closesAt === null ? undefined : lagosTime(closesAt),
         isGuest,
       });
+    }
     case "order_declined":
     case "order_expired":
       return farmDidNotAcceptEmail({
@@ -466,6 +471,7 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         refundKobo: order.totalKobo,
         why: n.kind === "order_expired" ? "timeout" : "declined",
         paymentMethod: await paymentMethodLabel(ctx, order),
+        unpaid: order.escrow === "none",
       });
     case "dispute_opened":
     case "dispute_resolved": {
@@ -487,7 +493,6 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         outcome: dispute.outcome === "refunded" ? "full_refund" : dispute.outcome === "split" ? "part_refund" : "no_refund",
         reason: dispute.decisionNote ?? "",
         refundKobo: dispute.refundKobo,
-        releasedKobo: dispute.releaseKobo,
         deliveryFeeKobo: order.deliveryFeeKobo,
       });
     }
@@ -508,8 +513,6 @@ async function orderEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"use
         deliveryFeeKobo: order.deliveryFeeKobo,
       });
     }
-    case "order_completed":
-      return paymentReleasedEmail({ ...ref, amountKobo: order.itemsTotalKobo });
     case "order_preparing": {
       const point = order.pickupPointId ? await ctx.db.get("pickupPoints", order.pickupPointId) : null;
       return orderPreparingEmail({
@@ -580,7 +583,7 @@ const SECTION_TITLES: Record<string, string> = {
   produce: "What you grow",
   collection: "Collection details",
   documents: "Documents",
-  payout: "Payout details",
+  payout: "Bank account",
 };
 
 // Same as farmerApplications.REVIEW_DAYS (F-09a "Expect a decision by")
@@ -762,7 +765,13 @@ async function farmEmail(ctx: QueryCtx, n: Doc<"notifications">, user: Doc<"user
         outcome: dispute.outcome === "refunded" ? "full_refund" : dispute.outcome === "split" ? "part_refund" : "no_refund",
         reason: dispute.decisionNote ?? "",
         refundKobo: dispute.refundKobo,
-        releasedKobo: dispute.releaseKobo,
+        farmDebtKobo: (
+          await ctx.db
+            .query("refunds")
+            .withIndex("by_orderId", (q) => q.eq("orderId", order._id))
+            .order("desc")
+            .first()
+        )?.farmDebtKobo,
       });
     case "dispute_message":
       return farmMessageEmail({

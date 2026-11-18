@@ -1,6 +1,6 @@
 // M-73 Rate and review (reviews.forOrder / reviews.submit): stars, quick
 // tags, optional stars for each item, and a comment. One review per
-// completed order. Opened with ?rating=4 from Payment released.
+// completed order (orders close a day after they arrive). ?rating=4 picks the stars.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";

@@ -1,7 +1,9 @@
-// W-81 Escrow (payment protection)
+// W-81 Buyer protection (was /escrow, which redirects here). Since the
+// Paystack split, Farmkeke doesn't hold shoppers' money: you pay only after
+// the farm accepts, Paystack sends the farm its share at once, and if
+// something's wrong (reported within a day) Farmkeke refunds you.
 import {
   ArrowRight,
-  Banknote,
   Check,
   Clock,
   File,
@@ -23,38 +25,38 @@ import { FadeUp } from "@/lib/motion";
 import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Payment protection",
+  title: "Buyer protection",
   description:
-    "Farmkeke holds your payment and only pays the farmer after you confirm your order arrived as expected. This is called escrow.",
+    "You pay only after the farm accepts your order. If something is wrong, report it within a day of delivery and Farmkeke sorts it out, with a refund if you're owed one.",
 };
 
 const FLOW: Array<{ icon: LucideIcon; title: string; body: string; box: string; tile?: React.CSSProperties; bodyColor: string }> = [
   {
     icon: ShoppingCart,
-    title: "You pay",
-    body: "Pay through Paystack by card, transfer or USSD.",
+    title: "The farm accepts",
+    body: "You order, and the farm has 24 hours to accept. You don't pay anything until it does.",
     box: "bg-surface",
     bodyColor: "text-muted",
   },
   {
     icon: Lock,
-    title: "Farmkeke holds it",
-    body: "The farm can see you've paid, but can't touch the money yet.",
+    title: "You pay securely",
+    body: "Pay your bill through Paystack by card, transfer or USSD. Paystack sends the farm its share.",
     box: "bg-forest text-white",
     tile: { background: "rgba(169,214,84,0.18)", color: "#A9D654" },
     bodyColor: "text-on-forest",
   },
   {
     icon: Package,
-    title: "You receive it",
+    title: "You check everything",
     body: "Check every item at your door or at the farm.",
     box: "bg-surface",
     bodyColor: "text-muted",
   },
   {
-    icon: Banknote,
-    title: "Farmer is paid",
-    body: "You confirm, and the money is released to the farm.",
+    icon: ShieldCheck,
+    title: "A day to report",
+    body: "Something wrong? Report it within a day. If not, your order closes.",
     box: "bg-lime text-ink",
     tile: { background: "rgba(255,255,255,0.5)", color: "#1E3B16" },
     bodyColor: "text-muted",
@@ -65,50 +67,50 @@ const CASES: Array<[LucideIcon, string, string, string, string]> = [
   [
     Clock,
     "b-ok",
-    "Full refund",
+    "Not charged",
     "The farm doesn't accept",
-    "Farms have 24 hours to accept. If they don't, your money goes straight back to you.",
+    "Farms have 24 hours to accept. If they don't, the order is cancelled and you haven't paid anything.",
   ],
   [
     TriangleAlert,
     "b-held",
-    "Money stays held",
+    "We look into it",
     "Something is wrong",
-    "Report it before you confirm. The farm has 12 hours to reply, and we decide within about a day.",
+    "Report it within a day of delivery or collection. The farm has 12 hours to reply, and we decide within about a day.",
   ],
   [
     RefreshCw,
     "b-ok",
-    "Part refund",
-    "Only some items had a problem",
-    "You're refunded for the affected items. The rest is paid to the farm. The delivery fee isn't refunded.",
+    "Full or part refund",
+    "We decide you're owed money",
+    "Farmkeke refunds you: in full, or for the affected items. The delivery fee is refunded only if the whole order is.",
   ],
   [
     Wallet,
     "b-held",
-    "Original method",
+    "3 to 10 working days",
     "Where refunds go",
-    "Refunds go back to the card or bank account you paid with. Banks can take a few working days.",
+    "Refunds go back to the card or bank account you paid with. Banks usually take 3 to 10 working days to show them.",
   ],
 ];
 
 const GOOD_TO_KNOW = [
-  "You can only confirm once your order is marked delivered or collected.",
-  "Confirming can't be undone, so check everything first.",
-  "Guest orders can only be confirmed on the device you ordered from.",
+  "You pay only after the farm accepts, so you're never charged for an order a farm can't fill.",
+  "Problems can be reported for a day after your order is delivered or collected. After that, it closes.",
+  "Guest orders can only be reported on the device you ordered from, or after adding them to an account.",
   "Card payments are handled by Paystack. Farmkeke never sees your full card number.",
 ];
 
-export default function EscrowPage() {
+export default function BuyerProtectionPage() {
   return (
     <>
       <section className="wrap-site pt-[72px] m:pt-9">
         <FadeUp className={`${S.sechead} !max-w-[760px]`}>
-          <Eyebrow icon={ShieldCheck}>Payment protection</Eyebrow>
-          <h1 className={S.h1}>Your money is safe until your food arrives</h1>
+          <Eyebrow icon={ShieldCheck}>Buyer protection</Eyebrow>
+          <h1 className={S.h1}>Pay only for what a farm can deliver</h1>
           <p className={lead}>
-            Farmkeke holds your payment and only pays the farmer after you confirm your order arrived as expected. This is
-            called escrow.
+            You pay only after the farm accepts your order. If anything arrives wrong, report it within a day and
+            Farmkeke sorts it out, with a refund if you&apos;re owed one.
           </p>
         </FadeUp>
       </section>
@@ -141,7 +143,7 @@ export default function EscrowPage() {
           <div className={S.sechead}>
             <Eyebrow icon={Info}>If something changes</Eyebrow>
             <h2 className={S.h2}>What happens when things don&apos;t go to plan</h2>
-            <p className={lead}>Clear rules, so you always know where your money is.</p>
+            <p className={lead}>Clear rules, so you always know what happens to your money.</p>
           </div>
           <div className="grid grid-cols-4 gap-5 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1 m:gap-2.5">
             {CASES.map(([Icon, tone, badge, title, body]) => (

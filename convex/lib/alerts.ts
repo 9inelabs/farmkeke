@@ -54,7 +54,7 @@ const SHOP: Alert[] = [
   {
     alert: "payments",
     title: "Payments and refunds",
-    description: "Bills, payment confirmed, money released, refunds",
+    description: "Bills, payment confirmed, refunds",
     locked: true,
     defaults: on,
     kinds: [
