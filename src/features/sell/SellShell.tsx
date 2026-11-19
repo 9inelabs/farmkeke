@@ -62,9 +62,11 @@ type Props = {
   pinFooter?: boolean;
   /** Replaces the content padding, for screens that lay themselves out (the PIN pad). */
   bare?: boolean;
+  /** Shown at the right of the top row when there is no step count (the log-in screen's wordmark). */
+  right?: ReactNode;
 };
 
-export function SellShell({ children, footer, back = "back", onBack, tone = "light", step, pinFooter = true, bare = false }: Props) {
+export function SellShell({ children, footer, back = "back", onBack, tone = "light", step, pinFooter = true, bare = false, right }: Props) {
   const insets = useSafeAreaInsets();
   const dark = tone === "dark";
   const leave = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace("/home")));
@@ -91,7 +93,7 @@ export function SellShell({ children, footer, back = "back", onBack, tone = "lig
             <Text style={[styles.stepText, dark && { color: colors.onForest }]}>
               Step {step.current} of {SELL_STEPS}
             </Text>
-          ) : null}
+          ) : (right ?? null)}
         </View>
         {step ? (
           <View style={styles.bar}>

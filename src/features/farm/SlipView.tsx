@@ -9,7 +9,7 @@ import { Check, Share as ShareIcon } from "@/components/icons";
 import { Button, ScreenHeader, Text } from "@/components/ui";
 import { dayTime } from "@/features/orders/format";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export type Slip = NonNullable<FunctionReturnType<typeof api.orders.farmer.packingSlip>>;
@@ -121,10 +121,10 @@ const styles = StyleSheet.create({
   number: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 27, color: colors.ink },
   tag: { paddingHorizontal: spacing.sm, height: 26, borderRadius: 13, backgroundColor: colors.tint, justifyContent: "center" },
   meta: { flexDirection: "row", gap: spacing.md },
-  tear: { borderTopWidth: 1.5, borderStyle: "dashed", borderColor: colors.line, marginVertical: spacing.xs },
+  tear: { borderTopWidth: borders.strong, borderStyle: "dashed", borderColor: colors.line, marginVertical: spacing.xs },
   cols: { flexDirection: "row" },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: 4 },
-  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: borders.strong, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
   boxOn: { backgroundColor: colors.forest, borderColor: colors.forest },
   struck: { textDecorationLine: "line-through", color: colors.inkMuted },
   total: { flexDirection: "row", alignItems: "center" },

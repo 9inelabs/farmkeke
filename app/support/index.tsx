@@ -15,7 +15,7 @@ import { useAttachments } from "@/features/chat/useAttachments";
 import { dayMonth } from "@/features/orders/format";
 import { errorCode } from "@/lib/errors";
 import { useEnsureIdentity } from "@/lib/session";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export default function Support() {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   ticket: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 48 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.lime },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  chip: { minHeight: 36, justifyContent: "center", paddingHorizontal: spacing.md, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: 1.5, borderColor: colors.surfaceSoft },
+  chip: { minHeight: 36, justifyContent: "center", paddingHorizontal: spacing.md, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: borders.strong, borderColor: colors.surfaceSoft },
   chipOn: { backgroundColor: colors.tint, borderColor: colors.lime },
   input: {
     minHeight: 120,

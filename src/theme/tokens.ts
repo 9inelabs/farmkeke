@@ -1,5 +1,6 @@
 // Design tokens taken from the Farmkeke Figma frames (390 x 844) and the PRD
 // palette. Every screen uses these; avoid raw values in components.
+import { PixelRatio } from "react-native";
 
 export const colors = {
   forest: "#1E3B16",
@@ -21,6 +22,8 @@ export const colors = {
   // Forest at 30%: placeholder text and inactive icons
   forestFaint: "rgba(30, 59, 22, 0.3)",
   line: "#DFDFDF",
+  // Outlines of fields and the search pill: ink at 28%, so a whole-pixel line reads as light as the old half-point one
+  lineStrong: "rgba(26, 26, 26, 0.28)",
   placeholder: "#D9D9D9",
   surfaceMuted: "#F7F7F7",
   // Grouped rows and cards on white (recent searches, cart lines)
@@ -70,9 +73,12 @@ export const radii = {
   pill: 999,
 } as const;
 
+// Borders sit on whole device pixels. Half-point lines (the Figma hairlines)
+// fall between pixels on most Android screens and draw faint and broken, so
+// the thin line is 1pt and the strong one is 1.5pt rounded to the pixel grid.
 export const borders = {
-  // Figma hairlines are 0.4–0.5pt
-  hairline: 0.5,
+  hairline: 1,
+  strong: PixelRatio.roundToNearestPixel(1.5),
 } as const;
 
 export const sizes = {

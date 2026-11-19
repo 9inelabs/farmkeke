@@ -8,7 +8,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Bell, Check, CheckCircle, Lock, Phone } from "@/components/icons";
 import { Button, ScreenHeader, Skeleton, Text } from "@/components/ui";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import type { PushStatus } from "./push";
 
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.md, gap: 0 },
   divider: { borderTopWidth: 1, borderTopColor: colors.surfaceSoft },
   cell: { width: CELL, height: 44, alignItems: "center", justifyContent: "center" },
-  dot: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.line, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
+  dot: { width: 26, height: 26, borderRadius: 13, borderWidth: borders.strong, borderColor: colors.line, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
   dotOn: { backgroundColor: colors.lime, borderColor: colors.lime },
   dotLocked: { backgroundColor: colors.tint, borderColor: colors.tint },
   dash: { width: 10, height: 2, borderRadius: 1, backgroundColor: colors.line },

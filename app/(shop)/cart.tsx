@@ -16,7 +16,7 @@ import { useShopContext } from "@/features/shop/useShopContext";
 import { formatNaira } from "@/lib/money";
 import { quoteItems, useCart, type CartLine } from "@/store/cart";
 import { showToast } from "@/store/toast";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Key = { listingId: string; unitId: string };
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 8, padding: spacing.md, gap: spacing.md },
   farmHead: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  farmRing: { padding: 2, borderRadius: 26, borderWidth: 1.5, borderColor: colors.forest },
+  farmRing: { padding: 2, borderRadius: 26, borderWidth: borders.strong, borderColor: colors.forest },
   farmPhoto: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.placeholder },
   items: { backgroundColor: colors.canvas, borderRadius: radii.lg, paddingHorizontal: spacing.md },
   item: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.md },

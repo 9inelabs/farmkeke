@@ -9,7 +9,7 @@ import { Button, Notice, Text } from "@/components/ui";
 import { CheckoutShell } from "@/features/checkout/CheckoutShell";
 import { useCheckoutDraft } from "@/features/checkout/draft";
 import { groupByFarm, useQuote } from "@/features/checkout/useQuote";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Mode = "delivery" | "pickup";
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg + 4,
     padding: spacing.lg,
     gap: spacing.sm,
-    borderWidth: 1.5,
+    borderWidth: borders.strong,
     borderColor: colors.white,
   },
   optionOn: { borderColor: colors.lime, backgroundColor: "#FBFDF6" },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   tile: { width: 48, height: 48, borderRadius: radii.md + 2, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center" },
   tileOn: { backgroundColor: colors.lime },
   price: { fontFamily: fonts.semibold },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: borders.strong, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
   radioOn: { borderColor: colors.forest },
   dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.forest },
   link: { paddingVertical: spacing.xxs },

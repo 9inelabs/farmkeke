@@ -8,7 +8,7 @@ import { ChevronRight, Clock, Pin, Truck, type IconComponent } from "@/component
 import { StatusBadge, Text, type BadgeTone } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
 import { androidUi, ripple } from "@/theme/platform";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export const farmColors = { canvas: colors.canvas, card: colors.white, hero: colors.forest };
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   countOn: { backgroundColor: colors.lime },
   round: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
   roundTint: { backgroundColor: colors.tint },
-  roundDot: { position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.badge, borderWidth: 1.5, borderColor: colors.white },
+  roundDot: { position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.badge, borderWidth: borders.strong, borderColor: colors.white },
   fact: { flex: 1, gap: 2, minWidth: "40%" },
   emptyIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center", marginBottom: spacing.xs },
 });

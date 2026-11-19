@@ -13,7 +13,7 @@ import { AttachmentStrip } from "@/features/chat/AttachmentStrip";
 import { useAttachments } from "@/features/chat/useAttachments";
 import { errorCode } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { dayLabel } from "./format";
 import type { OrderDetail } from "./useOrder";
@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
   semibold: { fontFamily: fonts.semibold },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.md },
   reasons: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  reason: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.lg, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: 1.5, borderColor: colors.surfaceSoft },
+  reason: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.lg, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: borders.strong, borderColor: colors.surfaceSoft },
   reasonOn: { backgroundColor: colors.tint, borderColor: colors.lime },
-  item: { borderRadius: radii.lg, borderWidth: 1.5, borderColor: colors.line, padding: spacing.md, gap: spacing.sm },
+  item: { borderRadius: radii.lg, borderWidth: borders.strong, borderColor: colors.line, padding: spacing.md, gap: spacing.sm },
   itemOn: { borderColor: colors.lime, backgroundColor: "#FBFDF6" },
   itemMain: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  box: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
+  box: { width: 24, height: 24, borderRadius: 7, borderWidth: borders.strong, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
   boxOn: { backgroundColor: colors.forest, borderColor: colors.forest },
   thumb: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.placeholder },
   qty: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.line },

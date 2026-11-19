@@ -3,7 +3,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "@/components/ui";
-import { colors } from "@/theme/tokens";
+import { borders, colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Props = {
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "flex-start", gap: 9 },
   box: { borderRadius: 15, borderWidth: 1, borderColor: colors.line, backgroundColor: "#F7F9F4", alignItems: "center", justifyContent: "center" },
   filled: { borderColor: "#CFE3B0", backgroundColor: colors.white },
-  active: { borderColor: colors.forest, borderWidth: 1.5, backgroundColor: colors.white, boxShadow: "0px 0px 0px 4px rgba(169, 214, 84, 0.28)" },
+  active: { borderColor: colors.forest, borderWidth: borders.strong, backgroundColor: colors.white, boxShadow: "0px 0px 0px 4px rgba(169, 214, 84, 0.28)" },
   error: { borderColor: colors.error },
   digit: { fontFamily: fonts.displayBold, fontSize: 24, lineHeight: 30, color: colors.forest },
   dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.forest },

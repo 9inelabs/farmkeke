@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     height: sizes.searchHeight,
     borderRadius: radii.pill,
     borderWidth: borders.hairline,
-    borderColor: colors.inkSoft,
+    borderColor: colors.lineStrong,
     backgroundColor: colors.white,
     flexDirection: "row",
     alignItems: "center",

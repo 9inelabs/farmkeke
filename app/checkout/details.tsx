@@ -17,7 +17,7 @@ import { PinPicker } from "@/features/maps/PinPicker";
 import { formatHours } from "@/lib/hours";
 import { formatNaira } from "@/lib/money";
 import { isEmail } from "@/lib/session";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 
 export default function Details() {
   const fulfilment = useCheckoutDraft((s) => s.fulfilment);
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radii.lg,
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderWidth: borders.strong,
     borderColor: colors.white,
   },
   savedRowOn: { borderColor: colors.lime },

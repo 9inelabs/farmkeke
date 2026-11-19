@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Check } from "@/components/icons";
-import { colors, spacing } from "@/theme/tokens";
+import { borders, colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { Text } from "./Text";
 
@@ -39,7 +39,7 @@ const DOT = 24;
 const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: spacing.md },
   rail: { alignItems: "center", width: DOT },
-  dot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.surfaceSoft, borderWidth: 1.5, borderColor: colors.line, alignItems: "center", justifyContent: "center" },
+  dot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.surfaceSoft, borderWidth: borders.strong, borderColor: colors.line, alignItems: "center", justifyContent: "center" },
   dotDone: { backgroundColor: colors.forest, borderColor: colors.forest },
   dotCurrent: { backgroundColor: colors.lime, borderColor: colors.tint, borderWidth: 4 },
   line: { flex: 1, width: 2, backgroundColor: colors.line, marginVertical: 2 },

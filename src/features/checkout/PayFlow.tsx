@@ -28,7 +28,7 @@ import { useEnsureIdentity } from "@/lib/session";
 import { errorCode } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
 import { showToast } from "@/store/toast";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Method = "card" | "bank_transfer" | "ussd";
@@ -475,13 +475,13 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderRadius: radii.lg + 4,
     backgroundColor: colors.white,
-    borderWidth: 1.5,
+    borderWidth: borders.strong,
     borderColor: colors.white,
   },
   methodOn: { borderColor: colors.lime },
   methodIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center" },
   methodIconOn: { backgroundColor: colors.lime },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: borders.strong, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
   radioOn: { borderColor: colors.forest },
   dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.forest },
   footer: { paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.lg, gap: spacing.sm },
