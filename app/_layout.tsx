@@ -1,6 +1,7 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { useFonts } from "expo-font";
 import { router, Stack, type ErrorBoundaryProps } from "expo-router";
+import { motionFor, navigationFor, ScreenMotionLayout } from "@/components/motion/screenMotion";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { Info, Refresh } from "@/components/icons";
@@ -40,7 +41,9 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           <AppGate>
             <Stack
-              screenOptions={{ ...stackScreenOptions, contentStyle: { backgroundColor: colors.white } }}
+              // Each screen arrives in one of three ways (components/motion/screenMotion.tsx)
+              screenOptions={({ route }) => ({ ...stackScreenOptions, ...navigationFor(motionFor(route.name)), contentStyle: { backgroundColor: colors.white } })}
+              screenLayout={({ route, children }) => <ScreenMotionLayout routeName={route.name}>{children}</ScreenMotionLayout>}
             >
               <Stack.Screen name="index" options={sectionFade} />
               <Stack.Screen name="(shop)" options={sectionFade} />
