@@ -124,7 +124,7 @@ const FARM: Alert[] = [
     description: "Refunds taken from your share, bank account changed",
     locked: true,
     defaults: { push: true, sms: true, email: true },
-    kinds: ["payout_account_changed", "farm_debt"],
+    kinds: ["payout_account_changed", "farm_debt", "farm_debt_forgiven"],
   },
   {
     alert: "messages",
