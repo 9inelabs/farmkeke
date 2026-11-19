@@ -7,7 +7,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Bank, Call, Edit, IdCard, Info, Pin, Shop, User, type IconComponent } from "@/components/icons";
+import { ArrowRight, Bank, Call, Edit, IdCard, Info, Pin, Shop, User, type IconComponent } from "@/components/icons";
 import { Avatar, Button, Checkbox, Skeleton, Text } from "@/components/ui";
 import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
@@ -85,14 +85,12 @@ export default function Review() {
 
   return (
     <SellShell
-      scene="review"
-      curve="both"
-      sticker="center"
+      step={{ current: 5, progress: terms ? 0.9 : 0.5 }}
       footer={
         <>
           <Checkbox label="I agree to the Farmkeke farmer terms" checked={terms} onChange={(v) => { setTerms(v); setError(null); }} />
           <Pressable accessibilityRole="link" hitSlop={6} onPress={() => router.push("/farm-settings/terms")}>
-            <Text variant="small" color={colors.limeInk} style={styles.link}>
+            <Text variant="small" color={colors.forest} style={styles.link}>
               Read the farmer terms
             </Text>
           </Pressable>
@@ -101,11 +99,11 @@ export default function Review() {
               {error}
             </Text>
           ) : null}
-          <Button label={app?.status === "more_info" ? "Resubmit Application" : "Submit Application"} variant="black" size="large" fullWidth loading={busy} disabled={incomplete} onPress={() => void send()} />
+          <Button label={app?.status === "more_info" ? "Resubmit application" : "Submit application"} iconRight={ArrowRight} size="hero" fullWidth loading={busy} disabled={incomplete} onPress={() => void send()} />
         </>
       }
     >
-      <SellTitle title="Review your" accent="Profile" note="Check your details. Tap Edit to change anything." />
+      <SellTitle title="Review your application" note="Check your details. Tap Edit to change anything." />
       {app?.status === "more_info" && app.moreInfo ? (
         <View style={styles.admin}>
           <Text variant="label">Farmkeke asked for more information</Text>
@@ -160,17 +158,17 @@ export default function Review() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, gap: 1 },
-  card: { backgroundColor: colors.white, borderRadius: radii.lg + 2, padding: spacing.lg, gap: spacing.md, borderWidth: 1.5, borderColor: "transparent" },
+  card: { backgroundColor: colors.white, borderRadius: 18, padding: spacing.lg, gap: spacing.md, borderWidth: 1.5, borderColor: "transparent", boxShadow: "0px 10px 30px 0px rgba(16, 35, 11, 0.08)" },
   flagged: { borderColor: colors.errorSoft },
   cardHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardTitle: { fontFamily: fonts.semibold, fontSize: 15 },
   edit: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.pill, backgroundColor: colors.tint },
   who: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.surfaceSoft },
-  photo: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: colors.lime },
+  photo: { width: 52, height: 52, borderRadius: 16 },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   problem: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   admin: { backgroundColor: colors.pendingSoft, borderRadius: radii.lg, padding: spacing.lg, gap: 4 },
   link: { fontFamily: fonts.semibold, textDecorationLine: "underline" },
   photos: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  farmPhoto: { width: 64, height: 64, borderRadius: radii.md, backgroundColor: colors.placeholder },
+  farmPhoto: { width: 72, height: 58, borderRadius: 12, backgroundColor: colors.placeholder },
 });

@@ -7,12 +7,14 @@ import { useAction, useMutation } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { Cash, CheckCircle, Lock } from "@/components/icons";
+import { ArrowRight, Bank, Cash, Check, Lock, ShieldCheck } from "@/components/icons";
+import { ForestBackdrop } from "@/components/premium";
 import { Button, SelectField, Text, TextField } from "@/components/ui";
 import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { colors, radii, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 const BANK_OPTIONS = BANKS.map((b) => ({ value: b.code, label: b.name }));
 type Check = { state: "idle" } | { state: "checking" } | { state: "found"; name: string } | { state: "manual" } | { state: "error"; message: string };
@@ -26,6 +28,7 @@ export default function BankDetails() {
   const [number, setNumber] = useState("");
   const [name, setName] = useState("");
   const [check, setCheck] = useState<Check>({ state: "idle" });
+  const bankName = BANKS.find((b) => b.code === bankCode)?.name;
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const run = useRef(0);
@@ -86,16 +89,47 @@ export default function BankDetails() {
 
   return (
     <SellShell
-      scene="bank"
-      curve="left"
-      sticker="center"
-      footer={<Button label={from === "review" ? "Save changes" : "Review Profile"} variant="black" size="large" fullWidth loading={busy || app === undefined} onPress={() => void submit()} />}
+      step={{ current: 4, progress: check.state === "found" ? 0.9 : 0.4 }}
+      footer={
+        <Button
+          label={from === "review" ? "Save changes" : "Next: review"}
+          iconRight={from === "review" ? undefined : ArrowRight}
+          variant="dark"
+          size="hero"
+          fullWidth
+          loading={busy || app === undefined}
+          onPress={() => void submit()}
+        />
+      }
     >
-      <SellTitle title="Add your Bank" accent="Details" note="Your earnings are paid here automatically once buyers confirm their orders" />
+      <SellTitle title="Where should we pay you?" note="When a buyer pays, Paystack sends your share straight to this account." />
+      <View style={styles.preview}>
+        <ForestBackdrop />
+        <View style={styles.previewTop}>
+          <Text style={styles.previewLabel}>YOUR PAYOUT ACCOUNT</Text>
+          <Bank size={20} color={colors.lime} strokeWidth={1.8} />
+        </View>
+        <Text style={styles.previewNumber}>{number.length > 0 ? `${number.slice(0, 4)} ${number.slice(4, 7)} ${number.slice(7)}`.trim() : "•••• ••• •••"}</Text>
+        <View style={styles.previewBottom}>
+          <View style={styles.flex}>
+            <Text style={styles.previewSmall}>{bankName ?? "Choose your bank"}</Text>
+            <Text style={styles.previewName} numberOfLines={1}>
+              {(check.state === "found" ? check.name : name || "Account name").toUpperCase()}
+            </Text>
+          </View>
+          {check.state === "found" ? (
+            <View style={styles.verified}>
+              <Check size={12} color={colors.forest} strokeWidth={3} />
+              <Text style={styles.verifiedText}>Verified</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
       <SelectField label="Bank" placeholder="Choose your bank" options={BANK_OPTIONS} value={bankCode} onChange={(v) => { setBankCode(v); setErrors({}); }} searchable error={errors.bank} />
       <TextField
-        tone="lime"
-        label="Account Number"
+        tone="premium"
+        valid={number.length === 10 && check.state === "found"}
+        label="Account number"
         value={number}
         onChangeText={(t) => {
           setNumber(t.replace(/\D/g, "").slice(0, 10));
@@ -112,13 +146,13 @@ export default function BankDetails() {
         </View>
       ) : check.state === "found" ? (
         <View style={[styles.status, styles.found]}>
-          <CheckCircle size={18} color={colors.forest} variant="solid" />
+          <ShieldCheck size={18} color={colors.forest} strokeWidth={1.8} />
           <Text variant="label" color={colors.forest} style={styles.flex}>
-            {check.name}
+            Name matched with your bank
           </Text>
         </View>
       ) : check.state === "manual" ? (
-        <TextField tone="lime" label="Account Name" value={name} onChangeText={setName} autoCapitalize="words" placeholder="As it appears at the bank" error={errors.name} />
+        <TextField tone="premium" label="Account name" value={name} onChangeText={setName} autoCapitalize="words" placeholder="As it appears at the bank" error={errors.name} />
       ) : null}
 
       <View style={styles.card}>
@@ -151,4 +185,13 @@ const styles = StyleSheet.create({
   found: { backgroundColor: colors.tint, borderRadius: radii.md },
   card: { backgroundColor: colors.white, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.md },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  preview: { borderRadius: 22, padding: 18, overflow: "hidden", gap: 14, boxShadow: "0px 18px 40px 0px rgba(16, 35, 11, 0.25)" },
+  previewTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  previewLabel: { fontFamily: fonts.semibold, fontSize: 11.5, lineHeight: 15, letterSpacing: 0.8, color: colors.onForest },
+  previewNumber: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 28, letterSpacing: 2, color: colors.white },
+  previewBottom: { flexDirection: "row", alignItems: "flex-end", gap: 10 },
+  previewSmall: { fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15, color: colors.onForest },
+  previewName: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19, color: colors.white },
+  verified: { flexDirection: "row", alignItems: "center", gap: 4, height: 26, paddingHorizontal: 10, borderRadius: 99, backgroundColor: colors.lime },
+  verifiedText: { fontFamily: fonts.semibold, fontSize: 11.5, lineHeight: 15, color: colors.forest },
 });

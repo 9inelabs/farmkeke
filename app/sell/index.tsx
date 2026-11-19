@@ -1,24 +1,31 @@
-// F-01 Sell on Farmkeke ("Sell Straight to Households"). Apply goes to the
+// F-01 Sell on Farmkeke ("Sell your harvest straight to households"), premium
+// redesign (Nov 2026): a farmer photo fading into deep green, three glass
+// benefit cards and a lime Apply button. Apply goes to the
 // phone step, or back into an application already started, or to farmer mode
 // for an approved farm. Farmers who already sell log in with phone and PIN.
 import { api } from "@convex/_generated/api";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Lock, People, Truck, type IconComponent } from "@/components/icons";
-import { Button, Text, Wordmark } from "@/components/ui";
+import { StatusBar } from "expo-status-bar";
+import { Component, useState, type ReactNode } from "react";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowRight, Close, Leaf, Shop, Truck, Wallet, type IconComponent } from "@/components/icons";
+import { Stagger } from "@/components/motion/reveal";
+import { Glass } from "@/components/premium";
+import { Button, Text } from "@/components/ui";
 import { nextStepPath } from "@/features/farmer/constants";
 import { useSwitchMode } from "@/features/farmer/useSwitchMode";
-import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 const BENEFITS: { icon: IconComponent; title: string; body: string }[] = [
-  { icon: People, title: "Reach buyers beyond your area", body: "Households across the city order from your farm on the app and farmkeke.com" },
-  { icon: Truck, title: "We collect from your farm", body: "Farmkeke riders pick up each order at your farm gate. You don't deliver." },
-  { icon: Lock, title: "Paid for every order", body: "Buyers pay once you accept. Paystack sends your share straight to your bank, before you hand anything over." },
+  { icon: Shop, title: "Reach buyers beyond your area", body: "Orders come from the app and farmkeke.com" },
+  { icon: Truck, title: "We collect from your farm", body: "Our riders pick up at your farm gate. You don't deliver." },
+  { icon: Wallet, title: "Paid for every order", body: "Buyers pay once you accept. Paystack sends your share straight to your bank." },
 ];
 
 export default function SellOnFarmkeke() {
@@ -31,6 +38,8 @@ export default function SellOnFarmkeke() {
   const switchMode = useSwitchMode();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
   const account = viewer && !viewer.isGuest;
   const loading = isAuthenticated && (viewer === undefined || phone === undefined || application === undefined || farm === undefined);
@@ -59,79 +68,125 @@ export default function SellOnFarmkeke() {
   };
 
   return (
-    <SellShell
-      scene="intro"
-      back="close"
-      curve="both"
-      sticker="none"
-      pinFooter
-      footer={
-        <>
-          <View style={styles.sellRow}>
-            <Text style={styles.sellOn}>Sell on</Text>
-            <Wordmark width={92} />
-          </View>
-          <Button label={farm ? "Open farmer mode" : inProgress ? "Continue your application" : "Apply as a farmer today"} variant="black" size="large" pill fullWidth loading={busy || loading} onPress={() => void apply()} />
-          <View style={styles.links}>
-            <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push("/sell/login")}>
-              <Text variant="small" color={colors.ink} style={styles.link}>
-                Already selling? Log in
-              </Text>
-            </Pressable>
-            <Text variant="small">·</Text>
-            <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push("/farm-settings/terms")}>
-              <Text variant="small">Terms & Conditions apply</Text>
-            </Pressable>
-          </View>
-        </>
-      }
-    >
-      <View style={styles.brand}>
-        <Wordmark width={120} />
-        <Text variant="small" color={colors.ink}>
-          ...from the farm, directly to your home
-        </Text>
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+      <View style={[styles.photo, { height: Math.min(500, height * 0.58) }]}>
+        <Image source={require("../../assets/photos/farmer-field.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "45%", top: "20%" }} accessible={false} />
+        {/* The photo staff set for this screen in the Admin Portal (Site photos), if any */}
+        <Quiet>
+          <AdminPhoto />
+        </Quiet>
+        <LinearGradient
+          colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0)", "rgba(11,26,7,0.15)", "rgba(11,26,7,0.92)", colors.forestDeep]}
+          locations={[0, 0.22, 0.45, 0.85, 1]}
+          style={StyleSheet.absoluteFill}
+        />
       </View>
-      <SellTitle title="Sell Straight to" accent="Households" note="List your produce, get orders and get paid safely. Everything happens in this app." />
-      <View style={styles.card}>
-        {BENEFITS.map(({ icon: Icon, title, body }, i) => (
-          <View key={title} style={[styles.benefit, i > 0 && styles.divider]}>
-            <View style={styles.icon}>
-              <Icon size={16} color={colors.forest} />
-            </View>
-            <View style={styles.flex}>
-              <Text variant="label" style={styles.benefitTitle}>
-                {title}
-              </Text>
-              <Text variant="small" color={colors.inkSoft}>
-                {body}
-              </Text>
-            </View>
-          </View>
-        ))}
+      <View style={[styles.topRow, { top: insets.top + 8 }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" hitSlop={8} onPress={() => (router.canGoBack() ? router.back() : router.replace("/home"))}>
+          <Glass style={styles.round}>
+            <Close size={20} color={colors.white} strokeWidth={2} />
+          </Glass>
+        </Pressable>
+        <Glass style={styles.tag}>
+          <Leaf size={14} color={colors.lime} strokeWidth={2} />
+          <Text style={styles.tagText}>Farmkeke for farmers</Text>
+        </Glass>
       </View>
-      <Text variant="small" color={colors.inkSoft}>
-        It takes about 3 minutes. You can stop and continue later; we save as you go.
-      </Text>
-      {error ? (
-        <Text variant="small" color={colors.error}>
-          {error}
-        </Text>
-      ) : null}
-    </SellShell>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: Math.min(500, height * 0.58) - 150 }]} showsVerticalScrollIndicator={false}>
+        <Stagger>
+          <Text style={styles.title} accessibilityRole="header">
+            Sell your harvest straight to <Text style={[styles.title, styles.lime]}>households</Text>
+          </Text>
+          <View style={styles.benefits}>
+            {BENEFITS.map(({ icon: Icon, title, body }) => (
+              <Glass key={title} style={styles.benefit}>
+                <View style={styles.icon}>
+                  <Icon size={19} color={colors.forest} strokeWidth={1.8} />
+                </View>
+                <View style={styles.flex}>
+                  <Text style={styles.benefitTitle}>{title}</Text>
+                  <Text style={styles.benefitBody}>{body}</Text>
+                </View>
+              </Glass>
+            ))}
+          </View>
+          <Text style={styles.small}>It takes about 3 minutes. You can stop and continue later; we save as you go.</Text>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </Stagger>
+      </ScrollView>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 10 }]}>
+        <Button
+          label={farm ? "Open farmer mode" : inProgress ? "Continue your application" : "Apply as a farmer"}
+          iconRight={ArrowRight}
+          size="hero"
+          fullWidth
+          loading={busy || loading}
+          onPress={() => void apply()}
+        />
+        <View style={styles.links}>
+          <Text style={styles.linkText} accessibilityRole="link" onPress={() => router.push("/sell/login")}>
+            Already selling? <Text style={styles.linkBold}>Log in</Text>
+          </Text>
+          <Text style={styles.dot}>·</Text>
+          <Text style={styles.linkText} accessibilityRole="link" onPress={() => router.push("/farm-settings/terms")}>
+            Terms apply
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
+/** The Admin Portal's photo for this screen, over the built-in one. */
+function AdminPhoto() {
+  const photos = useQuery(api.sitePhotos.farmerSignup);
+  const photo = photos?.intro ?? null;
+  if (photo === null) return null;
+  return (
+    <Image
+      source={{ uri: photo.url }}
+      style={StyleSheet.absoluteFill}
+      contentFit="cover"
+      contentPosition={typeof photo.x === "number" && typeof photo.y === "number" ? { left: `${photo.x}%`, top: `${photo.y}%` } : photo.focus}
+      transition={300}
+      accessible={false}
+    />
+  );
+}
+
+/** If the photos can't be loaded (an older backend), the built-in photo stays. */
+class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
 const styles = StyleSheet.create({
-  flex: { flex: 1, gap: 2 },
-  brand: { alignItems: "center", gap: 4 },
-  card: { backgroundColor: colors.white, borderRadius: radii.lg + 2, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
-  benefit: { flexDirection: "row", gap: spacing.md, paddingVertical: spacing.md },
-  divider: { borderTopWidth: 1, borderTopColor: colors.line },
-  icon: { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center", marginTop: 2 },
-  benefitTitle: { fontFamily: fonts.semibold },
-  sellRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 2 },
-  sellOn: { fontFamily: fonts.displayBold, fontSize: 15, lineHeight: 21, color: colors.ink },
-  links: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: spacing.sm, marginTop: 2 },
-  link: { textDecorationLine: "underline", fontFamily: fonts.medium },
+  screen: { flex: 1, backgroundColor: colors.forestDeep },
+  flex: { flex: 1 },
+  photo: { position: "absolute", left: 0, right: 0, top: 0 },
+  topRow: { position: "absolute", left: spacing.screen, right: spacing.screen, zIndex: 3, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  round: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  tag: { flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 12, borderRadius: 99 },
+  tagText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.white },
+  scroll: { paddingHorizontal: 24, paddingBottom: spacing.xl, gap: 0 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 38, letterSpacing: -1, color: colors.white },
+  lime: { color: colors.lime },
+  benefits: { gap: 10, marginTop: 20 },
+  benefit: { flexDirection: "row", alignItems: "center", gap: 12, padding: 13 },
+  icon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
+  benefitTitle: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19, color: colors.white },
+  benefitBody: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.onForest, marginTop: 1 },
+  small: { fontFamily: fonts.regular, fontSize: 12.5, lineHeight: 18, color: colors.onForest, marginTop: 14 },
+  error: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: "#FF9C9C", marginTop: 8 },
+  footer: { paddingHorizontal: 24, paddingTop: 8, gap: 14 },
+  links: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 },
+  linkText: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.onForest },
+  linkBold: { fontFamily: fonts.bold, color: colors.white },
+  dot: { color: colors.onForest },
 });

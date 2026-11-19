@@ -3,7 +3,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Text } from "@/components/ui";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Props = {
@@ -24,7 +24,7 @@ export type CodeBoxesHandle = { focus: () => void };
 export const CodeBoxes = forwardRef<CodeBoxesHandle, Props>(function CodeBoxes({ length, value, onChange, onFilled, secure, error, autoFocus, label }, ref) {
   const input = useRef<TextInput>(null);
   useImperativeHandle(ref, () => ({ focus: () => input.current?.focus() }));
-  const size = length > 4 ? 48 : 60;
+  const size = length > 4 ? 50 : 60;
   return (
     <Pressable onPress={() => input.current?.focus()} style={styles.row} accessibilityLabel={label} accessibilityHint="Opens the keypad">
       {Array.from({ length }, (_, i) => {
@@ -59,12 +59,12 @@ export const CodeBoxes = forwardRef<CodeBoxesHandle, Props>(function CodeBoxes({
 });
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "center", gap: spacing.sm },
-  box: { borderRadius: radii.md + 2, borderWidth: 1.5, borderColor: colors.line, backgroundColor: "rgba(255,255,255,0.6)", alignItems: "center", justifyContent: "center" },
-  filled: { borderColor: colors.inkMuted, backgroundColor: colors.white },
-  active: { borderColor: colors.lime, backgroundColor: colors.white },
+  row: { flexDirection: "row", justifyContent: "flex-start", gap: 9 },
+  box: { borderRadius: 15, borderWidth: 1, borderColor: colors.line, backgroundColor: "#F7F9F4", alignItems: "center", justifyContent: "center" },
+  filled: { borderColor: "#CFE3B0", backgroundColor: colors.white },
+  active: { borderColor: colors.forest, borderWidth: 1.5, backgroundColor: colors.white, boxShadow: "0px 0px 0px 4px rgba(169, 214, 84, 0.28)" },
   error: { borderColor: colors.error },
-  digit: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.ink },
-  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.ink },
+  digit: { fontFamily: fonts.displayBold, fontSize: 24, lineHeight: 30, color: colors.forest },
+  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.forest },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });

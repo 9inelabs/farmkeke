@@ -3,6 +3,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { Clock, Messages } from "@/components/icons";
 import { Button, Text } from "@/components/ui";
 import { CodeBoxes } from "@/features/sell/CodeBoxes";
 import { pendingCode } from "@/features/sell/pendingCode";
@@ -57,28 +58,33 @@ export default function CodeStep() {
 
   return (
     <SellShell
-      scene="code"
-      curve="right" sticker="left" footer={<Button label="Verify" variant="black" size="large" fullWidth loading={busy} disabled={code.length !== 6} onPress={() => void submit()} />}>
-      <SellTitle title="Enter Verification" accent="Code" note={`A verification code has been sent to ${maskedPhone(phone)}`} />
+      step={mode === "reset" ? undefined : { current: 1, progress: 0.65 }}
+      footer={<Button label="Verify" variant="dark" size="hero" fullWidth loading={busy} disabled={code.length !== 6} onPress={() => void submit()} />}
+    >
+      <View style={styles.badge}>
+        <Messages size={28} color={colors.lime} strokeWidth={1.8} />
+      </View>
+      <SellTitle title="Enter the code" note={`Sent by text to ${maskedPhone(phone)}.`} />
       <CodeBoxes length={6} value={code} onChange={(v) => { setCode(v); setError(null); }} onFilled={(v) => void submit(v)} error={error !== null} autoFocus label="Verification code" />
       <View style={styles.resend}>
+        <Text style={styles.change} accessibilityRole="link" onPress={() => router.back()}>
+          Wrong number? Change it
+        </Text>
         {error ? (
           <Text variant="small" color={colors.error} align="center" accessibilityLiveRegion="polite">
             {error}
           </Text>
         ) : null}
         <View style={styles.row}>
-          <Text variant="small" color={colors.inkSoft}>
-            Didn't get code?
-          </Text>
+          <Clock size={16} color={colors.inkSoft} strokeWidth={1.8} />
           {wait > 0 ? (
-            <Text variant="small" color={colors.inkMuted}>
-              Resend in {wait}s
+            <Text variant="small" color={colors.inkSoft}>
+              Resend code in <Text variant="small" color={colors.forest} style={styles.bold}>0:{String(wait).padStart(2, "0")}</Text>
             </Text>
           ) : (
             <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void resend()}>
-              <Text variant="small" color={colors.limeInk} style={styles.link}>
-                Resend
+              <Text variant="small" color={colors.forest} style={styles.link}>
+                Resend code
               </Text>
             </Pressable>
           )}
@@ -89,7 +95,10 @@ export default function CodeStep() {
 }
 
 const styles = StyleSheet.create({
-  resend: { alignItems: "center", gap: spacing.sm },
-  row: { flexDirection: "row", alignItems: "center", gap: 4 },
+  resend: { alignItems: "flex-start", gap: spacing.sm },
+  row: { flexDirection: "row", alignItems: "center", gap: 6 },
+  badge: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center", boxShadow: "0px 14px 30px 0px rgba(30, 59, 22, 0.25)" },
+  change: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 18, color: colors.forest },
+  bold: { fontFamily: fonts.semibold },
   link: { fontFamily: fonts.semibold, textDecorationLine: "underline" },
 });

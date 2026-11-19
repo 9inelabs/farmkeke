@@ -1,173 +1,168 @@
-// M-04 Get started, built to the Figma frame "Start Shopping" (node 12:53).
-// Every position, size and font below is measured from that frame;
-// useFigmaFrame scales it to the phone, and the content reveals in turn.
+// M-04 Get started (premium redesign, Nov 2026): a market photo on deep
+// green, then "How will you use Farmkeke?" with two choices.
+// - I'm shopping: Create account, Sign in, or Continue as a guest.
+// - I'm a farmer: Apply as a farmer, or Log in as a farmer (phone and PIN).
+// Every way out marks the welcome as seen. Accounts and farmer sign-up open
+// on top of the shop (or the area picker on a first visit), so finishing or
+// closing them lands there rather than back on this screen.
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, type Href } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import FarmIcon from "../../assets/icons/feature-farm.svg";
-import DeliveryIcon from "../../assets/icons/feature-delivery.svg";
-import PayIcon from "../../assets/icons/feature-pay.svg";
-import { Wordmark } from "@/components/ui";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import Animated, { Easing, ReduceMotion, interpolate, interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowRight, Cart, Check, Leaf, Sprout, type IconComponent } from "@/components/icons";
 import { Reveal } from "@/components/motion/reveal";
+import { Glass } from "@/components/premium";
+import { Button, Text, Wordmark } from "@/components/ui";
+import { tapFeedback } from "@/lib/haptics";
 import { usePrefs } from "@/store/prefs";
 import { colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
-import { useFigmaFrame } from "@/theme/useFigmaFrame";
 
-const INTER_12_LINE = 14.53; // Inter's natural line height at 12pt
-const INTER_14_LINE = 16.94; // … at 14pt
-
-// Feature rows: frame y of each row, the row's text x (row 2 sits 1pt left in
-// the frame), and where its 20pt circle and icon sit.
-const ROWS = [
-  {
-    y: 541,
-    textX: 66,
-    title: "Picked fresh, priced fairly",
-    body: "Farmers sell to you directly, with no middlemen.",
-    circle: { x: 41, y: 558, size: 20 },
-    Icon: FarmIcon,
-    icon: { x: 45, y: 563, w: 12, h: 9 },
-  },
-  {
-    y: 600,
-    textX: 65,
-    title: "Delivery or pickup",
-    body: "Choose what suits you at checkout",
-    circle: { x: 41, y: 617.5, size: 19 },
-    Icon: DeliveryIcon,
-    icon: { x: 45, y: 621.5, w: 11, h: 9 },
-  },
-  {
-    y: 659,
-    textX: 66,
-    title: "Pay safely",
-    body: "Pay only once the farm accepts your order",
-    circle: { x: 41, y: 676, size: 20 },
-    Icon: PayIcon,
-    icon: { x: 44, y: 681, w: 13, h: 9 },
-  },
-];
+type Role = "shop" | "farm";
 
 export default function GetStarted() {
-  const f = useFigmaFrame();
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const setOnboardingSeen = usePrefs((s) => s.setOnboardingSeen);
   const area = usePrefs((s) => s.area);
+  const [role, setRole] = useState<Role>("shop");
 
-  const startShopping = () => {
+  const base: Href = area ? "/home" : "/location";
+  /** Leaves the welcome for the shop (or area picker), then opens `next` on top of it. */
+  const leave = (next?: Href) => {
     setOnboardingSeen();
-    router.replace(area ? "/home" : "/location");
-  };
-  const signIn = () => {
-    setOnboardingSeen();
-    router.push("/sign-in");
+    router.replace(base);
+    if (next) router.push(next);
   };
 
-  const at = (x: number, y: number, w?: number, h?: number) => ({
-    position: "absolute" as const,
-    left: f.x(x),
-    top: f.y(y),
-    ...(w !== undefined && { width: f.size(w) }),
-    ...(h !== undefined && { height: f.size(h) }),
-  });
+  const pick = (r: Role) => {
+    if (r !== role) tapFeedback();
+    setRole(r);
+  };
+
+  const photoHeight = Math.max(300, Math.min(420, height * 0.47));
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ height: f.y(844) }} bounces={false} showsVerticalScrollIndicator={false}>
-      <StatusBar style="dark" />
-
-      <Reveal index={0} style={at(138.9, 92.04)}>
-        <Wordmark width={f.size(110.6)} />
-      </Reveal>
-
-      {/* Illustration, clipped to the frame's 338 x 306 box */}
-      <Reveal index={1} style={[at(21, 147, 338, 306), styles.clip]}>
-        <Image
-          source={require("../../assets/illustrations/start-shopping.jpg")}
-          accessible={false}
-          contentFit="fill"
-          style={{ position: "absolute", left: f.size(-66.73), top: f.size(-109.78), width: f.size(471.46), height: f.size(470.24) }}
-        />
-      </Reveal>
-
-      <Reveal index={2} style={at(31, 472.87, 328)}>
-        <Text
-          accessibilityRole="header"
-          allowFontScaling={false}
-          style={[styles.noPadding, { fontFamily: fonts.displaySemibold, fontSize: f.size(20), lineHeight: f.size(26), color: colors.ink, textAlign: "center" }]}
-        >
-          Shop fresh produce straight from Nigerian farms
-        </Text>
-      </Reveal>
-
-      {ROWS.map(({ y, textX, title, body, circle, Icon, icon }, i) => (
-        <Reveal key={title} index={3 + i} style={[at(31, y, 328, 54), styles.row, { borderRadius: f.size(12) }]}>
-          <View
-            style={{
-              position: "absolute",
-              left: f.size(circle.x - 31),
-              top: f.size(circle.y - y),
-              width: f.size(circle.size),
-              height: f.size(circle.size),
-              borderRadius: f.size(circle.size / 2),
-              backgroundColor: colors.forest,
-            }}
+    <View style={styles.screen}>
+      <StatusBar style="light" />
+      <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <View style={{ height: photoHeight }}>
+          <Image source={require("../../assets/photos/market-stall.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} transition={250} />
+          <LinearGradient
+            colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0.15)", "rgba(11,26,7,0.92)"]}
+            locations={[0, 0.35, 1]}
+            style={StyleSheet.absoluteFill}
           />
-          <Icon
-            width={f.size(icon.w)}
-            height={f.size(icon.h)}
-            style={{ position: "absolute", left: f.size(icon.x - 31), top: f.size(icon.y - y) }}
-          />
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.noPadding,
-              { position: "absolute", left: f.size(textX - 31), top: f.size(10.4), fontFamily: fonts.semibold, fontSize: f.size(14), lineHeight: f.size(INTER_14_LINE), color: colors.forest },
-            ]}
-          >
-            {title}
-          </Text>
-          <Text
-            allowFontScaling={false}
-            style={[
-              styles.noPadding,
-              { position: "absolute", left: f.size(textX - 31), top: f.size(29.4), fontFamily: fonts.regular, fontSize: f.size(12), lineHeight: f.size(INTER_12_LINE), color: colors.inkSoft },
-            ]}
-          >
-            {body}
-          </Text>
-        </Reveal>
-      ))}
+          <Reveal index={0} style={[styles.brand, { top: insets.top + 14 }]}>
+            <Wordmark width={128} tint={colors.white} />
+          </Reveal>
+          <View style={styles.headline}>
+            <Reveal index={1}>
+              <Glass style={styles.chip}>
+                <Leaf size={14} color={colors.lime} strokeWidth={2} />
+                <Text style={styles.chipText}>Fresh from Nigerian farms</Text>
+              </Glass>
+            </Reveal>
+            <Reveal index={2}>
+              <Text style={styles.title} accessibilityRole="header">
+                How will you use Farmkeke?
+              </Text>
+            </Reveal>
+          </View>
+        </View>
 
-      <Reveal index={6} style={at(99, 744, 192, 47)}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={startShopping}
-          style={({ pressed }) => [styles.button, { borderRadius: f.size(17) }, pressed && styles.pressed]}
-        >
-          <Text allowFontScaling={false} style={[styles.noPadding, { fontFamily: fonts.semibold, fontSize: f.size(14), lineHeight: f.size(INTER_14_LINE), color: colors.forest }]}>
-            Start Shopping
-          </Text>
-        </Pressable>
-      </Reveal>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 18 }]}>
+          <View style={styles.choices} accessibilityRole="radiogroup">
+            <Reveal index={3}>
+              <RoleCard icon={Cart} title="I'm shopping" body="Fresh food from farms near me" selected={role === "shop"} onPress={() => pick("shop")} />
+            </Reveal>
+            <Reveal index={4}>
+              <RoleCard icon={Sprout} title="I'm a farmer" body="Sell my harvest to households" selected={role === "farm"} onPress={() => pick("farm")} />
+            </Reveal>
+          </View>
 
-      <Reveal index={7} style={[at(0, 801.4), { width: "100%" }]}>
-        <Text allowFontScaling={false} style={[styles.noPadding, { fontFamily: fonts.regular, fontSize: f.size(12), lineHeight: f.size(INTER_12_LINE), color: colors.inkMuted, textAlign: "center" }]}>
-          No account needed •{" "}
-          <Text accessibilityRole="link" accessibilityHint="Opens sign in" onPress={signIn} suppressHighlighting={false}>
-            Sign in to create an account
-          </Text>
-        </Text>
-      </Reveal>
-    </ScrollView>
+          <Reveal index={5} style={styles.actions}>
+            {role === "shop" ? (
+              <>
+                <Button label="Create account" variant="dark" size="hero" fullWidth onPress={() => leave("/create-account")} />
+                <Button label="Sign in" variant="outline" size="hero" fullWidth onPress={() => leave("/sign-in")} style={styles.outline} />
+                <Text style={styles.link} accessibilityRole="button" onPress={() => leave()}>
+                  Continue as a guest
+                </Text>
+              </>
+            ) : (
+              <>
+                <Button label="Apply as a farmer" iconRight={ArrowRight} variant="dark" size="hero" fullWidth onPress={() => leave("/sell")} />
+                <Button label="Log in as a farmer" variant="outline" size="hero" fullWidth onPress={() => leave("/sell/login")} style={styles.outline} />
+                <Text style={styles.link} accessibilityRole="button" onPress={() => leave()}>
+                  Just look around the shop
+                </Text>
+              </>
+            )}
+          </Reveal>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+/** A choice card: the chosen one gets a forest outline, a soft tint and a tick. */
+function RoleCard({ icon: Icon, title, body, selected, onPress }: { icon: IconComponent; title: string; body: string; selected: boolean; onPress: () => void }) {
+  const on = useSharedValue(selected ? 1 : 0);
+  useEffect(() => {
+    on.value = withTiming(selected ? 1 : 0, { duration: 220, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.System });
+  }, [selected, on]);
+  const card = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(on.value, [0, 1], [colors.line, colors.forest]),
+    backgroundColor: interpolateColor(on.value, [0, 1], [colors.white, "#F6FAEF"]),
+    transform: [{ scale: interpolate(on.value, [0, 1], [0.985, 1]) }],
+  }));
+  const iconBox = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.value, [0, 1], [colors.tint, colors.forest]) }));
+  const tick = useAnimatedStyle(() => ({ opacity: on.value, transform: [{ scale: interpolate(on.value, [0, 1], [0.4, 1]) }] }));
+
+  return (
+    <Pressable accessibilityRole="radio" accessibilityState={{ selected }} accessibilityLabel={`${title}. ${body}`} onPress={onPress}>
+      <Animated.View style={[styles.card, selected && styles.cardShadow, card]}>
+        <Animated.View style={[styles.iconBox, iconBox]}>
+          <Icon size={24} color={selected ? colors.lime : colors.forest} strokeWidth={1.8} />
+        </Animated.View>
+        <View style={styles.flex}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardBody}>{body}</Text>
+        </View>
+        <View style={styles.radio}>
+          <Animated.View style={[styles.radioOn, tick]}>
+            <Check size={13} color={colors.lime} strokeWidth={3} />
+          </Animated.View>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  clip: { overflow: "hidden" },
-  row: { backgroundColor: colors.tint, overflow: "hidden" },
-  button: { flex: 1, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  noPadding: Platform.select({ android: { includeFontPadding: false }, default: {} }),
+  screen: { flex: 1, backgroundColor: colors.forestDeep },
+  scroll: { flexGrow: 1 },
+  flex: { flex: 1 },
+  brand: { position: "absolute", left: 24 },
+  headline: { position: "absolute", left: 24, right: 24, bottom: 52, gap: 12, alignItems: "flex-start" },
+  chip: { flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 12, borderRadius: 99 },
+  chipText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.white },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 36, letterSpacing: -1, color: colors.white, maxWidth: 320 },
+  sheet: { flexGrow: 1, marginTop: -28, backgroundColor: colors.white, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 20, paddingTop: 24 },
+  choices: { gap: 12 },
+  card: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 20, borderWidth: 1.5 },
+  cardShadow: { boxShadow: "0px 12px 28px 0px rgba(30, 59, 22, 0.12)" },
+  iconBox: { width: 50, height: 50, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  cardTitle: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 21, color: colors.forest },
+  cardBody: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.inkSoft, marginTop: 2 },
+  radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: "#CFD6C8", alignItems: "center", justifyContent: "center" },
+  radioOn: { position: "absolute", left: -1.5, top: -1.5, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
+  actions: { gap: 10, marginTop: 22 },
+  outline: { borderColor: colors.line },
+  link: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 20, color: colors.forest, textAlign: "center", paddingVertical: 8, marginTop: 4 },
 });

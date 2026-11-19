@@ -10,13 +10,14 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
-import { Camera, Close, ImageAdd } from "@/components/icons";
+import { ArrowRight, Camera, Close, Plus } from "@/components/icons";
 import { Button, Text } from "@/components/ui";
 import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { pickPhotos, preparePhoto, uploadFile, type PhotoSource } from "@/lib/upload";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 export default function FarmPhotos() {
   const { from } = useLocalSearchParams<{ from?: string }>();
@@ -80,17 +81,31 @@ export default function FarmPhotos() {
 
   return (
     <SellShell
-      scene="profile"
-      curve="left"
-      sticker="center"
-      footer={<Button label={from === "review" ? "Save changes" : "Set Bank Details"} variant="black" size="large" fullWidth loading={app === undefined} disabled={pending.length > 0} onPress={next} />}
+      step={{ current: 3, progress: Math.min(1, Math.max(0.15, counted / MIN_FARM_PHOTOS)) }}
+      footer={
+        <Button
+          label={from === "review" ? "Save changes" : "Next: bank account"}
+          iconRight={from === "review" ? undefined : ArrowRight}
+          variant="dark"
+          size="hero"
+          fullWidth
+          loading={app === undefined}
+          disabled={pending.length > 0}
+          onPress={next}
+        />
+      }
     >
-      <SellTitle title="Show us your" accent="Farm" note={`Add at least ${MIN_FARM_PHOTOS} clear photos of your farm, crops or animals. Only Farmkeke staff see them.`} />
+      <SellTitle title="Show us your farm" note={`Add at least ${MIN_FARM_PHOTOS} clear photos of your crops, land or animals. Only Farmkeke staff see them.`} />
 
       <View style={styles.grid}>
-        {photos.map((d) => (
+        {photos.map((d, i) => (
           <View key={d._id} style={[styles.tile, d.status === "rejected" && styles.tileRejected]}>
-            {d.url ? <Image source={{ uri: d.url }} style={styles.image} contentFit="cover" /> : <View style={styles.image} />}
+            {d.url ? <Image source={{ uri: d.url }} style={styles.image} contentFit="cover" transition={200} /> : <View style={styles.image} />}
+            {i === 0 && d.status !== "rejected" ? (
+              <View style={styles.cover}>
+                <Text style={styles.coverText}>Cover</Text>
+              </View>
+            ) : null}
             {d.status === "rejected" ? (
               <View style={styles.rejectedBand}>
                 <Text variant="small" color={colors.white} numberOfLines={2}>
@@ -106,7 +121,7 @@ export default function FarmPhotos() {
               onPress={() => void remove(d._id)}
               style={styles.remove}
             >
-              {removing === d._id ? <ActivityIndicator size="small" color={colors.white} /> : <Close size={14} color={colors.white} />}
+              {removing === d._id ? <ActivityIndicator size="small" color={colors.white} /> : <Close size={14} color={colors.white} strokeWidth={2} />}
             </Pressable>
           </View>
         ))}
@@ -114,31 +129,37 @@ export default function FarmPhotos() {
           <View key={uri} style={styles.tile}>
             <Image source={{ uri }} style={styles.image} contentFit="cover" />
             <View style={styles.uploading}>
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color={colors.lime} />
+              <Text style={styles.uploadingText}>Uploading</Text>
             </View>
           </View>
         ))}
         {room > 0 ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Add photos from your gallery" onPress={() => void add("library")} style={[styles.tile, styles.addTile]}>
-            <ImageAdd size={26} color={colors.forest} />
-            <Text variant="small" color={colors.forest}>
-              Add photos
-            </Text>
-          </Pressable>
+          <>
+            <Pressable accessibilityRole="button" accessibilityLabel="Take a photo" onPress={() => void add("camera")} style={({ pressed }) => [styles.tile, styles.addTile, styles.addStriped, pressed && styles.pressed]}>
+              <View style={styles.addIconDark}>
+                <Camera size={20} color={colors.lime} strokeWidth={1.8} />
+              </View>
+              <Text style={styles.addText}>Take a photo</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Add photos from your gallery" onPress={() => void add("library")} style={({ pressed }) => [styles.tile, styles.addTile, pressed && styles.pressed]}>
+              <View style={styles.addIcon}>
+                <Plus size={20} color={colors.forest} strokeWidth={2} />
+              </View>
+              <Text style={styles.addText}>From gallery</Text>
+            </Pressable>
+          </>
         ) : null}
       </View>
 
-      <Text variant="small" color={counted >= MIN_FARM_PHOTOS ? colors.forest : colors.inkSoft} align="center">
-        {status}
-      </Text>
+      <Text style={[styles.status, counted >= MIN_FARM_PHOTOS && styles.statusDone]}>{status}</Text>
       {rejected.length > 0 ? (
-        <Text variant="small" color={colors.error} align="center">
+        <Text variant="small" color={colors.error}>
           Remove the photos we couldn't accept and add new ones.
         </Text>
       ) : null}
-      {room > 0 ? <Button label="Take a photo" icon={Camera} variant="primary" pill fullWidth onPress={() => void add("camera")} /> : null}
       {error ? (
-        <Text variant="small" color={colors.error} align="center">
+        <Text variant="small" color={colors.error}>
           {error}
         </Text>
       ) : null}
@@ -147,12 +168,22 @@ export default function FarmPhotos() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  tile: { width: "31.5%", aspectRatio: 1, borderRadius: radii.md, overflow: "hidden", backgroundColor: colors.placeholder },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10 },
+  tile: { width: "48.5%", aspectRatio: 1.15, borderRadius: 20, overflow: "hidden", backgroundColor: colors.placeholder },
   tileRejected: { borderWidth: 2, borderColor: colors.error },
   image: { width: "100%", height: "100%", backgroundColor: colors.placeholder },
-  addTile: { alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: colors.white, borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.lime },
-  remove: { position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: 13, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", justifyContent: "center" },
-  uploading: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" },
+  cover: { position: "absolute", left: 8, top: 8, height: 24, paddingHorizontal: 9, borderRadius: 99, backgroundColor: colors.lime, justifyContent: "center" },
+  coverText: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.forest },
+  addTile: { alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: colors.white, borderWidth: 1.5, borderColor: "#C9D6B8" },
+  addStriped: { backgroundColor: "#FAFCF6", borderStyle: "dashed" },
+  addIconDark: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
+  addIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
+  addText: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 17, color: colors.forest },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  remove: { position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: "rgba(11,26,7,0.6)", alignItems: "center", justifyContent: "center" },
+  uploading: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(11,26,7,0.55)", alignItems: "center", justifyContent: "center", gap: 6 },
+  uploadingText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.white },
   rejectedBand: { position: "absolute", left: 0, right: 0, bottom: 0, padding: 6, backgroundColor: "rgba(198,40,40,0.85)" },
+  status: { fontFamily: fonts.medium, fontSize: 12.5, lineHeight: 17, color: colors.inkSoft },
+  statusDone: { color: colors.forest, fontFamily: fonts.semibold },
 });

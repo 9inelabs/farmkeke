@@ -1,7 +1,7 @@
 // M-50 Sign in, including the wrong-details and too-many-tries states.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Lock } from "@/components/icons";
+import { ArrowRight, Lock, Mail } from "@/components/icons";
 import { useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, StatusScreen, Text, TextField } from "@/components/ui";
@@ -12,6 +12,7 @@ import { closeAuth } from "@/features/auth/navigation";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { usePrefs } from "@/store/prefs";
 import { colors, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 export default function SignIn() {
   // /forgot-password lands here with the reset sheet open.
@@ -83,20 +84,18 @@ export default function SignIn() {
 
   return (
     <AuthScreen
-      title="Welcome Back"
-      subtitle="Sign in to see your orders and saved addresses"
+      title="Welcome back"
+      subtitle="Sign in to see your orders and saved addresses."
       tab="sign-in"
-      footer={
-        <>
-          <Button label="Continue" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />
-          <AuthSwitchLink label="No account yet? Create one" onPress={() => router.replace("/create-account")} />
-        </>
-      }
+      footer={<Button label="Sign in" iconRight={ArrowRight} variant="dark" size="hero" fullWidth loading={busy} onPress={() => void submit()} />}
+      bottom={<AuthSwitchLink prompt="No account yet?" action="Create one" onPress={() => router.replace("/create-account")} />}
     >
       {banner !== null && <Notice tone="error">{banner}</Notice>}
       <View style={styles.fields}>
         <TextField
-          label="Email Address"
+          tone="premium"
+          icon={Mail}
+          label="Email address"
           value={identifier}
           onChangeText={(t) => {
             setIdentifier(t);
@@ -114,7 +113,10 @@ export default function SignIn() {
         />
         <TextField
           ref={passwordRef}
+          tone="premium"
+          icon={Lock}
           label="Password"
+          placeholder="Your password"
           password
           value={password}
           onChangeText={(t) => {
@@ -140,7 +142,7 @@ export default function SignIn() {
           onPress={() => setResetOpen(true)}
           style={styles.forgot}
         >
-          Forgot Password?
+          Forgot password?
         </Text>
       </View>
       <ForgotPasswordSheet visible={resetOpen} onClose={() => setResetOpen(false)} initialEmail={identifier} />
@@ -150,5 +152,5 @@ export default function SignIn() {
 
 const styles = StyleSheet.create({
   fields: { gap: spacing.lg },
-  forgot: { paddingVertical: spacing.xxs, marginTop: -spacing.xs, marginRight: 40 },
+  forgot: { paddingVertical: spacing.xxs, marginTop: -spacing.xs, color: colors.forest, fontFamily: fonts.semibold },
 });

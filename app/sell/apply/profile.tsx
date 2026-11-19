@@ -10,7 +10,7 @@ import * as Location from "expo-location";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
-import { Camera, ChevronDown, Pin } from "@/components/icons";
+import { ArrowRight, Camera, IdCard, Pin, Sprout, User } from "@/components/icons";
 import { BottomSheet, Button, SelectField, Text, TextField } from "@/components/ui";
 import { NIGERIAN_STATES } from "@/content/nigeria";
 import { useEditableApplication } from "@/features/farmer/useApplication";
@@ -18,7 +18,7 @@ import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { pickPhotos, preparePhoto, uploadFile } from "@/lib/upload";
 import { whereIs } from "@/lib/whereIs";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 const STATE_OPTIONS = NIGERIAN_STATES.map((s) => ({ value: s, label: s }));
@@ -142,63 +142,81 @@ export default function Profile() {
 
   return (
     <SellShell
-      scene="profile"
-      curve="right"
-      sticker="right"
-      footer={<Button label={from === "review" ? "Save changes" : "Add Farm Photos"} variant="black" size="large" fullWidth loading={busy || app === undefined} disabled={uploading} onPress={() => void submit()} />}
+      step={{ current: 2, progress: 0.5 }}
+      footer={
+        <Button
+          label={from === "review" ? "Save changes" : "Next: farm photos"}
+          iconRight={from === "review" ? undefined : ArrowRight}
+          variant="dark"
+          size="hero"
+          fullWidth
+          loading={busy || app === undefined}
+          disabled={uploading}
+          onPress={() => void submit()}
+        />
+      }
     >
-      <SellTitle title="Let's get to know you!" note="Please fill in all details correctly" />
-
-      <View style={styles.photoWrap}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Set profile picture" onPress={() => void choosePhoto()} style={styles.ring}>
-          {photo ? <Image source={{ uri: photo.uri }} style={styles.photo} contentFit="cover" /> : <View style={styles.photo} />}
-          {uploading ? (
-            <View style={styles.uploading}>
-              <ActivityIndicator color={colors.white} />
-            </View>
-          ) : null}
+      <View style={styles.header}>
+        <Pressable accessibilityRole="button" accessibilityLabel={photo ? "Change profile picture" : "Set profile picture"} onPress={() => void choosePhoto()}>
+          <View style={styles.avatar}>
+            {photo ? <Image source={{ uri: photo.uri }} style={styles.avatarImage} contentFit="cover" /> : <User size={30} color={colors.forestFaint} strokeWidth={1.6} />}
+            {uploading ? (
+              <View style={styles.uploading}>
+                <ActivityIndicator color={colors.white} />
+              </View>
+            ) : null}
+          </View>
           <View style={styles.camera}>
-            <Camera size={14} color={colors.forest} />
+            <Camera size={14} color={colors.lime} strokeWidth={2} />
           </View>
         </Pressable>
-        <Text style={styles.photoLabel}>{photo ? "Change Profile Picture" : "Set Profile Picture"}</Text>
-        {errors.photo ? (
-          <Text variant="small" color={colors.error}>
-            {errors.photo}
-          </Text>
-        ) : null}
+        <View style={styles.flex}>
+          <SellTitle title="Let's get to know you" note={photo ? "Buyers see your name and farm." : "Add a clear photo of yourself. Buyers see your name and farm."} />
+        </View>
+      </View>
+      {errors.photo ? (
+        <Text variant="small" color={colors.error}>
+          {errors.photo}
+        </Text>
+      ) : null}
+
+      <View style={styles.card}>
+        <TextField tone="premium" icon={User} valid={fullName.trim().length > 1} label="Full name" value={fullName} onChangeText={setFullName} placeholder="Okafor John" autoCapitalize="words" autoComplete="name" error={errors.fullName} />
+        <TextField tone="premium" icon={Sprout} valid={farmName.trim().length > 1} label="Farm name" value={farmName} onChangeText={setFarmName} placeholder="Okafor's Farm" autoCapitalize="words" error={errors.farmName} />
+        <TextField
+          tone="premium"
+          icon={IdCard}
+          valid={nin.length === 11}
+          label="NIN (National Identification Number)"
+          value={nin}
+          onChangeText={(v) => setNin(v.replace(/\D/g, "").slice(0, 11))}
+          placeholder="11 digits"
+          keyboardType="number-pad"
+          maxLength={11}
+          helper="Kept private. Only Farmkeke staff see it, to confirm who you are."
+          error={errors.nin}
+        />
       </View>
 
-      <TextField tone="lime" label="Full Name" value={fullName} onChangeText={setFullName} placeholder="Okafor John" autoCapitalize="words" autoComplete="name" error={errors.fullName} />
-      <TextField tone="lime" label="Name of Farm" value={farmName} onChangeText={setFarmName} placeholder="Okafor's Farm" autoCapitalize="words" error={errors.farmName} />
-      <TextField
-        tone="lime"
-        label="NIN (National Identification Number)"
-        value={nin}
-        onChangeText={(v) => setNin(v.replace(/\D/g, "").slice(0, 11))}
-        placeholder="11 digits"
-        keyboardType="number-pad"
-        maxLength={11}
-        helper="Only Farmkeke staff see it, to confirm who you are. It's never shown to buyers."
-        error={errors.nin}
-      />
-
-      <View style={styles.locationBlock}>
-        <Pressable accessibilityRole="button" accessibilityLabel={summary ? `Farm location: ${summary}. Change` : "Select location"} onPress={() => setSheet(true)} style={[styles.select, errors.place ? styles.selectError : null]}>
-          <Text variant="body" color={summary ? colors.ink : colors.inkMuted} numberOfLines={1} style={styles.flex}>
-            {summary ?? "Select location"}
-          </Text>
-          {found ? <Pin size={18} color={colors.forest} variant="solid" /> : <ChevronDown size={18} color={colors.inkMuted} />}
-        </Pressable>
-        <Button label="Search location automatically" icon={Pin} variant="primary" pill fullWidth loading={locating} onPress={() => void findMe()} />
-        <Text variant="small" color={colors.inkMuted} align="center">
-          {found ? "Found from your location. Tap it to add a landmark." : "Only Farmkeke and your riders see the exact location"}
+      <View style={[styles.card, styles.locationCard, errors.place ? styles.cardError : null]}>
+        <View style={styles.locationRow}>
+          <View style={styles.mapTile}>
+            <Pin size={24} color={colors.forest} strokeWidth={1.8} variant={found ? "solid" : "line"} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.locationTitle}>Farm location</Text>
+            <Text style={styles.locationBody} numberOfLines={2}>
+              {summary ?? "Riders collect orders here"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.locationButtons}>
+          <Button label="Use my location" icon={Pin} variant="dark" size="small" loading={locating} onPress={() => void findMe()} style={styles.flex} />
+          <Button label={summary ? "Change" : "Choose it"} variant="outline" size="small" onPress={() => setSheet(true)} style={styles.flex} />
+        </View>
+        <Text variant="small" color={errors.place ? colors.error : colors.inkMuted}>
+          {errors.place ?? (found ? "Found from your location. Tap Change to add a landmark." : "Only Farmkeke and your riders see the exact location.")}
         </Text>
-        {errors.place ? (
-          <Text variant="small" color={colors.error} align="center">
-            {errors.place}
-          </Text>
-        ) : null}
       </View>
       {errors.form ? (
         <Text variant="small" color={colors.error}>
@@ -254,14 +272,18 @@ function LocationSheet({ visible, place, onClose, onDone }: { visible: boolean; 
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  photoWrap: { alignItems: "center", gap: spacing.sm },
-  ring: { width: 112, height: 112, borderRadius: 56, borderWidth: 2, borderColor: colors.lime, padding: 4 },
-  photo: { flex: 1, borderRadius: 52, backgroundColor: colors.placeholder },
-  uploading: { position: "absolute", top: 4, left: 4, right: 4, bottom: 4, borderRadius: 52, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" },
-  camera: { position: "absolute", right: 2, bottom: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.white },
-  photoLabel: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  locationBlock: { gap: spacing.md },
-  select: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 56, borderRadius: radii.md + 2, borderWidth: 1, borderColor: "rgba(169,214,84,0.6)", backgroundColor: colors.white, paddingHorizontal: spacing.lg },
-  selectError: { borderColor: colors.error },
+  header: { flexDirection: "row", alignItems: "center", gap: 16 },
+  avatar: { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 3, borderColor: colors.white, boxShadow: "0px 8px 20px 0px rgba(16, 35, 11, 0.15)" },
+  avatarImage: { width: "100%", height: "100%" },
+  uploading: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" },
+  camera: { position: "absolute", right: -6, bottom: -6, width: 28, height: 28, borderRadius: 10, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: "#F7F9F4" },
+  card: { backgroundColor: colors.white, borderRadius: 18, padding: 16, gap: spacing.lg, boxShadow: "0px 10px 30px 0px rgba(16, 35, 11, 0.08)" },
+  cardError: { borderWidth: 1, borderColor: colors.error },
+  locationCard: { gap: spacing.md },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  mapTile: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
+  locationTitle: { fontFamily: fonts.semibold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
+  locationBody: { fontFamily: fonts.regular, fontSize: 12.5, lineHeight: 17, color: colors.inkSoft, marginTop: 2 },
+  locationButtons: { flexDirection: "row", gap: 8 },
   sheetTitle: { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 22, color: colors.ink, marginBottom: spacing.xs },
 });

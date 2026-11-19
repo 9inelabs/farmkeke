@@ -1,177 +1,142 @@
-// The frame of the farmer sign-up screens (Sell on Farmkeke designs): a lime
-// band with Back or Close, a light sheet with a big curved top corner, the
-// tilted "Sell on farmkeke" sticker on its edge, a title whose last word is
-// grey, a short line under it, the content, and the main button at the foot.
-// Each screen's band shows the photo staff set for it in the Admin Portal
-// (Site photos); without one, it stays lime.
-import { api } from "@convex/_generated/api";
-import type { FarmerScene } from "@convex/lib/sitePhotos";
-import { useQuery } from "convex/react";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
+// The frame of the farmer sign-up screens (premium redesign, Nov 2026): a
+// round Back (or Close) button, "Step X of 5" and the step bar along the
+// top, a big left-aligned headline, the content, and the main button pinned
+// at the foot. "light" is the soft canvas of the form steps; "dark" is the
+// deep green of the PIN, log-in and finish screens.
 import { router } from "expo-router";
-import { Component, useEffect, useState, type ReactNode } from "react";
+import { StatusBar } from "expo-status-bar";
+import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BackIcon, Text, Wordmark } from "@/components/ui";
+import { ChevronLeft, Close } from "@/components/icons";
+import { Stagger } from "@/components/motion/reveal";
+import { ForestBackdrop, Glass, StepBar } from "@/components/premium";
+import { Text } from "@/components/ui";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
-const BAND = 96;
-// A photo gets a taller band so the scene shows
-const PHOTO_BAND = 150;
-const CURVE = 64;
+/** Sign-up has five steps: phone, about you, photos, bank, review. */
+export const SELL_STEPS = 5;
 
-/** The white "Sell on farmkeke" tag, tilted, as on every sign-up screen. */
-export function SellSticker({ tilt = -6 }: { tilt?: number }) {
-  return (
-    <View style={[styles.sticker, { transform: [{ rotate: `${tilt}deg` }] }]} accessibilityLabel="Sell on Farmkeke">
-      <Text style={styles.stickerText}>Sell on</Text>
-      <Wordmark width={58} />
-    </View>
-  );
-}
+type Tone = "light" | "dark";
 
-/** "Input your Phone Number": the last word in grey. */
-export function SellTitle({ title, accent, note }: { title: string; accent?: string; note?: string }) {
+/** The step's headline: a small label above, the title (its `accent` in lime on dark), and a line under it. */
+export function SellTitle({
+  title,
+  accent,
+  note,
+  overline,
+  tone = "light",
+  center = false,
+}: {
+  title: string;
+  accent?: string;
+  note?: string;
+  overline?: string;
+  tone?: Tone;
+  center?: boolean;
+}) {
+  const dark = tone === "dark";
   return (
-    <View style={styles.titleWrap}>
-      <Text style={styles.title} accessibilityRole="header">
+    <View style={[styles.titleWrap, center && styles.center]}>
+      {overline ? <Text style={[styles.overline, dark && { color: colors.lime }]}>{overline}</Text> : null}
+      <Text style={[styles.title, dark && styles.titleDark, center && styles.textCenter]} accessibilityRole="header">
         {title}
-        {accent ? <Text style={[styles.title, styles.accent]}>{` ${accent}`}</Text> : null}
+        {accent ? <Text style={[styles.title, dark ? styles.accentDark : styles.titleLight]}>{` ${accent}`}</Text> : null}
       </Text>
-      {note ? (
-        <Text variant="small" color={colors.inkSoft} align="center" style={styles.note}>
-          {note}
-        </Text>
-      ) : null}
+      {note ? <Text style={[styles.note, dark && styles.noteDark, center && styles.textCenter]}>{note}</Text> : null}
     </View>
   );
 }
 
 type Props = {
   children: ReactNode;
-  /** The main button (and anything under it) */
+  /** The main button (and anything under it). */
   footer?: ReactNode;
   back?: "back" | "close";
   onBack?: () => void;
-  /** Which top corner of the sheet curves (the designs vary) */
-  curve?: "left" | "right" | "both";
-  /** Where the sticker sits along the sheet's edge */
-  sticker?: "left" | "center" | "right" | "none";
-  /** Keep the footer at the bottom of the screen instead of after the content */
+  tone?: Tone;
+  /** Shows "Step X of 5" and the step bar. */
+  step?: { current: number; progress?: number };
+  /** Keep the footer at the bottom of the screen (default) or let it follow the content. */
   pinFooter?: boolean;
-  /** Which screen this is, for its header photo (Admin Portal, Site photos) */
-  scene?: FarmerScene;
+  /** Replaces the content padding, for screens that lay themselves out (the PIN pad). */
+  bare?: boolean;
 };
 
-export function SellShell({ children, footer, back = "back", onBack, curve = "left", sticker = "center", pinFooter = false, scene }: Props) {
-  const [photo, setPhoto] = useState(false);
+export function SellShell({ children, footer, back = "back", onBack, tone = "light", step, pinFooter = true, bare = false }: Props) {
   const insets = useSafeAreaInsets();
+  const dark = tone === "dark";
   const leave = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace("/home")));
-  const stickerPos = sticker === "left" ? { left: "22%" as const } : sticker === "right" ? { right: spacing.screen } : { alignSelf: "center" as const };
+  const BackGlyph = back === "close" ? Close : ChevronLeft;
+
   return (
-    <View style={styles.screen}>
-      <View style={[styles.band, { paddingTop: insets.top + spacing.md, height: insets.top + (photo ? PHOTO_BAND : BAND) + CURVE }]}>
-        {scene ? (
-          <Quiet>
-            <BandPhoto scene={scene} onPhoto={setPhoto} />
-          </Quiet>
+    <View style={[styles.screen, dark && styles.screenDark]}>
+      <StatusBar style={dark ? "light" : "dark"} />
+      {dark ? <ForestBackdrop /> : null}
+      <View style={[styles.top, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.topRow}>
+          <Pressable accessibilityRole="button" accessibilityLabel={back === "close" ? "Close" : "Back"} hitSlop={8} onPress={leave}>
+            {dark ? (
+              <Glass style={styles.round}>
+                <BackGlyph size={20} color={colors.white} strokeWidth={2} />
+              </Glass>
+            ) : (
+              <View style={[styles.round, styles.roundLight]}>
+                <BackGlyph size={20} color={colors.forest} strokeWidth={2} />
+              </View>
+            )}
+          </Pressable>
+          {step ? (
+            <Text style={[styles.stepText, dark && { color: colors.onForest }]}>
+              Step {step.current} of {SELL_STEPS}
+            </Text>
+          ) : null}
+        </View>
+        {step ? (
+          <View style={styles.bar}>
+            <StepBar total={SELL_STEPS} current={step.current} progress={step.progress ?? 0.5} tone={tone} />
+          </View>
         ) : null}
-        <Pressable accessibilityRole="button" accessibilityLabel={back === "close" ? "Close" : "Back"} hitSlop={10} onPress={leave} style={styles.back}>
-          <BackIcon color={photo ? colors.white : colors.ink} />
-          <Text style={[styles.backText, photo ? styles.backOnPhoto : null]}>{back === "close" ? "Close" : "Back"}</Text>
-        </Pressable>
       </View>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View
-          style={[
-            styles.sheet,
-            { marginTop: -CURVE },
-            curve !== "right" && { borderTopLeftRadius: CURVE },
-            curve !== "left" && { borderTopRightRadius: CURVE },
-          ]}
+        <ScrollView
+          contentContainerStyle={[bare ? styles.bare : styles.content, styles.grow]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {sticker !== "none" ? (
-            <View style={[styles.stickerSlot, stickerPos]} pointerEvents="none">
-              <SellSticker tilt={sticker === "right" ? -8 : sticker === "left" ? 6 : -5} />
-            </View>
-          ) : null}
-          <ScrollView contentContainerStyle={[styles.content, pinFooter && styles.grow]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            {children}
-            {footer && !pinFooter ? <View style={styles.footerInline}>{footer}</View> : null}
-          </ScrollView>
-          {footer && pinFooter ? <View style={[styles.footerPinned, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>{footer}</View> : null}
-        </View>
+          {bare ? children : <Stagger>{children}</Stagger>}
+          {footer && !pinFooter ? <View style={styles.footerInline}>{footer}</View> : null}
+        </ScrollView>
+        {footer && pinFooter ? <View style={[styles.footerPinned, { paddingBottom: Math.max(insets.bottom, spacing.lg) + 8 }]}>{footer}</View> : null}
       </KeyboardAvoidingView>
     </View>
   );
 }
 
-/** The scene's photo, cropped to the band, with a fade so Back reads on it. */
-function BandPhoto({ scene, onPhoto }: { scene: FarmerScene; onPhoto: (on: boolean) => void }) {
-  const photos = useQuery(api.sitePhotos.farmerSignup);
-  const photo = photos?.[scene] ?? null;
-  useEffect(() => onPhoto(photo !== null), [photo, onPhoto]);
-  if (photo === null) return null;
-  return (
-    <>
-      <Image
-        source={{ uri: photo.url }}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        // The point staff chose by dragging in the Admin Portal (older backends send only focus)
-        contentPosition={
-          typeof photo.x === "number" && typeof photo.y === "number"
-            ? { left: `${photo.x}%`, top: `${photo.y}%` }
-            : photo.focus
-        }
-        transition={250}
-        accessible={false}
-      />
-      {/* Darker at the top, so Back reads on any photo */}
-      <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.08)", "rgba(0,0,0,0)"]} locations={[0, 0.45, 1]} style={StyleSheet.absoluteFill} />
-    </>
-  );
-}
-
-/** If the photos can't be loaded (an older backend), the band just stays lime. */
-class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
-
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.lime },
+  screen: { flex: 1, backgroundColor: "#F7F9F4" },
+  screenDark: { backgroundColor: colors.forestDeep },
   flex: { flex: 1 },
-  band: { backgroundColor: colors.lime, paddingHorizontal: spacing.screen, overflow: "hidden" },
-  back: { flexDirection: "row", alignItems: "center", gap: 2, alignSelf: "flex-start", marginLeft: -4 },
-  backText: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 19, color: colors.ink },
-  backOnPhoto: { color: colors.white, textShadowColor: "rgba(0,0,0,0.35)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
-  sheet: { flex: 1, backgroundColor: colors.canvas },
-  stickerSlot: { position: "absolute", top: -12, zIndex: 2 },
-  sticker: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: colors.white,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.12)",
-  },
-  stickerText: { fontFamily: fonts.displayBold, fontSize: 10, lineHeight: 14, color: colors.ink },
-  content: { paddingHorizontal: spacing.screen + 4, paddingTop: spacing.xxl + spacing.sm, paddingBottom: spacing.xl, gap: spacing.lg },
+  top: { paddingHorizontal: spacing.screen },
+  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 48 },
+  round: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  roundLight: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line },
+  stepText: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
+  bar: { marginTop: 12 },
+  content: { paddingHorizontal: spacing.screen, paddingTop: 26, paddingBottom: spacing.xl, gap: spacing.lg },
+  bare: { paddingHorizontal: spacing.screen, paddingTop: 16, paddingBottom: spacing.lg },
   grow: { flexGrow: 1 },
   footerInline: { marginTop: spacing.md, gap: spacing.sm },
-  footerPinned: { paddingHorizontal: spacing.screen + 4, paddingTop: spacing.sm, gap: spacing.sm },
-  titleWrap: { alignItems: "center", gap: 4, marginBottom: spacing.xs },
-  title: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.ink, textAlign: "center" },
-  accent: { color: "#5F5F5F" },
-  note: { maxWidth: 300 },
+  footerPinned: { paddingHorizontal: spacing.screen, paddingTop: spacing.sm, gap: spacing.sm },
+  titleWrap: { gap: 8, marginBottom: 4 },
+  center: { alignItems: "center" },
+  textCenter: { textAlign: "center" },
+  overline: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, letterSpacing: 0.9, textTransform: "uppercase", color: colors.limeInk },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 27, lineHeight: 33, letterSpacing: -0.9, color: colors.forest },
+  titleLight: { color: colors.forest },
+  titleDark: { color: colors.white },
+  accentDark: { color: colors.lime },
+  note: { fontFamily: fonts.regular, fontSize: 14.5, lineHeight: 21, color: colors.inkSoft },
+  noteDark: { color: colors.onForest },
 });

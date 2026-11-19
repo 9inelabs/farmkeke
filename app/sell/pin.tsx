@@ -1,19 +1,21 @@
-// Farmer sign-up, step 3: choose a 4-digit PIN (then confirm it). Saving it
+// Farmer sign-up, step 3: choose a 4-digit PIN (then confirm it) on
+// Farmkeke's own keypad, on deep green. Saving it
 // signs the farmer in, with the code from step 2, and moves on to the
 // application. Logging in later is the phone number and this PIN.
 import { router, useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Lock } from "@/components/icons";
-import { Button, Text } from "@/components/ui";
+import { PinPad } from "@/components/premium";
+import { Text } from "@/components/ui";
 import { useAfterFarmerSignIn } from "@/features/sell/afterSignIn";
-import { CodeBoxes, type CodeBoxesHandle } from "@/features/sell/CodeBoxes";
 import { pendingCode } from "@/features/sell/pendingCode";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { phoneAuthMessage, usePhoneAuth } from "@/features/sell/usePhoneAuth";
 import { errorCode } from "@/lib/errors";
 import { showToast } from "@/store/toast";
-import { colors, spacing } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 export default function PinStep() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
@@ -23,7 +25,6 @@ export default function PinStep() {
   const [pin, setPinValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const boxes = useRef<CodeBoxesHandle>(null);
   const confirming = first !== null;
 
   const next = async (value = pin) => {
@@ -32,7 +33,6 @@ export default function PinStep() {
     if (!confirming) {
       setFirst(value);
       setPinValue("");
-      setTimeout(() => boxes.current?.focus(), 50);
       return;
     }
     if (value !== first) {
@@ -73,33 +73,49 @@ export default function PinStep() {
 
   return (
     <SellShell
-      scene="pin"
-      curve="left"
-      sticker="right"
+      tone="dark"
+      bare
+      step={mode === "reset" ? undefined : { current: 1, progress: confirming ? 1 : 0.85 }}
       onBack={confirming ? () => { setFirst(null); setPinValue(""); } : undefined}
-      footer={<Button label={confirming ? "Save PIN" : "Continue"} variant="black" size="large" fullWidth loading={busy} disabled={pin.length !== 4} onPress={() => void next()} />}
     >
-      <SellTitle
-        title={confirming ? "Confirm your" : mode === "reset" ? "Choose a new" : "Create your"}
-        accent="PIN"
-        note={confirming ? "Enter the same 4 digits again" : "You'll log in with your phone number and this PIN"}
-      />
-      <CodeBoxes ref={boxes} key={confirming ? "confirm" : "first"} length={4} secure value={pin} onChange={(v) => { setPinValue(v); setError(null); }} onFilled={(v) => void next(v)} error={error !== null} autoFocus label={confirming ? "Confirm PIN" : "PIN"} />
-      {error ? (
-        <Text variant="small" color={colors.error} align="center" accessibilityLiveRegion="polite">
-          {error}
-        </Text>
-      ) : null}
-      <View style={styles.note}>
-        <Lock size={14} color={colors.inkMuted} />
-        <Text variant="small" color={colors.inkMuted}>
-          Avoid easy PINs like 1234. Never share it, even with Farmkeke.
-        </Text>
+      <View style={styles.head}>
+        <View style={styles.lock}>
+          <Lock size={28} color={colors.forest} strokeWidth={1.8} />
+        </View>
+        <SellTitle
+          tone="dark"
+          center
+          title={confirming ? "Confirm your PIN" : mode === "reset" ? "Choose a new PIN" : "Create your PIN"}
+          note={confirming ? "Enter the same 4 digits again." : "4 digits. You'll log in with your phone number and this PIN."}
+        />
+        {error ? (
+          <Text style={styles.error} accessibilityLiveRegion="polite">
+            {error}
+          </Text>
+        ) : null}
       </View>
+      <View style={styles.flex} />
+      <PinPad
+        key={confirming ? "confirm" : "first"}
+        value={pin}
+        onChange={(v) => {
+          setPinValue(v);
+          setError(null);
+        }}
+        onFilled={(v) => void next(v)}
+        error={error !== null}
+        disabled={busy}
+        label={confirming ? "Confirm PIN" : "PIN"}
+      />
+      <Text style={styles.tip}>{busy ? "Saving your PIN…" : "Avoid easy PINs like 1234. Never share it, even with Farmkeke."}</Text>
     </SellShell>
   );
 }
 
 const styles = StyleSheet.create({
-  note: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs },
+  flex: { flex: 1, minHeight: 24 },
+  head: { alignItems: "center", gap: 18, paddingTop: 22 },
+  lock: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center", boxShadow: "0px 14px 34px 0px rgba(169, 214, 84, 0.35)" },
+  error: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 18, color: "#FF9C9C", textAlign: "center" },
+  tip: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.onForest, textAlign: "center", marginTop: 22, opacity: 0.85 },
 });

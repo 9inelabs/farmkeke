@@ -1,7 +1,7 @@
 // M-51 Create account, including the already-registered state.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { router } from "expo-router";
-import { User } from "@/components/icons";
+import { Lock, Mail, User } from "@/components/icons";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View, type TextInput } from "react-native";
 import { Button, Notice, PasswordRules, Text, TextField } from "@/components/ui";
@@ -11,6 +11,7 @@ import { errorCode, errorMessage } from "@/lib/errors";
 import { isEmail, passwordRules } from "@/lib/session";
 import { usePrefs } from "@/store/prefs";
 import { colors, spacing } from "@/theme/tokens";
+import { fonts } from "@/theme/typography";
 
 export default function CreateAccount() {
   const { signIn } = useAuthActions();
@@ -57,20 +58,35 @@ export default function CreateAccount() {
 
   return (
     <AuthScreen
-      title="Setup Your Account"
-      subtitle="Save addresses, see every order in one place, and check out faster."
+      title="Set up your account"
+      chips={["Saved addresses", "Every order in one place"]}
       tab="create-account"
+      photo={require("../../assets/photos/fruits.jpg")}
       footer={
         <>
-          <Button label="Continue" variant="black" size="large" fullWidth loading={busy} onPress={() => void submit()} />
-          <AuthSwitchLink label="Already have an account? Sign In" onPress={() => router.replace("/sign-in")} />
+          <Button label="Create account" variant="dark" size="hero" fullWidth loading={busy} onPress={() => void submit()} />
+          <Text variant="small" align="center">
+            By continuing you agree to the{" "}
+            <Text variant="small" color={colors.forest} style={styles.legal} onPress={() => router.push("/legal/terms")}>
+              Terms
+            </Text>{" "}
+            and{" "}
+            <Text variant="small" color={colors.forest} style={styles.legal} onPress={() => router.push("/legal/privacy")}>
+              Privacy Policy
+            </Text>
+            .
+          </Text>
         </>
       }
+      bottom={<AuthSwitchLink prompt="Already have an account?" action="Sign in" onPress={() => router.replace("/sign-in")} />}
     >
       {banner !== null && <Notice tone="error">{banner}</Notice>}
       <View style={styles.fields}>
         <TextField
-          label="Full Name"
+          tone="premium"
+          icon={User}
+          valid={name.trim().length > 1}
+          label="Full name"
           placeholder="John Okafor"
           value={name}
           onChangeText={(t) => {
@@ -86,7 +102,10 @@ export default function CreateAccount() {
         />
         <TextField
           ref={emailRef}
-          label="Email Address"
+          tone="premium"
+          icon={Mail}
+          valid={isEmail(email) && !emailTaken}
+          label="Email address"
           placeholder="you@example.com"
           value={email}
           onChangeText={(t) => {
@@ -122,6 +141,8 @@ export default function CreateAccount() {
         <View style={styles.passwordGroup}>
           <TextField
             ref={passwordRef}
+            tone="premium"
+            icon={Lock}
             label="Password"
             password
             value={password}
@@ -135,7 +156,7 @@ export default function CreateAccount() {
             returnKeyType="go"
             onSubmitEditing={() => void submit()}
           />
-          <PasswordRules password={password} />
+          <PasswordRules password={password} meter />
         </View>
       </View>
     </AuthScreen>
@@ -154,4 +175,5 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   takenText: { flex: 1 },
+  legal: { fontFamily: fonts.semibold },
 });

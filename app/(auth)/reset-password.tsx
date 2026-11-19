@@ -1,6 +1,7 @@
 // M-55 Create new password. Opened from the reset email:
 //   farmkeke://reset-password?email=…&code=…
 import { useAuthActions } from "@convex-dev/auth/react";
+import { Lock } from "@/components/icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
@@ -51,12 +52,14 @@ export default function ResetPassword() {
     <AuthScreen
       title="Make a new password"
       subtitle={email ? `For ${email}` : undefined}
-      footer={<Button label="Save password" fullWidth loading={busy} onPress={() => void submit()} />}
+      footer={<Button label="Save password" variant="dark" size="hero" fullWidth loading={busy} onPress={() => void submit()} />}
     >
       {banner !== null && <Notice tone="error">{banner}</Notice>}
       <View style={styles.fields}>
         <View style={styles.group}>
           <TextField
+            tone="premium"
+            icon={Lock}
             label="New password"
             password
             value={password}
@@ -70,10 +73,12 @@ export default function ResetPassword() {
             returnKeyType="next"
             onSubmitEditing={() => againRef.current?.focus()}
           />
-          <PasswordRules password={password} />
+          <PasswordRules password={password} meter />
         </View>
         <TextField
           ref={againRef}
+          tone="premium"
+          icon={Lock}
           label="Type it again"
           password
           value={again}

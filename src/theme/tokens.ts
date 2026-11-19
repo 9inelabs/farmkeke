@@ -3,6 +3,12 @@
 
 export const colors = {
   forest: "#1E3B16",
+  // The darker greens of the premium surfaces (welcome, sign-in, farmer sign-up),
+  // matching the website's dark sections
+  forestDeep: "#0B1A07",
+  forestMid: "#152E10",
+  // Soft text on those dark greens
+  onForest: "#C9D8BE",
   lime: "#A9D654",
   tint: "#F2F8E6",
   // Lime deep enough to read as small text on white (links, "See all")

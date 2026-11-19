@@ -15,3 +15,13 @@ export function tapFeedback() {
 export function successFeedback() {
   if (on) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
 }
+
+/** A wrong PIN or code. */
+export function errorFeedback() {
+  if (on) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => undefined);
+}
+
+/** A key on Farmkeke's own keypad (PIN). */
+export function keyFeedback() {
+  if (on) void Haptics.selectionAsync().catch(() => undefined);
+}

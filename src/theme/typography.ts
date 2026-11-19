@@ -5,6 +5,7 @@ import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { Montserrat_600SemiBold } from "@expo-google-fonts/montserrat/600SemiBold";
 import { Montserrat_700Bold } from "@expo-google-fonts/montserrat/700Bold";
+import { Montserrat_800ExtraBold } from "@expo-google-fonts/montserrat/800ExtraBold";
 import type { TextStyle } from "react-native";
 import { colors } from "./tokens";
 
@@ -16,6 +17,7 @@ export const fontAssets = {
   Inter_700Bold,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
+  Montserrat_800ExtraBold,
 };
 
 export const fonts = {
@@ -25,6 +27,8 @@ export const fonts = {
   bold: "Inter_700Bold",
   displaySemibold: "Montserrat_600SemiBold",
   displayBold: "Montserrat_700Bold",
+  // Big headlines on the welcome, sign-in and farmer sign-up screens
+  displayHeavy: "Montserrat_800ExtraBold",
 } as const;
 
 // Montserrat is for large display headings (onboarding, success and empty

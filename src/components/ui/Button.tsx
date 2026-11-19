@@ -4,13 +4,14 @@ import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
 import { PressableScale } from "./PressableScale";
 import { Text } from "./Text";
 
-type Variant = "primary" | "dark" | "black" | "secondary" | "outline" | "ghost" | "danger";
+type Variant = "primary" | "dark" | "black" | "secondary" | "outline" | "ghost" | "danger" | "glass";
 
 type Props = {
   label: string;
   onPress?: () => void;
   variant?: Variant;
-  size?: "default" | "large" | "small";
+  /** "hero": the tall, softly lit buttons of the welcome, sign-in and farmer sign-up screens. */
+  size?: "default" | "large" | "small" | "hero";
   icon?: IconComponent;
   /** Icon after the label ("Checkout →"). */
   iconRight?: IconComponent;
@@ -33,6 +34,8 @@ const palette: Record<Variant, { bg: string; fg: string; border?: string }> = {
   outline: { bg: colors.white, fg: colors.forest, border: colors.forest },
   ghost: { bg: "transparent", fg: colors.forest },
   danger: { bg: colors.errorSoft, fg: colors.error },
+  // White on a frosted fill, for the dark green screens
+  glass: { bg: "rgba(255,255,255,0.08)", fg: colors.white, border: "rgba(255,255,255,0.22)" },
 };
 
 export function Button({
@@ -50,8 +53,8 @@ export function Button({
   accessibilityHint,
 }: Props) {
   const { bg, fg, border } = palette[variant];
-  const height =
-    size === "large" ? sizes.buttonHeightLarge : size === "small" ? sizes.chipHeight : sizes.buttonHeight;
+  const hero = size === "hero";
+  const height = hero ? 54 : size === "large" ? sizes.buttonHeightLarge : size === "small" ? sizes.chipHeight : sizes.buttonHeight;
   const inactive = disabled || loading;
 
   return (
@@ -70,8 +73,9 @@ export function Button({
           borderRadius: size === "small" || pill ? radii.pill : radii.control,
           paddingHorizontal: size === "small" ? spacing.lg : spacing.xxl,
         },
-        border !== undefined && { borderColor: border, borderWidth: variant === "outline" ? 1 : borders.hairline },
+        border !== undefined && { borderColor: border, borderWidth: variant === "outline" || variant === "glass" ? 1 : borders.hairline },
         fullWidth && styles.fullWidth,
+        hero && !disabled && (variant === "primary" ? styles.glowLime : variant === "dark" ? styles.glowForest : null),
         disabled && !loading && styles.disabled,
         style,
       ]}
@@ -81,7 +85,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {Icon !== undefined && <Icon size={size === "small" ? 16 : 20} color={fg} />}
-          <Text variant="button" color={fg} numberOfLines={1}>
+          <Text variant="button" color={fg} numberOfLines={1} style={hero ? styles.heroLabel : undefined}>
             {label}
           </Text>
           {IconRight !== undefined && <IconRight size={size === "small" ? 16 : 20} color={fg} />}
@@ -96,4 +100,7 @@ const styles = StyleSheet.create({
   fullWidth: { alignSelf: "stretch" },
   content: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   disabled: { opacity: 0.45 },
+  heroLabel: { fontSize: 15.5, lineHeight: 20 },
+  glowLime: { boxShadow: "0px 14px 30px 0px rgba(169, 214, 84, 0.35)" },
+  glowForest: { boxShadow: "0px 14px 28px 0px rgba(30, 59, 22, 0.28)" },
 });
