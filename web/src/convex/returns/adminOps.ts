@@ -88,7 +88,17 @@ export type BoardRow = {
   fulfilment: "delivery" | "pickup";
   farm: { _id: Id<"farms">; name: string; phone: string; collectionAddress: string; lga: string } | null;
   dropOff:
-    | { kind: "address"; area: string; lga: string; street: string; landmark: string; note: string | null }
+    | {
+        kind: "address";
+        area: string;
+        lga: string;
+        street: string;
+        landmark: string;
+        note: string | null;
+        /** The shopper's drop-off pin (M-35); absent on older backends */
+        latitude?: number | null;
+        longitude?: number | null;
+      }
     | { kind: "pickup_point"; name: string; address: string }
     | { kind: "farm"; name: string; address: string };
   consumer: { name: string; phone: string };

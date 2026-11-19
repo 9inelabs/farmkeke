@@ -1,5 +1,5 @@
 // M-85 Add or edit address (/settings/addresses/new or /settings/addresses/<id>).
-// The exact map pin (M-35) is added with maps at checkout in Phase 6.
+// The drop-off pin (M-35) is set on a map, as at checkout.
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui";
 import { ADDRESS_ICONS, ADDRESS_LABELS, type AddressLabel } from "@/features/account/addressLabels";
 import { useAccount } from "@/features/account/useAccount";
+import { PinPicker } from "@/features/maps/PinPicker";
+import type { Coords } from "@/features/maps/pin";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { usePrefs } from "@/store/prefs";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -45,6 +47,7 @@ export default function AddressForm() {
   const [landmark, setLandmark] = useState("");
   const [area, setArea] = useState<Area | null>(null);
   const [isDefault, setIsDefault] = useState(false);
+  const [pin, setPin] = useState<Coords | undefined>(undefined);
   const [errors, setErrors] = useState<{ street?: string; landmark?: string; area?: string }>({});
   const [banner, setBanner] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,6 +65,7 @@ export default function AddressForm() {
       setStreet(existing.street);
       setLandmark(existing.landmark);
       setIsDefault(existing.isDefault);
+      if (existing.latitude !== undefined && existing.longitude !== undefined) setPin({ latitude: existing.latitude, longitude: existing.longitude });
       if (existing.area) setArea(existing.area);
     } else if (isNew && browsingArea) {
       setArea({
@@ -85,7 +89,7 @@ export default function AddressForm() {
     if (Object.keys(problems).length > 0 || area === null) return;
     setBusy(true);
     try {
-      const fields = { label, street, landmark, serviceAreaId: area._id, isDefault };
+      const fields = { label, street, landmark, serviceAreaId: area._id, isDefault, ...(pin ?? {}) };
       if (isNew) await create(fields);
       else await update({ addressId: id as Id<"addresses">, ...fields });
       router.back();
@@ -181,6 +185,7 @@ export default function AddressForm() {
               </Text>
             )}
           </View>
+          <PinPicker value={pin} onChange={setPin} />
           <Checkbox label="Make this my default address" checked={isDefault} onChange={setIsDefault} />
           {!isNew && (
             <Button label="Delete address" icon={Trash} variant="ghost" onPress={() => setConfirmDelete(true)} />

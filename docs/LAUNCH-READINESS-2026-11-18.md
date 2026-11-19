@@ -71,7 +71,12 @@ Replaces `LAUNCH-READINESS-2026-10-25.md`. Since then, payments have moved to th
 
 ## 4. Store submission
 
-1. **App icon.** `assets/icon.png` is the full wordmark on white, unreadable at home-screen size. It needs a square mark (e.g. an "fk" monogram), and the Android adaptive icon needs the same.
+1. **App icon.** Done 19 Nov from the owner's draft:
+   - the app icon;
+   - the Android adaptive and themed icons;
+   - the splash;
+   - a status-bar notification icon;
+   - a 512px Play icon in `assets/store/`.
 2. **Listings:** screenshots (iPhone 6.9" and 6.5", Android phone), descriptions and keywords, the support URL and the privacy URL.
 3. **Privacy forms:** Apple App Privacy and Google Data safety. The app collects name, phone, email, address, precise location, photos, the push token and purchase history. It shares data with Paystack and Termii.
 4. **Reviewer accounts on production:** a shopper (email and password) and a farmer (phone and PIN).
@@ -82,12 +87,19 @@ Replaces `LAUNCH-READINESS-2026-10-25.md`. Since then, payments have moved to th
 | Item | Status |
 | --- | --- |
 | About page names | Four placeholders: "[Founder name]" and three "[Name]" |
-| Map pins for shoppers | Planned for the first store release; needs a native build and a Google Maps key |
+| Map pins for shoppers | Done 19 Nov in checkout and saved addresses. iPhone uses Apple Maps. Android shows the map once the EAS environment variable `GOOGLE_MAPS_API_KEY` is set, and uses "Use my location" until then. Staff see the pin in Dispatch |
 | App links (email and text links open the app) | Not done: `.well-known` files, `associatedDomains`, `intentFilters` and a native build |
 | Crash reporting | None in the app or on the website (e.g. Sentry free tier) |
-| Forgiving a farm's debt | Works; the farm isn't told and no ledger row is written |
+| Forgiving a farm's debt | Done 19 Nov: the farm is told in the app and by push. The audit log keeps the record, because ledger rows belong to orders |
 | Old payout data model | Old tables and fields (payouts, held money) can go later with a migration |
 | Staffing pay and budget | Open on the staffing board |
+
+## 19 Nov update
+
+- Expo packages are on the SDK 57 patch versions (expo-doctor: 21/21).
+- The non-breaking `npm audit` fixes are applied, the critical one included. The remaining advisories need Expo's next major version.
+- The app bundles for Android, iOS and web, and 104 backend tests pass.
+- Run the tests from `C:\` in PowerShell, not from a lower-case `c:\` folder. Otherwise every file fails with "Vitest failed to find the runner".
 
 ## 6. Done since 25 Oct
 

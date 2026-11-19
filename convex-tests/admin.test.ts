@@ -659,6 +659,11 @@ test("money: the Paystack split by payment, farms that owe for refunds or can't 
   const founder = as(t, s.founder);
   await expect(founder.mutation(api.admin.money.forgiveDebt, { farmId: ids.ada, amountKobo: 200000, reason: "x" })).rejects.toThrow(/INVALID_AMOUNT/);
   expect(await founder.mutation(api.admin.money.forgiveDebt, { farmId: ids.ada, amountKobo: 20000, reason: "Goodwill" })).toEqual({ owedKobo: 100000 });
+  // The farm hears about it (in the app and by push, never by text)
+  const told = await t.run(async (ctx) => (await ctx.db.query("notifications").collect()).filter((n) => n.kind === "farm_debt_forgiven"));
+  expect(told).toHaveLength(1);
+  expect(told[0]).toMatchObject({ side: "farm", title: "Farmkeke cleared ₦200 you owed" });
+  expect(told[0].smsTo).toBeUndefined();
   await founder.mutation(api.admin.money.retryPaystack, { farmId: ids.okafor, reason: "Bank fixed" });
   const audit = await t.run(async (ctx) => (await ctx.db.query("auditLog").collect()).map((a) => a.action));
   expect(audit).toEqual(expect.arrayContaining(["farm.forgiveDebt", "farm.paystackRetry"]));

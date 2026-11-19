@@ -11,6 +11,7 @@ import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
 import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
+import { naira, notify } from "../lib/notify";
 import { paymentsLive } from "../lib/paystack";
 import { DAY } from "../lib/settings";
 
@@ -208,6 +209,19 @@ export const forgiveDebt = mutation({
       reason,
       details: { name: farm.name, amountKobo: args.amountKobo, owedBefore: owed, owedAfter: owed - args.amountKobo },
     });
-    return { owedKobo: owed - args.amountKobo };
+    // Tell the farm (in the app and by push; never texted)
+    const left = owed - args.amountKobo;
+    await notify(ctx, {
+      userId: farm.userId,
+      side: "farm",
+      kind: "farm_debt_forgiven",
+      title: `Farmkeke cleared ${naira(args.amountKobo)} you owed`,
+      body:
+        left > 0
+          ? `That amount won't come off your next orders. ${naira(left)} still comes off your share of your next orders.`
+          : "Nothing more will come off your share of your next orders.",
+      href: "/earnings",
+    });
+    return { owedKobo: left };
   },
 });
