@@ -71,8 +71,9 @@ export function ListGroup({ title, children, tone = "grey", badge }: { title?: s
       <View style={[styles.group, tone === "white" && styles.groupWhite]}>
         {rows.map((row, i) => (
           // A crisp line between rows, starting after the icon
-          <View key={i} style={i > 0 && styles.divider}>
+          <View key={i}>
             {row}
+            {i > 0 ? <View pointerEvents="none" style={styles.divider} /> : null}
           </View>
         ))}
       </View>
@@ -84,7 +85,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md + 2, minHeight: 54, paddingVertical: spacing.sm },
   icon: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
   iconDanger: { backgroundColor: colors.errorSoft },
-  divider: { borderTopWidth: borders.hairline, borderTopColor: "#F0F1EE", marginLeft: spacing.md + 2 + 34 + spacing.md },
+  // Drawn over the row's top edge, so only the line is inset, not the row
+  divider: { position: "absolute", top: 0, right: 0, left: spacing.md + 2 + 34 + spacing.md, height: borders.hairline, backgroundColor: "#F0F1EE" },
   pressed: { backgroundColor: "rgba(0,0,0,0.035)" },
   copy: { flex: 1, gap: 1 },
   title: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 19 },
