@@ -47,6 +47,8 @@ type Env = {
   readonly TERMII_BASE_URL: string | undefined;
   readonly TERMII_CHANNEL: string | undefined;
   readonly TERMII_SENDER_ID: string | undefined;
+  readonly TERMII_WEBHOOK_KEY: string | undefined;
+  readonly TERMII_WEBHOOK_SECRET: string | undefined;
   readonly WEBSITE_URL: string | undefined;
 };
 

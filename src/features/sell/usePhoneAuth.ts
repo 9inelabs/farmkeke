@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
   INVALID_PHONE: "Enter a Nigerian mobile number, like 0803 123 4567.",
   SMS_UNAVAILABLE: "We can't send texts right now. Please try again later.",
   SMS_FAILED: "The text didn't go through. Check the number and try again.",
+  CALL_FAILED: "We couldn't call that number. Check it and try again, or ask for a text.",
   RATE_LIMITED: "Too many codes for this number. Wait an hour and try again.",
   CODE_EXPIRED: "That code has expired. Ask for a new one.",
   TOO_MANY_ATTEMPTS: "Too many wrong tries. Wait a little, then try again.",
@@ -80,7 +81,8 @@ export function usePhoneAuth() {
   );
 
   return {
-    send: useCallback((phone: string) => sendCode({ phone }), [sendCode]),
+    /** Texts a code, or with "voice" calls the phone and reads a new code out. */
+    send: useCallback((phone: string, by: "sms" | "voice" = "sms") => sendCode(by === "voice" ? { phone, by } : { phone }), [sendCode]),
     /** Is this the code? Doesn't sign in; the PIN step does. */
     check: useCallback((phone: string, code: string) => checkCode({ phone, code }), [checkCode]),
     /** Signs in with the checked code and sets the PIN. */

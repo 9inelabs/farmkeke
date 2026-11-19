@@ -88,9 +88,12 @@ export const logSms = internalMutation({
     provider: v.optional(v.string()),
     providerReference: v.optional(v.string()),
     error: v.optional(v.string()),
+    kind: v.optional(v.union(v.literal("code"), v.literal("notification"), v.literal("test"))),
+    channel: v.optional(v.union(v.literal("sms"), v.literal("voice"))),
   },
   handler: async (ctx, args) => {
-    await ctx.db.insert("smsLog", args);
+    // Sent through Termii: waiting for its delivery report (convex/texts.ts)
+    await ctx.db.insert("smsLog", { channel: "sms", ...args, ...(args.status === "sent" ? { delivery: "pending" as const } : {}) });
   },
 });
 

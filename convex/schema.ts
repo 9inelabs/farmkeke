@@ -1136,7 +1136,21 @@ export default defineSchema({
     provider: v.optional(v.string()),
     providerReference: v.optional(v.string()),
     error: v.optional(v.string()),
-  }).index("by_userId", ["userId"]),
+    // What it was: a sign-up code (its body never holds the code), an order or
+    // account notification, or a staff test
+    kind: v.optional(v.union(v.literal("code"), v.literal("notification"), v.literal("test"))),
+    // A text, or a voice call reading the code out
+    channel: v.optional(v.union(v.literal("sms"), v.literal("voice"))),
+    // From Termii's delivery reports: "pending" until a report says otherwise
+    delivery: v.optional(v.union(v.literal("pending"), v.literal("delivered"), v.literal("failed"))),
+    // Termii's own words for the latest report, e.g. "DND Active on Phone Number"
+    deliveryStatus: v.optional(v.string()),
+    deliveryAt: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_providerReference", ["providerReference"])
+    .index("by_to", ["to"])
+    .index("by_delivery", ["delivery"]),
 
   // ---------------------------------------------------------------------------
   // Disputes, chat, reviews, favourites and support (functions in Phase 3b)

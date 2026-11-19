@@ -3,7 +3,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Clock, Messages } from "@/components/icons";
+import { Call, Clock, Messages } from "@/components/icons";
 import { Button, Text } from "@/components/ui";
 import { CodeBoxes } from "@/features/sell/CodeBoxes";
 import { pendingCode } from "@/features/sell/pendingCode";
@@ -45,14 +45,21 @@ export default function CodeStep() {
     }
   };
 
-  const resend = async () => {
+  const [calling, setCalling] = useState(false);
+  const [called, setCalled] = useState(false);
+  const resend = async (by: "sms" | "voice" = "sms") => {
     setError(null);
+    if (by === "voice") setCalling(true);
     try {
-      await send(phone);
+      await send(phone, by);
       setWait(RESEND_AFTER);
-      showToast({ message: "New code sent" });
+      setCode("");
+      setCalled(by === "voice");
+      showToast({ message: by === "voice" ? "Calling you now. Answer to hear your code." : "New code sent" });
     } catch (e) {
       setError(phoneAuthMessage(e));
+    } finally {
+      setCalling(false);
     }
   };
 
@@ -64,7 +71,7 @@ export default function CodeStep() {
       <View style={styles.badge}>
         <Messages size={28} color={colors.lime} strokeWidth={1.8} />
       </View>
-      <SellTitle title="Enter the code" note={`Sent by text to ${maskedPhone(phone)}.`} />
+      <SellTitle title="Enter the code" note={called ? `We're calling ${maskedPhone(phone)} to read it out.` : `Sent by text to ${maskedPhone(phone)}.`} />
       <CodeBoxes length={6} value={code} onChange={(v) => { setCode(v); setError(null); }} onFilled={(v) => void submit(v)} error={error !== null} autoFocus label="Verification code" />
       <View style={styles.resend}>
         <Text style={styles.change} accessibilityRole="link" onPress={() => router.back()}>
@@ -90,6 +97,20 @@ export default function CodeStep() {
           )}
         </View>
       </View>
+      {wait <= 0 ? (
+        <View style={styles.callCard}>
+          <View style={styles.callIcon}>
+            <Call size={20} color={colors.forest} strokeWidth={1.8} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.callTitle}>Didn't get the text?</Text>
+            <Text variant="small" color={colors.inkSoft}>
+              We'll call your phone and read the code out. It replaces the texted code.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+      {wait <= 0 ? <Button label="Call me with the code" icon={Call} variant="outline" size="hero" fullWidth loading={calling} onPress={() => void resend("voice")} /> : null}
     </SellShell>
   );
 }
@@ -101,4 +122,8 @@ const styles = StyleSheet.create({
   change: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 18, color: colors.forest },
   bold: { fontFamily: fonts.semibold },
   link: { fontFamily: fonts.semibold, textDecorationLine: "underline" },
+  flex: { flex: 1, gap: 2 },
+  callCard: { flexDirection: "row", gap: 12, padding: 14, borderRadius: 16, backgroundColor: colors.tint, marginTop: spacing.sm },
+  callIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
+  callTitle: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 19, color: colors.forest },
 });

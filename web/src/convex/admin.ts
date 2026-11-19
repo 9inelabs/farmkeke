@@ -191,6 +191,10 @@ export const admin = {
     reply: makeFunctionReference<"mutation", { "body": string; "photoIds": Array<Id<"_storage">>; "ticketId": Id<"supportTickets"> }, any>("admin/support:reply"),
     resolve: makeFunctionReference<"mutation", { "reason": string; "ticketId": Id<"supportTickets"> }, any>("admin/support:resolve"),
   },
+  texts: {
+    list: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "delivery"?: "pending" | "delivered" | "failed" }, any>("admin/texts:list"),
+    summary: makeFunctionReference<"query", { "since": number }, any>("admin/texts:summary"),
+  },
   uploads: {
     generateUploadUrl: makeFunctionReference<"mutation", Record<string, never>, any>("admin/uploads:generateUploadUrl"),
   },

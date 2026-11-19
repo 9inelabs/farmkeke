@@ -38,6 +38,10 @@ const app = defineApp({
     TERMII_CHANNEL: v.optional(v.string()),
     // "false" pauses texting without removing the key
     SMS_ENABLED: v.optional(v.string()),
+    // Termii delivery reports: the ?key= on the webhook URL, and (optional) the
+    // key that signs each report (X-Termii-Signature, HMAC-SHA512)
+    TERMII_WEBHOOK_KEY: v.optional(v.string()),
+    TERMII_WEBHOOK_SECRET: v.optional(v.string()),
   },
 });
 

@@ -177,7 +177,7 @@ export const api = {
   phoneAuth: {
     checkCode: makeFunctionReference<"action", { "phone": string; "code": string }, any>("phoneAuth:checkCode"),
     mine: makeFunctionReference<"query", Record<string, never>, any>("phoneAuth:mine"),
-    sendCode: makeFunctionReference<"action", { "phone": string }, any>("phoneAuth:sendCode"),
+    sendCode: makeFunctionReference<"action", { "phone": string; "by"?: "sms" | "voice" }, any>("phoneAuth:sendCode"),
   },
   reviews: {
     forOrder: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("reviews:forOrder"),

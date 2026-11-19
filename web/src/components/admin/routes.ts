@@ -42,6 +42,7 @@ export const adminRoutes = {
   disputes: adminPath("/disputes"),
   dispute: (id: string) => adminPath(`/disputes/${id}`),
   support: adminPath("/support"),
+  texts: adminPath("/texts"),
   ticket: (id: string) => adminPath(`/support/${id}`),
   messages: adminPath("/messages"),
   newMessage: adminPath("/messages/new"),

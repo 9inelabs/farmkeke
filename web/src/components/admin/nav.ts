@@ -18,6 +18,7 @@ import {
   Scale,
   Wallet,
   Headphones,
+  MessageSquareText,
   MessageSquareWarning,
   Users,
   LayoutGrid,
@@ -89,6 +90,7 @@ export const NAV: NavGroup[] = [
       { href: adminRoutes.disputes, label: "Problem reports", icon: MessageSquareWarning, any: ["disputes.view"], badge: "disputes" },
       { href: adminRoutes.support, label: "Support inbox", icon: Headphones, any: ["support.view"], badge: "support" },
       { href: adminRoutes.messages, label: "Messages", icon: Megaphone, any: ["messages.send"] },
+      { href: adminRoutes.texts, label: "Text messages", icon: MessageSquareText, any: ["support.view", "platform.manage"] },
     ],
   },
   {

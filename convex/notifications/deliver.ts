@@ -112,13 +112,14 @@ export const send = internalAction({
         await ctx.runMutation(internal.notifications.store.logSms, {
           ...plan.sms,
           body: fitSms(plan.sms.body),
+          kind: "notification",
           provider: "termii",
           ...(result.status === "sent"
             ? { status: "sent" as const, providerReference: result.reference }
             : { status: "failed" as const, error: result.error }),
         });
       } else {
-        await ctx.runMutation(internal.notifications.store.logSms, { ...plan.sms, status: "recorded" });
+        await ctx.runMutation(internal.notifications.store.logSms, { ...plan.sms, kind: "notification", status: "recorded" });
       }
     }
     if (plan.email && emailOn()) {
@@ -252,6 +253,7 @@ export const testSms = internalAction({
     await ctx.runMutation(internal.notifications.store.logSms, {
       to: args.to,
       body: fitSms(body),
+      kind: "test",
       provider: "termii",
       ...(result.status === "sent"
         ? { status: "sent" as const, providerReference: result.reference }

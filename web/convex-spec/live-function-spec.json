@@ -6223,6 +6223,118 @@
       "returns": null
     },
     {
+      "identifier": "admin/texts.js:list",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                },
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                }
+              }
+            },
+            "optional": false
+          },
+          "delivery": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "pending"
+                },
+                {
+                  "type": "literal",
+                  "value": "delivered"
+                },
+                {
+                  "type": "literal",
+                  "value": "failed"
+                }
+              ]
+            },
+            "optional": true
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "admin/texts.js:summary",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "since": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "admin/uploads.js:generateUploadUrl",
       "functionType": "Mutation",
       "visibility": {
@@ -10335,6 +10447,42 @@
               "type": "string"
             },
             "optional": true
+          },
+          "kind": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "code"
+                },
+                {
+                  "type": "literal",
+                  "value": "notification"
+                },
+                {
+                  "type": "literal",
+                  "value": "test"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "channel": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "sms"
+                },
+                {
+                  "type": "literal",
+                  "value": "voice"
+                }
+              ]
+            },
+            "optional": true
           }
         }
       },
@@ -12063,6 +12211,22 @@
               "type": "string"
             },
             "optional": false
+          },
+          "by": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "sms"
+                },
+                {
+                  "type": "literal",
+                  "value": "voice"
+                }
+              ]
+            },
+            "optional": true
           }
         }
       },
@@ -13359,6 +13523,37 @@
             "fieldType": {
               "type": "id",
               "tableName": "supportTickets"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
+      "identifier": "texts.js:recordDelivery",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "internal"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "reference": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "to": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "status": {
+            "fieldType": {
+              "type": "string"
             },
             "optional": false
           }

@@ -8,6 +8,10 @@
 //   TERMII_CHANNEL     "dnd" (default: transactional route that also reaches numbers on
 //                      Do-Not-Disturb) or "generic" (cheaper, but DND numbers don't get it)
 //   SMS_ENABLED        set to "false" to pause sending without removing the key
+//   TERMII_WEBHOOK_KEY a long random string; Termii's delivery reports go to
+//                      https://<deployment>.convex.site/termii/delivery?key=<it>
+//   TERMII_WEBHOOK_SECRET optional: when set, a report's X-Termii-Signature
+//                      header must be the HMAC-SHA512 of its body with this key
 import { env } from "../_generated/server";
 import { normalizeNigerianPhone } from "./phone";
 
@@ -66,4 +70,51 @@ export async function sendSms(to: string, body: string): Promise<SmsResult> {
   } catch (error) {
     return { status: "failed", error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+/**
+ * Calls the number and reads `code` out (Termii's Voice Call): the backup when
+ * a network drops texts. Never throws. Termii takes the code as a number, so
+ * it must not start with 0 (see voiceCode in phoneAuth).
+ */
+export async function callWithCode(to: string, code: string): Promise<SmsResult> {
+  const apiKey = env.TERMII_API_KEY;
+  if (!apiKey) return { status: "failed", error: "TERMII_API_KEY is not set" };
+  const number = termiiNumber(to);
+  if (number === null) return { status: "failed", error: `Not a Nigerian mobile number: ${to}` };
+  if (!/^[1-9]\d{3,7}$/.test(code)) return { status: "failed", error: "A voice code is 4 to 8 digits and can't start with 0" };
+  const base = (env.TERMII_BASE_URL ?? "https://v3.api.termii.com").replace(/\/+$/, "");
+  try {
+    const response = await fetch(`${base}/api/sms/otp/call`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ api_key: apiKey, phone_number: number, code: Number(code) }),
+    });
+    const text = await response.text();
+    let json: { message_id?: string | number; pinId?: string; pin_id?: string; message?: string; code?: string } = {};
+    try {
+      json = JSON.parse(text);
+    } catch {
+      // Termii sometimes answers errors as plain text
+    }
+    if (!response.ok) return { status: "failed", error: `Termii ${response.status}: ${(json.message ?? text).slice(0, 300)}` };
+    const reference = json.message_id ?? json.pinId ?? json.pin_id;
+    return { status: "sent", reference: reference === undefined ? undefined : String(reference) };
+  } catch (error) {
+    return { status: "failed", error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export type Delivery = "delivered" | "failed" | "pending";
+
+/**
+ * Termii's delivery-report status in three words. Delivered; anything that
+ * says it failed, was rejected, expired or hit Do-Not-Disturb; otherwise
+ * still on its way ("Sent", "Message Sent", "Accepted"...).
+ */
+export function deliveryOf(status: string): Delivery {
+  const s = status.toLowerCase();
+  if (/(undeliv|not deliv|fail|reject|expire|dnd|block|invalid|unknown subscriber|absent)/.test(s)) return "failed";
+  if (/(deliver|delivrd)/.test(s)) return "delivered";
+  return "pending";
 }

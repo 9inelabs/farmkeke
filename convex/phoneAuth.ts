@@ -11,7 +11,7 @@ import { getViewer } from "./lib/auth";
 import { codeHash } from "./lib/codeHash";
 import { normalizeNigerianPhone } from "./lib/phone";
 import { hitLimit } from "./lib/rateLimit";
-import { sendSms, smsConfigured } from "./lib/sms";
+import { callWithCode, sendSms, smsConfigured, type SmsResult } from "./lib/sms";
 
 export const PHONE_PROVIDER = "phone-code";
 const CODE_TTL_MS = 10 * 60_000;
@@ -48,29 +48,54 @@ function sixDigits() {
   return String(n[0]! % 1_000_000).padStart(6, "0");
 }
 
+/** Six digits that don't start with 0: Termii's voice call takes the code as a number. */
+function voiceCode() {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return String(100_000 + (n[0]! % 900_000));
+}
+
+// What the log keeps instead of the code itself
+const HIDDEN_CODE = "Sign-up code (hidden)";
+
 /**
- * Sign-up and Forgot PIN, step 1: texts a 6-digit code. Not a sign-in call,
- * so whoever is signed in on the phone (a guest with orders) stays signed in
- * until the PIN step. Without Termii, codes are only written to the Convex
- * logs when AUTH_DEV_LOG_EMAILS is "true"; otherwise this fails with SMS_UNAVAILABLE.
+ * Sign-up and Forgot PIN, step 1: texts a 6-digit code, or with by "voice"
+ * calls the phone and reads a new code out (the backup when a network drops
+ * texts). Either way it replaces any earlier code and counts toward the same
+ * hourly limits. Not a sign-in call, so whoever is signed in on the phone (a
+ * guest with orders) stays signed in until the PIN step. Every code sent is
+ * logged in smsLog (without the code) so staff can see whether it arrived.
+ * Without Termii, codes are only written to the Convex logs when
+ * AUTH_DEV_LOG_EMAILS is "true"; otherwise this fails with SMS_UNAVAILABLE.
  */
 export const sendCode = action({
-  args: { phone: v.string() },
+  args: { phone: v.string(), by: v.optional(v.union(v.literal("sms"), v.literal("voice"))) },
   handler: async (ctx, args): Promise<null> => {
     const phone = normalizeNigerianPhone(args.phone);
     if (phone === null) throw new ConvexError({ code: "INVALID_PHONE" });
+    const voice = args.by === "voice";
     const devLog = env.AUTH_DEV_LOG_EMAILS === "true";
     if (!smsConfigured() && !devLog) throw new ConvexError({ code: "SMS_UNAVAILABLE" });
-    const code = sixDigits();
+    const code = voice ? voiceCode() : sixDigits();
     await ctx.runMutation(internal.phoneAuth.issueCode, { phone, codeHash: await codeHash(code, phone) });
-    if (smsConfigured()) {
-      const sent = await sendSms(phone, `Your Farmkeke code is ${code}. It expires in 10 minutes. Don't share it with anyone.`);
-      if (sent.status === "failed") {
-        console.error("Sign-up code not sent", sent.error);
-        throw new ConvexError({ code: "SMS_FAILED" });
-      }
-    } else {
-      console.log(`[dev] Farmkeke code for ${phone}: ${code}`);
+    if (!smsConfigured()) {
+      console.log(`[dev] Farmkeke code for ${phone}${voice ? " (call)" : ""}: ${code}`);
+      return null;
+    }
+    const sent: SmsResult = voice
+      ? await callWithCode(phone, code)
+      : await sendSms(phone, `Your Farmkeke code is ${code}. It expires in 10 minutes. Don't share it with anyone.`);
+    await ctx.runMutation(internal.notifications.store.logSms, {
+      to: phone,
+      body: HIDDEN_CODE,
+      kind: "code",
+      channel: voice ? "voice" : "sms",
+      provider: "termii",
+      ...(sent.status === "sent" ? { status: "sent" as const, providerReference: sent.reference } : { status: "failed" as const, error: sent.error }),
+    });
+    if (sent.status === "failed") {
+      console.error(voice ? "Sign-up code call failed" : "Sign-up code not sent", sent.error);
+      throw new ConvexError({ code: voice ? "CALL_FAILED" : "SMS_FAILED" });
     }
     return null;
   },

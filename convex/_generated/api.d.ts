@@ -37,6 +37,7 @@ import type * as admin_setup from "../admin/setup.js";
 import type * as admin_sitePhotos from "../admin/sitePhotos.js";
 import type * as admin_staff from "../admin/staff.js";
 import type * as admin_support from "../admin/support.js";
+import type * as admin_texts from "../admin/texts.js";
 import type * as admin_uploads from "../admin/uploads.js";
 import type * as appConfig from "../appConfig.js";
 import type * as areas from "../areas.js";
@@ -108,6 +109,7 @@ import type * as shopStats from "../shopStats.js";
 import type * as sitePhotos from "../sitePhotos.js";
 import type * as storefront from "../storefront.js";
 import type * as support from "../support.js";
+import type * as texts from "../texts.js";
 import type * as users from "../users.js";
 
 import type {
@@ -146,6 +148,7 @@ declare const fullApi: ApiFromModules<{
   "admin/sitePhotos": typeof admin_sitePhotos;
   "admin/staff": typeof admin_staff;
   "admin/support": typeof admin_support;
+  "admin/texts": typeof admin_texts;
   "admin/uploads": typeof admin_uploads;
   appConfig: typeof appConfig;
   areas: typeof areas;
@@ -217,6 +220,7 @@ declare const fullApi: ApiFromModules<{
   sitePhotos: typeof sitePhotos;
   storefront: typeof storefront;
   support: typeof support;
+  texts: typeof texts;
   users: typeof users;
 }>;
 

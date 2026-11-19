@@ -55,7 +55,9 @@ Replaces `LAUNCH-READINESS-2026-10-25.md`. Since then, payments have moved to th
   - real service areas and delivery prices, riders, and the fees page.
 - **Termii:**
   - a new API key (the old one was in a session log);
-  - an approved sender ID.
+  - an approved sender ID, **registered on MTN too** (MTN silently drops transactional texts from sender IDs it hasn't cleared; until then, ask Termii for a shared pre-cleared sender ID and put it in `TERMII_SENDER_ID`);
+  - delivery reports: set `TERMII_WEBHOOK_KEY` on Convex to a long random string, then in the Termii dashboard set the delivery report webhook to `https://<deployment>.convex.site/termii/delivery?key=<that string>`. Admin Portal → Text messages then shows whether each text arrived;
+  - optional: `TERMII_WEBHOOK_SECRET`, if Termii signs reports (X-Termii-Signature).
   - Farmers can't sign up without texts.
   - Guests need an email for their bill until texts work.
 - **Resend:** verify farmkeke.com, and set up a real support@farmkeke.com inbox.
