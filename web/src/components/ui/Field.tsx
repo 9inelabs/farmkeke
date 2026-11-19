@@ -9,7 +9,16 @@ type FieldShell = {
   hint?: ReactNode;
   error?: ReactNode;
   className?: string;
+  /** An icon inside the field, before the text (Admin Portal sign-in). */
+  icon?: ReactNode;
 };
+
+/** The leading icon, inside the field on the left. */
+const FieldIcon = ({ icon }: { icon: ReactNode }) => (
+  <span aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 flex -translate-y-1/2 text-faint [&_svg]:size-[18px]">
+    {icon}
+  </span>
+);
 
 function Shell({
   id,
@@ -44,19 +53,30 @@ const describedBy = (id: string, hint?: ReactNode, error?: ReactNode) =>
   error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
 export const TextField = forwardRef<HTMLInputElement, FieldShell & Omit<ComponentProps<"input">, "className">>(
-  function TextField({ label, labelNote, hint, error, className, id: idProp, ...input }, ref) {
+  function TextField({ label, labelNote, hint, error, className, id: idProp, icon, ...input }, ref) {
     const auto = useId();
     const id = idProp ?? auto;
+    const field = (
+      <input
+        ref={ref}
+        id={id}
+        className="fin"
+        style={icon ? { paddingLeft: 42 } : undefined}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        {...input}
+      />
+    );
     return (
       <Shell id={id} label={label} labelNote={labelNote} hint={hint} error={error} className={className}>
-        <input
-          ref={ref}
-          id={id}
-          className="fin"
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy(id, hint, error)}
-          {...input}
-        />
+        {icon ? (
+          <div className="relative">
+            <FieldIcon icon={icon} />
+            {field}
+          </div>
+        ) : (
+          field
+        )}
       </Shell>
     );
   },
@@ -66,19 +86,20 @@ export const TextField = forwardRef<HTMLInputElement, FieldShell & Omit<Componen
 export const PasswordField = forwardRef<
   HTMLInputElement,
   FieldShell & Omit<ComponentProps<"input">, "className" | "type">
->(function PasswordField({ label, labelNote, hint, error, className, id: idProp, ...input }, ref) {
+>(function PasswordField({ label, labelNote, hint, error, className, id: idProp, icon, ...input }, ref) {
   const auto = useId();
   const id = idProp ?? auto;
   const [show, setShow] = useState(false);
   return (
     <Shell id={id} label={label} labelNote={labelNote} hint={hint} error={error} className={className}>
       <div className="relative">
+        {icon ? <FieldIcon icon={icon} /> : null}
         <input
           ref={ref}
           id={id}
           type={show ? "text" : "password"}
           className="fin"
-          style={{ paddingRight: 76 }}
+          style={{ paddingRight: 76, ...(icon ? { paddingLeft: 42 } : {}) }}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(id, hint, error)}
           {...input}

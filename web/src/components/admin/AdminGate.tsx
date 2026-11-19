@@ -11,7 +11,8 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Clock, MessageSquareText, ShieldOff, UserX } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { AuthCard, authTitle } from "@/components/account/AuthLayouts";
+import { authTitle } from "@/components/account/AuthLayouts";
+import { AdminAuthCard } from "./AuthLayout";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { TextArea, TextField } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -87,13 +88,13 @@ function SignOutButton() {
 
 function StatusCard({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
-    <AuthCard width={560} headerRight={<SignOutButton />}>
+    <AdminAuthCard width={520} headerRight={<SignOutButton />}>
       <span className="tile mb-5" aria-hidden>
         {icon}
       </span>
       <h1 className={authTitle}>{title}</h1>
       {children}
-    </AuthCard>
+    </AdminAuthCard>
   );
 }
 

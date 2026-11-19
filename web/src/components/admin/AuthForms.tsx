@@ -5,11 +5,11 @@
 // Flows: convex/lib/staffAuth.ts.
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
-import { Check, MailCheck } from "lucide-react";
+import { Check, KeyRound, LockKeyhole, LogIn, Mail, MailCheck, TimerOff, User, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
-import { AuthCard, authTitle } from "@/components/account/AuthLayouts";
+import { AdminAuthCard, adminAuthLead, adminAuthTitle } from "./AuthLayout";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { PasswordField, PhoneField, TextArea, TextField } from "@/components/ui/Field";
 import { admin } from "@/convex/admin";
@@ -19,13 +19,11 @@ import { adminError } from "./errors";
 import { adminRoutes, safeAdminNext } from "./routes";
 import { Notice } from "./ui";
 
-const PortalLabel = () => <span className="badge b-held">Admin portal</span>;
-
-function Card({ children, width = 480 }: { children: ReactNode; width?: number }) {
+function Card({ children, width = 440, icon }: { children: ReactNode; width?: number; icon?: ReactNode }) {
   return (
-    <AuthCard width={width} headerRight={<PortalLabel />}>
+    <AdminAuthCard width={width} icon={icon}>
       {children}
-    </AuthCard>
+    </AdminAuthCard>
   );
 }
 
@@ -95,11 +93,8 @@ function CodeStep({
 
   return (
     <>
-      <span className="tile mb-5" aria-hidden>
-        <MailCheck className="size-6" strokeWidth={1.75} />
-      </span>
-      <h1 className={authTitle}>{purpose === "confirm" ? "Confirm your email" : "Check your email"}</h1>
-      <p className="p mt-2">
+      <h1 className={adminAuthTitle}>{purpose === "confirm" ? "Confirm your email" : "Check your email"}</h1>
+      <p className={adminAuthLead}>
         We sent a 6-digit code to <strong className="text-ink">{email}</strong>.{" "}
         {purpose === "confirm" ? "Enter it to send your application." : "Enter it to finish signing in."} It works for 10 minutes.
       </p>
@@ -116,7 +111,7 @@ function CodeStep({
           error={error ?? undefined}
           autoFocus
         />
-        <Button type="submit" variant="lime" size="lg" fullWidth loading={busy}>
+        <Button type="submit" variant="dark" size="lg" fullWidth loading={busy}>
           {purpose === "confirm" ? "Confirm and send application" : "Sign in"}
         </Button>
       </form>
@@ -197,7 +192,7 @@ export function SignInForm() {
 
   if (step === "code") {
     return (
-      <Card>
+      <Card icon={<MailCheck strokeWidth={1.75} />}>
         <CodeStep
           email={email.trim().toLowerCase()}
           purpose="signin"
@@ -214,9 +209,9 @@ export function SignInForm() {
 
   const reason = params.get("reason");
   return (
-    <Card>
-      <h1 className={authTitle}>Sign in to the admin portal</h1>
-      <p className="p mt-2">For Farmkeke staff. After your password, we email you a code to finish signing in.</p>
+    <Card icon={<LogIn strokeWidth={1.75} />}>
+      <h1 className={adminAuthTitle}>Sign in to the admin portal</h1>
+      <p className={adminAuthLead}>For Farmkeke staff. After your password, we email you a code to finish signing in.</p>
       {reason === "idle" ? (
         <div className="mt-5">
           <Notice tone="pend">You were signed out after 30 minutes without activity.</Notice>
@@ -227,8 +222,9 @@ export function SignInForm() {
         </div>
       ) : null}
       <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
-        <TextField label="Email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <TextField icon={<Mail />} label="Email" type="email" autoComplete="username" placeholder="you@farmkeke.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <PasswordField
+          icon={<LockKeyhole />}
           label="Password"
           autoComplete="current-password"
           value={password}
@@ -236,7 +232,7 @@ export function SignInForm() {
           required
         />
         {error ? <Notice tone="err">{error}</Notice> : null}
-        <Button type="submit" variant="lime" size="lg" fullWidth loading={busy}>
+        <Button type="submit" variant="dark" size="lg" fullWidth loading={busy}>
           Continue
         </Button>
       </form>
@@ -292,7 +288,7 @@ export function ApplyForm() {
 
   if (step === "code") {
     return (
-      <Card>
+      <Card icon={<MailCheck strokeWidth={1.75} />}>
         <CodeStep
           email={form.email.trim().toLowerCase()}
           purpose="confirm"
@@ -305,15 +301,16 @@ export function ApplyForm() {
   }
 
   return (
-    <Card width={560}>
-      <h1 className={authTitle}>Apply for staff access</h1>
-      <p className="p mt-2">
+    <Card width={520} icon={<UserPlus strokeWidth={1.75} />}>
+      <h1 className={adminAuthTitle}>Apply for staff access</h1>
+      <p className={adminAuthLead}>
         For people who work at Farmkeke. The Founder reviews every application and chooses your role. We&apos;ll email you
         when it&apos;s decided.
       </p>
       <form className="mt-6 flex flex-col gap-4" onSubmit={submit} noValidate>
-        <TextField label="Full name" autoComplete="name" value={form.name} onChange={set("name")} required maxLength={80} />
+        <TextField icon={<User />} label="Full name" autoComplete="name" value={form.name} onChange={set("name")} required maxLength={80} />
         <TextField
+          icon={<Mail />}
           label="Email"
           type="email"
           autoComplete="email"
@@ -343,6 +340,7 @@ export function ApplyForm() {
         />
         <div>
           <PasswordField
+            icon={<LockKeyhole />}
             label="Password"
             autoComplete="new-password"
             value={form.password}
@@ -354,7 +352,7 @@ export function ApplyForm() {
           <p className="sm mt-2">Already have a Farmkeke account with this email? Enter that account&apos;s password instead.</p>
         </div>
         {error ? <Notice tone="err">{error}</Notice> : null}
-        <Button type="submit" variant="lime" size="lg" fullWidth loading={busy}>
+        <Button type="submit" variant="dark" size="lg" fullWidth loading={busy}>
           Continue
         </Button>
       </form>
@@ -377,12 +375,9 @@ export function ForgotForm() {
 
   if (sent) {
     return (
-      <Card>
-        <span className="tile mb-5" aria-hidden>
-          <MailCheck className="size-6" strokeWidth={1.75} />
-        </span>
-        <h1 className={authTitle}>Check your email</h1>
-        <p className="p mt-2">
+      <Card icon={<MailCheck strokeWidth={1.75} />}>
+        <h1 className={adminAuthTitle}>Check your email</h1>
+        <p className={adminAuthLead}>
           If <strong className="text-ink">{email.trim()}</strong> is on the admin portal, we&apos;ve sent a link to make a new
           password. It works for 60 minutes, and only once.
         </p>
@@ -395,9 +390,9 @@ export function ForgotForm() {
     );
   }
   return (
-    <Card>
-      <h1 className={authTitle}>Forgot your password?</h1>
-      <p className="p mt-2">Enter your staff email. We&apos;ll send you a link to make a new password.</p>
+    <Card icon={<KeyRound strokeWidth={1.75} />}>
+      <h1 className={adminAuthTitle}>Forgot your password?</h1>
+      <p className={adminAuthLead}>Enter your staff email. We&apos;ll send you a link to make a new password.</p>
       <form
         className="mt-6 flex flex-col gap-4"
         noValidate
@@ -415,9 +410,9 @@ export function ForgotForm() {
           }
         }}
       >
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <TextField icon={<Mail />} label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         {error ? <Notice tone="err">{error}</Notice> : null}
-        <Button type="submit" variant="lime" size="lg" fullWidth loading={busy}>
+        <Button type="submit" variant="dark" size="lg" fullWidth loading={busy}>
           Send the link
         </Button>
       </form>
@@ -443,9 +438,9 @@ export function SetPasswordForm() {
 
   if (!email || !code || expired) {
     return (
-      <Card>
-        <h1 className={authTitle}>This link has expired</h1>
-        <p className="p mt-2">Password links work for 60 minutes, and only once. Ask for a new one.</p>
+      <Card icon={<TimerOff strokeWidth={1.75} />}>
+        <h1 className={adminAuthTitle}>This link has expired</h1>
+        <p className={adminAuthLead}>Password links work for 60 minutes, and only once. Ask for a new one.</p>
         <div className="mt-6">
           <ButtonLink href={adminRoutes.forgotPassword} variant="lime">
             Send a new link
@@ -455,9 +450,9 @@ export function SetPasswordForm() {
     );
   }
   return (
-    <Card>
-      <h1 className={authTitle}>Make your password</h1>
-      <p className="p mt-2">
+    <Card icon={<LockKeyhole strokeWidth={1.75} />}>
+      <h1 className={adminAuthTitle}>Make your password</h1>
+      <p className={adminAuthLead}>
         For <strong className="text-ink">{email}</strong> on the Farmkeke admin portal. You&apos;ll be signed in straight
         away.
       </p>
@@ -485,6 +480,7 @@ export function SetPasswordForm() {
         <input type="email" autoComplete="username" value={email} readOnly hidden />
         <div>
           <PasswordField
+            icon={<LockKeyhole />}
             label="New password"
             autoComplete="new-password"
             value={password}
@@ -495,6 +491,7 @@ export function SetPasswordForm() {
           <StaffPasswordRules password={password} id={ruleId} />
         </div>
         <PasswordField
+          icon={<LockKeyhole />}
           label="Type it again"
           autoComplete="new-password"
           value={confirm}
@@ -502,7 +499,7 @@ export function SetPasswordForm() {
           required
         />
         {error ? <Notice tone="err">{error}</Notice> : null}
-        <Button type="submit" variant="lime" size="lg" fullWidth loading={busy}>
+        <Button type="submit" variant="dark" size="lg" fullWidth loading={busy}>
           Save and sign in
         </Button>
       </form>
