@@ -118,6 +118,11 @@ test("delivery reports update the matching text, by message ID or else by number
   const rows = await logRows(t);
   expect(rows[1]!.delivery).toBe("failed");
   expect(rows[0]!.delivery).toBe("delivered");
+
+  // Termii's event style: details under "data", the status as the event name
+  await t.action(api.phoneAuth.sendCode, { phone: "08031234567" });
+  await post({ event: "message.delivered", data: { signal_id: "sig_new", recipient: "2348031234567" } });
+  expect((await logRows(t))[2]!.delivery).toBe("delivered");
 });
 
 test("the webhook refuses a wrong key, a bad signature and bodies without a status", async () => {
@@ -128,7 +133,9 @@ test("the webhook refuses a wrong key, a bad signature and bodies without a stat
     t.fetch(`/termii/delivery?key=${key}`, { method: "POST", body, headers });
   expect((await post(JSON.stringify({ message_id: "3017", status: "Delivered" }), "wrong")).status).toBe(401);
   expect((await post("not json", "hook_key")).status).toBe(400);
-  expect((await post(JSON.stringify({ message_id: "3017" }), "hook_key")).status).toBe(400);
+  // A report without a status is accepted (so Termii doesn't retry) but changes nothing
+  expect((await post(JSON.stringify({ message_id: "3017" }), "hook_key")).status).toBe(200);
+  expect((await logRows(t))[0]!.delivery).toBe("pending");
 
   process.env.TERMII_WEBHOOK_SECRET = "sign_me";
   const raw = JSON.stringify({ message_id: "3017", status: "Delivered" });
@@ -136,6 +143,10 @@ test("the webhook refuses a wrong key, a bad signature and bodies without a stat
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("sign_me"), { name: "HMAC", hash: "SHA-512" }, false, ["sign"]);
   const mac = Array.from(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(raw))), (b) => b.toString(16).padStart(2, "0")).join("");
   expect((await post(raw, "hook_key", { "x-termii-signature": mac })).status).toBe(200);
+  // SHA-256 in base64 is accepted too
+  const key256 = await crypto.subtle.importKey("raw", new TextEncoder().encode("sign_me"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac256 = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.sign("HMAC", key256, new TextEncoder().encode(raw)))));
+  expect((await post(raw, "hook_key", { "x-termii-signature": mac256 })).status).toBe(200);
   const [row] = await logRows(t);
   expect(row!.delivery).toBe("delivered");
 

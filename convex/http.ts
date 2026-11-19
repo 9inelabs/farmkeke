@@ -203,23 +203,40 @@ a.alt{display:block;margin-top:16px;color:#1E3B16;font-size:14px}
 });
 
 /** A text or code call's delivery report fields, from one report object. */
+// Reads flat reports and Termii's event style, where the details sit under
+// "data" (or "payload") and the status may only be the event name, e.g.
+// "message.delivered".
 function reportFields(item: unknown): { reference?: string; to?: string; status: string } | null {
   if (typeof item !== "object" || item === null) return null;
-  const r = item as Record<string, unknown>;
+  const top = item as Record<string, unknown>;
+  const nested = [top.data, top.payload].find((x): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x));
+  const r: Record<string, unknown> = { ...top, ...(nested ?? {}) };
   const text = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : typeof value === "number" ? String(value) : undefined);
-  const status = text(r.status) ?? text(r.message_status) ?? text(r.delivery_status);
+  const status = text(r.status) ?? text(r.message_status) ?? text(r.delivery_status) ?? text(top.event) ?? text(r.event);
   if (status === undefined) return null;
-  const reference = text(r.message_id) ?? text(r.messageId) ?? text(r.id);
-  const to = text(r.receiver) ?? text(r.to) ?? text(r.phone_number);
+  const reference = text(r.message_id) ?? text(r.messageId) ?? text(r.signal_id) ?? text(r.id);
+  const to = text(r.receiver) ?? text(r.to) ?? text(r.recipient) ?? text(r.phone_number);
   return { status, ...(reference ? { reference } : {}), ...(to ? { to } : {}) };
 }
 
-/** HMAC-SHA512 of the body, as hex. */
-async function hmacSha512(key: string, body: string): Promise<string> {
+/**
+ * Whether `given` is an HMAC of the body with the secret. Termii's docs
+ * couldn't be checked when this was written, so SHA-512 and SHA-256 are both
+ * accepted, as hex or base64, with or without a "sha512=" style prefix. Every
+ * form still needs the secret.
+ */
+async function validTermiiSignature(secret: string, body: string, given: string): Promise<boolean> {
+  const signature = given.trim().replace(/^sha(256|512)=/i, "");
+  if (!signature) return false;
   const encoder = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey("raw", encoder.encode(key), { name: "HMAC", hash: "SHA-512" }, false, ["sign"]);
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(body)));
-  return Array.from(mac, (b) => b.toString(16).padStart(2, "0")).join("");
+  for (const hash of ["SHA-512", "SHA-256"] as const) {
+    const cryptoKey = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash }, false, ["sign"]);
+    const mac = new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(body)));
+    const hex = Array.from(mac, (b) => b.toString(16).padStart(2, "0")).join("");
+    const base64 = btoa(String.fromCharCode(...mac));
+    if (signature.toLowerCase() === hex || signature === base64) return true;
+  }
+  return false;
 }
 
 /**
@@ -239,8 +256,10 @@ http.route({
     const raw = await req.text();
     const secret = env.TERMII_WEBHOOK_SECRET;
     if (secret) {
-      const given = (req.headers.get("x-termii-signature") ?? "").trim().toLowerCase();
-      if (given !== (await hmacSha512(secret, raw))) return new Response("Bad signature", { status: 401 });
+      if (!(await validTermiiSignature(secret, raw, req.headers.get("x-termii-signature") ?? ""))) {
+        console.warn("Termii report with a signature that doesn't match TERMII_WEBHOOK_SECRET");
+        return new Response("Bad signature", { status: 401 });
+      }
     }
     let body: unknown;
     try {
@@ -248,11 +267,17 @@ http.route({
     } catch {
       return new Response("Expected JSON", { status: 400 });
     }
-    const reports = (Array.isArray(body) ? body : [body]).map(reportFields);
-    if (reports.length === 0 || reports.some((r) => r === null)) return new Response("Expected a delivery report", { status: 400 });
-    for (const report of reports.slice(0, 100)) {
-      if (report) await ctx.runMutation(internal.texts.recordDelivery, report);
+    const items = Array.isArray(body) ? body : [body];
+    let understood = 0;
+    for (const item of items.slice(0, 100)) {
+      const report = reportFields(item);
+      if (report === null) continue;
+      understood += 1;
+      await ctx.runMutation(internal.texts.recordDelivery, report);
     }
+    // Accepted either way, so Termii doesn't keep retrying or switch the
+    // webhook off; anything not understood is logged to adapt to.
+    if (understood < items.length) console.warn("Termii report not understood:", raw.slice(0, 600));
     return new Response("OK", { status: 200 });
   }),
 });
