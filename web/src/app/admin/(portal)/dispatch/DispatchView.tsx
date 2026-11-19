@@ -191,6 +191,16 @@ function Card({ row, riders, actions }: { row: BoardRow; riders: Rider[]; action
             <div className="cap">{row.dropOff.kind === "address" ? "Deliver to" : "Hand over"}</div>
             <div className="text-[14px] leading-5 text-ink">{dropOff}</div>
             {row.dropOff.kind === "address" && row.dropOff.note ? <div className="mt-1 text-[13px] leading-5 text-ink-2">“{row.dropOff.note}”</div> : null}
+            {row.dropOff.kind === "address" && row.dropOff.latitude != null && row.dropOff.longitude != null ? (
+              <a
+                href={`https://www.google.com/maps?q=${row.dropOff.latitude},${row.dropOff.longitude}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-[13px] font-semibold"
+              >
+                Open the drop-off pin in Google Maps
+              </a>
+            ) : null}
           </div>
         </li>
       </ol>

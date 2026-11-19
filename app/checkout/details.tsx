@@ -5,15 +5,15 @@
 // and text, so guests give an email here if they didn't at the contact step.
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, View, type TextInput } from "react-native";
-import { CheckCircle, Home, Mail, Pin, PinCheck, Receipt, Shop, Truck, type IconComponent } from "@/components/icons";
+import { CheckCircle, Home, Mail, Receipt, Shop, Truck, type IconComponent } from "@/components/icons";
 import { Button, Skeleton, Text, TextField } from "@/components/ui";
 import { Card, CheckoutShell } from "@/features/checkout/CheckoutShell";
 import { useCheckoutDraft, type CheckoutDraft } from "@/features/checkout/draft";
 import { groupByFarm, useQuote } from "@/features/checkout/useQuote";
+import { PinPicker } from "@/features/maps/PinPicker";
 import { formatHours } from "@/lib/hours";
 import { formatNaira } from "@/lib/money";
 import { isEmail } from "@/lib/session";
@@ -42,8 +42,6 @@ function DeliveryDetails() {
   const [email, setEmail] = useState(draft.contact.email);
   const needsEmail = viewer !== undefined && !signedIn && !draft.contact.email.trim();
   const [errors, setErrors] = useState<Errors>({});
-  const [pinNote, setPinNote] = useState<string | null>(addr.latitude !== undefined ? "Drop-off pin set." : null);
-  const [locating, setLocating] = useState(false);
   const landmarkRef = useRef<TextInput>(null);
 
   // Saved addresses in the chosen area, default first
@@ -58,31 +56,11 @@ function DeliveryDetails() {
   function use(a: (typeof inArea)[number]) {
     setAddr((x) => ({ ...x, street: a.street, landmark: a.landmark, note: x.note || a.directions || "", latitude: a.latitude, longitude: a.longitude }));
     setErrors({});
-    setPinNote(a.latitude !== undefined ? "Pin set from your saved address." : null);
   }
 
   const set = (k: "street" | "landmark" | "note") => (value: string) => {
     setAddr((a) => ({ ...a, [k]: value }));
     if (k !== "note" && errors[k]) setErrors((x) => ({ ...x, [k]: undefined }));
-  };
-
-  // M-35: the drop-off spot, from where the shopper is standing now
-  const pinHere = async () => {
-    setLocating(true);
-    try {
-      const { granted } = await Location.requestForegroundPermissionsAsync();
-      if (!granted) {
-        setPinNote("Location is off for Farmkeke. The rider will use your address and landmark.");
-        return;
-      }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setAddr((a) => ({ ...a, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
-      setPinNote("Pin set to where you are now. The rider will come to this spot.");
-    } catch {
-      setPinNote("We couldn't get your location. The rider will use your address and landmark.");
-    } finally {
-      setLocating(false);
-    }
   };
 
   const next = () => {
@@ -148,16 +126,10 @@ function DeliveryDetails() {
             {area ? "Change" : "Choose area"}
           </Text>
         </View>
-        <View style={styles.pin}>
-          <View style={[styles.pinIcon, addr.latitude !== undefined && styles.pinIconOn]}>
-            {addr.latitude !== undefined ? <PinCheck size={22} color={colors.forest} variant="solid" /> : <Pin size={22} color={colors.forest} />}
-          </View>
-          <View style={styles.flex}>
-            <Text variant="label">Drop-off pin</Text>
-            <Text variant="small">{pinNote ?? "Optional. Helps the rider find the exact gate."}</Text>
-          </View>
-          <Button label={addr.latitude !== undefined ? "Update" : "Use my location"} variant="secondary" size="small" loading={locating} onPress={() => void pinHere()} />
-        </View>
+        <PinPicker
+          value={addr.latitude !== undefined && addr.longitude !== undefined ? { latitude: addr.latitude, longitude: addr.longitude } : undefined}
+          onChange={(c) => setAddr((x) => ({ ...x, latitude: c.latitude, longitude: c.longitude }))}
+        />
         <TextField
           label="Note for the rider (optional)"
           placeholder="Blue gate. Call when you arrive. Best after 4pm."
@@ -288,9 +260,6 @@ const styles = StyleSheet.create({
   },
   savedRowOn: { borderColor: colors.lime },
   areaRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
-  pin: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  pinIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center" },
-  pinIconOn: { backgroundColor: colors.lime },
   steps: { gap: spacing.sm },
   step: { flexDirection: "row", gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
   stepIcon: { width: 36, height: 36, borderRadius: radii.md, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
