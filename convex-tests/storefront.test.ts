@@ -370,3 +370,26 @@ test("every field in the live samples is still returned", async () => {
   for (const [name, value] of Object.entries(got)) expect([name, missing(sample(name), value)]).toEqual([name, []]);
   expect(missing(sample("home.area"), got.home)).toEqual([]);
 });
+
+test("all farms: own area first, then nearest; categories and delivery marks; holiday farms left out", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  await t.mutation(internal.shopStats.rebuild, {});
+
+  // A shopper in Owerri West with a position: Nwosu (their area) first, then Okafor (~1 km), then Ada (~15 km)
+  const near = await t.query(api.storefront.farms, { today: TODAY, state: "Imo", lga: "Owerri West", ...OWERRI });
+  expect(near.map((f) => f.name)).toEqual(["Nwosu Farms", "Okafor Farms", "Ada Agro"]);
+  expect(near[0]).toMatchObject({ inYourArea: true, inYourState: true });
+  const okafor = near.find((f) => f.name === "Okafor Farms")!;
+  expect(okafor).toMatchObject({ id: s.okafor, area: "Owerri North", state: "Imo", rating: 5, productCount: 3, delivery: true, pickup: true, photos: [] });
+  expect(okafor.categories).toEqual(["Vegetables", "Fruits"]);
+  expect(near.find((f) => f.name === "Ada Agro")).toMatchObject({ delivery: true, inYourArea: false });
+
+  // No area or position: best rated first
+  const anywhere = await t.query(api.storefront.farms, {});
+  expect(anywhere.map((f) => f.name)).toEqual(["Okafor Farms", "Ada Agro", "Nwosu Farms"]);
+
+  // A farm on holiday disappears
+  await t.run(async (ctx) => ctx.db.patch("farms", s.ada, { holidayMode: true }));
+  expect((await t.query(api.storefront.farms, {})).map((f) => f.name)).toEqual(["Okafor Farms", "Nwosu Farms"]);
+});

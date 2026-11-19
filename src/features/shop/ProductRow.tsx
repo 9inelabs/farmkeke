@@ -25,6 +25,10 @@ export function ProductRow({ title, items }: { title: string; items: GridItem[] 
             width={140}
             onPress={() => router.push(`/product/${p.id}`)}
             onAdd={p.inStock === false ? undefined : () => openAdd(p.id)}
+            soldOut={p.inStock === false}
+            freshness={p.freshness}
+            delivery={p.delivery}
+            pickup={p.pickup}
           />
         ))}
       </ScrollView>

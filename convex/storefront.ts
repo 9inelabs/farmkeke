@@ -633,3 +633,77 @@ export const popular = query({
     );
   },
 });
+
+// The all-farms screen reads at most this many open farms, and a few live
+// listings from each for the photo strip and the delivery and pickup marks.
+const ALL_FARMS = 200;
+const FARM_PREVIEW = 6;
+const FARM_PHOTOS = 3;
+
+/**
+ * M-14 All farms ("View all" on Farmers Near You): every open farm, not on
+ * holiday, with three product photos, its main categories and whether it
+ * delivers or offers pickup. The shopper's own area (LGA, then state) comes
+ * first, then the nearest when the position is known, then the best rated.
+ */
+export const farms = query({
+  args: {
+    today: v.optional(v.string()),
+    state: v.optional(v.string()),
+    lga: v.optional(v.string()),
+    lat: v.optional(v.number()),
+    lng: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const shop = shopReader(ctx, { today: args.today, from: shopperPoint(args.lat, args.lng) });
+    const open = (
+      await ctx.db
+        .query("farms")
+        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .take(ALL_FARMS)
+    ).filter((f) => !f.holidayMode);
+
+    const rows = await Promise.all(
+      open.map(async (farm) => {
+        const row = await shop.farmRow(farm);
+        const live = (
+          await ctx.db
+            .query("listings")
+            .withIndex("by_farmId_and_status", (q) => q.eq("farmId", farm._id).eq("status", "live"))
+            .order("desc")
+            .take(FARM_PREVIEW)
+        ).filter((l) => isShopListing(l) && l.units.length > 0);
+        const photos: string[] = [];
+        for (const l of live) {
+          if (photos.length >= FARM_PHOTOS) break;
+          const url = l.photoIds[0] ? await ctx.storage.getUrl(l.photoIds[0]) : null;
+          if (url !== null) photos.push(url);
+        }
+        const names = new Map<string, number>();
+        for (const l of live) {
+          const c = await shop.category(l.categoryId);
+          if (c !== null) names.set(c.name, (names.get(c.name) ?? 0) + 1);
+        }
+        return {
+          ...row,
+          description: farm.description ?? null,
+          photos,
+          categories: [...names.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 3),
+          delivery: live.some((l) => l.delivery),
+          pickup: live.some((l) => l.pickup),
+          inYourArea: args.lga !== undefined && farm.lga === args.lga && farm.state === args.state,
+          inYourState: args.state !== undefined && farm.state === args.state,
+        };
+      }),
+    );
+
+    return rows.sort(
+      (a, b) =>
+        Number(b.inYourArea) - Number(a.inYourArea) ||
+        Number(b.inYourState) - Number(a.inYourState) ||
+        (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) ||
+        (b.rating ?? 0) - (a.rating ?? 0) ||
+        b.productCount - a.productCount,
+    );
+  },
+});

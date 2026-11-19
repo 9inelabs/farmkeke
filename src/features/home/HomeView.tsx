@@ -22,7 +22,17 @@ import { useScreenWidth } from "@/theme/useScreenSize";
 import { AlmostGoneRow } from "./AlmostGoneRow";
 
 export type HomeCategory = { id: string; name: string; illustration: string };
-export type HomeProduct = { id: string; name: string; priceKobo: number; unit: string; imageUrl: string | null };
+export type HomeProduct = {
+  id: string;
+  name: string;
+  priceKobo: number;
+  unit: string;
+  imageUrl: string | null;
+  // For the card's tag
+  freshness?: string | null;
+  delivery?: boolean;
+  pickup?: boolean;
+};
 export type HomeBanner = { tag: string; title: string; subtitle: string; buttonLabel: string; imageUrl: string | null };
 export type HomeFarm = { id: string; name: string; area: string; photoUrl: string | null };
 /** One product row, as storefront.home sends it. */
@@ -54,6 +64,8 @@ type Props = {
   onAddToCart?: (product: HomeProduct) => void;
   onBanner?: () => void;
   onFarm?: (farm: HomeFarm) => void;
+  /** "View all" on Farmers near you: the all-farms screen */
+  onAllFarms?: () => void;
 };
 
 const CARD_GAP = spacing.sm + 2;
@@ -104,6 +116,9 @@ export function HomeView(props: Props) {
               width={cardWidth}
               onPress={props.onProduct && (() => props.onProduct?.(p))}
               onAdd={props.onAddToCart && (() => props.onAddToCart?.(p))}
+              freshness={p.freshness}
+              delivery={p.delivery}
+              pickup={p.pickup}
             />
           ))}
     </ScrollView>
@@ -121,19 +136,21 @@ export function HomeView(props: Props) {
         pressedScale={0.985}
         style={styles.banner}
       >
+        {/* Deep green behind the words; the photo sits clear on the right, with
+            only a short fade where the two meet */}
+        <ForestBackdrop grid={false} />
         {props.banner.imageUrl ? (
-          <Image source={{ uri: props.banner.imageUrl }} contentFit="cover" transition={200} style={styles.bannerPhoto} />
-        ) : (
-          <ForestBackdrop grid={false} />
-        )}
-        {/* Deep green behind the words on the left, the photo showing through on the right */}
-        <LinearGradient
-          colors={[colors.forestDeep, "rgba(11,26,7,0.86)", "rgba(11,26,7,0.15)"]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={StyleSheet.absoluteFill}
-        />
+          <View style={styles.bannerPhotoWrap}>
+            <Image source={{ uri: props.banner.imageUrl }} contentFit="cover" transition={200} style={StyleSheet.absoluteFill} />
+            <LinearGradient
+              colors={[colors.forestMid, "rgba(21,46,16,0.55)", "rgba(21,46,16,0)"]}
+              locations={[0, 0.45, 1]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.bannerSeam}
+            />
+          </View>
+        ) : null}
         <View style={styles.bannerCopy}>
           <View style={styles.bannerTag}>
             <Text numberOfLines={1} maxFontSizeMultiplier={MAX_TEXT} style={styles.bannerTagText}>
@@ -160,12 +177,22 @@ export function HomeView(props: Props) {
     <View style={styles.farmsCard}>
       <ForestBackdrop grid={false} glow="left" />
       <View style={styles.farmsHead}>
-        <Text accessibilityRole="header" maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsTitle}>
-          Farmers near you
-        </Text>
-        <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsSub}>
-          Order straight from their farm
-        </Text>
+        <View style={styles.flex}>
+          <Text accessibilityRole="header" maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsTitle}>
+            Farmers near you
+          </Text>
+          <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsSub}>
+            Order straight from their farm
+          </Text>
+        </View>
+        {props.onAllFarms ? (
+          <Pressable accessibilityRole="link" accessibilityLabel="View all farms" hitSlop={12} onPress={props.onAllFarms} style={styles.seeAll}>
+            <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsAll}>
+              View all
+            </Text>
+            <ChevronRight size={13} color={colors.lime} />
+          </Pressable>
+        ) : null}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.farms}>
         {props.farms === undefined
@@ -412,8 +439,10 @@ const styles = StyleSheet.create({
   emptyRow: { backgroundColor: colors.tint, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.xxs },
   // Banner
   banner: { height: 150, borderRadius: BANNER_RADIUS, overflow: "hidden", backgroundColor: colors.forestDeep, justifyContent: "center" },
-  bannerPhoto: { position: "absolute", top: 0, bottom: 0, right: 0, width: "62%" },
-  bannerCopy: { width: "64%", paddingHorizontal: spacing.lg, gap: 5, alignItems: "flex-start" },
+  bannerPhotoWrap: { position: "absolute", top: 0, bottom: 0, right: 0, width: "46%", backgroundColor: colors.tint },
+  // The fade covers only the photo's left edge
+  bannerSeam: { position: "absolute", top: 0, bottom: 0, left: 0, width: "34%" },
+  bannerCopy: { width: "58%", paddingHorizontal: spacing.lg, gap: 5, alignItems: "flex-start" },
   bannerTag: { backgroundColor: colors.lime, borderRadius: radii.pill, paddingHorizontal: spacing.sm, paddingVertical: 2, maxWidth: "100%" },
   bannerTagText: { fontFamily: fonts.bold, fontSize: 10, lineHeight: 13, letterSpacing: 0.3, color: colors.forestDeep },
   bannerTitle: { fontFamily: fonts.displayBold, fontSize: 17, lineHeight: 21, letterSpacing: -0.3, color: colors.white },
@@ -422,7 +451,9 @@ const styles = StyleSheet.create({
   bannerButtonText: { fontFamily: fonts.bold, fontSize: 12, lineHeight: 15, color: colors.forestDeep },
   // Farmers near you
   farmsCard: { borderRadius: 20, overflow: "hidden", backgroundColor: colors.forestDeep, paddingVertical: spacing.md + 2, gap: spacing.md },
-  farmsHead: { paddingHorizontal: spacing.lg, gap: 1 },
+  farmsHead: { paddingHorizontal: spacing.lg, flexDirection: "row", alignItems: "center", gap: spacing.md },
+  flex: { flex: 1 },
+  farmsAll: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.lime },
   farmsTitle: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 20, letterSpacing: -0.2, color: colors.white },
   farmsSub: { fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15, color: colors.onForest },
   farms: { paddingHorizontal: spacing.lg, gap: spacing.md },
