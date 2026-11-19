@@ -13,7 +13,7 @@ import { Avatar, Button, Notice, Screen, ScreenHeader, Skeleton, StatusScreen, T
 import { useOrder } from "@/features/orders/useOrder";
 import { errorCode } from "@/lib/errors";
 import { showToast } from "@/store/toast";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 const TAGS = ["Fresh", "Well packed", "On time", "Good value", "Friendly farmer", "As described"];
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   farmPhoto: { width: 64, height: 64, borderRadius: 32 },
   stars: { flexDirection: "row", gap: spacing.sm },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  tag: { minHeight: 40, justifyContent: "center", paddingHorizontal: spacing.lg, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: 1.5, borderColor: colors.surfaceSoft },
+  tag: { minHeight: 40, justifyContent: "center", paddingHorizontal: spacing.lg, borderRadius: radii.pill, backgroundColor: colors.surfaceSoft, borderWidth: borders.strong, borderColor: colors.surfaceSoft },
   tagOn: { backgroundColor: colors.tint, borderColor: colors.lime },
   item: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   thumb: { width: 40, height: 40, borderRadius: radii.sm, backgroundColor: colors.placeholder },

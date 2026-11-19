@@ -3,12 +3,12 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 import { HomeView } from "@/features/home/HomeView";
 import { useShopContext } from "@/features/shop/useShopContext";
 import { greeting } from "@/lib/greeting";
 import { formatNaira } from "@/lib/money";
+import { useCartSummary } from "@/store/cart";
 import { useShopUi } from "@/store/shopUi";
 import { colors } from "@/theme/tokens";
 
@@ -18,16 +18,21 @@ export default function Home() {
   const categories = useQuery(api.catalog.listCategories);
   const viewer = useQuery(api.users.viewer);
   const unread = useQuery(api.notifications.unreadCount, { side: "shop" }) ?? 0;
-  const firstName = viewer && !viewer.isGuest ? viewer.name?.trim().split(/\s+/)[0] : undefined;
+  const name = viewer && !viewer.isGuest ? viewer.name?.trim() || undefined : undefined;
+  const { count: cartCount } = useCartSummary();
   const home = useQuery(api.storefront.home, { today, state: area?.state, lga: area?.lga });
   // Fresh Picks' "See all": the Categories tab, showing every product
   const openAllProducts = () => router.navigate({ pathname: "/categories", params: { c: "all", at: String(Date.now()) } });
   const categorySlug = new Map<string, { slug: string; name: string }>(categories?.map((c) => [c._id, { slug: c.slug, name: c.name }]));
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.screen}>
+    <View style={styles.screen}>
       <HomeView
-        greeting={firstName ? `${greeting()}, ${firstName}` : greeting()}
+        greeting={greeting()}
+        name={name}
+        cartCount={cartCount}
+        onCart={() => router.navigate("/cart")}
+        onAllCategories={() => router.navigate("/categories")}
         unreadAlerts={unread}
         onAlerts={() => router.push("/notifications")}
         areaLabel={area ? `${area.name}, ${area.state}` : "Choose your area"}
@@ -58,7 +63,7 @@ export default function Home() {
         onBanner={home?.banner ? () => router.push(`/product/${home.banner!.listing.id}`) : undefined}
         onFarm={(f) => router.push(`/farm/${f.id}`)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

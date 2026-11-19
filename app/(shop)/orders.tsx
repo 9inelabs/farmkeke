@@ -14,7 +14,7 @@ import { Button, EmptyState, ScreenHeader, Segmented, Skeleton, StatusBadge, Tex
 import { dayMonth } from "@/features/orders/format";
 import { justArrived, badge, timingText } from "@/features/orders/status";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Row = FunctionReturnType<typeof api.orders.consumer.list>[number];
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   next: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderRadius: radii.md, backgroundColor: colors.surfaceSoft },
   nextAction: { backgroundColor: colors.tint },
   chatButton: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
-  chatDot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.forest, borderWidth: 1.5, borderColor: colors.tint },
+  chatDot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.forest, borderWidth: borders.strong, borderColor: colors.tint },
   findInset: { marginHorizontal: spacing.screen, marginBottom: spacing.lg },
   pastRow: { flexDirection: "row", alignItems: "center" },
   find: {

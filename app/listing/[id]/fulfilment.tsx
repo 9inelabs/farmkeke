@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
     borderWidth: borders.hairline,
     borderColor: colors.line,
   },
-  cardOn: { borderColor: colors.forest, borderWidth: 1.5, backgroundColor: colors.tint },
+  cardOn: { borderColor: colors.forest, borderWidth: borders.strong, backgroundColor: colors.tint },
   icon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
   flex: { flex: 1, gap: 2 },
-  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: borders.strong, borderColor: colors.inkMuted, alignItems: "center", justifyContent: "center" },
   boxOn: { backgroundColor: colors.forest, borderColor: colors.forest },
 });

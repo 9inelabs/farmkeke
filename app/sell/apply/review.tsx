@@ -13,7 +13,7 @@ import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { displayPhone } from "@/lib/phone";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 function Line({ icon: Icon, label, value }: { icon: IconComponent; label: string; value: string | null }) {
@@ -158,7 +158,7 @@ export default function Review() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, gap: 1 },
-  card: { backgroundColor: colors.white, borderRadius: 18, padding: spacing.lg, gap: spacing.md, borderWidth: 1.5, borderColor: "transparent", boxShadow: "0px 10px 30px 0px rgba(16, 35, 11, 0.08)" },
+  card: { backgroundColor: colors.white, borderRadius: 18, padding: spacing.lg, gap: spacing.md, borderWidth: borders.strong, borderColor: "transparent", boxShadow: "0px 10px 30px 0px rgba(16, 35, 11, 0.08)" },
   flagged: { borderColor: colors.errorSoft },
   cardHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardTitle: { fontFamily: fonts.semibold, fontSize: 15 },

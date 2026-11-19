@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     borderWidth: borders.hairline,
     borderColor: colors.line,
   },
-  cardOn: { borderColor: colors.forest, borderWidth: 1.5, backgroundColor: colors.tint },
+  cardOn: { borderColor: colors.forest, borderWidth: borders.strong, backgroundColor: colors.tint },
   icon: {
     width: 40,
     height: 40,

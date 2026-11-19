@@ -16,7 +16,7 @@ import { useEditableApplication } from "@/features/farmer/useApplication";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { pickPhotos, preparePhoto, uploadFile, type PhotoSource } from "@/lib/upload";
-import { colors } from "@/theme/tokens";
+import { borders, colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export default function FarmPhotos() {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   image: { width: "100%", height: "100%", backgroundColor: colors.placeholder },
   cover: { position: "absolute", left: 8, top: 8, height: 24, paddingHorizontal: 9, borderRadius: 99, backgroundColor: colors.lime, justifyContent: "center" },
   coverText: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.forest },
-  addTile: { alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: colors.white, borderWidth: 1.5, borderColor: "#C9D6B8" },
+  addTile: { alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: colors.white, borderWidth: borders.strong, borderColor: "#C9D6B8" },
   addStriped: { backgroundColor: "#FAFCF6", borderStyle: "dashed" },
   addIconDark: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
   addIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },

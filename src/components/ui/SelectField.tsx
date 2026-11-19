@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: radii.pill,
     borderWidth: borders.hairline,
-    borderColor: colors.inkSoft,
+    borderColor: colors.lineStrong,
     paddingHorizontal: spacing.lg,
     flexDirection: "row",
     alignItems: "center",

@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   frame: {
     height: HEIGHT + PAD * 2,
     borderRadius: radii.md + 2,
-    borderWidth: borders.hairline * 2,
+    borderWidth: borders.hairline,
     borderColor: colors.line,
     padding: PAD,
     flexDirection: "row",

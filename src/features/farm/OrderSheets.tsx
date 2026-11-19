@@ -7,7 +7,7 @@ import { Bike, Call, Camera, Danger, Key } from "@/components/icons";
 import { BottomSheet, Button, Checkbox, RadioRow, Text } from "@/components/ui";
 import { displayPhone } from "@/lib/phone";
 import { errorCode, errorMessage } from "@/lib/errors";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { PickupScanner } from "./PickupScanner";
 import { DECLINE_REASONS, type DeclineReason } from "./status";
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   riderPhone: { flexDirection: "row", alignItems: "center", gap: 4 },
   checks: { gap: spacing.md, paddingVertical: spacing.xs },
   code: { flexDirection: "row", justifyContent: "center", gap: spacing.md, paddingVertical: spacing.sm },
-  digit: { width: 60, height: 70, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "transparent" },
+  digit: { width: 60, height: 70, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center", borderWidth: borders.strong, borderColor: "transparent" },
   digitFilled: { backgroundColor: colors.tint },
   digitActive: { borderColor: colors.lime, backgroundColor: colors.white },
   digitError: { borderColor: colors.error },

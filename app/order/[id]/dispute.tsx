@@ -16,7 +16,7 @@ import { ChatThread } from "@/features/chat/ChatThread";
 import { dayTime } from "@/features/orders/format";
 import { useOrder } from "@/features/orders/useOrder";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export default function Dispute() {
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   heroTitle: { fontFamily: fonts.displayBold },
   heroBadges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
-  decision: { borderWidth: 1.5, borderColor: colors.lime },
+  decision: { borderWidth: borders.strong, borderColor: colors.lime },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   photos: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   photo: { width: 72, height: 72, borderRadius: radii.md, backgroundColor: colors.placeholder },

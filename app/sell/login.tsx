@@ -5,12 +5,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Keyboard, Platform, StyleSheet, TextInput, View } from "react-native";
 import { Glass, PinPad } from "@/components/premium";
-import { Text } from "@/components/ui";
+import { Text, Wordmark } from "@/components/ui";
 import { useAfterFarmerSignIn } from "@/features/sell/afterSignIn";
 import { SellShell, SellTitle } from "@/features/sell/SellShell";
 import { phoneAuthMessage, usePhoneAuth } from "@/features/sell/usePhoneAuth";
 import { validPhone } from "@/lib/phone";
-import { colors } from "@/theme/tokens";
+import { borders, colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 export default function FarmerLogin() {
@@ -44,9 +44,9 @@ export default function FarmerLogin() {
   };
 
   return (
-    <SellShell tone="dark" bare>
+    <SellShell tone="dark" bare right={<Wordmark width={112} tone="light" />}>
       <View style={styles.head}>
-        <SellTitle tone="dark" overline="Farmers" title="Log in" accent="with your PIN" note="Your phone number and the 4-digit PIN you chose." />
+        <SellTitle tone="dark" title="Farmer" accent="Sign In" note="Your phone number and the 4-digit PIN you chose." />
         <View>
           <Text style={styles.label}>Mobile number</Text>
           <Glass style={[styles.phone, focused && styles.phoneFocused, errors.phone ? styles.phoneError : null]}>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   head: { gap: 18, paddingTop: 8, marginBottom: 18 },
   label: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 17, color: colors.white, marginBottom: 7 },
   phone: { flexDirection: "row", alignItems: "center", height: 54, borderRadius: 15, paddingHorizontal: 15 },
-  phoneFocused: { borderColor: colors.lime, borderWidth: 1.5 },
+  phoneFocused: { borderColor: colors.lime, borderWidth: borders.strong },
   phoneError: { borderColor: "#FF9C9C" },
   prefix: { flexShrink: 0, fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20, color: colors.white, paddingRight: 12, marginRight: 12, borderRightWidth: 1, borderRightColor: "rgba(255,255,255,0.2)" },
   input: { flex: 1, fontFamily: fonts.medium, fontSize: 16, color: colors.white, paddingVertical: 12, ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {}) },

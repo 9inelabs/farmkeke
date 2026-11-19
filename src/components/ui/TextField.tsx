@@ -76,7 +76,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
           styles.field,
           lime && styles.fieldLime,
           premium && styles.fieldPremium,
-          { borderColor, borderWidth: focused || error || lime ? 1.5 : 1 },
+          { borderColor, borderWidth: focused || error || lime ? borders.strong : borders.hairline },
           focused && styles.fieldFocused,
           premium && valid && !focused && !error && styles.fieldFocused,
           premium && focused && !error && styles.haloPremium,

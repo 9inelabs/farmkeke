@@ -9,7 +9,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Component, useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowRight, Close, Leaf, Shop, Truck, Wallet, type IconComponent } from "@/components/icons";
@@ -71,11 +71,7 @@ export default function SellOnFarmkeke() {
     <View style={styles.screen}>
       <StatusBar style="light" />
       <View style={[styles.photo, { height: Math.min(500, height * 0.58) }]}>
-        <Image source={require("../../assets/photos/farmer-field.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "45%", top: "20%" }} accessible={false} />
-        {/* The photo staff set for this screen in the Admin Portal (Site photos), if any */}
-        <Quiet>
-          <AdminPhoto />
-        </Quiet>
+        <Image source={require("../../assets/photos/farmer-field-hd.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "50%", top: "12%" }} accessible={false} />
         <LinearGradient
           colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0)", "rgba(11,26,7,0.15)", "rgba(11,26,7,0.92)", colors.forestDeep]}
           locations={[0, 0.22, 0.45, 0.85, 1]}
@@ -136,34 +132,6 @@ export default function SellOnFarmkeke() {
       </View>
     </View>
   );
-}
-
-/** The Admin Portal's photo for this screen, over the built-in one. */
-function AdminPhoto() {
-  const photos = useQuery(api.sitePhotos.farmerSignup);
-  const photo = photos?.intro ?? null;
-  if (photo === null) return null;
-  return (
-    <Image
-      source={{ uri: photo.url }}
-      style={StyleSheet.absoluteFill}
-      contentFit="cover"
-      contentPosition={typeof photo.x === "number" && typeof photo.y === "number" ? { left: `${photo.x}%`, top: `${photo.y}%` } : photo.focus}
-      transition={300}
-      accessible={false}
-    />
-  );
-}
-
-/** If the photos can't be loaded (an older backend), the built-in photo stays. */
-class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
 }
 
 const styles = StyleSheet.create({

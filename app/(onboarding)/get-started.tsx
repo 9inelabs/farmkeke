@@ -19,7 +19,7 @@ import { Glass } from "@/components/premium";
 import { Button, Text, Wordmark } from "@/components/ui";
 import { tapFeedback } from "@/lib/haptics";
 import { usePrefs } from "@/store/prefs";
-import { colors } from "@/theme/tokens";
+import { borders, colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
 type Role = "shop" | "farm";
@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 36, letterSpacing: -1, color: colors.white, maxWidth: 320 },
   sheet: { flexGrow: 1, marginTop: -28, backgroundColor: colors.white, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 20, paddingTop: 24 },
   choices: { gap: 12 },
-  card: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 20, borderWidth: 1.5 },
+  card: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 20, borderWidth: borders.strong },
   cardShadow: { boxShadow: "0px 12px 28px 0px rgba(30, 59, 22, 0.12)" },
   iconBox: { width: 50, height: 50, borderRadius: 15, alignItems: "center", justifyContent: "center" },
   cardTitle: { fontFamily: fonts.displayBold, fontSize: 16, lineHeight: 21, color: colors.forest },
   cardBody: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.inkSoft, marginTop: 2 },
-  radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: "#CFD6C8", alignItems: "center", justifyContent: "center" },
+  radio: { width: 24, height: 24, borderRadius: 12, borderWidth: borders.strong, borderColor: "#CFD6C8", alignItems: "center", justifyContent: "center" },
   radioOn: { position: "absolute", left: -1.5, top: -1.5, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
   actions: { gap: 10, marginTop: 22 },
   outline: { borderColor: colors.line },

@@ -15,7 +15,7 @@ import { useAttachments } from "@/features/chat/useAttachments";
 import { dayTime } from "@/features/orders/format";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { Countdown } from "./ui";
 
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
   heroTitle: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.white },
   heroBadges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
   card: { backgroundColor: colors.white, borderRadius: radii.lg + 4, padding: spacing.lg, gap: spacing.sm },
-  reply: { borderWidth: 1.5, borderColor: colors.lime },
-  decision: { borderWidth: 1.5, borderColor: colors.lime },
+  reply: { borderWidth: borders.strong, borderColor: colors.lime },
+  decision: { borderWidth: borders.strong, borderColor: colors.lime },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   stances: { flexDirection: "row", gap: spacing.xs },
   note: { minHeight: 96, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft, padding: spacing.md, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, textAlignVertical: "top" },
