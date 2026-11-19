@@ -62,6 +62,7 @@ export default function Home() {
         onAddToCart={(p) => openAdd(p.id)}
         onBanner={home?.banner ? () => router.push(`/product/${home.banner!.listing.id}`) : undefined}
         onFarm={(f) => router.push(`/farm/${f.id}`)}
+        onAllFarms={() => router.push("/farms")}
       />
     </View>
   );

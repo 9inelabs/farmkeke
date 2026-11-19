@@ -22,7 +22,17 @@ import { useScreenWidth } from "@/theme/useScreenSize";
 import { AlmostGoneRow } from "./AlmostGoneRow";
 
 export type HomeCategory = { id: string; name: string; illustration: string };
-export type HomeProduct = { id: string; name: string; priceKobo: number; unit: string; imageUrl: string | null };
+export type HomeProduct = {
+  id: string;
+  name: string;
+  priceKobo: number;
+  unit: string;
+  imageUrl: string | null;
+  // For the card's tag
+  freshness?: string | null;
+  delivery?: boolean;
+  pickup?: boolean;
+};
 export type HomeBanner = { tag: string; title: string; subtitle: string; buttonLabel: string; imageUrl: string | null };
 export type HomeFarm = { id: string; name: string; area: string; photoUrl: string | null };
 /** One product row, as storefront.home sends it. */
@@ -54,6 +64,8 @@ type Props = {
   onAddToCart?: (product: HomeProduct) => void;
   onBanner?: () => void;
   onFarm?: (farm: HomeFarm) => void;
+  /** "View all" on Farmers near you: the all-farms screen */
+  onAllFarms?: () => void;
 };
 
 const CARD_GAP = spacing.sm + 2;
@@ -104,6 +116,9 @@ export function HomeView(props: Props) {
               width={cardWidth}
               onPress={props.onProduct && (() => props.onProduct?.(p))}
               onAdd={props.onAddToCart && (() => props.onAddToCart?.(p))}
+              freshness={p.freshness}
+              delivery={p.delivery}
+              pickup={p.pickup}
             />
           ))}
     </ScrollView>
@@ -160,12 +175,22 @@ export function HomeView(props: Props) {
     <View style={styles.farmsCard}>
       <ForestBackdrop grid={false} glow="left" />
       <View style={styles.farmsHead}>
-        <Text accessibilityRole="header" maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsTitle}>
-          Farmers near you
-        </Text>
-        <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsSub}>
-          Order straight from their farm
-        </Text>
+        <View style={styles.flex}>
+          <Text accessibilityRole="header" maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsTitle}>
+            Farmers near you
+          </Text>
+          <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsSub}>
+            Order straight from their farm
+          </Text>
+        </View>
+        {props.onAllFarms ? (
+          <Pressable accessibilityRole="link" accessibilityLabel="View all farms" hitSlop={12} onPress={props.onAllFarms} style={styles.seeAll}>
+            <Text maxFontSizeMultiplier={MAX_TEXT} style={styles.farmsAll}>
+              View all
+            </Text>
+            <ChevronRight size={13} color={colors.lime} />
+          </Pressable>
+        ) : null}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.farms}>
         {props.farms === undefined
@@ -422,7 +447,9 @@ const styles = StyleSheet.create({
   bannerButtonText: { fontFamily: fonts.bold, fontSize: 12, lineHeight: 15, color: colors.forestDeep },
   // Farmers near you
   farmsCard: { borderRadius: 20, overflow: "hidden", backgroundColor: colors.forestDeep, paddingVertical: spacing.md + 2, gap: spacing.md },
-  farmsHead: { paddingHorizontal: spacing.lg, gap: 1 },
+  farmsHead: { paddingHorizontal: spacing.lg, flexDirection: "row", alignItems: "center", gap: spacing.md },
+  flex: { flex: 1 },
+  farmsAll: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.lime },
   farmsTitle: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 20, letterSpacing: -0.2, color: colors.white },
   farmsSub: { fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15, color: colors.onForest },
   farms: { paddingHorizontal: spacing.lg, gap: spacing.md },

@@ -4,9 +4,9 @@
 import { router } from "expo-router";
 import type { ReactElement } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
-import { ProductCard, Skeleton, Text } from "@/components/ui";
+import { ProductCard, Skeleton } from "@/components/ui";
 import { useShopUi } from "@/store/shopUi";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { radii, spacing } from "@/theme/tokens";
 import { useScreenWidth } from "@/theme/useScreenSize";
 
 export type GridItem = {
@@ -17,6 +17,8 @@ export type GridItem = {
   imageUrl: string | null;
   inStock?: boolean;
   freshness?: string | null;
+  delivery?: boolean;
+  pickup?: boolean;
 };
 
 const GAP = spacing.md;
@@ -78,20 +80,11 @@ export function ProductGrid({ items, header, empty, footer, onEndReached, column
             compact={columns === 3}
             onPress={() => router.push(`/product/${item.id}`)}
             onAdd={item.inStock === false ? undefined : () => openAdd(item.id)}
+            soldOut={item.inStock === false}
+            freshness={item.freshness}
+            delivery={item.delivery}
+            pickup={item.pickup}
           />
-          {item.inStock === false ? (
-            <View style={styles.tag}>
-              <Text variant="small" color={colors.ink}>
-                Sold out
-              </Text>
-            </View>
-          ) : item.freshness && columns === 2 ? (
-            <View style={styles.tag}>
-              <Text variant="small" color={colors.forest} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                {item.freshness}
-              </Text>
-            </View>
-          ) : null}
         </View>
       )}
     />
@@ -101,14 +94,4 @@ export function ProductGrid({ items, header, empty, footer, onEndReached, column
 const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.screen, paddingBottom: spacing.xxxl },
   loading: { flexDirection: "row", flexWrap: "wrap" },
-  tag: {
-    position: "absolute",
-    top: spacing.md + 2,
-    left: spacing.sm + 4,
-    backgroundColor: colors.white,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    maxWidth: "88%",
-  },
 });

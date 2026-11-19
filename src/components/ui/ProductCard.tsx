@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Plus } from "@/components/icons";
+import { Leaf, Pin, Plus, Truck, type IconComponent } from "@/components/icons";
 import { formatNaira } from "@/lib/money";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -20,15 +20,33 @@ type Props = {
   onAdd?: () => void;
   /** Three-across grids: tighter padding and type so the price isn't cut off. */
   compact?: boolean;
+  // The tag on the photo, like the reference's "Free Delivery": the first that applies of
+  // sold out, harvested today or yesterday, home delivery, pickup only.
+  soldOut?: boolean;
+  freshness?: string | null;
+  delivery?: boolean;
+  pickup?: boolean;
 };
+
+type Tag = { label: string; icon?: IconComponent; tone: "green" | "lime" | "grey" };
+
+function tagOf(p: Pick<Props, "soldOut" | "freshness" | "delivery" | "pickup" | "compact">): Tag | null {
+  if (p.soldOut) return { label: "Sold out", tone: "grey" };
+  if (p.freshness === "Harvested today" || p.freshness === "Harvested yesterday") return { label: p.compact ? "Fresh" : p.freshness, icon: Leaf, tone: "lime" };
+  if (p.delivery) return { label: p.compact ? "Delivery" : "Home delivery", icon: Truck, tone: "green" };
+  if (p.pickup) return { label: "Pickup only", icon: Pin, tone: "green" };
+  return null;
+}
 
 /**
  * Product card (redesign, Nov 2026, after the owner's grocery reference): a
  * white card with a crisp outline, the photo on a soft panel, then the price,
- * the name and the unit, with a round green add button in the corner.
+ * the name and the unit, with a round green add button in the corner, and a
+ * small tag on the photo (see tagOf).
  */
-export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPress, onAdd, compact = false }: Props) {
+export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPress, onAdd, compact = false, soldOut, freshness, delivery, pickup }: Props) {
   const price = formatNaira(priceKobo);
+  const tag = tagOf({ soldOut, freshness, delivery, pickup, compact });
   const add = compact ? 26 : 30;
   return (
     <PressableScale
@@ -39,7 +57,15 @@ export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPr
       style={[styles.card, compact && styles.cardCompact, { width }]}
     >
       <View style={styles.photo}>
-        {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" transition={150} /> : null}
+        {imageUrl ? <Image source={{ uri: imageUrl }} style={[styles.image, soldOut && styles.imageSoldOut]} contentFit="cover" transition={150} /> : null}
+        {tag ? (
+          <View style={[styles.tag, compact && styles.tagCompact, tag.tone === "lime" && styles.tagLime, tag.tone === "grey" && styles.tagGrey]}>
+            {tag.icon ? <tag.icon size={compact ? 10 : 11} color={tag.tone === "lime" ? colors.forestDeep : colors.white} variant="solid" /> : null}
+            <Text numberOfLines={1} maxFontSizeMultiplier={1.15} style={[styles.tagText, compact && styles.tagTextCompact, tag.tone === "lime" && styles.tagTextLime]}>
+              {tag.label}
+            </Text>
+          </View>
+        ) : null}
       </View>
       {/* Price, name and unit share the row with the add button, so they can't run under it. */}
       <View style={styles.buy}>
@@ -82,6 +108,26 @@ const styles = StyleSheet.create({
   cardCompact: { padding: 6, gap: 6 },
   photo: { width: "100%", aspectRatio: 1.1, borderRadius: radii.md, backgroundColor: colors.tint, overflow: "hidden" },
   image: { width: "100%", height: "100%" },
+  imageSoldOut: { opacity: 0.5 },
+  tag: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    maxWidth: "90%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+    backgroundColor: colors.success,
+  },
+  tagCompact: { top: 4, left: 4, paddingHorizontal: 5, paddingVertical: 2 },
+  tagLime: { backgroundColor: colors.lime },
+  tagGrey: { backgroundColor: "rgba(26, 26, 26, 0.72)" },
+  tagText: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 10, lineHeight: 13, color: colors.white },
+  tagTextCompact: { fontSize: 9, lineHeight: 11 },
+  tagTextLime: { color: colors.forestDeep },
   buy: { flexDirection: "row", alignItems: "flex-end", gap: spacing.xs, paddingHorizontal: 2 },
   copy: { flex: 1, minWidth: 0 },
   price: { fontFamily: fonts.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink, letterSpacing: -0.2 },
