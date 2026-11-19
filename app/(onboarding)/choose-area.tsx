@@ -107,7 +107,7 @@ export default function ChooseArea() {
           <EmptyState
             icon={Offline}
             title="Can't load areas right now"
-            message="Check your mobile data or Wi-Fi. This list loads as soon as you're back online."
+            message="Check your mobile data or Wi-Fi. If you're online, Farmkeke may be briefly unreachable. This list loads as soon as we're connected."
           />
         ) : loading ? (
           <View style={styles.skeletons}>
