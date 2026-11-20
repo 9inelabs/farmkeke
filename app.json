@@ -78,7 +78,10 @@
     ],
     "owner": "9inelabs",
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "6f52b9a3-8939-4ba6-bf6c-50fcd2dd0016"
+      }
     }
   }
 }
