@@ -12,6 +12,7 @@
       }
     },
     "preview": {
+      "environment": "preview",
       "distribution": "internal",
       "android": {
         "buildType": "apk"
@@ -20,7 +21,18 @@
         "EXPO_PUBLIC_CONVEX_URL": "https://incredible-wolf-877.eu-west-1.convex.cloud"
       }
     },
+    "investor": {
+      "environment": "production",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "https://abundant-ram-87.convex.cloud"
+      }
+    },
     "production": {
+      "environment": "production",
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
