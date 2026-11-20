@@ -1,0 +1,57 @@
+# What EAS Build leaves out of the upload. This file replaces .gitignore for
+# EAS, so the .gitignore rules are repeated below; then the folders the app
+# doesn't use: the website, backend tests, docs and design files.
+# (convex/ stays: the app imports its generated API and shared rules.)
+
+# --- from .gitignore ---
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# dependencies
+node_modules/
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+# Metro
+.metro-health-check*
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+# macOS
+.DS_Store
+*.pem
+# local env files
+.env
+.env*.local
+# typescript
+*.tsbuildinfo
+# generated native folders
+/ios
+/android
+# Original docs archive (extracted into farmkeke-docs/)
+farmkeke-docs.zip
+# Firebase app config: given to EAS as the GOOGLE_SERVICES_JSON file variable
+google-services.json
+# Firebase service account keys (push sending): never commit
+*firebase-adminsdk*.json
+
+# --- not part of the app ---
+web/
+convex-tests/
+docs/
+farmkeke-docs/
+assets/new assets/
+app-preview/
+skills-lock.json
+*.apk
+*.aab
+*.zip
