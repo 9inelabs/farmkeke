@@ -227,6 +227,12 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
               : "This checkout has expired. Go back to your cart to start again."
             : code === "ALREADY_PAID"
               ? "This has already been paid."
+            : code === "FARM_NOT_READY"
+              ? "A farm in this order isn't set up to receive payments yet. Try again in a few minutes. You haven't been charged."
+            : code === "PAYMENTS_NOT_LIVE"
+              ? "Card and bank payments aren't switched on yet. Please try again later."
+            : code === "PAYMENT_START_FAILED"
+              ? "Paystack couldn't open the payment just now. Try again in a minute, or choose another way to pay. You haven't been charged."
             : "We couldn't open the payment. Check your connection and try again. You haven't been charged.",
       );
     } finally {

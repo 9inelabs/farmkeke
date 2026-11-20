@@ -210,7 +210,11 @@ export function PayView({ checkoutId: fromPath, payToken }: { checkoutId?: strin
             ? "You've tried to pay several times in a few minutes. Wait a little, then try again."
             : code === "PAYMENTS_NOT_LIVE"
               ? "Card and bank payments aren't switched on yet. Please try again later."
-              : "We couldn't open the payment. Check your connection and try again.",
+              : code === "FARM_NOT_READY"
+                ? "A farm in this order isn't set up to receive payments yet. Try again in a few minutes. You haven't been charged."
+                : code === "PAYMENT_START_FAILED"
+                  ? "Paystack couldn't open the payment just now. Try again in a minute, or choose another way to pay. You haven't been charged."
+                  : "We couldn't open the payment. Check your connection and try again.",
       );
     }
   };
