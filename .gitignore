@@ -43,3 +43,8 @@ yarn-error.*
 
 # Original docs archive (extracted into farmkeke-docs/)
 farmkeke-docs.zip
+
+# Firebase app config: given to EAS as the GOOGLE_SERVICES_JSON file variable
+google-services.json
+# Firebase service account keys (push sending): never commit
+*firebase-adminsdk*.json
