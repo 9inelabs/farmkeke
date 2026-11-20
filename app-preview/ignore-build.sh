@@ -3,9 +3,14 @@
 # build, exit 1 builds. Builds when anything the app is made from changed since
 # the last deployed commit, not just since the parent, so a merge or docs commit
 # on top of app changes still builds. If that commit can't be found, it builds.
+# A redeploy of the commit already deployed (e.g. after changing the Convex
+# address in Vercel's environment variables) always builds.
 cd "$(dirname "$0")/.." || exit 1
 prev="$VERCEL_GIT_PREVIOUS_SHA"
 if [ -z "$prev" ] || ! git cat-file -e "$prev^{commit}" 2>/dev/null; then
+  exit 1
+fi
+if [ "$(git rev-parse "$prev")" = "$(git rev-parse HEAD)" ]; then
   exit 1
 fi
 git diff --quiet "$prev" HEAD -- app src assets package.json package-lock.json app.json babel.config.js metro.config.js app-preview

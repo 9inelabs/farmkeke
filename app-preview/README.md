@@ -15,7 +15,10 @@ Builds are skipped when nothing the app is built from has changed since the
 last deployed commit (Vercel's `VERCEL_GIT_PREVIOUS_SHA`), so a push of only
 website, backend or docs changes is skipped. It compares with the last
 deployment, not the parent commit: a merge or docs commit on top of app
-changes still builds. If the previous commit can't be found, it builds.
+changes still builds. If the previous commit can't be found, it builds. A redeploy of the same commit always builds, so
+changing `EXPO_PUBLIC_CONVEX_URL` and pressing Redeploy picks up the new
+address. Every build clears Expo's cache (`--clear`), because the Convex
+address is baked into the bundle and a cached build would keep the old one.
 Search engines are told not to index the preview.
 
 Native-only features behave differently in a browser: no push notifications,
