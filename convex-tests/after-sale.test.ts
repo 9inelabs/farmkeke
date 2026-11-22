@@ -387,3 +387,47 @@ test("the shopper says a delivery arrived while the rider is bringing it, or rep
   expect(disputed.deliveredAt).toBeDefined();
   expect(disputed.escrow).toBe("released");
 });
+
+test("orders nobody confirms close 2 days after payment (delivery) or after the collect-by time (pickup)", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const get = (id: any) => t.run(async (ctx) => (await ctx.db.get(id))!) as Promise<any>;
+  const age = (id: any, patch: Record<string, number>) => t.run(async (ctx) => ctx.db.patch(id, patch as any));
+
+  // A paid delivery the farm accepted and nobody marked delivered
+  const delivery = await paidOrder(t, s, s.account, "delivery");
+  // A paid farm pickup nobody collected
+  const pickup = await paidOrder(t, s, s.account, "pickup");
+  expect((await get(pickup)).status).toBe("ready_for_collection");
+
+  // Not yet: a day after payment, and before the collect-by time
+  await age(delivery, { paidAt: Date.now() - 24 * 3_600_000 });
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  expect((await get(delivery)).status).not.toBe("completed");
+  expect((await get(pickup)).status).toBe("ready_for_collection");
+
+  // Two days on, both close
+  await age(delivery, { paidAt: Date.now() - 49 * 3_600_000 });
+  await age(pickup, { collectBy: Date.now() - 49 * 3_600_000 });
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  for (const id of [delivery, pickup]) {
+    const o = await get(id);
+    expect(o.status).toBe("completed");
+    expect(o.endedAt).toBeDefined();
+  }
+  const told = await t.run(async (ctx) =>
+    (await ctx.db.query("notifications").collect()).filter((n: any) => n.kind === "order_completed" && /is closed/.test(n.title)),
+  );
+  expect(told).toHaveLength(2);
+
+  // An unpaid pickup (no collect-by time yet) is never closed or flagged
+  const unpaid = await t.run(async (ctx) => {
+    const o = (await ctx.db.get(pickup))!;
+    const { _id, _creationTime, ...rest } = o as any;
+    return await ctx.db.insert("orders", { ...rest, status: "ready_for_collection", paidAt: undefined, collectBy: undefined, endedAt: undefined, number: "FK-UNPAID" });
+  });
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  const still = await get(unpaid);
+  expect(still.status).toBe("ready_for_collection");
+  expect(still.pickupOverdueAt).toBeUndefined();
+});

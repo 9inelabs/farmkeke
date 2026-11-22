@@ -423,3 +423,17 @@ Implementation:
   - Still open: the Sell page's "How orders work" list mentions SMS alerts
     and "Mark it as packed". It belongs to the #11 changes; check that it's
     updated.
+
+### #11 follow-up (owner, 22 Nov): orders nobody confirms close after 2 days
+
+- Built in `convex/orders/system.ts` (`flagUnconfirmed`, hourly):
+  - a paid delivery that nobody marks delivered closes 2 days after
+    payment;
+  - a paid farm pickup that nobody marks collected closes 2 days after its
+    collect-by time (the shopper already has 3 days to collect).
+  - Either way the order moves to delivered/collected and then completed,
+    and the shopper gets an "Order … is closed" notice pointing to support.
+- Also fixed: unpaid pickup orders (ready to collect since acceptance, with
+  no collect-by time yet) could be caught by the collect-by sweeps, because
+  missing values sort first in Convex indexes. Both sweeps now skip them.
+- Test in `convex-tests/after-sale.test.ts`; all 119 tests pass.

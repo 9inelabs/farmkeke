@@ -140,12 +140,38 @@ export const flagUnconfirmed = internalMutation({
         flagged++;
       }
     }
+    // Nobody confirmed (owner, 22 Nov 2026): a paid delivery 2 days after
+    // payment, or a farm pickup 2 days after its collect-by time, closes on
+    // its own. The farm was paid when the shopper paid.
+    const closeBefore = now - UNCONFIRMED_CLOSE_HOURS * HOUR;
+    for (const status of UNDELIVERED) {
+      const waiting = await ctx.db
+        .query("orders")
+        .withIndex("by_status_and_deliveredAt", (q) => q.eq("status", status))
+        .take(500);
+      for (const order of waiting) {
+        if (order.fulfilment !== "delivery" || order.paidAt === undefined || order.paidAt > closeBefore) continue;
+        await closeUnconfirmed(ctx, order, "delivered", now);
+        flagged++;
+      }
+    }
+    for (const status of COLLECTING) {
+      const waiting = await ctx.db
+        .query("orders")
+        .withIndex("by_status_and_collectBy", (q) => q.eq("status", status).gt("collectBy", 0).lte("collectBy", closeBefore))
+        .take(200);
+      for (const order of waiting) {
+        await closeUnconfirmed(ctx, order, "collected", now);
+        flagged++;
+      }
+    }
+
     const overdue = [];
     for (const status of COLLECTING) {
       overdue.push(
         ...(await ctx.db
           .query("orders")
-          .withIndex("by_status_and_collectBy", (q) => q.eq("status", status).lte("collectBy", now))
+          .withIndex("by_status_and_collectBy", (q) => q.eq("status", status).gt("collectBy", 0).lte("collectBy", now))
           .take(200)),
       );
     }
@@ -158,6 +184,23 @@ export const flagUnconfirmed = internalMutation({
     return { flagged };
   },
 });
+
+/** How long after payment (delivery) or the collect-by time (pickup) an order nobody confirmed closes. */
+export const UNCONFIRMED_CLOSE_HOURS = 48;
+// Paid delivery orders still waiting for someone to say they arrived
+const UNDELIVERED: OrderStatus[] = ["accepted", "preparing", "ready_for_rider", "out_for_delivery"];
+
+async function closeUnconfirmed(ctx: MutationCtx, order: Doc<"orders">, reached: "delivered" | "collected", now: number) {
+  const done = await transition(ctx, order, reached, SYSTEM, { deliveredAt: now }, "Nobody confirmed it within 2 days");
+  await transition(ctx, done, "completed", SYSTEM, { endedAt: now }, "Closed: nobody confirmed it within 2 days");
+  await notifyConsumer(
+    ctx,
+    done,
+    "order_completed",
+    `Order ${order.number} is closed`,
+    "Nobody confirmed it within 2 days, so we've closed it. If anything was wrong, contact Farmkeke support.",
+  );
+}
 
 async function markPickupOverdue(ctx: MutationCtx, order: Doc<"orders">, now: number) {
   await ctx.db.patch("orders", order._id, { pickupOverdueAt: now });
