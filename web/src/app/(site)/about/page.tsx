@@ -30,13 +30,13 @@ const CHECKS: Array<[string, string]> = [
 const TEAM: { name: string; role: string; bio: string; photo: string }[] = [
   {
     name: "Ejike Daniel Chukwuemeka",
-    role: "Founder / CEO",
+    role: "Founder & CEO",
     bio: "Leads Farmkeke's vision, farmer partnerships and growth across Nigeria.",
     photo: "/team/ejike-daniel.jpg",
   },
   {
     name: "Franklyn Raymond Nobei",
-    role: "Co-Founder / CTO",
+    role: "Co-Founder & CTO",
     bio: "Leads the technology behind Farmkeke's app, website and payments.",
     photo: "/team/franklyn-nobei.jpg",
   },
