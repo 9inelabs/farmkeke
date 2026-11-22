@@ -54,7 +54,7 @@ export const admin = {
     assignRider: makeFunctionReference<"mutation", { "collectAt": number; "note"?: string; "orderId": Id<"orders">; "riderId": Id<"riders"> }, any>("admin/dispatch:assignRider"),
     board: makeFunctionReference<"query", { "now": number }, any>("admin/dispatch:board"),
     needsPriceCount: makeFunctionReference<"query", Record<string, never>, any>("admin/dispatch:needsPriceCount"),
-    recordStep: makeFunctionReference<"mutation", { "note"?: string; "orderId": Id<"orders">; "pickupCode"?: string; "step": "collected_from_farm" | "dropped_at_pickup_point" | "delivered" | "collected_by_consumer" }, any>("admin/dispatch:recordStep"),
+    recordStep: makeFunctionReference<"mutation", { "note"?: string; "orderId": Id<"orders">; "pickupCode"?: string; "step": "collected_from_farm" | "dropped_at_pickup_point" | "delivered" | "collected_by_consumer" | "ready_at_farm" }, any>("admin/dispatch:recordStep"),
     setDeliveryPrice: makeFunctionReference<"mutation", { "orderId": Id<"orders">; "feeKobo": number; "note"?: string }, any>("admin/dispatch:setDeliveryPrice"),
   },
   disputes: {

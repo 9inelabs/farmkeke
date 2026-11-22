@@ -20,8 +20,8 @@ const VALUES: Array<[LucideIcon, string, string]> = [
 ];
 
 const CHECKS: Array<[string, string]> = [
-  ["Identity and address", "Government ID and proof of address are checked."],
-  ["Farm and association", "Farm photos and a farmers association letter confirm they grow what they sell."],
+  ["Identity", "Each farmer's phone number is confirmed and their NIN is checked."],
+  ["Farm and location", "Farm photos and the farm's location confirm they grow what they sell."],
   ["Call or visit", "We may call the farmer or visit the farm before approving."],
   ["Ongoing reviews", "Ratings and problem reports help us keep standards high."],
 ];

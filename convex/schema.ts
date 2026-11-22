@@ -267,6 +267,9 @@ export default defineSchema({
     // the guest orders placed with that email (proves the shopper owns it)
     guestLinkToken: v.optional(v.string()),
     guestLinkExpiresAt: v.optional(v.number()),
+    // APK #10: the profile photo the account holder uploaded (Edit profile).
+    // Set and removed through profilePhoto.ts, which deletes the old file.
+    photoStorageId: v.optional(v.id("_storage")),
   })
     .index("email", ["email"])
     .index("phone", ["phone"])

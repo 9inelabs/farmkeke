@@ -288,9 +288,7 @@ test("problem report: staff alert, farm reminder 2h before the 12h deadline, ove
     const orderId = placed.orders[0].orderId;
     await farmer.mutation(api.orders.farmer.accept, { orderId });
     await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
-    await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-    await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-    // Pickup at the farm: staff can record the collection too, with the shopper's code
+    // Pickup at the farm: ready once accepted; staff can record the collection too, with the shopper's code
     const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
     await admin.mutation(api.admin.dispatch.recordStep, { orderId, step: "collected_by_consumer", pickupCode: order.pickupCode });
     return await guest.mutation(api.disputes.open, { orderId, itemIndexes: [0], note: "Soft", photoIds: [], reason: "damaged" });

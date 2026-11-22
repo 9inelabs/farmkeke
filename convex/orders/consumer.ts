@@ -9,6 +9,8 @@ import { getViewer, requireAccount, requireUser } from "../lib/auth";
 import { isOutOfStock } from "../lib/listing";
 import { farmIsOpen, isShopListing } from "../lib/listingCounts";
 import {
+  canSayArrived,
+  canSayCollected,
   collectFromView,
   deliveredByShopper,
   isActive,
@@ -17,6 +19,7 @@ import {
   pickupPointView,
   reachedShopper,
   reportBy,
+  transition,
 } from "../lib/orders";
 import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY, getRules, HOUR } from "../lib/settings";
@@ -77,8 +80,10 @@ async function consumerView(ctx: QueryCtx, order: Doc<"orders">, viewOnly: boole
     pickupCode: viewOnly ? null : (order.pickupCode ?? null),
     contact: viewOnly ? { name: order.contact.name.split(/\s+/)[0] ?? "", phone: null } : order.contact,
     address: viewOnly && core.address ? { ...core.address, street: null, landmark: null, note: null } : core.address,
-    // The rider is bringing it: the shopper can say it arrived
-    canMarkArrived: !viewOnly && order.status === "out_for_delivery",
+    // Paid and on its way (or the rider beat staff to it): the shopper can say it arrived
+    canMarkArrived: !viewOnly && canSayArrived(order),
+    // Paid and waiting to be collected: the shopper can say they have it (the farm needn't scan)
+    canMarkCollected: !viewOnly && canSayCollected(order),
     // Problems are reported until the order closes, a day after delivery or collection
     canReport: !viewOnly && reachedShopper(order) && order.disputeId === undefined,
     reportBy: closesAt,
@@ -194,10 +199,11 @@ export const placedSummary = query({
 });
 
 /**
- * "It's arrived": the shopper marks a delivery delivered while the rider is
- * bringing it, without waiting for staff. The farm was paid when the shopper
- * paid (Paystack split), so this only starts the day in which a problem can be
- * reported; the order closes by itself after that.
+ * "It's arrived": the shopper marks a paid delivery delivered, without
+ * waiting for staff (who may not have marked it out for delivery yet). The
+ * farm was paid when the shopper paid (Paystack split), so this only starts
+ * the day in which a problem can be reported (buyer protection); the order
+ * closes by itself after that.
  */
 export const markArrived = mutation({
   args: { orderId: v.id("orders") },
@@ -207,9 +213,31 @@ export const markArrived = mutation({
     // Guests: only the identity (device) that placed the order
     if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
     if (order.status === "delivered") return null;
-    if (order.status !== "out_for_delivery") throw new ConvexError({ code: "NOT_OUT_FOR_DELIVERY", status: order.status });
+    if (!canSayArrived(order)) throw new ConvexError({ code: "NOT_OUT_FOR_DELIVERY", status: order.status });
     const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
     await deliveredByShopper(ctx, order, actor, "The shopper said it arrived");
+    return null;
+  },
+});
+
+/**
+ * "Collected": the shopper confirms they have a pickup order when the farm
+ * didn't scan their code (scanning is optional for the farm since 22 Nov
+ * 2026). Like "It's arrived", it starts the day in which a problem can be
+ * reported, then the order closes by itself.
+ */
+export const markCollected = mutation({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const order = await ctx.db.get("orders", args.orderId);
+    // Guests: only the identity (device) that placed the order
+    if (order === null || order.userId !== user._id) throw new ConvexError({ code: "NOT_FOUND" });
+    if (order.status === "collected") return null;
+    if (order.escrow === "none" && isActive(order)) throw new ConvexError({ code: "NOT_PAID_YET" });
+    if (!canSayCollected(order)) throw new ConvexError({ code: "NOT_READY_TO_COLLECT", status: order.status });
+    const actor = { kind: user.isAnonymous ? ("guest" as const) : ("consumer" as const), id: user._id };
+    await transition(ctx, order, "collected", actor, { deliveredAt: Date.now() }, "The shopper said they collected it");
     return null;
   },
 });

@@ -346,21 +346,20 @@ export const stuck = query({
     // Delivery accepted two hours ago and still no price: the shopper is waiting for their bill
     const unpriced = (o: Doc<"orders">) =>
       o.fulfilment === "delivery" && o.escrow === "none" && o.deliveryPricedAt === undefined && (o.acceptedAt ?? o._creationTime) < now - 2 * HOUR;
-    await scan("accepted", (o) =>
-      unpriced(o) ? "needs_delivery_price" : (o.acceptedAt ?? o._creationTime) < now - 48 * HOUR ? "not_preparing" : null,
-    );
-    await scan("preparing", (o) =>
-      unpriced(o) ? "needs_delivery_price" : (o.preparingAt ?? o._creationTime) < now - 48 * HOUR ? "not_ready" : null,
-    );
-    await scan("ready_for_rider", (o) =>
-      unpriced(o)
-        ? "needs_delivery_price"
-        : o.riderId === undefined
-        ? "no_rider"
-        : o.riderCollectAt !== undefined && o.riderCollectAt < now - 2 * HOUR
-          ? "not_collected_from_farm"
-          : null,
-    );
+    // The farm only accepts (22 Nov 2026): a paid order at the farm waits for
+    // staff to send the rider and mark it out for delivery. Older pickup-at-farm
+    // orders still "accepted"/"preparing" wait for staff to mark them ready.
+    const atFarmStuck = (o: Doc<"orders">) => {
+      if (unpriced(o)) return "needs_delivery_price";
+      if (o.escrow === "none") return null;
+      if (o.fulfilment === "pickup" && o.pickupPointId === undefined) return "not_ready";
+      if (o.riderId === undefined) return "no_rider";
+      if (o.riderCollectAt !== undefined && o.riderCollectAt < now - 2 * HOUR) return "not_collected_from_farm";
+      return (o.paidAt ?? o._creationTime) < now - 48 * HOUR ? "not_collected_from_farm" : null;
+    };
+    await scan("accepted", atFarmStuck);
+    await scan("preparing", atFarmStuck);
+    await scan("ready_for_rider", atFarmStuck);
     await scan("out_for_delivery", (o) => {
       const end = windowEnd(o.window);
       return end !== null && end < now - 2 * HOUR ? "delivery_late" : null;

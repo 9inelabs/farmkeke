@@ -11,6 +11,7 @@ import { formatNaira } from "@/lib/money";
 import { useCartSummary } from "@/store/cart";
 import { useShopUi } from "@/store/shopUi";
 import { colors } from "@/theme/tokens";
+import { openProduct } from "@/features/shop/openProduct";
 
 export default function Home() {
   const { today, area } = useShopContext();
@@ -30,6 +31,7 @@ export default function Home() {
       <HomeView
         greeting={greeting()}
         name={name}
+        photoUrl={viewer && !viewer.isGuest ? viewer.photoUrl : null}
         cartCount={cartCount}
         onCart={() => router.navigate("/cart")}
         onAllCategories={() => router.navigate("/categories")}
@@ -58,9 +60,9 @@ export default function Home() {
           if (cat) router.push({ pathname: "/category/[slug]", params: cat });
         }}
         onSeeAll={openAllProducts}
-        onProduct={(p) => router.push(`/product/${p.id}`)}
+        onProduct={(p) => openProduct(p.id, p.imageUrl)}
         onAddToCart={(p) => openAdd(p.id)}
-        onBanner={home?.banner ? () => router.push(`/product/${home.banner!.listing.id}`) : undefined}
+        onBanner={home?.banner ? () => openProduct(home.banner!.listing.id, home.banner!.listing.imageUrl) : undefined}
         onFarm={(f) => router.push(`/farm/${f.id}`)}
         onAllFarms={() => router.push("/farms")}
       />

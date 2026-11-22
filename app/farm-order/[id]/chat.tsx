@@ -4,17 +4,18 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronRight, Messages } from "@/components/icons";
-import { Avatar, Button, ScreenHeader, Skeleton, StatusScreen, Text } from "@/components/ui";
+import { Messages } from "@/components/icons";
+import { Button, ScreenHeader, Skeleton, StatusScreen } from "@/components/ui";
+import { ChatHeader, ChatOrderCard } from "@/features/chat/ChatHeader";
 import { ChatThread } from "@/features/chat/ChatThread";
+import { chatPalette } from "@/features/chat/palette";
 import { farmBadge } from "@/features/farm/status";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { radii, spacing } from "@/theme/tokens";
 
 export default function FarmOrderChat() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -56,45 +57,37 @@ export default function FarmOrderChat() {
 
   const b = farmBadge(order);
   const name = thread.counterpart.name;
+  const first = thread.order.firstItem;
+  const more = thread.order.itemCount - 1;
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
-      <ScreenHeader title={name} />
+    <View style={styles.screen}>
+      <ChatHeader name={name} subtitle={`Buyer · Order ${order.number}`} right={{ kind: "buyer", name, photoUrl: thread.counterpart.photoUrl }} />
+      <ChatOrderCard
+        imageUrl={thread.order.imageUrl}
+        title={(first ? `${first.name} × ${first.quantity}` : thread.order.summary) + (more > 0 ? ` and ${more} more` : "")}
+        line={`${order.number} · ${formatNaira(order.money.netKobo)} to you`}
+        status={b.label}
+        onPress={() => router.push({ pathname: "/farm-order/[id]", params: { id: orderId } })}
+      />
       <ChatThread
-        messages={results.map((m) => ({ _id: m._id, mine: m.mine, body: m.body, photos: m.photos, at: m.at, read: m.read, authorName: m.mine ? null : name }))}
+        messages={results.map((m) => ({ _id: m._id, mine: m.mine, body: m.body, photos: m.photos, at: m.at, read: m.read }))}
         loading={status === "LoadingFirstPage" || status === "LoadingMore"}
         onLoadMore={() => status === "CanLoadMore" && loadMore(30)}
-        header={
-          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/farm-order/[id]", params: { id: orderId } })} style={styles.order}>
-            {thread.order.imageUrl ? <Image source={{ uri: thread.order.imageUrl }} style={styles.thumb} contentFit="cover" /> : <Avatar name={name} size={44} />}
-            <View style={styles.flex}>
-              <Text variant="label" numberOfLines={1}>
-                {order.number} · {thread.order.summary}
-              </Text>
-              <Text variant="small">
-                {b.label} · {formatNaira(order.money.netKobo)} to you
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.inkMuted} />
-          </Pressable>
-        }
         empty={`Questions from ${name} show here. Farmkeke can read this chat to keep everyone safe.`}
         canSend={thread.canSend}
         closedNote="This order didn't go ahead, so the chat is closed."
-        placeholder={`Message ${name}`}
+        placeholder={`Reply to ${name}…`}
         maxPhotos={4}
         generateUploadUrl={() => generateUploadUrl({})}
         onSend={async (body, photoIds) => {
           await send({ orderId, side: "farm", body, photoIds: photoIds as Id<"_storage">[] });
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.canvas },
-  flex: { flex: 1 },
+  screen: { flex: 1, backgroundColor: chatPalette.background },
   pad: { padding: spacing.screen },
-  order: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.white },
-  thumb: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.placeholder },
 });

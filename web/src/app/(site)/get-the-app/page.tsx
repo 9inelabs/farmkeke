@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 const FEATURES: Array<[LucideIcon, string, string]> = [
-  [Clock, "Instant order alerts", "Know the moment your order is accepted, packed and on the way."],
+  [Clock, "Instant order alerts", "Know the moment your order is accepted and on the way."],
   [MessageCircle, "Chat with farmers", "Ask questions and share photos with the farm."],
   [MapPin, "Use your location", "Find farms that deliver near you in one tap."],
   [RefreshCw, "Reorder in seconds", "Buy your regular items again from your order history."],

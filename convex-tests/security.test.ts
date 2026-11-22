@@ -148,9 +148,11 @@ test("another farm can't see or act on a farm's orders, listings or payouts", as
 
   expect(await farmB.query(api.orders.farmer.get, { orderId })).toBeNull();
   expect(await farmB.query(api.orders.farmer.packingSlip, { orderId })).toBeNull();
-  for (const fn of [api.orders.farmer.accept, api.orders.farmer.startPreparing, api.orders.farmer.readyForRider, api.orders.farmer.confirmHandover]) {
-    await expect(farmB.mutation(fn, { orderId })).rejects.toThrow();
-  }
+  // The farm only accepts or declines (22 Nov 2026), plus the optional code scan
+  await expect(farmB.mutation(api.orders.farmer.accept, { orderId })).rejects.toThrow();
+  await expect(farmB.mutation(api.orders.farmer.confirmCollection, { orderId, code: "0000" })).rejects.toThrow();
+  // Nor can another shopper say it was collected
+  await expect(as(t, s.farmerB).mutation(api.orders.consumer.markCollected, { orderId })).rejects.toThrow(/NOT_FOUND/);
   await expect(farmB.mutation(api.orders.farmer.decline, { orderId, reason: "other", note: "x" } as any)).rejects.toThrow();
   await expect(farmB.mutation(api.listings.saveDetails, { listingId: s.tomatoes, name: "Pwned", categoryId: s.categoryId, description: "x" })).rejects.toThrow();
   await expect(farmB.mutation(api.listings.quickUpdate, { listingId: s.tomatoes, units: [{ unitId: s.unitId, priceKobo: 1, stock: 0 }] } as any)).rejects.toThrow();

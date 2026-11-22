@@ -34,12 +34,11 @@ export function badge(status: string, fulfilment: "delivery" | "pickup", paid = 
     case "placed":
     case "paid":
       return { label: "Waiting for the farm", tone: "pending" };
+    // "preparing" and "ready_for_rider" are older orders' stages (the farm only accepts since 22 Nov 2026)
     case "accepted":
-      return { label: fulfilment === "delivery" && !paid ? "Accepted · bill next" : "Accepted", tone: "pending" };
     case "preparing":
-      return { label: "Preparing", tone: "pending" };
     case "ready_for_rider":
-      return { label: "Ready for rider", tone: "pending" };
+      return { label: !paid ? "Accepted · bill next" : fulfilment === "delivery" ? "Rider arranged" : "Accepted", tone: "pending" };
     case "out_for_delivery":
       return { label: "Out for delivery", tone: "pending" };
     case "with_rider":
@@ -88,8 +87,8 @@ export function timingText(o: RowLike, now: number): string {
   if (o.status === "ready_for_collection") return "Ready to collect at the farm";
   if (o.status === "at_pickup_point") return "Ready to collect at the pickup point";
   if (o.status === "out_for_delivery") return "On its way to you";
-  if (o.fulfilment === "pickup" && ["accepted", "preparing"].includes(o.status)) return "Being prepared at the farm";
-  if (["accepted", "preparing", "ready_for_rider"].includes(o.status)) return "Being prepared";
+  if (o.fulfilment === "pickup" && ["accepted", "preparing"].includes(o.status)) return "Accepted by the farm";
+  if (["accepted", "preparing", "ready_for_rider"].includes(o.status)) return "A Farmkeke rider brings it next";
   return `Ordered ${dayLabel(o.placedAt)}`;
 }
 

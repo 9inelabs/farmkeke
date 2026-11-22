@@ -18,6 +18,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { Glass } from "@/components/premium";
 import { Button, Text, Wordmark } from "@/components/ui";
 import { tapFeedback } from "@/lib/haptics";
+import { photoProps } from "@/lib/preloadImages";
 import { usePrefs } from "@/store/prefs";
 import { borders, colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -51,7 +52,7 @@ export default function GetStarted() {
       <StatusBar style="light" />
       <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={{ height: photoHeight }}>
-          <Image source={require("../../assets/photos/market-stall.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} transition={250} />
+          <Image {...photoProps("marketStall")} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
           <LinearGradient
             colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0.15)", "rgba(11,26,7,0.92)"]}
             locations={[0, 0.35, 1]}

@@ -332,7 +332,8 @@ test("paid on Paystack after one farm's order was cancelled: that farm's share i
     refunds: await ctx.db.query("refunds").collect(),
     ledgerB: (await ctx.db.query("ledgerEntries").withIndex("by_orderId", (q) => q.eq("orderId", b.orderId)).collect()).map((e) => [e.kind, e.amountKobo]),
   }));
-  expect(r.a).toMatchObject({ status: "accepted", escrow: "released", farmShareKobo: 427500 });
+  // Pickup at the farm: ready to collect since it was accepted (22 Nov 2026)
+  expect(r.a).toMatchObject({ status: "ready_for_collection", escrow: "released", farmShareKobo: 427500 });
   // Farm B got its share from Paystack anyway: it owes it back; the shopper gets farm B's whole order back
   expect(r.b).toMatchObject({ status: "cancelled", escrow: "refunded", farmShareKobo: 285000 });
   expect(r.farmB.owedKobo).toBe(285000);

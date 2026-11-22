@@ -2,7 +2,8 @@
 // greeting, the farm, the bell, what Paystack sent the farm lately and the
 // order pipeline in frosted tiles; then quick actions (add a listing,
 // messages, reviews, low stock); orders waiting for a reply (with their
-// countdown); orders to prepare; stock running low. Small, tight type.
+// countdown); stock running low. Small, tight type. Since 22 Nov 2026 the
+// farm only accepts or declines, so there's no "To prepare" list.
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { router } from "expo-router";
@@ -18,7 +19,6 @@ import { androidUi, ripple } from "@/theme/platform";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { useLightStatusBar } from "@/theme/useLightStatusBar";
-import { farmBadge } from "./status";
 import { EmptyCard, FarmOrderRow, Section } from "./ui";
 
 type Dash = NonNullable<FunctionReturnType<typeof api.orders.farmer.dashboard>>;
@@ -45,8 +45,9 @@ export function DashboardView(p: DashboardProps) {
   const d = p.dash;
   const stats = [
     { label: "New", value: d?.counts.new },
-    { label: "To prepare", value: d?.counts.to_prepare },
-    { label: "Out", value: d?.counts.with_rider },
+    // The farm only accepts (22 Nov 2026): Farmkeke takes accepted orders from there
+    { label: "Accepted", value: d?.counts.accepted },
+    { label: "Problems", value: d?.counts.disputed },
   ];
   return (
     <View style={styles.screen}>
@@ -136,16 +137,6 @@ export function DashboardView(p: DashboardProps) {
                 <EmptyCard icon={Clipboard} title="You're all caught up" note="New orders appear here. You have 24 hours to reply." />
               )}
             </Section>
-
-            {d && d.toPrepare.length > 0 ? (
-              <Section title="To prepare" action={d.counts.to_prepare > 5 ? "See all" : undefined} onAction={() => router.navigate("/sales")}>
-                <View style={styles.list}>
-                  {d.toPrepare.map((o) => (
-                    <FarmOrderRow key={o._id} o={o} now={p.now} badge={farmBadge(o)} onPress={() => openOrder(o._id)} />
-                  ))}
-                </View>
-              </Section>
-            ) : null}
 
             {p.lowStock.length > 0 ? (
               <Section title="Running low" action="Listings" onAction={() => router.navigate("/listings")}>

@@ -1,4 +1,5 @@
-// M-48 (shopper, after the first order) and F-12 (farmer, on first switch to
+// M-48 (shopper: on Home after signing in, PushManager, or after the first
+// order, whichever comes first) and F-12 (farmer, on first switch to
 // farmer mode): why turn on push, shown before the phone's own prompt so the
 // one chance to ask isn't wasted. Two sample alerts show what's coming.
 import { useEffect, useState } from "react";
@@ -121,7 +122,8 @@ const styles = StyleSheet.create({
 
 /**
  * Opens the primer once per side, a moment after `armed` turns true: the
- * shopper's after an order is placed, while the phone can still be asked;
+ * shopper's on Home or after an order is placed, while the phone can still
+ * be asked;
  * the farmer's in farmer mode whenever push is off (F-12).
  */
 export function usePrimer(side: Side, armed: boolean, delay = 900) {

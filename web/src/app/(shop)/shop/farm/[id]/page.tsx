@@ -185,7 +185,7 @@ async function FarmContent({ params }: Props) {
               <div>
                 <div className="text-[15px] font-semibold">Verified by Farmkeke</div>
                 <p className="sm mt-1">
-                  Our team checked this farm&apos;s ID, farm photos, proof of address and farmers association letter.
+                  Our team checked this farm&apos;s NIN, location and farm photos.
                 </p>
               </div>
             </div>

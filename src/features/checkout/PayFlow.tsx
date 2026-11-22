@@ -270,7 +270,7 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
         icon={Clock}
         tone="pending"
         title="Your bill isn't ready yet"
-        message="The farm is packing the order and we're arranging a rider. We'll send the bill by email, text and in the app, with 12 hours to pay."
+        message="The farm accepted the order and we're arranging a rider. We'll send the bill by email, text and in the app, with 12 hours to pay."
         actions={<Button label="Go to my orders" variant="dark" size="large" pill fullWidth onPress={() => router.replace("/orders")} />}
       />
     );
@@ -356,7 +356,7 @@ export function PayFlow({ checkoutId: fromRoute, payToken, returned = false }: P
         icon={Clock}
         tone="pending"
         title="Waiting for your bank"
-        message="Transfers and USSD can take a few minutes to confirm. We'll move you on as soon as it lands, and text you too. If you haven't sent it yet, you still can."
+        message="Transfers and USSD can take a few minutes to confirm. We'll move you on as soon as it lands. If you haven't sent it yet, you still can."
         actions={
           <>
             <Button label="Check again" icon={Refresh} variant="dark" size="large" pill fullWidth onPress={() => setPhase("confirming")} />

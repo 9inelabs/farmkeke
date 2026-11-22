@@ -50,9 +50,9 @@ export default function Orders() {
       <SafeAreaView edges={["top"]} style={styles.screen}>
         {header}
         <View style={styles.list}>
-          <Skeleton height={60} radius={radii.lg} />
-          <Skeleton height={170} radius={radii.lg + 4} />
-          <Skeleton height={170} radius={radii.lg + 4} />
+          <Skeleton height={60} radius={radii.md + 2} />
+          <ActiveCardSkeleton />
+          <ActiveCardSkeleton />
         </View>
       </SafeAreaView>
     );
@@ -144,6 +144,34 @@ function ActiveCard({ o, now }: { o: Row; now: number }) {
   );
 }
 
+/** ActiveCard while loading: the photo, number, details and status lines, and the "what's next" box. */
+function ActiveCardSkeleton() {
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.card}>
+      <View style={styles.cardHead}>
+        <Skeleton width={56} height={56} radius={radii.md} />
+        <View style={styles.flex}>
+          <View style={styles.lineLabel}>
+            <Skeleton height={11} width="70%" />
+          </View>
+          <View style={styles.lineSmall}>
+            <Skeleton height={9} width="55%" />
+          </View>
+          <View style={styles.badges}>
+            <Skeleton height={21} width={84} radius={radii.pill} />
+          </View>
+        </View>
+        <View style={styles.chevronSpace} />
+      </View>
+      <View style={styles.next}>
+        <View style={[styles.flex, styles.lineCaption]}>
+          <Skeleton height={10} width="80%" />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 /** Every item's photo (the first four), then "+N" for the rest. */
 function ItemPhotos({ o }: { o: Row }) {
   const urls = o.imageUrls ?? [o.imageUrl];
@@ -218,6 +246,11 @@ const styles = StyleSheet.create({
   chatDot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.forest, borderWidth: borders.strong, borderColor: colors.tint },
   findInset: { marginHorizontal: spacing.screen, marginBottom: spacing.lg },
   pastRow: { flexDirection: "row", alignItems: "center" },
+  // Loading lines, at the loaded text's line heights
+  lineLabel: { height: 17, justifyContent: "center" },
+  lineSmall: { height: 15, justifyContent: "center" },
+  lineCaption: { height: 16, justifyContent: "center" },
+  chevronSpace: { width: 18 },
   find: {
     flexDirection: "row",
     alignItems: "center",

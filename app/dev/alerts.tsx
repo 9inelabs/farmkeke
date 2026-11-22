@@ -15,7 +15,7 @@ const SHOP = {
   channels: ["push", "sms", "email"],
   hasEmail: true,
   alerts: [
-    { alert: "order_updates", title: "Order updates", description: "Farm accepted, out for delivery, delivered, ready for pickup", locked: false, smsAvailable: true, push: true, sms: true, email: true },
+    { alert: "order_updates", title: "Order updates", description: "Farm accepted, out for delivery, delivered, ready for pickup", locked: false, smsAvailable: false, push: true, sms: false, email: true },
     { alert: "payments", title: "Payments and refunds", description: "Bills, payment confirmed, money released, refunds", locked: true, smsAvailable: true, push: true, sms: true, email: true },
     { alert: "messages", title: "Messages from farmers", description: "When a farm replies about your order", locked: false, smsAvailable: false, push: true, sms: false, email: true },
     { alert: "reminders", title: "Reminders", description: "Asking how your order was", locked: false, smsAvailable: false, push: true, sms: false, email: true },
@@ -28,7 +28,7 @@ const FARM = {
   channels: ["push", "sms", "email"],
   hasEmail: true,
   alerts: [
-    { alert: "orders", title: "New orders and deadlines", description: "New orders, deadline near, expired or cancelled orders, rider collection", locked: false, smsAvailable: true, push: true, sms: true, email: true },
+    { alert: "orders", title: "New orders and deadlines", description: "New orders, deadline near, expired or cancelled orders, rider collection", locked: false, smsAvailable: false, push: true, sms: false, email: true },
     { alert: "problems", title: "Problem reports", description: "A shopper reported a problem, and Farmkeke's decision", locked: false, smsAvailable: false, push: true, sms: false, email: true },
     { alert: "payments", title: "Payments", description: "Refunds taken from your share, bank account changed", locked: true, smsAvailable: true, push: true, sms: true, email: true },
     { alert: "messages", title: "Messages", description: "Shoppers' messages about their orders, and support replies", locked: false, smsAvailable: false, push: true, sms: false, email: false },

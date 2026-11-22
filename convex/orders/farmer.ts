@@ -1,9 +1,13 @@
-// Farmer mode: orders (F-10, F-40 to F-49). One step at a time:
-// accept → start preparing → mark packed → ready → handed over.
+// Farmer mode: orders (F-10, F-40 to F-49). Since 22 Nov 2026 the farm only
+// accepts or declines (owner's decision, APK corrections #11):
+//  - delivery: Farmkeke staff send the rider and mark it out for delivery and
+//    delivered from Dispatch (the shopper can also say "It's arrived");
+//  - pickup at the farm: ready to collect as soon as it's accepted; scanning
+//    the shopper's code (confirmCollection) is the farm's one optional step,
+//    and the shopper (or staff) can confirm "Collected" instead.
 // Orders arrive unpaid (Paystack split, 17 Nov 2026): the farm accepts, then
-// the shopper is billed (for delivery, once Farmkeke has priced it). The
-// rider collects, or the shopper collects at the farm with their 4-digit
-// code, only once it's paid. Paystack sends the farm its share at payment.
+// the shopper is billed (for delivery, once Farmkeke has priced it). Paystack
+// sends the farm its share at payment, so no money waits on a farm click.
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
@@ -15,7 +19,7 @@ import {
   isActive,
   orderCore,
   orderRow,
-  pickupDeadline,
+  readyAtFarm,
   transition,
   type OrderStatus,
 } from "../lib/orders";
@@ -23,10 +27,22 @@ import { hitLimit } from "../lib/rateLimit";
 import { commissionOn, DAY, getRules, HOUR } from "../lib/settings";
 import { recordResponseTime } from "../lib/shop";
 
+// Accepted and not yet closed: with Farmkeke or the shopper now. The old
+// "preparing" / "ready" stages only hold orders from before 22 Nov 2026.
+const ACCEPTED: OrderStatus[] = [
+  "accepted",
+  "preparing",
+  "ready_for_rider",
+  "ready_for_collection",
+  "out_for_delivery",
+  "with_rider",
+  "at_pickup_point",
+  "delivered",
+  "collected",
+];
 const TABS = {
   new: ["paid", "placed"],
-  to_prepare: ["accepted", "preparing", "ready_for_rider", "ready_for_collection"],
-  with_rider: ["with_rider", "out_for_delivery", "at_pickup_point", "delivered", "collected"],
+  accepted: ACCEPTED,
   completed: ["completed"],
   cancelled: ["declined", "expired", "cancelled"],
   disputed: ["disputed"],
@@ -101,17 +117,20 @@ export const list = query({
   args: {
     tab: v.union(
       v.literal("new"),
-      v.literal("to_prepare"),
-      v.literal("with_rider"),
+      v.literal("accepted"),
       v.literal("completed"),
       v.literal("cancelled"),
       v.literal("disputed"),
+      // Tabs of app builds from before 22 Nov 2026: both show the accepted orders
+      v.literal("to_prepare"),
+      v.literal("with_rider"),
     ),
   },
   handler: async (ctx, args) => {
     const farm = await viewerFarm(ctx);
     if (farm === null) return [];
-    const orders = await ordersIn(ctx, farm._id, TABS[args.tab]);
+    const tab: Tab = args.tab === "to_prepare" || args.tab === "with_rider" ? "accepted" : args.tab;
+    const orders = await ordersIn(ctx, farm._id, TABS[tab]);
     return await Promise.all(
       orders.map(async (o) => ({
         ...(await orderRow(ctx, o)),
@@ -146,8 +165,7 @@ export const dashboard = query({
     const farm = await viewerFarm(ctx);
     if (farm === null) return null;
     const waiting = await ordersIn(ctx, farm._id, TABS.new, 50);
-    const toPrepare = await ordersIn(ctx, farm._id, TABS.to_prepare, 50);
-    const withRider = await ordersIn(ctx, farm._id, TABS.with_rider, 50);
+    const accepted = await ordersIn(ctx, farm._id, TABS.accepted, 50);
     const disputed = await ordersIn(ctx, farm._id, TABS.disputed, 50);
     const rules = await getRules(ctx);
     // The farm's shares from the last 30 days (Paystack sends each when the shopper pays)
@@ -158,14 +176,13 @@ export const dashboard = query({
       .take(1000);
     return {
       farm: { _id: farm._id, name: farm.name, status: farm.status, holidayMode: farm.holidayMode },
+      // The farm only answers new orders; the rest is Farmkeke's and the shopper's
       counts: {
         new: waiting.length,
-        to_prepare: toPrepare.length,
-        with_rider: withRider.length,
+        accepted: accepted.length,
         disputed: disputed.length,
       },
       newOrders: await Promise.all(waiting.slice(0, 5).map((o) => orderRow(ctx, o))),
-      toPrepare: await Promise.all(toPrepare.slice(0, 5).map((o) => orderRow(ctx, o))),
       paid30dKobo: recent.reduce((s, e) => s + (e.kind === "farm_share" && e.status === "done" ? e.amountKobo : 0), 0),
       // Refunds Farmkeke paid that this farm still owes back
       owedKobo: Math.max(farm.owedKobo ?? 0, 0),
@@ -201,24 +218,24 @@ export const get = query({
   },
 });
 
-/** The one next-step button on F-44. */
+/**
+ * What the farm can do on F-44: accept (or decline) a new order; for pickup at
+ * the farm, optionally scan the shopper's code once it's paid. Everything
+ * else is Farmkeke's: "waiting_for_payment" until the bill is paid, then
+ * "rider_collecting" while a delivery waits for the Farmkeke rider.
+ */
 function nextStep(order: Doc<"orders">) {
   switch (order.status) {
     case "paid":
     case "placed":
       return "accept" as const;
-    case "accepted":
-      return "start_preparing" as const;
-    case "preparing":
-      return order.packedAt === undefined ? ("mark_packed" as const) : ("ready_for_rider" as const);
-    case "ready_for_rider":
-      // Delivery: the rider only collects once the bill is paid
-      return order.fulfilment === "delivery" && order.escrow === "none"
-        ? ("waiting_for_payment" as const)
-        : ("confirm_handover" as const);
     case "ready_for_collection":
       // Pickup: hand it over only once the bill is paid
       return order.escrow === "none" ? ("waiting_for_payment" as const) : ("confirm_collection" as const);
+    case "accepted":
+    case "preparing":
+    case "ready_for_rider":
+      return order.escrow === "none" ? ("waiting_for_payment" as const) : ("rider_collecting" as const);
     default:
       return null;
   }
@@ -265,7 +282,12 @@ export const accept = mutation({
     if (order.status !== "paid" && order.status !== "placed") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
     if (order.respondBy !== undefined && Date.now() > order.respondBy) throw new ConvexError({ code: "EXPIRED" });
     const acceptedAt = Date.now();
-    const accepted = await transition(ctx, order, "accepted", actor, { acceptedAt });
+    let accepted = await transition(ctx, order, "accepted", actor, { acceptedAt });
+    // Pickup at the farm: ready to collect straight away; there's no "ready" step
+    // for the farm. (Older pickup-point orders still go with a Farmkeke rider.)
+    if (order.fulfilment === "pickup" && order.pickupPointId === undefined) {
+      accepted = await readyAtFarm(ctx, accepted, actor, "Ready to collect once accepted");
+    }
     // "Usually accepts within…" on the shop's farm and product pages
     await recordResponseTime(ctx, farm._id, (acceptedAt - (order.paidAt ?? order._creationTime)) / HOUR);
     if (order.expiryJobId) {
@@ -280,8 +302,10 @@ export const accept = mutation({
       order.status === "placed"
         ? order.fulfilment === "delivery"
           ? `${farm.name} accepted your order. We're arranging a rider and will send your bill, delivery included.`
-          : `${farm.name} accepted your order. We'll send your bill to pay.`
-        : `${farm.name} accepted your order and will start preparing it.`,
+          : `${farm.name} accepted your order. We'll send your bill to pay, then you can collect it from the farm with your code.`
+        : order.fulfilment === "delivery"
+          ? `${farm.name} accepted your order. A Farmkeke rider will bring it.`
+          : `${farm.name} accepted your order.`,
     );
     // Dispatch: brief a rider and price the delivery, so the shopper gets their bill
     if (order.status === "placed" && order.fulfilment === "delivery") {
@@ -336,73 +360,6 @@ export const decline = mutation({
   },
 });
 
-/** F-43 Start preparing. */
-export const startPreparing = mutation({
-  args: { orderId: v.id("orders") },
-  handler: async (ctx, args) => {
-    const { farm, order, actor } = await ownOrder(ctx, args.orderId);
-    const preparing = await transition(ctx, order, "preparing", actor, { preparingAt: Date.now() });
-    await notifyConsumer(
-      ctx,
-      preparing,
-      "order_preparing",
-      `Order ${order.number} is being prepared`,
-      `${farm.name} is preparing your order.`,
-    );
-  },
-});
-
-/** F-44 Mark packed (a step inside preparing). */
-export const markPacked = mutation({
-  args: { orderId: v.id("orders") },
-  handler: async (ctx, args) => {
-    const { order, actor } = await ownOrder(ctx, args.orderId);
-    if (order.status !== "preparing") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
-    if (order.packedAt !== undefined) return;
-    await ctx.db.patch("orders", order._id, { packedAt: Date.now() });
-    await ctx.db.insert("orderEvents", { orderId: order._id, kind: "packed", actorKind: actor.kind, actorId: actor.id });
-    // Push (or SMS) only; the "being prepared" email already went out.
-    await notifyConsumer(
-      ctx,
-      order,
-      "order_packed",
-      `Order ${order.number} is packed`,
-      order.fulfilment === "delivery" ? "It's waiting for a Farmkeke rider." : "It's nearly ready to collect from the farm.",
-    );
-  },
-});
-
-/**
- * F-44 Ready. Delivery: ready for the rider (staff assign one, A-53).
- * Pickup: ready to collect at the farm, which starts the shopper's 3 days.
- */
-export const readyForRider = mutation({
-  args: { orderId: v.id("orders") },
-  handler: async (ctx, args) => {
-    const { farm, order, actor } = await ownOrder(ctx, args.orderId);
-    const now = Date.now();
-    // Older pickup orders still go through a Farmkeke pickup point
-    if (order.fulfilment === "delivery" || order.pickupPointId !== undefined) {
-      await transition(ctx, order, "ready_for_rider", actor, { readyAt: now, packedAt: order.packedAt ?? now });
-      return;
-    }
-    const collectBy = await pickupDeadline(ctx, order, now);
-    const ready = await transition(ctx, order, "ready_for_collection", actor, {
-      readyAt: now,
-      packedAt: order.packedAt ?? now,
-      arrivedAt: now,
-      collectBy,
-    });
-    await notifyConsumer(
-      ctx,
-      ready,
-      "ready_for_pickup",
-      `Order ${order.number} is ready to collect`,
-      `Collect it from ${farm.name}, ${farm.collectionAddress}. Show your code ${order.pickupCode ?? ""} at the farm.`,
-    );
-  },
-});
-
 /** Pickup at the farm: the farmer enters the shopper's 4-digit code to hand the order over. */
 export const confirmCollection = mutation({
   args: { orderId: v.id("orders"), code: v.string() },
@@ -423,27 +380,5 @@ export const confirmCollection = mutation({
       `Order ${order.number} was collected`,
       "Check everything. Something wrong? Report it from your order page within 24 hours.",
     );
-  },
-});
-
-/** F-45 Handed to rider. */
-export const confirmHandover = mutation({
-  args: { orderId: v.id("orders") },
-  handler: async (ctx, args) => {
-    const { order, actor } = await ownOrder(ctx, args.orderId);
-    // The rider only takes a delivery once the shopper has paid the bill
-    if (order.fulfilment === "delivery" && order.escrow === "none") throw new ConvexError({ code: "NOT_PAID_YET" });
-    const to = order.fulfilment === "delivery" ? "out_for_delivery" : "with_rider";
-    const moved = await transition(ctx, order, to, actor, { handedOverAt: Date.now() });
-    if (to === "out_for_delivery") {
-      const rider = order.riderId ? await ctx.db.get("riders", order.riderId) : null;
-      await notifyConsumer(
-        ctx,
-        moved,
-        "out_for_delivery",
-        `Order ${order.number} is on its way`,
-        `${rider ? `${rider.name} (${rider.phone}) is` : "A Farmkeke rider is"} bringing your order. Check everything when it arrives.`,
-      );
-    }
   },
 });

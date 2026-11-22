@@ -56,9 +56,19 @@ export function MessagesScreen({ side }: { side: "shop" | "farm" }) {
           {[0, 1, 2].map((i) => (
             <View key={i} style={[styles.row, i > 0 && styles.divider]}>
               <Skeleton width={PHOTO} height={PHOTO} radius={PHOTO / 2} />
-              <View style={[styles.flex, styles.skeletonCopy]}>
-                <Skeleton width="55%" height={12} radius={6} />
-                <Skeleton width="80%" height={10} radius={5} />
+              {/* Name and time, order number, preview: the loaded row's three lines at their heights */}
+              <View style={styles.flex}>
+                <View style={[styles.line, styles.skeletonName]}>
+                  <Skeleton width="50%" height={11} radius={5} />
+                  <View style={styles.flex} />
+                  <Skeleton width={34} height={8} radius={4} />
+                </View>
+                <View style={styles.skeletonOrder}>
+                  <Skeleton width={70} height={8} radius={4} />
+                </View>
+                <View style={styles.skeletonPreview}>
+                  <Skeleton width="80%" height={10} radius={5} />
+                </View>
               </View>
             </View>
           ))}
@@ -148,7 +158,9 @@ const styles = StyleSheet.create({
   rowLast: { borderBottomLeftRadius: radii.lg + 2, borderBottomRightRadius: radii.lg + 2 },
   divider: { borderTopWidth: borders.hairline, borderTopColor: "#F0F0EE" },
   pressed: { backgroundColor: colors.surfaceSoft },
-  skeletonCopy: { gap: spacing.xs },
+  skeletonName: { height: 18 },
+  skeletonOrder: { height: 14, marginTop: 1, justifyContent: "center" },
+  skeletonPreview: { height: 17, marginTop: 1, justifyContent: "center" },
   photo: { width: PHOTO, height: PHOTO, borderRadius: PHOTO / 2, backgroundColor: colors.placeholder },
   line: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   name: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 18, color: colors.ink },

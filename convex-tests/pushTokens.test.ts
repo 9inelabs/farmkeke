@@ -3,6 +3,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api, internal } from "../convex/_generated/api";
+import { alertsFor } from "../convex/lib/alerts";
 import schema from "../convex/schema";
 import { modules } from "./modules";
 
@@ -53,4 +54,45 @@ test("signing back in on the same phone moves the token to the new sign-in", asy
   await as(t, { id, sessionId: second }).mutation(api.notifications.registerPushToken, { platform: "ios", token });
   const rows = await t.run(async (ctx) => await ctx.db.query("pushTokens").collect());
   expect(rows.map((r) => r.sessionId)).toEqual([second]);
+});
+
+// APK correction #2: every in-app notification is also a push, on the
+// Android channel the app makes ("default"), at high priority with sound,
+// carrying the screen to open. Only the opt-in promotions ("offer") wait
+// for the person to switch them on.
+test("every notification kind on both sides is pushed by default, with the payload the app reads", async () => {
+  const t = convexTest(schema, modules);
+  const ada = await t.run(async (ctx) => {
+    const id = await ctx.db.insert("users", { name: "Ada Obi", email: "ada@example.com" } as any);
+    const sessionId = await ctx.db.insert("authSessions", { userId: id, expirationTime: Date.now() + 1e10 });
+    return { id, sessionId };
+  });
+  const token = "ExponentPushToken[phone-3]";
+  await as(t, ada).mutation(api.notifications.registerPushToken, { platform: "android", token });
+
+  const hidden = { shop: ["broadcast"], farm: ["broadcast", "application_received", "application_more_info", "application_approved", "application_rejected"] };
+  for (const side of ["shop", "farm"] as const) {
+    const kinds = [...alertsFor(side).flatMap((a) => a.kinds), ...hidden[side]];
+    for (const kind of kinds) {
+      const notificationId = await t.run(async (ctx) =>
+        ctx.db.insert("notifications", { userId: ada.id, side, kind, title: "Title", body: "Body", href: "/notifications" } as any),
+      );
+      const plan = await t.query(internal.notifications.store.plan, { notificationId });
+      if (kind === "offer") {
+        expect(plan?.push, `${side}/${kind}`).toEqual([]);
+        continue;
+      }
+      expect(plan?.push, `${side}/${kind}`).toEqual([
+        {
+          to: token,
+          title: "Title",
+          body: "Body",
+          sound: "default",
+          priority: "high",
+          channelId: "default",
+          data: { href: "/notifications", kind, notificationId, side },
+        },
+      ]);
+    }
+  }
 });

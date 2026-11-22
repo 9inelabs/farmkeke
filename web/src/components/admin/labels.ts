@@ -137,9 +137,10 @@ export const ESCROW: Record<string, string> = {
 };
 export const STUCK_REASON: Record<string, string> = {
   deadline_passed: "Farm deadline passed",
+  // Older orders only (the farm stopped marking "preparing" on 22 Nov 2026)
   not_preparing: "Accepted 2+ days ago, not preparing",
-  not_ready: "Preparing for 2+ days",
-  no_rider: "No rider assigned",
+  not_ready: "Paid pickup at the farm, not marked ready to collect",
+  no_rider: "Paid, no rider assigned",
   needs_delivery_price: "Accepted, delivery not priced",
   not_collected_from_farm: "Rider hasn't collected",
   delivery_late: "Delivery window passed",

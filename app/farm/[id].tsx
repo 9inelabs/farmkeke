@@ -35,11 +35,35 @@ export default function FarmPage() {
   const header = (
     <View style={styles.head}>
       {farm === undefined ? (
-        <View style={styles.loading}>
-          <Skeleton width={72} height={72} radius={36} />
-          <Skeleton height={24} width={200} />
-          <Skeleton height={18} width={140} />
-        </View>
+        // The loaded layout's shape: photo beside the name and place, the stats box, the ways to get it
+        <>
+          <View style={styles.identity}>
+            <Skeleton width={72} height={72} radius={36} />
+            <View style={styles.flex}>
+              <View style={styles.lineSection}>
+                <Skeleton height={13} width="70%" />
+              </View>
+              <View style={styles.lineCaption}>
+                <Skeleton height={10} width="55%" />
+              </View>
+            </View>
+          </View>
+          <View style={styles.stats}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={styles.stat}>
+                <View style={styles.lineLabel}>
+                  <Skeleton height={11} width={44} />
+                </View>
+                <View style={styles.lineSmall}>
+                  <Skeleton height={9} width={56} />
+                </View>
+              </View>
+            ))}
+          </View>
+          <View style={styles.ways}>
+            <Skeleton height={36} width={136} radius={radii.pill} />
+          </View>
+        </>
       ) : (
         <>
           <View style={styles.identity}>
@@ -132,7 +156,11 @@ function Stat({ label, value, icon: Icon }: { label: string; value: string; icon
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   head: { gap: spacing.lg, paddingBottom: spacing.lg },
-  loading: { gap: spacing.md },
+  // Loading lines, at the loaded text's line heights
+  lineSection: { height: 20, justifyContent: "center" },
+  lineCaption: { height: 16, justifyContent: "center" },
+  lineLabel: { height: 17, justifyContent: "center" },
+  lineSmall: { height: 15, justifyContent: "center" },
   identity: { flexDirection: "row", gap: spacing.md, alignItems: "center" },
   photo: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.placeholder },
   flex: { flex: 1, gap: 4 },

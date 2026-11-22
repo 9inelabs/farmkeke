@@ -80,10 +80,10 @@ const base = {
 const rider = { name: "Chinedu Okeke", phone: "+2348039998877" };
 const ORDERS: Record<string, object> = {
   new: base,
-  prepare: { ...base, status: "preparing", acceptedAt: now - 2 * H, preparingAt: now - H, next: "mark_packed" },
-  handover: { ...base, status: "ready_for_rider", acceptedAt: now - 5 * H, preparingAt: now - 4 * H, packedAt: now - 2 * H, readyAt: now - H, rider, riderCollectAt: now + H, next: "confirm_handover" },
-  pickup: { ...base, fulfilment: "pickup", address: null, deliveryFeeKobo: 0, status: "ready_for_collection", acceptedAt: now - 5 * H, preparingAt: now - 4 * H, packedAt: now - 2 * H, readyAt: now - H, collectBy: now + 71 * H, next: "confirm_collection" },
-  waiting: { ...base, status: "ready_for_rider", escrow: "none", paid: false, paidAt: null, paymentPending: true, acceptedAt: now - 5 * H, preparingAt: now - 4 * H, packedAt: now - 2 * H, readyAt: now - H, next: "waiting_for_payment" },
+  prepare: { ...base, status: "accepted", acceptedAt: now - 2 * H, rider, riderCollectAt: now + H, next: "rider_collecting" },
+  handover: { ...base, status: "out_for_delivery", acceptedAt: now - 5 * H, outForDeliveryAt: now - H, rider, next: null },
+  pickup: { ...base, fulfilment: "pickup", address: null, deliveryFeeKobo: 0, status: "ready_for_collection", acceptedAt: now - 5 * H, readyAt: now - 5 * H, collectBy: now + 71 * H, next: "confirm_collection" },
+  waiting: { ...base, status: "accepted", escrow: "none", paid: false, paidAt: null, paymentPending: true, acceptedAt: now - 5 * H, next: "waiting_for_payment" },
   declined: { ...base, status: "declined", escrow: "refunded", declineReason: "out_of_stock", declineNote: "Tomatoes sold out at the market", endedAt: now - 2 * H, isActive: false, next: null },
   problem: { ...base, status: "disputed", disputeId: "case1", acceptedAt: now - 30 * H, preparingAt: now - 29 * H, packedAt: now - 27 * H, readyAt: now - 27 * H, outForDeliveryAt: now - 26 * H, deliveredAt: now - 24 * H, rider: null, next: null },
 };
@@ -101,14 +101,13 @@ const row = (o: Partial<typeof base> & { _id: string; number: string; status: st
 });
 const rows = {
   new: [row({ _id: "o1", number: "FK-10234", status: "paid" }), row({ _id: "o2", number: "FK-10241", status: "placed", respondBy: now + 4 * H }, { consumerFirstName: "Tunde", summary: "5 × Plantain", area: "Ikenegbu" }), row({ _id: "o3", number: "FK-10248", status: "paid", respondBy: now + 70 * 60_000, fulfilment: "pickup" }, { consumerFirstName: "Ngozi", summary: "1 × Palm oil (5 L)", area: null })],
-  to_prepare: [row({ _id: "o4", number: "FK-10220", status: "preparing" }), row({ _id: "o5", number: "FK-10219", status: "accepted" }, { consumerFirstName: "Emeka" })],
+  accepted: [row({ _id: "o4", number: "FK-10220", status: "out_for_delivery" }), row({ _id: "o5", number: "FK-10219", status: "accepted" }, { consumerFirstName: "Emeka" })],
 };
 
 const dash = {
   farm: { _id: "farm", name: "Okafor Family Farms", status: "active", holidayMode: false },
-  counts: { new: 3, to_prepare: 2, with_rider: 1, disputed: 0 },
+  counts: { new: 3, accepted: 2, disputed: 0 },
   newOrders: rows.new,
-  toPrepare: rows.to_prepare,
   paid30dKobo: 4_872_000,
   owedKobo: 0,
   commissionBps: 1000,
@@ -187,8 +186,8 @@ const SCREENS: Record<string, string> = {
   dashboard: "Dashboard",
   orders: "Orders",
   new: "New order",
-  prepare: "Packing",
-  handover: "Hand to rider",
+  prepare: "Rider collecting",
+  handover: "With the rider",
   pickup: "Pickup code",
   waiting: "Unpaid",
   declined: "Declined",
@@ -212,15 +211,11 @@ function SampleOrder({ start }: { start: string }) {
       now={now}
       order={o as unknown as FarmOrder}
       actions={{
-        accept: step({ status: "accepted", acceptedAt: Date.now(), next: "start_preparing" }),
+        accept: step({ status: "accepted", acceptedAt: Date.now(), next: "waiting_for_payment" }),
         decline: async (reason, note) => {
           await wait();
           setO((x) => ({ ...x, status: "declined", escrow: "refunded", declineReason: reason, declineNote: note ?? null, endedAt: Date.now(), isActive: false, next: null }));
         },
-        startPreparing: step({ status: "preparing", preparingAt: Date.now(), next: "mark_packed" }),
-        markPacked: step({ packedAt: Date.now(), next: "ready_for_rider" }),
-        ready: step({ status: "ready_for_rider", readyAt: Date.now(), rider, next: "confirm_handover" }),
-        handover: step({ status: "out_for_delivery", outForDeliveryAt: Date.now(), next: null }),
         collect: async (code) => {
           await wait();
           if (code !== "4821") throw new ConvexError({ code: "WRONG_PICKUP_CODE" });
@@ -253,7 +248,7 @@ export default function FarmSamples() {
       />
     );
   } else if (s === "orders") {
-    screen = <OrdersView tab={tab} onTab={setTab} counts={{ new: 3, to_prepare: 2, with_rider: 1, completed: 48 }} orders={(tab === "new" || tab === "to_prepare" ? rows[tab] : []) as never} unreadChats={3} now={now} />;
+    screen = <OrdersView tab={tab} onTab={setTab} counts={{ new: 3, accepted: 2, completed: 48 }} orders={(tab === "new" || tab === "accepted" ? rows[tab] : []) as never} unreadChats={3} now={now} />;
   } else if (ORDERS[s]) {
     screen = <SampleOrder key={s} start={s} />;
   } else if (s === "slip") {

@@ -221,16 +221,18 @@ export function preferenceRows(prefs: Doc<"notificationPrefs">[], side: Side) {
 }
 
 /**
- * The only events that send a text message (owner's cost decision, 21 Oct 2026).
- * Everything else goes by email, in-app notification and push. Keep this list
- * short: every text costs money.
- *  - shop: the delivery bill with its pay link; order ready for pickup (code)
- *  - farm: application received and approved; new order (24h to accept);
- *          payout bank account changed (security)
+ * The only events that send a text message (owner's cost decisions, 21 Oct
+ * and 22 Nov 2026). Everything else goes by email, in-app notification and
+ * push. Keep this list short: every text costs money (Termii).
+ *  - shop: the bill with its pay link (a guest with no email gets it only by text)
+ *  - farm: payout bank account changed (a safety alert against account takeover)
+ * Phone sign-up and forgot-PIN codes are texted too, from phoneAuth.ts, not here.
+ * Ready for pickup, application received/approved and new orders are push,
+ * in-app (and email where they email) only since 22 Nov 2026.
  */
 export const SMS_KINDS: Record<Side, ReadonlySet<string>> = {
-  shop: new Set(["bill_ready", "ready_for_pickup"]),
-  farm: new Set(["application_received", "application_approved", "order_new", "payout_account_changed"]),
+  shop: new Set(["bill_ready"]),
+  farm: new Set(["payout_account_changed"]),
 };
 
 export const textsFor = (side: string, kind: string) =>

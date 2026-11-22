@@ -6,12 +6,12 @@ import { BANKS } from "@convex/lib/banks";
 import { useAction, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bank, CheckCircle, Lock } from "@/components/icons";
+import { PinPad } from "@/components/premium";
 import { BottomSheet, Button, ScreenHeader, SelectField, Skeleton, Text, TextField } from "@/components/ui";
 import { Card } from "@/features/farm/ui";
-import { CodeBoxes } from "@/features/sell/CodeBoxes";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
 import { showToast } from "@/store/toast";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -97,7 +97,8 @@ export default function PayoutAccount() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <ScreenHeader title="Payout account" />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
+      {/* "padding" on Android too: edge to edge (SDK 57) the window no longer shrinks for the keyboard */}
+      <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {farm === undefined ? (
             <Skeleton height={86} radius={radii.lg + 4} />
@@ -175,7 +176,8 @@ export default function PayoutAccount() {
           </Text>
         </View>
         {usesPin ? (
-          <CodeBoxes length={4} secure value={secret} onChange={(v) => { setSecret(v); setConfirmError(null); }} onFilled={(v) => void submit(v)} error={confirmError !== null} autoFocus label="PIN" />
+          // Farmkeke's own keypad: the phone's keyboard doesn't open for a hidden input inside a sheet on Android
+          <PinPad tone="light" length={4} value={secret} onChange={(v) => { setSecret(v); setConfirmError(null); }} onFilled={(v) => void submit(v)} error={confirmError !== null} disabled={busy} label="PIN" />
         ) : (
           <TextField label="Password" value={secret} onChangeText={(v) => { setSecret(v); setConfirmError(null); }} secureTextEntry autoComplete="current-password" autoFocus error={confirmError ?? undefined} />
         )}

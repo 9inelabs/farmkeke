@@ -6,8 +6,7 @@ import {
   CircleHelp,
   ClipboardCheck,
   Clock,
-  File,
-  House,
+  MapPin,
   MessageCircle,
   Package,
   ShieldCheck,
@@ -43,32 +42,31 @@ const WHY: Array<[LucideIcon, string, string]> = [
 ];
 
 const FLOW: Array<[string, string]> = [
-  ["Receive an order", "You get an alert by push notification and SMS."],
-  ["Accept within 24 hours", "Once you accept, the buyer gets the bill. If you don't accept in time, the order is cancelled."],
+  ["Receive an order", "You get an alert in the app, by push notification and by email."],
+  ["Accept within 24 hours", "Accepting is your only step. The buyer then gets the bill. If you don't accept in time, the order is cancelled."],
   ["Get paid", "When the buyer pays, Paystack sends your share to your bank, minus Farmkeke's commission."],
-  ["Pack the order", "Mark it as packed and a Farmkeke rider is sent to collect it."],
-  ["Rider delivers", "The buyer receives it at home, or collects it from your farm."],
+  ["We handle the rest", "A Farmkeke rider collects it from your farm and delivers it, or a pickup buyer collects it from you with a code."],
 ];
 
 const NEEDS: Array<[LucideIcon, string, string]> = [
-  [User, "Government ID", "NIN slip, voter's card, driver's licence or international passport"],
-  [Camera, "Farm photos", "At least three photos of your farm and produce"],
-  [House, "Proof of address", "A recent utility bill or a letter from your community"],
-  [File, "Farmers association letter", "A letter from your local farmers association or cooperative"],
-  [Banknote, "Your bank account", "In your name or your registered farm name. Your money is paid into it"],
+  [Smartphone, "Your mobile number", "We text it a code to confirm it's yours. You sign in with it and a 4-digit PIN"],
+  [User, "Your name and NIN", "Your full name, your farm's name and your 11-digit National Identification Number"],
+  [MapPin, "Where your farm is", "State, LGA and the address or nearest landmark"],
+  [Camera, "Farm photos", "At least three clear photos of your crops, land or animals"],
+  [Banknote, "Your bank account", "In your name. Your money is paid into it"],
 ];
 
 const APPLY: Array<[string, string]> = [
-  ["Download the app", "Create an account with your phone number, email and a password."],
-  ["Open Sell on Farmkeke", "Go to Account, then Sell on Farmkeke, and tell us about your farm."],
-  ["Upload your documents", "Add photos of each document and your bank details."],
+  ["Download the app", "Open Sell on Farmkeke from the Account tab."],
+  ["Confirm your number", "We text a code to your mobile number, then you choose a 4-digit PIN."],
+  ["Tell us about your farm", "Your name, NIN, where your farm is, at least three farm photos and your bank account."],
   ["Start selling", "Once approved, farmer mode unlocks and you can list produce."],
 ];
 
 const QUESTIONS: Array<[string, string]> = [
   [
     "How long does approval take?",
-    "Most applications are reviewed within 3 working days. We may call you or visit your farm before approving.",
+    "Most applications are reviewed within 2 working days. We may call you or visit your farm before approving.",
   ],
   [
     "Can I sell if I farm on a small plot?",
@@ -259,7 +257,7 @@ export default function SellPage() {
               <Eyebrow icon={Smartphone}>How to apply</Eyebrow>
               <h2 className={S.h2}>Apply in the Farmkeke app</h2>
               <p className={lead}>
-                It takes about 10 minutes. We&apos;ll review your application and let you know by SMS and email.
+                It takes about 10 minutes. We&apos;ll review your application and let you know in the app and by email.
               </p>
             </div>
             <ol className="m-0 grid list-none grid-cols-4 gap-5 p-0 text-center min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-1 m:gap-3.5 m:text-left">

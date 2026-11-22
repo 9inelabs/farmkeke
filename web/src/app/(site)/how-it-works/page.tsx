@@ -51,7 +51,7 @@ const STEPS: Array<{ icon: LucideIcon; title: string; body: string; points: stri
     title: "Receive your order",
     body: "A Farmkeke rider brings it to your door, or you collect it from the farm.",
     points: [
-      "Follow each step: accepted, packed, on the way",
+      "Follow each step: accepted, paid, on the way",
       "Chat with the farmer about your order",
       "Pickup orders wait for you for 3 days",
     ],
@@ -97,8 +97,8 @@ const OPTIONS: Array<{ icon: LucideIcon; title: string; sub: string; rows: Array
 
 const STATUSES: Array<[string, string, string]> = [
   ["b-pend", "Waiting for the farm", "The farm has up to 24 hours to accept your order."],
-  ["b-held", "Accepted", "We send your bill. Once it's paid, the farm prepares your produce."],
-  ["b-held", "Packed", "A rider is on the way to collect it from the farm."],
+  ["b-held", "Accepted", "We send your bill. Once it's paid, a Farmkeke rider collects it from the farm (or it's ready for you to collect)."],
+  ["b-held", "On the way", "The rider brings it to you. Tap It's arrived when it's in your hands."],
   ["b-pend", "Out for delivery", "Your order is on its way to you."],
   ["b-ok", "Delivered", "Check your items. Something wrong? Report it within a day."],
   ["b-err", "Problem reported", "Farmkeke reviews it and decides on any refund."],

@@ -1,7 +1,10 @@
-// F-41 to F-47: one order as the farm sees it. A stage bar and the one next
-// step on a dark card; what the farm earns; the items; the buyer and how it
-// leaves the farm; and the order's history. The step's button is pinned at
-// the bottom. The route gives it the order and the actions.
+// F-41 to F-47: one order as the farm sees it. A stage bar and where it's up
+// to on a dark card; what the farm earns; the items; the buyer and how it
+// leaves the farm; and the order's history. Since 22 Nov 2026 the farm only
+// accepts or declines: Farmkeke sends the rider and marks the delivery, and
+// for pickup at the farm, scanning the buyer's code is the one optional step.
+// The step's button is pinned at the bottom. The route gives it the order and
+// the actions.
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
@@ -19,7 +22,7 @@ import { showToast } from "@/store/toast";
 import { androidUi } from "@/theme/platform";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
-import { CodeSheet, DeclineSheet, HandoverSheet } from "./OrderSheets";
+import { CodeSheet, DeclineSheet } from "./OrderSheets";
 import { DECLINE_REASONS, farmBadge, type DeclineReason } from "./status";
 import { Card, Countdown, Fact, LinkRow, MoneyLine, RoundButton } from "./ui";
 
@@ -28,54 +31,47 @@ export type FarmOrder = NonNullable<FunctionReturnType<typeof api.orders.farmer.
 export type FarmOrderActions = {
   accept: () => Promise<unknown>;
   decline: (reason: DeclineReason, note?: string) => Promise<unknown>;
-  startPreparing: () => Promise<unknown>;
-  markPacked: () => Promise<unknown>;
-  ready: () => Promise<unknown>;
-  handover: () => Promise<unknown>;
   collect: (code: string) => Promise<unknown>;
 };
 
 const ENDED = ["declined", "expired", "cancelled"];
-const STAGES = ["Accept", "Prepare", "Pack", "Ready", "Hand over"];
+// The farm accepts; the buyer pays; Farmkeke (or the buyer) takes it from there
+const STAGES = ["Accept", "Paid", "With buyer", "Closed"];
 
 function stageOf(o: FarmOrder): number {
-  switch (o.status) {
-    case "paid":
-    case "placed":
-      return 0;
-    case "accepted":
-      return 1;
-    case "preparing":
-      return o.packedAt ? 3 : 2;
-    case "ready_for_rider":
-    case "ready_for_collection":
-      return 4;
-    default:
-      return 5;
-  }
+  if (o.next === "accept") return 0;
+  if (o.status === "completed") return 4;
+  if (o.status === "delivered" || o.status === "collected" || o.status === "disputed") return 3;
+  return o.paid ? 2 : 1;
 }
 
-type Step = { title: string; note: string; button?: string; sheet?: "handover" | "code"; run?: keyof FarmOrderActions; done?: string };
+type Step = { title: string; note: string; button?: string; sheet?: "code"; run?: keyof FarmOrderActions; done?: string };
 
 function stepFor(o: FarmOrder): Step | null {
-  const pickup = o.fulfilment === "pickup" && o.pickupPoint === null;
+  const atFarm = o.fulfilment === "pickup" && o.pickupPoint === null;
   switch (o.next) {
     case "accept":
-      return { title: "Accept this order", note: o.fulfilment === "delivery" ? "We'll arrange the rider and bill the buyer." : "We'll bill the buyer. You're paid when they pay.", button: "Accept order", run: "accept", done: "Order accepted" };
-    case "start_preparing":
-      return { title: "Start preparing", note: "The buyer is told you're on it.", button: "Start preparing", run: "startPreparing", done: "Marked as preparing" };
-    case "mark_packed":
-      return { title: "Pack the order", note: "Use the packing slip to check each item.", button: "Mark as packed", run: "markPacked", done: "Marked as packed" };
-    case "ready_for_rider":
-      return pickup
-        ? { title: "Ready for the buyer?", note: "They get 3 days to collect.", button: "Ready to collect", run: "ready", done: "Buyer told it's ready" }
-        : { title: "Ready for the rider?", note: "We'll send a rider to collect.", button: "Ready for rider", run: "ready", done: "Marked ready for the rider" };
+      return {
+        title: "Accept this order",
+        note: o.fulfilment === "delivery" ? "That's all you do. Farmkeke sends a rider and bills the buyer." : "That's all you do. We bill the buyer, then they collect it from you.",
+        button: "Accept order",
+        run: "accept",
+        done: "Order accepted",
+      };
     case "waiting_for_payment":
-      return { title: "Bill sent to the buyer", note: "The rider collects once it's paid." };
-    case "confirm_handover":
-      return { title: "Hand to the rider", note: o.riderCollectAt ? `Collecting ${dayTime(o.riderCollectAt)}` : "Check each item as it goes.", button: "Hand over", sheet: "handover" };
+      return { title: "Bill sent to the buyer", note: atFarm ? "They collect it once it's paid. Paystack sends your share when they pay." : "A Farmkeke rider collects it once it's paid." };
+    case "rider_collecting":
+      return {
+        title: "A Farmkeke rider collects it",
+        note: o.rider ? `${o.rider.name} is collecting${o.riderCollectAt ? ` ${dayTime(o.riderCollectAt)}` : ""}. Have it ready. Nothing to tap.` : "We'll tell you who's coming and when. Have it ready. Nothing to tap.",
+      };
     case "confirm_collection":
-      return { title: "Buyer collecting", note: o.collectBy ? `Collect by ${dayTime(o.collectBy)}` : "Ask for their 4-digit code.", button: "Enter pickup code", sheet: "code" };
+      return {
+        title: "Buyer collecting",
+        note: `${o.collectBy ? `Collect by ${dayTime(o.collectBy)}. ` : ""}When they come, you can scan their code. Optional: they can confirm it themselves.`,
+        button: "Scan pickup code",
+        sheet: "code",
+      };
     default:
       // After the hand-over there's nothing for the farm to do; say where it's up to
       if (o.status === "out_for_delivery" || o.status === "with_rider" || o.status === "at_pickup_point") return { title: "On its way", note: "You've been paid. The buyer can report a problem for a day after it arrives." };
@@ -100,11 +96,16 @@ function history(o: FarmOrder): TimelineStep[] {
     { key: "accepted", title: "Accepted", at: o.acceptedAt },
     // Paystack sends the farm's share the moment the shopper pays
     { key: "paid", title: "Paid to your bank", at: o.paidAt },
-    { key: "preparing", title: "Preparing", at: o.preparingAt },
-    { key: "packed", title: "Packed", at: o.packedAt },
-    { key: "ready", title: pickup ? "Ready to collect" : "Ready for the rider", at: o.readyAt },
+    // Older orders (before 22 Nov 2026) went through preparing and packed
+    ...(o.preparingAt !== null ? [{ key: "preparing", title: "Preparing", at: o.preparingAt }] : []),
+    ...(o.packedAt !== null ? [{ key: "packed", title: "Packed", at: o.packedAt }] : []),
+    ...(o.fulfilment === "delivery" && o.readyAt !== null ? [{ key: "ready", title: "Ready for the rider", at: o.readyAt }] : []),
     ...(pickup
-      ? [{ key: "collected", title: "Collected by the buyer", at: o.deliveredAt }]
+      ? [
+          // Ready to collect as soon as it's accepted; the buyer's days start once it's paid
+          { key: "ready", title: "Ready to collect", at: o.paid ? (o.readyAt ?? o.paidAt) : null },
+          { key: "collected", title: "Collected by the buyer", at: o.deliveredAt },
+        ]
       : [
           { key: "out", title: "With the rider", at: o.outForDeliveryAt },
           { key: "delivered", title: "Delivered", at: o.deliveredAt },
@@ -123,7 +124,7 @@ function history(o: FarmOrder): TimelineStep[] {
 
 export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; actions: FarmOrderActions; now: number }) {
   const insets = useSafeAreaInsets();
-  const [sheet, setSheet] = useState<"decline" | "handover" | "code" | null>(null);
+  const [sheet, setSheet] = useState<"decline" | "code" | null>(null);
   const [busy, setBusy] = useState(false);
   const step = stepFor(o);
   const stage = stageOf(o);
@@ -233,7 +234,7 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
             <Text variant="caption" color="rgba(255,255,255,0.72)">
               {step.note}
             </Text>
-            <View style={styles.stages} accessibilityLabel={`Step ${Math.min(stage + 1, 5)} of 5`}>
+            <View style={styles.stages} accessibilityLabel={`Step ${Math.min(stage + 1, STAGES.length)} of ${STAGES.length}`}>
               {STAGES.map((s, i) => (
                 <View key={s} style={styles.stage}>
                   <View style={[styles.bar, i < stage && styles.barDone, i === stage && styles.barNow]} />
@@ -297,7 +298,7 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
             ) : (
               <Fact label="Where" value={o.pickupPoint?.name ?? "At your farm"} />
             )}
-            {o.fulfilment === "pickup" ? <Fact label="Collect by" value={o.collectBy ? dayTime(o.collectBy) : "3 days after ready"} /> : <Fact label="Payment" value={o.escrow === "refunded" ? "Refunded" : o.paid ? "Paid" : o.isActive ? "After pricing" : "Not charged"} />}
+            {o.fulfilment === "pickup" ? <Fact label="Collect by" value={o.collectBy ? dayTime(o.collectBy) : "3 days after they pay"} /> : <Fact label="Payment" value={o.escrow === "refunded" ? "Refunded" : o.paid ? "Paid" : o.isActive ? "After pricing" : "Not charged"} />}
           </View>
           {o.rider ? (
             <View style={styles.rider}>
@@ -353,7 +354,7 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
               pill
               fullWidth
               loading={busy}
-              icon={step.sheet === "handover" ? Bike : step.sheet === "code" ? ShieldCheck : undefined}
+              icon={step.sheet === "code" ? ShieldCheck : undefined}
               onPress={() => (step.sheet ? setSheet(step.sheet) : void run(step))}
             />
           )}
@@ -367,16 +368,6 @@ export function FarmOrderView({ order: o, actions, now }: { order: FarmOrder; ac
         onDecline={async (reason, note) => {
           await actions.decline(reason, note);
           finish("Order declined");
-        }}
-      />
-      <HandoverSheet
-        visible={sheet === "handover"}
-        onClose={() => setSheet(null)}
-        rider={o.rider}
-        items={o.items}
-        onConfirm={async () => {
-          await actions.handover();
-          finish("Handed to the rider");
         }}
       />
       <CodeSheet

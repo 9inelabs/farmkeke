@@ -154,7 +154,7 @@ const TOPICS: Topic[] = [
       ],
       [
         "What documents do I need?",
-        "Government ID, farm photos, proof of address, a farmers association letter and the bank account you want to be paid into.",
+        "Your mobile number, your NIN, where your farm is, at least three farm photos and a bank account in your name to be paid into.",
       ],
       ["Can I sell on the website?", "Not yet. Farmers apply and manage everything in the Farmkeke app."],
     ],

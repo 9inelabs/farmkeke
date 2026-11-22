@@ -1,8 +1,9 @@
 // The order timeline (M-63), the same steps the website shows (W-51, W-51b).
 // Every order is placed, accepted, billed and paid (Paystack splits the
-// payment at once), then delivered or collected at the farm, and closes a
-// day later unless a problem is reported. Orders that ended early show how
-// they ended.
+// payment at once), then delivered by a Farmkeke rider or collected at the
+// farm, and closes a day after it reaches the shopper unless a problem is
+// reported. Since 22 Nov 2026 the farm only accepts, so there are no
+// "preparing" or "packed" steps. Orders that ended early show how they ended.
 import type { ReactNode } from "react";
 import type { TimelineStep } from "@/components/ui";
 import { formatNaira } from "@/lib/money";
@@ -49,7 +50,7 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
     title: o.status === "disputed" ? "We're looking into your report" : r >= 6 ? "Closed" : "Order closes",
     detail:
       o.status === "disputed"
-        ? "We'll text you with the outcome"
+        ? "We'll let you know the outcome"
         : r >= 6
           ? at(o.endedAt)
           : o.reportBy
@@ -76,8 +77,8 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
               ? `${formatNaira(o.bill.totalKobo)}${pickup ? "" : ", delivery included"}. Pay by ${o.bill.payBy ? dayTime(o.bill.payBy) : "the time on your bill"}`
               : r >= 2
                 ? pickup
-                  ? "By email, text and in the app"
-                  : "By email, text and in the app, once a rider is arranged"
+                  ? "By text, email and in the app"
+                  : "By text, email and in the app, once a rider is arranged"
                 : undefined,
           state: state(isPaid, r >= 2 && !isPaid),
         },
@@ -85,40 +86,46 @@ export function orderSteps(o: OrderDetail, riderCard: ReactNode): TimelineStep[]
     : [];
 
   if (pickup) {
-    // Older orders went to a pickup point; new ones are collected at the farm.
+    // Older orders went to a pickup point with a Farmkeke rider; new ones are
+    // collected at the farm, ready as soon as the farm accepts and it's paid.
     const point = o.pickupPoint?.name;
-    const waiting = point ? `Waiting at ${point}` : `Ready to collect at ${farm}`;
+    const ready = point ? r >= 4.5 : r >= 2 && isPaid;
+    const rider: TimelineStep[] = point
+      ? [
+          {
+            key: "rider",
+            title: r >= 4 ? `Taken to ${point}` : `A Farmkeke rider takes it to ${point}`,
+            detail: r >= 4 ? at(o.outForDeliveryAt) : undefined,
+            state: state(r >= 4.5, r >= 2 && r < 4.5 && isPaid),
+          },
+        ]
+      : [];
     return [
       placed,
       ...(billFirst ? [accepted, ...bill] : []),
-      {
-        key: "packed",
-        title: r >= 4 ? `Packed by ${farm}` : `${farm} is preparing your order`,
-        detail: r >= 4 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt ?? o.acceptedAt) : undefined,
-        state: state(r >= 4.5, r >= 2 && r < 4.5 && isPaid),
-      },
+      ...rider,
       {
         key: "ready",
-        title: waiting,
-        detail: r >= 4.5 && o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : undefined,
-        state: state(r >= 5, r >= 4.5 && r < 5),
+        title: point ? `Waiting at ${point}` : `Ready to collect at ${farm}`,
+        detail: ready && r < 5 ? (o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : "Show your pickup code") : r >= 2 && !isPaid ? "Once you've paid" : undefined,
+        state: state(r >= 5, ready && r < 5),
       },
       { key: "collected", title: o.status === "disputed" ? "Collected · Problem reported" : "Collected", detail: at(o.deliveredAt), state: state(r >= 5, false) },
       close,
     ];
   }
 
+  // Delivery: the farm only accepts; a Farmkeke rider collects it once it's paid
   return [
     placed,
     accepted,
     ...bill,
     {
-      key: "packed",
-      title: r >= 4 ? "Packed and handed to the rider" : r >= 3.5 ? "Packed, waiting for the rider" : "Being prepared",
-      detail: r >= 4 ? at(o.outForDeliveryAt ?? o.packedAt) : r >= 3.5 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt) : undefined,
-      state: state(r >= 4, r >= 2 && r < 4 && (isPaid || !billFirst)),
+      key: "out",
+      title: r >= 4 ? "Out for delivery" : "A Farmkeke rider brings it",
+      detail: r === 4 ? (riderCard ?? at(o.outForDeliveryAt)) : r >= 5 ? at(o.outForDeliveryAt) : undefined,
+      state: state(r >= 5, r >= 2 && r < 5 && (isPaid || !billFirst)),
     },
-    { key: "out", title: "Out for delivery", detail: r === 4 ? riderCard : undefined, state: state(r >= 5, r === 4) },
     { key: "delivered", title: o.status === "disputed" ? "Delivered · Problem reported" : "Delivered", detail: at(o.deliveredAt), state: state(r >= 5, false) },
     close,
   ];

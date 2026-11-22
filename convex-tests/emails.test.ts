@@ -109,18 +109,19 @@ test("each shop status change sends the right email (delivery)", async () => {
   const texts = await t.run(async (ctx) => await ctx.db.query("smsLog").collect());
   expect(texts.filter((m) => m.to === "+2348031112222" && m.body.includes("farmkeke.com/pay/"))).toHaveLength(1);
 
-  // Paid: the thank-you email; then the farm packs and the rider collects
+  // Paid: the thank-you email; then the rider collects (the farm only accepts)
   mail.clear();
   await payTest(t, s.account, placed.checkoutId);
   await flush(t);
   expect(mail.to(shopper)).toEqual(["Paid: order FK-10001"]);
   mail.clear();
-  await handOver(t, s, orderId, { packed: true });
+  await handOver(t, s, orderId);
   await flush(t);
-  // Packed is push only; out for delivery follows the rider's collection
-  expect(mail.to(shopper)).toEqual(["Ada Greens is preparing order FK-10001", "Your order FK-10001 is on its way"]);
+  // No preparing or packed steps since 22 Nov 2026: staff mark it out for delivery
+  expect(mail.to(shopper)).toEqual(["Your order FK-10001 is on its way"]);
   const kinds = await t.run(async (ctx) => (await ctx.db.query("notifications").collect()).map((n) => n.kind));
-  expect(kinds).toContain("order_packed");
+  expect(kinds).not.toContain("order_packed");
+  expect(kinds).not.toContain("order_preparing");
   expect(kinds).toContain("order_paid");
 
   mail.clear();
@@ -158,12 +159,11 @@ test("pickup, cancel and decline emails; guests only with an email", async () =>
   const pickup = await paidOrder(t, s, s.guest, "pickup", 1, guestEmail);
   await handOver(t, s, pickup);
   await flush(t);
-  // Placed, accepted (the bill follows at once), paid, then collected at the farm
+  // Placed, accepted (ready at once; the bill follows), paid, then ready to collect at the farm
   expect(mail.to(guestEmail)).toEqual([
     "We've got your order FK-10001",
     "Ada Greens accepted order FK-10001",
     "Paid: order FK-10001",
-    "Ada Greens is preparing order FK-10001",
     "Ready for pickup: order FK-10001",
   ]);
   // A day before collect-by (3 days), then the window ends

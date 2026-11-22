@@ -111,12 +111,15 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   // Wrong farmer can't act on someone else's order
   await expect(as(t, s.farmerB).mutation(api.orders.farmer.accept, { orderId: orderA })).rejects.toThrow();
   await farmerA.mutation(api.orders.farmer.accept, { orderId: orderA });
-  await farmerA.mutation(api.orders.farmer.startPreparing, { orderId: orderA });
-  await farmerA.mutation(api.orders.farmer.markPacked, { orderId: orderA });
-  await farmerA.mutation(api.orders.farmer.readyForRider, { orderId: orderA });
-  // Packed, but the rider only collects once the shopper has paid
-  expect(await farmerA.query(api.orders.farmer.get, { orderId: orderA })).toMatchObject({ next: "waiting_for_payment" });
-  await expect(farmerA.mutation(api.orders.farmer.confirmHandover, { orderId: orderA })).rejects.toThrow(/NOT_PAID_YET/);
+  // Accepting is the farm's only step (22 Nov 2026): the rider only collects once the shopper has paid
+  expect(await farmerA.query(api.orders.farmer.get, { orderId: orderA })).toMatchObject({ status: "accepted", next: "waiting_for_payment" });
+  expect(await farmerA.query(api.orders.farmer.counts, {})).toMatchObject({ new: 0, accepted: 1 });
+  expect((await farmerA.query(api.orders.farmer.dashboard, {}))!.counts).toEqual({ new: 0, accepted: 1, disputed: 0 });
+  // Older app builds' tab names still list the accepted orders
+  expect((await farmerA.query(api.orders.farmer.list, { tab: "to_prepare" })).map((o: any) => o._id)).toEqual([orderA]);
+  // Staff can't send it out (and the shopper can't say it arrived) before it's paid
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: orderA, step: "collected_from_farm" })).rejects.toThrow(/NOT_PAID_YET/);
+  await expect(guest.mutation(api.orders.consumer.markArrived, { orderId: orderA })).rejects.toThrow(/NOT_OUT_FOR_DELIVERY/);
 
   // Staff brief a rider first, then set the price
   await expect(admin.mutation(api.admin.dispatch.setDeliveryPrice, { orderId: orderA, feeKobo: 150000 })).rejects.toThrow(/NO_RIDER/);
@@ -158,12 +161,16 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   await expect(payTest(t, s.account, placed.checkoutId)).rejects.toThrow(/NOT_FOUND/);
   await payTest(t, s.account, placed.checkoutId, checkout.payToken);
   const paidA = await guest.query(api.orders.consumer.get, { orderId: orderA });
-  expect(paidA).toMatchObject({ status: "ready_for_rider", escrow: "released", paid: true, deliveryFeeKobo: 150000, totalKobo: 1050000 });
+  // Paid: still "accepted" (no farm steps); the shopper could already say it arrived
+  expect(paidA).toMatchObject({ status: "accepted", escrow: "released", paid: true, deliveryFeeKobo: 150000, totalKobo: 1050000, canMarkArrived: true, canMarkCollected: false });
+  expect(await farmerA.query(api.orders.farmer.get, { orderId: orderA })).toMatchObject({ next: "rider_collecting", rider: { name: "Emeka" } });
+  const paidBoard = await admin.query(api.admin.dispatch.board, { now: Date.now() });
+  expect(paidBoard.readyForRider.map((r: any) => r.number)).toEqual(["FK-10001"]);
 
-  // Paid: the rider collects
-  await farmerA.mutation(api.orders.farmer.confirmHandover, { orderId: orderA });
+  // Staff mark it out for delivery from Dispatch when the rider has it
+  await admin.mutation(api.admin.dispatch.recordStep, { orderId: orderA, step: "collected_from_farm" });
   const farmView = await farmerA.query(api.orders.farmer.get, { orderId: orderA });
-  expect(farmView).toMatchObject({ status: "out_for_delivery", consumer: { firstName: "Guest" }, paymentPending: false });
+  expect(farmView).toMatchObject({ status: "out_for_delivery", consumer: { firstName: "Guest" }, paymentPending: false, next: null });
   expect(farmView!.money).toMatchObject({ productKobo: 900000, feeKobo: 45000, netKobo: 855000 });
   await admin.mutation(api.admin.dispatch.recordStep, { orderId: orderA, step: "delivered" });
 
@@ -205,7 +212,7 @@ test("guest delivery from two farms: one farm expires, the bill covers the other
   // Nothing is held, so nothing is paid out later
   expect(result.payouts).toHaveLength(0);
   expect(result.events.map((e) => e.kind)).toEqual([
-    "placed", "accepted", "preparing", "packed", "ready_for_rider", "rider_assigned", "delivery_priced", "bill_sent", "paid",
+    "placed", "accepted", "rider_assigned", "delivery_priced", "bill_sent", "paid",
     "out_for_delivery", "delivered", "completed",
   ]);
   expect(result.events.find((e) => e.kind === "accepted")?.actorKind).toBe("farmer");
@@ -304,18 +311,23 @@ test("pickup order: accepted, billed, paid, collected and closed; admin fees; gu
   // Accepting sends the bill at once: nothing to price for pickup
   const billed = await t.run(async (ctx) => (await ctx.db.get(placed.checkoutId))!);
   expect(billed).toMatchObject({ status: "awaiting_payment", totalKobo: 450000, deliveryFeeKobo: 0 });
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
-  // Ready but unpaid: the farm waits for the payment before handing it over
+  // Ready to collect as soon as it's accepted (the farm has no "ready" step since
+  // 22 Nov 2026), but the days to collect and the notice wait for the payment
+  const unpaidReady = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
+  expect(unpaidReady).toMatchObject({ status: "ready_for_collection", escrow: "none" });
+  expect(unpaidReady.collectBy).toBeUndefined();
   expect(await farmer.query(api.orders.farmer.get, { orderId })).toMatchObject({ next: "waiting_for_payment", paymentPending: true });
   await expect(farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: summary!.orders[0].pickupCode! })).rejects.toThrow(/NOT_PAID_YET/);
+  await expect(guest.mutation(api.orders.consumer.markCollected, { orderId })).rejects.toThrow(/NOT_PAID_YET/);
+  expect(await guest.query(api.orders.consumer.get, { orderId })).toMatchObject({ canMarkCollected: false });
   await guest.mutation(api.payments.checkout.markPaidTest, { checkoutId: placed.checkoutId });
-  // Ready at the farm: the shopper has 3 days, and sees where to go
+  // Paid: the shopper has 3 days, sees where to go, and is told it's ready (no text since 22 Nov 2026)
   const ready = await guest.query(api.orders.consumer.get, { orderId });
-  expect(ready).toMatchObject({ status: "ready_for_collection", collectFrom: { farmName: "Ada Greens", address: "x", collectWithinDays: 3 } });
+  expect(ready).toMatchObject({ status: "ready_for_collection", canMarkCollected: true, collectFrom: { farmName: "Ada Greens", address: "x", collectWithinDays: 3 } });
   expect(ready!.collectBy! - Date.now()).toBe(3 * 86_400_000);
+  const readyNote = await t.run(async (ctx) => (await ctx.db.query("notifications").collect()).find((n) => n.kind === "ready_for_pickup")!);
+  expect(readyNote.body).toContain(ready!.pickupCode!);
   expect(await farmer.query(api.orders.farmer.get, { orderId })).toMatchObject({ next: "confirm_collection" });
-  await expect(farmer.mutation(api.orders.farmer.confirmHandover, { orderId })).rejects.toThrow(/WRONG_STATUS/);
   // The farmer enters the shopper's code to hand it over
   await expect(farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: "0000" })).rejects.toThrow(/WRONG_PICKUP_CODE/);
   await farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code: ready!.pickupCode! });
@@ -497,8 +509,6 @@ test("live Paystack path: split, start, signed webhook, refund", async () => {
   expect(entries.map((e) => [e.kind, e.amountKobo, e.simulated ?? false])).toEqual([["farm_share", 427500, false], ["commission", 22500, false]]);
   expect(await t.run(async (ctx) => (await ctx.db.query("paymentAttempts").collect()).at(-1)!)).toMatchObject({ splitCode: "SPL_1" });
 
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
   const code = await t.run(async (ctx) => (await ctx.db.get(orderId))!.pickupCode!);
   await farmer.mutation(api.orders.farmer.confirmCollection, { orderId, code });
   await t.finishAllScheduledFunctions(vi.runAllTimers);
@@ -594,4 +604,92 @@ test("in-app Paystack: bill return link, checking while the page is open", async
   const pickupPage = await (await t.fetch(`/paystack/return?checkoutId=${bill.checkoutId}&reference=${reference}`)).text();
   expect(pickupPage).toContain(`farmkeke://checkout/pay/${bill.checkoutId}?reference=${reference}`);
   vi.unstubAllGlobals();
+});
+
+test("the farm only accepts (22 Nov 2026): shopper Collected, staff collected without a code, staff delivered, older orders moved by staff", async () => {
+  const t = convexTest(schema, modules);
+  const s = await seed(t);
+  const guest = as(t, s.guest);
+  const farmer = as(t, s.farmerA);
+  const admin = as(t, s.admin);
+  const contact = { name: "Guest", phone: "08031112222", email: "guest@example.com" };
+  const items = [{ listingId: s.tomatoes, unitId: s.unitId, quantity: 1, priceKobo: 450000 }];
+  const pickup = async () => {
+    const placed = await guest.mutation(api.checkout.place, { items, fulfilment: "pickup", expectedTotalKobo: 450000, contact });
+    const orderId = placed.orders[0].orderId;
+    await farmer.mutation(api.orders.farmer.accept, { orderId });
+    await payTest(t, s.guest, placed.checkoutId);
+    return orderId;
+  };
+  const statusOf = async (orderId: any) => (await t.run(async (ctx) => (await ctx.db.get(orderId))!)).status;
+
+  // Pickup: the farm never scans; the shopper says they collected it, which starts the day to report
+  const first = await pickup();
+  await expect(as(t, s.account).mutation(api.orders.consumer.markCollected, { orderId: first })).rejects.toThrow(/NOT_FOUND/);
+  await guest.mutation(api.orders.consumer.markCollected, { orderId: first });
+  await guest.mutation(api.orders.consumer.markCollected, { orderId: first });
+  const collected = await guest.query(api.orders.consumer.get, { orderId: first });
+  expect(collected).toMatchObject({ status: "collected", canMarkCollected: false, canReport: true });
+  expect(collected!.reportBy! - collected!.deliveredAt!).toBe(24 * HOUR);
+  const events = await t.run(async (ctx) => await ctx.db.query("orderEvents").withIndex("by_orderId", (q) => q.eq("orderId", first)).collect());
+  expect(events.map((e) => [e.kind, e.actorKind])).toEqual([
+    ["placed", "guest"], ["accepted", "farmer"], ["ready_for_collection", "farmer"], ["bill_sent", "system"], ["paid", "system"], ["collected", "guest"],
+  ]);
+  // Staff marking it collected afterwards changes nothing
+  expect(await admin.mutation(api.admin.dispatch.recordStep, { orderId: first, step: "collected_by_consumer" })).toEqual({ status: "collected" });
+  // It still closes by itself a day later
+  vi.advanceTimersByTime(25 * HOUR);
+  await t.mutation(internal.orders.system.flagUnconfirmed, {});
+  expect(await statusOf(first)).toBe("completed");
+
+  // Staff mark a pickup at the farm collected without the code (on the farm's word); a wrong code is still refused
+  const second = await pickup();
+  const board = await admin.query(api.admin.dispatch.board, { now: Date.now() });
+  expect(board.atPickupPoint.map((r: any) => r.orderId)).toContain(second);
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: second, step: "collected_by_consumer", pickupCode: "0000" })).rejects.toThrow(/WRONG_PICKUP_CODE/);
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: second, step: "collected_from_farm" })).rejects.toThrow(/WRONG_STATUS/);
+  await admin.mutation(api.admin.dispatch.recordStep, { orderId: second, step: "collected_by_consumer", note: "The farm called" });
+  expect(await statusOf(second)).toBe("collected");
+
+  // Delivery: staff can mark a paid order delivered straight from "accepted" (no out-for-delivery step recorded)
+  const placed = await placeDelivery(t, s, s.guest, { quantity: 1 });
+  const delivery = placed.orders[0].orderId;
+  await billDelivery(t, s, delivery);
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: delivery, step: "delivered" })).rejects.toThrow(/NOT_PAID_YET/);
+  await payTest(t, s.guest, placed.checkoutId);
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: delivery, step: "ready_at_farm" })).rejects.toThrow(/WRONG_STATUS/);
+  await admin.mutation(api.admin.dispatch.recordStep, { orderId: delivery, step: "delivered" });
+  expect(await statusOf(delivery)).toBe("delivered");
+  // The shopper saying it arrived afterwards is harmless
+  await guest.mutation(api.orders.consumer.markArrived, { orderId: delivery });
+
+  // The shopper can say a paid delivery arrived before staff mark it out for delivery
+  const placed2 = await placeDelivery(t, s, s.guest, { quantity: 1, phone: "0803 111 3333" });
+  const early = placed2.orders[0].orderId;
+  await billDelivery(t, s, early);
+  await payTest(t, s.guest, placed2.checkoutId);
+  await guest.mutation(api.orders.consumer.markArrived, { orderId: early });
+  expect(await guest.query(api.orders.consumer.get, { orderId: early })).toMatchObject({ status: "delivered", canMarkArrived: false, canReport: true });
+  // Staff marking it out for delivery afterwards is refused (it's already with the shopper)
+  await expect(admin.mutation(api.admin.dispatch.recordStep, { orderId: early, step: "collected_from_farm" })).rejects.toThrow(/WRONG_STATUS/);
+
+  // Older orders left in the farm's old steps: staff move them on from Dispatch
+  const oldDelivery = await placeDelivery(t, s, s.guest, { quantity: 1, phone: "0803 111 4444" });
+  const oldD = oldDelivery.orders[0].orderId;
+  await billDelivery(t, s, oldD);
+  await payTest(t, s.guest, oldDelivery.checkoutId);
+  await t.run(async (ctx) => await ctx.db.patch(oldD, { status: "ready_for_rider", preparingAt: Date.now(), packedAt: Date.now(), readyAt: Date.now() }));
+  const oldView = await farmer.query(api.orders.farmer.get, { orderId: oldD });
+  expect(oldView).toMatchObject({ next: "rider_collecting" });
+  await admin.mutation(api.admin.dispatch.recordStep, { orderId: oldD, step: "collected_from_farm" });
+  expect(await statusOf(oldD)).toBe("out_for_delivery");
+
+  const oldPickup = await pickup();
+  await t.run(async (ctx) => await ctx.db.patch(oldPickup, { status: "preparing", preparingAt: Date.now(), readyAt: undefined, collectBy: undefined, arrivedAt: undefined }));
+  const stuck = await admin.query(api.admin.orders.stuck, { now: Date.now() });
+  expect(stuck.find((r: any) => r._id === oldPickup)?.reason).toBe("not_ready");
+  await admin.mutation(api.admin.dispatch.recordStep, { orderId: oldPickup, step: "ready_at_farm" });
+  const oldReady = await guest.query(api.orders.consumer.get, { orderId: oldPickup });
+  expect(oldReady).toMatchObject({ status: "ready_for_collection", canMarkCollected: true });
+  expect(oldReady!.collectBy).toBeGreaterThan(Date.now());
 });

@@ -79,7 +79,7 @@ export function ProductDetailView(props: Props) {
                 accessibilityLabel={props.onPhotoPress ? `${props.name}, photo ${index + 1}. Open full screen` : props.name}
                 onPress={() => props.onPhotoPress?.(index)}
               >
-                <Image source={{ uri: item }} style={{ width, height: photoHeight }} contentFit="cover" transition={200} />
+                <Image source={{ uri: item }} style={{ width, height: photoHeight }} contentFit="cover" cachePolicy="memory-disk" />
               </Pressable>
             ) : (
               <View style={[styles.placeholder, { width, height: photoHeight }]}>

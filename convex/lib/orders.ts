@@ -22,9 +22,13 @@ const NEXT: Record<OrderStatus, OrderStatus[]> = {
   // Delivery: unpaid until the bill (lib/bill.ts); the farm answers first
   placed: ["accepted", "declined", "expired", "cancelled"],
   paid: ["accepted", "declined", "expired", "cancelled"],
-  accepted: ["preparing", "cancelled"],
-  preparing: ["ready_for_rider", "ready_for_collection", "cancelled"],
-  ready_for_rider: ["out_for_delivery", "with_rider", "cancelled"],
+  // Since 22 Nov 2026 the farm only accepts (or declines). Delivery: staff mark
+  // it out for delivery (or the shopper says it arrived). Pickup at the farm:
+  // ready to collect at once. "preparing" and "ready_for_rider" are kept for
+  // older orders, which staff move on from Dispatch.
+  accepted: ["ready_for_collection", "out_for_delivery", "with_rider", "delivered", "preparing", "cancelled"],
+  preparing: ["ready_for_rider", "ready_for_collection", "out_for_delivery", "with_rider", "delivered", "cancelled"],
+  ready_for_rider: ["out_for_delivery", "with_rider", "delivered", "cancelled"],
   out_for_delivery: ["delivered", "cancelled"],
   // Pickup through a Farmkeke pickup point (orders from before pickup moved to the farm)
   with_rider: ["at_pickup_point", "cancelled"],
@@ -84,10 +88,59 @@ export const reachedShopper = (o: Doc<"orders">) =>
 export const reportBy = (o: Doc<"orders">, rules: { unconfirmedAfterHours: number }) =>
   o.deliveredAt === undefined ? null : o.deliveredAt + rules.unconfirmedAfterHours * HOUR;
 
-/** Out for delivery → delivered, on the shopper's word. Staff do the same from Dispatch. */
+/**
+ * A paid delivery the shopper can say has arrived: on its way, or still
+ * waiting for staff to mark it out for delivery (the rider can beat them).
+ */
+export const ARRIVABLE: OrderStatus[] = ["out_for_delivery", "accepted", "preparing", "ready_for_rider"];
+export const canSayArrived = (o: Doc<"orders">) =>
+  o.fulfilment === "delivery" && o.escrow !== "none" && ARRIVABLE.includes(o.status);
+
+/** Waiting to be collected (at the farm, or at a pickup point for older orders), and paid. */
+export const COLLECTABLE: OrderStatus[] = ["ready_for_collection", "at_pickup_point"];
+export const canSayCollected = (o: Doc<"orders">) => o.escrow !== "none" && COLLECTABLE.includes(o.status);
+
+/**
+ * Delivered, on the shopper's word ("It's arrived"). Staff do the same from
+ * Dispatch. Whoever confirms first starts the day in which a problem can be
+ * reported (buyer protection); the order closes by itself after that.
+ */
 export async function deliveredByShopper(ctx: MutationCtx, order: Doc<"orders">, actor: Actor, note: string) {
-  if (order.status !== "out_for_delivery") return order;
+  if (!canSayArrived(order)) return order;
   return await transition(ctx, order, "delivered", actor, { deliveredAt: Date.now() }, note);
+}
+
+/**
+ * Pickup at the farm, once the farm accepts: ready to collect straight away
+ * (the farm has no "ready" step since 22 Nov 2026). The shopper's days to
+ * collect and the "ready to collect" notice start once it's paid.
+ */
+export async function readyAtFarm(ctx: MutationCtx, order: Doc<"orders">, actor: Actor, note?: string) {
+  const ready = await transition(ctx, order, "ready_for_collection", actor, { readyAt: order.readyAt ?? Date.now() }, note);
+  return await startPickupClock(ctx, ready);
+}
+
+/**
+ * A paid order ready to collect at the farm: starts the shopper's days to
+ * collect and tells them, with their code (push, in-app and email; no text
+ * since 22 Nov 2026). Does nothing unpaid, or once the clock is running.
+ */
+export async function startPickupClock(ctx: MutationCtx, order: Doc<"orders">) {
+  if (order.status !== "ready_for_collection" || order.collectBy !== undefined || order.escrow === "none") return order;
+  const now = Date.now();
+  const collectBy = await pickupDeadline(ctx, order, now);
+  const patch = { arrivedAt: order.arrivedAt ?? now, collectBy };
+  await ctx.db.patch("orders", order._id, patch);
+  const ready = { ...order, ...patch };
+  const farm = await ctx.db.get("farms", order.farmId);
+  await notifyConsumer(
+    ctx,
+    ready,
+    "ready_for_pickup",
+    `Order ${order.number} is ready to collect`,
+    `Collect it from ${farm?.name ?? "the farm"}${farm?.collectionAddress ? `, ${farm.collectionAddress}` : ""}. Show your code ${order.pickupCode ?? ""} at the farm.`,
+  );
+  return ready;
 }
 
 export async function ledger(
@@ -252,9 +305,11 @@ export async function markCheckoutPaid(
         paid,
         "order_paid",
         `Order ${order.number} is paid`,
-        `${order.fulfilment === "delivery" ? "Hand it to the Farmkeke rider when they arrive." : "Hand it over when the shopper shows their code."} ${shareLine}`,
+        `${order.fulfilment === "delivery" || order.pickupPointId !== undefined ? "A Farmkeke rider will collect it. Have it ready." : "The shopper can collect it now. You can scan their pickup code when they come."} ${shareLine}`,
       );
       await notifyConsumer(ctx, paid, "order_placed", `Order ${order.number} is paid`, "Thank you, we've received your payment.");
+      // Pickup at the farm: ready since the farm accepted; the days to collect start now
+      await startPickupClock(ctx, paid);
     } else {
       await notifyFarm(
         ctx,
@@ -572,7 +627,7 @@ export async function orderCore(ctx: QueryCtx, order: Doc<"orders">) {
     deliveryPricedAt: order.deliveryPricedAt ?? null,
     paid: order.escrow !== "none",
     rider:
-      rider === null || !["out_for_delivery", "with_rider", "ready_for_rider"].includes(order.status)
+      rider === null || !["accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider"].includes(order.status)
         ? null
         : { name: rider.name, phone: rider.phone },
     riderCollectAt: order.riderCollectAt ?? null,

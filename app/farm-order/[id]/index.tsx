@@ -17,10 +17,7 @@ export default function FarmOrder() {
   const order = useQuery(api.orders.farmer.get, { orderId: id ?? "" });
   const accept = useMutation(api.orders.farmer.accept);
   const decline = useMutation(api.orders.farmer.decline);
-  const startPreparing = useMutation(api.orders.farmer.startPreparing);
-  const markPacked = useMutation(api.orders.farmer.markPacked);
-  const ready = useMutation(api.orders.farmer.readyForRider);
-  const handover = useMutation(api.orders.farmer.confirmHandover);
+  // The farm only accepts or declines (22 Nov 2026); the code scan is its one optional step
   const collect = useMutation(api.orders.farmer.confirmCollection);
   const now = useNow();
 
@@ -57,10 +54,6 @@ export default function FarmOrder() {
       actions={{
         accept: () => accept({ orderId }),
         decline: (reason, note) => decline({ orderId, reason, note }),
-        startPreparing: () => startPreparing({ orderId }),
-        markPacked: () => markPacked({ orderId }),
-        ready: () => ready({ orderId }),
-        handover: () => handover({ orderId }),
         collect: (code) => collect({ orderId, code }),
       }}
     />

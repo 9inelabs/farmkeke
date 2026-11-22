@@ -29,7 +29,7 @@ const TICK_LENGTH = 40;
 
 const NEXT = [
   { title: "We review your profile", body: "Usually within 2 working days" },
-  { title: "We text you the decision", body: "To the number you signed up with" },
+  { title: "We tell you the decision", body: "In the app, by notification and by email" },
   { title: "Start selling", body: "Set your collection hours and add your first listing" },
 ];
 

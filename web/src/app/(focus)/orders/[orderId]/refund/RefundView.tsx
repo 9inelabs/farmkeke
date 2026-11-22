@@ -35,7 +35,7 @@ export function RefundView({ orderId }: { orderId: string }) {
       <FocusShell orderId={orderId} width={720}>
         <section className="card flex flex-col items-center gap-3 px-8 py-12 text-center m:px-5">
           <h1 className="m-0 font-display text-[24px] leading-8 font-bold m:text-[22px] m:leading-7">No refund on this order yet</h1>
-          <p className="p">If a refund is decided, you&apos;ll see where it&apos;s up to here, and we&apos;ll text you.</p>
+          <p className="p">If a refund is decided, you&apos;ll see where it&apos;s up to here, and we&apos;ll let you know.</p>
           <ButtonLink href={routes.order(orderId)} variant="ghost" className="mt-2">
             Back to order
           </ButtonLink>

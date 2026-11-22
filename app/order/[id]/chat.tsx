@@ -4,18 +4,19 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronRight, ShieldCheck } from "@/components/icons";
-import { Avatar, ScreenHeader, Skeleton, StatusScreen, Text, Button } from "@/components/ui";
+import { ShieldCheck } from "@/components/icons";
+import { ScreenHeader, Skeleton, StatusScreen, Text, Button } from "@/components/ui";
+import { ChatHeader, ChatOrderCard } from "@/features/chat/ChatHeader";
 import { ChatThread } from "@/features/chat/ChatThread";
+import { chatPalette } from "@/features/chat/palette";
 import { badge } from "@/features/orders/status";
 import { useOrder } from "@/features/orders/useOrder";
 import { formatNaira } from "@/lib/money";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { radii, spacing } from "@/theme/tokens";
 
 export default function OrderChat() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -59,55 +60,56 @@ export default function OrderChat() {
   }
 
   const b = badge(thread.order.status, thread.order.fulfilment);
+  const farm = thread.counterpart.kind === "farm" ? thread.counterpart : null;
+  const first = thread.order.firstItem;
+  const more = thread.order.itemCount - 1;
   return (
-    <SafeAreaView style={styles.screen} edges={["top"]}>
-      <View style={styles.head}>
-        <ScreenHeader title={thread.counterpart.name} />
-        {thread.replyNote ? (
-          <Text variant="small" style={styles.reply}>
-            {thread.replyNote}
-          </Text>
-        ) : null}
-      </View>
+    <View style={styles.screen}>
+      <ChatHeader
+        name={thread.counterpart.name}
+        verified={farm?.verified ?? false}
+        subtitle={[`Order ${thread.order.number}`, farm?.lga].filter(Boolean).join(" · ")}
+        right={{
+          kind: "farm",
+          name: thread.counterpart.name,
+          photoUrl: thread.counterpart.photoUrl,
+          onPress: () => farm && router.push({ pathname: "/farm/[id]", params: { id: farm.farmId } }),
+        }}
+      />
+      <ChatOrderCard
+        imageUrl={thread.order.imageUrl}
+        title={(first ? `${first.name} × ${first.quantity}` : thread.order.summary) + (more > 0 ? ` and ${more} more` : "")}
+        line={`${thread.order.number} · ${formatNaira(thread.order.totalKobo)}`}
+        status={b.label}
+        onPress={() => router.push({ pathname: "/order/[id]", params: { id } })}
+      />
       <ChatThread
-        messages={results.map((m) => ({ _id: m._id, mine: m.mine, body: m.body, photos: m.photos, at: m.at, read: m.read, authorName: m.mine ? null : thread.counterpart.name }))}
+        messages={results.map((m) => ({ _id: m._id, mine: m.mine, body: m.body, photos: m.photos, at: m.at, read: m.read }))}
         loading={status === "LoadingFirstPage" || status === "LoadingMore"}
         onLoadMore={() => status === "CanLoadMore" && loadMore(30)}
         header={
-          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/order/[id]", params: { id } })} style={styles.order}>
-            {thread.order.imageUrl ? <Image source={{ uri: thread.order.imageUrl }} style={styles.thumb} contentFit="cover" /> : <Avatar name={thread.counterpart.name} size={44} />}
-            <View style={styles.flex}>
-              <Text variant="label" numberOfLines={1}>
-                {thread.order.number} · {thread.order.summary}
-                {thread.order.itemCount > 1 ? ` + ${thread.order.itemCount - 1} more` : ""}
-              </Text>
-              <Text variant="small">
-                {b.label} · {formatNaira(thread.order.totalKobo)}
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.inkMuted} />
-          </Pressable>
+          thread.replyNote ? (
+            <Text variant="small" align="center" style={styles.reply}>
+              {thread.replyNote}
+            </Text>
+          ) : null
         }
         empty={`Ask ${thread.counterpart.name} anything about this order. Farmkeke can read this chat to keep everyone safe.`}
         canSend={thread.canSend}
         closedNote="This order didn't go ahead, so the chat is closed. Contact support if you need help."
-        placeholder={`Message ${thread.counterpart.name}`}
+        placeholder="Type a message…"
         maxPhotos={4}
         generateUploadUrl={() => generateUploadUrl({})}
         onSend={async (body, photoIds) => {
           await send({ orderId, side: "shop", body, photoIds: photoIds as Id<"_storage">[] });
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.canvas },
-  flex: { flex: 1 },
+  screen: { flex: 1, backgroundColor: chatPalette.background },
   pad: { padding: spacing.screen },
-  head: { backgroundColor: colors.canvas },
-  reply: { paddingHorizontal: spacing.screen, marginTop: -spacing.sm, paddingBottom: spacing.sm },
-  order: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.white },
-  thumb: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: colors.placeholder },
+  reply: { paddingHorizontal: spacing.lg },
 });

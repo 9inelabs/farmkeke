@@ -40,7 +40,7 @@ export default function Refund() {
         icon={Receipt}
         header={<ScreenHeader title="Refund" />}
         title="No refund on this order yet"
-        message="If a refund is decided, you'll see where it's up to here, and we'll text you."
+        message="If a refund is decided, you'll see where it's up to here, and we'll let you know."
         actions={<Button label="Back to the order" variant="dark" size="large" pill fullWidth onPress={() => router.back()} />}
       />
     );

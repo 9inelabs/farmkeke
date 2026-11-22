@@ -21,7 +21,8 @@ export function timingText(o: OrderRow, now: number): string {
   }
   if (stage === "paid") return "Waiting for the farm to accept";
   // Every order is paid by bill once the farm accepts (and delivery is priced)
-  if (o.paid === false && ["accepted", "preparing", "ready"].includes(stage)) {
+  // (pickup at the farm is "ready to collect" from acceptance, but only once paid)
+  if (o.paid === false && (["accepted", "preparing", "ready"].includes(stage) || o.status === "ready_for_collection")) {
     return o.billReady ? "Your bill is ready. Pay now" : "Waiting for your bill";
   }
   if (o.status === "ready_for_collection") return "Ready to collect at the farm";
@@ -30,7 +31,7 @@ export function timingText(o: OrderRow, now: number): string {
     return `Arriving ${relDay(o.window.day, now)}, ${windowLabel(o.window.from, o.window.to)}`;
   }
   if (o.fulfilment === "pickup" && ["accepted", "preparing", "ready", "out_for_delivery"].includes(stage)) {
-    return o.status === "with_rider" ? "On its way to the pickup point" : "Being prepared at the farm";
+    return o.status === "with_rider" ? "On its way to the pickup point" : "Accepted by the farm";
   }
   return `Ordered ${dayMonth(o.placedAt)}`;
 }

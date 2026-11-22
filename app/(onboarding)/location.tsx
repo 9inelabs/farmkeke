@@ -1,21 +1,44 @@
 // M-05 Location permission primer (Figma: location).
+// Back (top left, and Android's back button) returns to wherever the shopper
+// came from: the area picker, Home's area chip, and so on. On a first launch
+// this screen replaced Get started, so there's nothing behind it; back then
+// goes to Get started rather than closing the app.
 import { api } from "@convex/_generated/api";
 import { useConvex } from "convex/react";
 import * as Location from "expo-location";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { ChevronDown } from "@/components/icons";
-import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, BackHandler, Platform, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, Notice, Text, Wordmark } from "@/components/ui";
+import { BackIcon, Button, Notice, Text, Wordmark } from "@/components/ui";
 import { usePrefs } from "@/store/prefs";
 import { borders, colors, spacing } from "@/theme/tokens";
+
+const goBack = () => {
+  if (router.canGoBack()) router.back();
+  else router.replace("/get-started");
+};
 
 export default function LocationPrimer() {
   const convex = useConvex();
   const setArea = usePrefs((s) => s.setArea);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+
+  // Android's back button: with history the stack pops as usual; without it
+  // (first launch) go to Get started instead of leaving the app.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") return;
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (router.canGoBack()) return false;
+        router.replace("/get-started");
+        return true;
+      });
+      return () => sub.remove();
+    }, []),
+  );
 
   const chooseManually = () => router.push("/choose-area");
 
@@ -60,6 +83,12 @@ export default function LocationPrimer() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* Same place and size as the back mark in ScreenHeader on the other light screens */}
+      <View style={styles.top}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" hitSlop={8} onPress={goBack} style={styles.back}>
+          <BackIcon />
+        </Pressable>
+      </View>
       <View style={styles.content}>
         {/* The column stretches its children; the wordmark sits centred like the copy under it. */}
         <Wordmark width={227} style={styles.wordmark} />
@@ -93,6 +122,8 @@ export default function LocationPrimer() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.tint },
+  top: { flexDirection: "row", paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.md, minHeight: 56, alignItems: "center" },
+  back: { minWidth: 32, minHeight: 32, justifyContent: "center", marginLeft: -4 },
   content: { flex: 1, justifyContent: "center", alignItems: "stretch", paddingHorizontal: 42, gap: spacing.lg },
   wordmark: { alignSelf: "center" },
   copy: { marginTop: spacing.xs, marginBottom: spacing.lg, paddingHorizontal: spacing.sm, alignSelf: "center" },

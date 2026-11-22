@@ -1,9 +1,11 @@
 // Test helper: drives an order through the current flow.
 // Delivery: placed unpaid → the farm accepts → staff assign a rider and set
 // the delivery price → the bill goes out → the shopper pays → the rider
-// collects and delivers. Pickup (since the Paystack split, 17 Nov 2026):
-// placed unpaid → the farm accepts → the bill goes out → the shopper pays →
-// the farm gets it ready → the farmer hands it over with the shopper's code.
+// collects (staff mark it out for delivery) and delivers. Pickup (since the
+// Paystack split, 17 Nov 2026): placed unpaid → the farm accepts (ready to
+// collect at once, since 22 Nov 2026) → the bill goes out → the shopper pays →
+// the farmer scans the shopper's code (or the shopper says it's collected).
+// The farm only accepts or declines: there are no preparing or packed steps.
 import type { convexTest } from "convex-test";
 import { api, internal } from "../convex/_generated/api";
 
@@ -96,15 +98,13 @@ export async function paidOrder(t: T, s: S, who: U, fulfilment: "delivery" | "pi
 
 /**
  * Takes a paid order to the hand-over: delivery orders are collected by the
- * rider (out for delivery); pickup orders wait at the farm (ready to collect).
+ * rider (staff mark them out for delivery); pickup orders wait at the farm
+ * (ready to collect since the farm accepted).
  */
-export async function handOver(t: T, s: S, orderId: any, opts: { packed?: boolean } = {}) {
+export async function handOver(t: T, s: S, orderId: any) {
   const farmer = as(t, s.farmerA);
   const status = async () => (await t.run(async (ctx) => (await ctx.db.get(orderId))!)).status;
   if ((await status()) === "paid" || (await status()) === "placed") await farmer.mutation(api.orders.farmer.accept, { orderId });
-  if ((await status()) === "accepted") await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  if (opts.packed) await farmer.mutation(api.orders.farmer.markPacked, { orderId });
-  if ((await status()) === "preparing") await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
   const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
   if (order.fulfilment !== "delivery") return;
   const admin = as(t, s.admin);
@@ -115,8 +115,8 @@ export async function handOver(t: T, s: S, orderId: any, opts: { packed?: boolea
 }
 
 /** All the way: delivered by the rider, or collected at the farm with the code. */
-export async function deliver(t: T, s: S, orderId: any, opts: { packed?: boolean } = {}) {
-  await handOver(t, s, orderId, opts);
+export async function deliver(t: T, s: S, orderId: any) {
+  await handOver(t, s, orderId);
   const order = await t.run(async (ctx) => (await ctx.db.get(orderId))!);
   if (order.fulfilment === "delivery") {
     await as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" });

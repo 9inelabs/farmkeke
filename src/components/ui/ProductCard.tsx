@@ -1,10 +1,11 @@
 import { Image } from "expo-image";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Leaf, Pin, Plus, Truck, type IconComponent } from "@/components/icons";
 import { formatNaira } from "@/lib/money";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { PressableScale } from "./PressableScale";
+import { Skeleton } from "./Skeleton";
 import { Text } from "./Text";
 
 type Props = {
@@ -96,6 +97,35 @@ export function ProductCard({ name, priceKobo, unit, imageUrl, width = 127, onPr
   );
 }
 
+/**
+ * ProductCard's loading shape: the same white outlined card, photo panel,
+ * price, name and unit lines and round add button, at the same size, so a
+ * row or grid doesn't move when the products arrive.
+ */
+export function ProductCardSkeleton({ width = 127, compact = false }: { width?: number; compact?: boolean }) {
+  // The card's text grows with the phone's font size up to 1.3x, so its lines do here too.
+  const scale = Math.min(Math.max(useWindowDimensions().fontScale, 1), 1.3);
+  const add = compact ? 26 : 30;
+  const line = (lineHeight: number, barWidth: `${number}%`, bar: number) => (
+    <View style={[styles.skeletonLine, { height: lineHeight * scale }]}>
+      <Skeleton width={barWidth} height={Math.round(bar * scale)} radius={4} />
+    </View>
+  );
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.card, compact && styles.cardCompact, { width }]}>
+      <Skeleton height="auto" radius={radii.md} style={styles.skeletonPhoto} />
+      <View style={styles.buy}>
+        <View style={styles.copy}>
+          {line(compact ? 17 : 19, "62%", 11)}
+          {line(16, "86%", 9)}
+          {line(14, "44%", 8)}
+        </View>
+        <Skeleton width={add} height={add} radius={add / 2} />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     borderRadius: radii.lg,
@@ -137,4 +167,6 @@ const styles = StyleSheet.create({
   unit: { fontFamily: fonts.regular, fontSize: 11, lineHeight: 14, color: colors.inkMuted },
   add: { backgroundColor: colors.success, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.75, transform: [{ scale: 0.94 }] },
+  skeletonPhoto: { width: "100%", aspectRatio: 1.1 },
+  skeletonLine: { justifyContent: "center" },
 });

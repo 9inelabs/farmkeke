@@ -1,8 +1,9 @@
 // A-53 Dispatch board and A-54 Assign rider / update delivery. Staff give
 // accepted delivery orders to riders, brief the rider, and set the delivery
-// price, which completes the shopper's bill (lib/bill.ts). Once the bill is
-// paid the rider collects; staff record each step: collected from the farm,
-// delivered, collected by the shopper (pickup at the farm).
+// price, which completes the shopper's bill (lib/bill.ts). Since 22 Nov 2026
+// the farm only accepts, so once the bill is paid staff record every step:
+// out for delivery (the rider has it), delivered, and for pickups collected
+// by the shopper. The shopper can also say "It's arrived" or "Collected".
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { mutation, query, type QueryCtx } from "../_generated/server";
@@ -10,11 +11,15 @@ import { writeAudit } from "../lib/audit";
 import { requireStaff } from "../lib/auth";
 import { checkBill, MAX_DELIVERY_FEE_KOBO } from "../lib/bill";
 import { naira, notifyConsumer, notifyFarm } from "../lib/notify";
-import { logOrderEvent, pickupDeadline, transition, type OrderStatus } from "../lib/orders";
+import { logOrderEvent, pickupDeadline, readyAtFarm, transition, type OrderStatus } from "../lib/orders";
 import { HOUR } from "../lib/settings";
 
-// Riders can be lined up as soon as the farm accepts
+// Riders can be lined up as soon as the farm accepts. "preparing" and
+// "ready_for_rider" only hold orders from before 22 Nov 2026.
 const ASSIGNABLE: OrderStatus[] = ["accepted", "preparing", "ready_for_rider"];
+
+/** Pickup at the farm (not through a Farmkeke pickup point). */
+const atFarm = (o: Doc<"orders">) => o.fulfilment === "pickup" && o.pickupPointId === undefined;
 
 /** End of a delivery window in Nigerian time (UTC+1), as a timestamp. */
 export function windowEnd(w: Doc<"orders">["window"]): number | null {
@@ -32,9 +37,9 @@ async function boardRow(ctx: QueryCtx, o: Doc<"orders">, now: number) {
   const checkout = await ctx.db.get("checkouts", o.checkoutId);
   const end = windowEnd(o.window);
   let late: string | null = null;
-  if (o.status === "ready_for_rider" && o.riderId === undefined) late = "no_rider";
+  if (ASSIGNABLE.includes(o.status) && o.escrow !== "none" && !atFarm(o) && o.riderId === undefined) late = "no_rider";
   else if (o.status === "ready_for_collection" && o.collectBy !== undefined && o.collectBy < now) late = "not_collected";
-  else if (o.status === "ready_for_rider" && o.riderCollectAt !== undefined && o.riderCollectAt < now) late = "collection_late";
+  else if (ASSIGNABLE.includes(o.status) && o.escrow !== "none" && o.riderCollectAt !== undefined && o.riderCollectAt < now) late = "collection_late";
   else if (o.status === "out_for_delivery" && end !== null && end < now) late = "past_window";
   else if (o.status === "with_rider" && o.handedOverAt !== undefined && o.handedOverAt < now - 24 * HOUR) late = "not_at_point";
   else if (o.status === "at_pickup_point" && o.collectBy !== undefined && o.collectBy < now) late = "not_collected";
@@ -103,12 +108,16 @@ export const board = query({
         .take(n);
     const rows = (list: Doc<"orders">[]) => Promise.all(list.map((o) => boardRow(ctx, o, args.now)));
     // Accepted delivery orders: each needs a rider and a delivery price before the bill
-    const atFarm = [...(await take("accepted", 200)), ...(await take("preparing", 200))];
-    const ready = await take("ready_for_rider", 200);
-    const needsPrice = [...atFarm, ...ready].filter((o) => o.fulfilment === "delivery" && o.escrow === "none");
-    // Lined up early: accepted or preparing orders that already have a rider
-    const upcoming = atFarm.filter((o) => o.riderId !== undefined && !needsPrice.includes(o));
-    const readyPaid = ready.filter((o) => !needsPrice.includes(o));
+    const accepted = [
+      ...(await take("accepted", 200)),
+      ...(await take("preparing", 200)),
+      ...(await take("ready_for_rider", 200)),
+    ];
+    const needsPrice = accepted.filter((o) => o.fulfilment === "delivery" && o.escrow === "none");
+    // Paid and still at the farm: the farm only accepts, so these wait for the
+    // rider (and staff to mark them out for delivery). Older pickup-at-farm
+    // orders left in "accepted"/"preparing" wait for staff to mark them ready.
+    const readyPaid = accepted.filter((o) => o.escrow !== "none");
     const withRider = [...(await take("out_for_delivery", 200)), ...(await take("with_rider", 200))];
     const atPoint = [...(await take("ready_for_collection", 200)), ...(await take("at_pickup_point", 200))];
     // Most recent deliveries only
@@ -120,13 +129,13 @@ export const board = query({
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(200);
     const busy = new Map<string, number>();
-    for (const o of [...needsPrice, ...upcoming, ...readyPaid, ...withRider]) {
+    for (const o of [...needsPrice, ...readyPaid, ...withRider]) {
       if (o.riderId) busy.set(o.riderId, (busy.get(o.riderId) ?? 0) + 1);
     }
     return {
       // Unpaid: rider to brief, price to set, or the bill out waiting for payment
       awaitingBill: await rows(needsPrice),
-      readyForRider: await rows([...readyPaid, ...upcoming]),
+      readyForRider: await rows(readyPaid),
       withRider: await rows(withRider),
       atPickupPoint: await rows(atPoint),
       delivered: await rows(delivered.slice(0, 50)),
@@ -236,19 +245,28 @@ export const assignRider = mutation({
       order,
       "rider_assigned",
       `Rider for order ${order.number}`,
-      `${rider.name} (${rider.phone}) will collect it. Have it packed and ready.`,
+      `${rider.name} (${rider.phone}) will collect it. Have it ready.`,
     );
   },
 });
 
+// The farm only accepts (22 Nov 2026), so a paid order goes out straight from
+// "accepted"; "preparing" and "ready_for_rider" are older orders' stages.
 const STEP_FROM: Record<string, OrderStatus[]> = {
-  collected_from_farm: ["ready_for_rider"],
+  collected_from_farm: ["accepted", "preparing", "ready_for_rider"],
   dropped_at_pickup_point: ["with_rider"],
-  delivered: ["out_for_delivery"],
+  delivered: ["out_for_delivery", "accepted", "preparing", "ready_for_rider"],
   collected_by_consumer: ["at_pickup_point", "ready_for_collection"],
+  // Older pickup-at-farm orders the farm accepted before 22 Nov 2026 and never marked ready
+  ready_at_farm: ["accepted", "preparing"],
 };
 
-/** A-54: record a delivery step. Collecting at the pickup point needs the consumer's code. */
+/**
+ * A-54: record a delivery step. "collected_from_farm" is "out for delivery"
+ * (the rider has it). Collecting at a pickup point needs the shopper's code;
+ * at the farm the code is optional (staff may be marking it on the farm's or
+ * the shopper's word), but must match when given.
+ */
 export const recordStep = mutation({
   args: {
     note: v.optional(v.string()),
@@ -259,6 +277,7 @@ export const recordStep = mutation({
       v.literal("dropped_at_pickup_point"),
       v.literal("delivered"),
       v.literal("collected_by_consumer"),
+      v.literal("ready_at_farm"),
     ),
   },
   handler: async (ctx, args) => {
@@ -269,18 +288,32 @@ export const recordStep = mutation({
     const note = args.note?.trim() || undefined;
     const now = Date.now();
 
-    // The farm may already have confirmed the handover (F-45): nothing to do.
+    // Already on its way (an older order the farm handed over itself): nothing to do.
     if (args.step === "collected_from_farm" && (order.status === "out_for_delivery" || order.status === "with_rider")) {
       return { status: order.status };
     }
+    // The shopper may have said it arrived or that they collected it first
+    if ((args.step === "delivered" && order.status === "delivered") || (args.step === "collected_by_consumer" && order.status === "collected")) {
+      return { status: order.status };
+    }
     if (!STEP_FROM[args.step]!.includes(order.status)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
-    // The rider only takes a delivery once the shopper has paid the bill
-    if (args.step === "collected_from_farm" && order.fulfilment === "delivery" && order.escrow === "none") {
+    // Pickup at the farm never goes with a rider; deliveries are never "ready at the farm"
+    if ((args.step === "collected_from_farm" || args.step === "delivered") && atFarm(order)) {
+      throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    }
+    if (args.step === "ready_at_farm" && !atFarm(order)) throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    // Delivered straight from the farm is only for a delivery (not a pickup point)
+    if (args.step === "delivered" && order.fulfilment !== "delivery") throw new ConvexError({ code: "WRONG_STATUS", status: order.status });
+    // The rider only takes an order, and the shopper only collects it, once it's paid
+    if (args.step !== "ready_at_farm" && args.step !== "dropped_at_pickup_point" && order.escrow === "none") {
       throw new ConvexError({ code: "NOT_PAID_YET" });
     }
     if (args.step === "collected_by_consumer") {
       const code = (args.pickupCode ?? "").replace(/\D/g, "");
-      if (!order.pickupCode || code !== order.pickupCode) throw new ConvexError({ code: "WRONG_PICKUP_CODE" });
+      const needed = order.status === "at_pickup_point";
+      if ((needed || code.length > 0) && (!order.pickupCode || code !== order.pickupCode)) {
+        throw new ConvexError({ code: "WRONG_PICKUP_CODE" });
+      }
     }
 
     await writeAudit(ctx, {
@@ -331,6 +364,11 @@ export const recordStep = mutation({
           `Order ${order.number} was delivered`,
           "Check everything. Something wrong? Report it from your order page within 24 hours.",
         );
+        break;
+      }
+      case "ready_at_farm": {
+        // Paid: the shopper's days to collect start and they're told, with their code
+        moved = await readyAtFarm(ctx, order, actor, note);
         break;
       }
       case "collected_by_consumer": {

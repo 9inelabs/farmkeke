@@ -1,13 +1,14 @@
 // Grid of product cards for categories, search, farm pages and saved items:
 // two columns, or three on the Categories tab. Cards fill the screen's width;
 // "+" opens the add-to-cart sheet.
-import { router } from "expo-router";
 import type { ReactElement } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
-import { ProductCard, Skeleton } from "@/components/ui";
+import { ProductCard } from "@/components/ui";
+import { ProductCardSkeleton } from "@/components/ui/ProductCard";
 import { useShopUi } from "@/store/shopUi";
-import { radii, spacing } from "@/theme/tokens";
+import { spacing } from "@/theme/tokens";
 import { useScreenWidth } from "@/theme/useScreenSize";
+import { openProduct } from "./openProduct";
 
 export type GridItem = {
   id: string;
@@ -62,7 +63,7 @@ export function ProductGrid({ items, header, empty, footer, onEndReached, column
         items === undefined ? (
           <View style={[styles.loading, { gap }]}>
             {Array.from({ length: columns * 2 }, (_, i) => (
-              <Skeleton key={i} width={card} height={card + 64} radius={radii.lg} />
+              <ProductCardSkeleton key={i} width={card} compact={columns === 3} />
             ))}
           </View>
         ) : (
@@ -78,7 +79,7 @@ export function ProductGrid({ items, header, empty, footer, onEndReached, column
             imageUrl={item.imageUrl}
             width={card}
             compact={columns === 3}
-            onPress={() => router.push(`/product/${item.id}`)}
+            onPress={() => openProduct(item.id, item.imageUrl)}
             onAdd={item.inStock === false ? undefined : () => openAdd(item.id)}
             soldOut={item.inStock === false}
             freshness={item.freshness}

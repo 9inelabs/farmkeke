@@ -4,6 +4,7 @@
 // in white cards, and Sell on Farmkeke as a dark card.
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -100,14 +101,18 @@ function QuickTile({ icon: Icon, label, value, onPress }: { icon: IconComponent;
 }
 
 /** M-80. Also drawn by /dev/account. */
-export function SignedInAccount({ viewer, addresses, onSignOut }: { viewer: { name: string | null; email: string | null; phone: string | null }; addresses: number | undefined; onSignOut: () => void }) {
+export function SignedInAccount({ viewer, addresses, onSignOut }: { viewer: { name: string | null; email: string | null; phone: string | null; photoUrl?: string | null }; addresses: number | undefined; onSignOut: () => void }) {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <Header>
         <View style={styles.profile}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(viewer.name)}</Text>
-          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Profile photo. Edit profile" onPress={() => router.push("/settings/edit-profile")} style={styles.avatar}>
+            {viewer.photoUrl ? (
+              <Image source={{ uri: viewer.photoUrl }} contentFit="cover" transition={150} cachePolicy="memory-disk" style={styles.avatarPhoto} />
+            ) : (
+              <Text style={styles.avatarText}>{initials(viewer.name)}</Text>
+            )}
+          </Pressable>
           <View style={styles.flex}>
             <Text accessibilityRole="header" numberOfLines={1} style={styles.name}>
               {viewer.name ?? "Your account"}
@@ -132,7 +137,7 @@ export function SignedInAccount({ viewer, addresses, onSignOut }: { viewer: { na
       <View style={styles.content}>
         <Stagger>
           <ListGroup title="Settings" tone="white">
-            <ListRow icon={User} title="Profile" subtitle="Name, email and phone" onPress={() => router.push("/settings/edit-profile")} />
+            <ListRow icon={User} title="Profile" subtitle="Photo, name, email and phone" onPress={() => router.push("/settings/edit-profile")} />
             <ListRow icon={Key} title="Login details" subtitle="Password and sign-in" onPress={() => router.push("/settings/login-details")} />
             <ListRow icon={Bell} title="Notifications" subtitle="What we tell you about" onPress={() => router.push("/settings/notifications")} />
           </ListGroup>
@@ -266,7 +271,9 @@ const styles = StyleSheet.create({
     borderColor: colors.lime,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  avatarPhoto: { width: "100%", height: "100%" },
   avatarText: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 22, color: colors.lime },
   name: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, letterSpacing: -0.4, color: colors.white },
   contact: { fontFamily: fonts.regular, fontSize: 12.5, lineHeight: 17, color: colors.onForest },

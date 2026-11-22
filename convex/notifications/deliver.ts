@@ -65,7 +65,7 @@ async function pushNow(ctx: ActionCtx, messages: PushMessage[], attempt: number)
         if (token === undefined) return;
         if (ticket.status === "ok") tickets.push({ id: ticket.id, token });
         else if (ticket.details?.error === "DeviceNotRegistered") dead.push(token);
-        else console.error("Expo push error", ticket.message ?? ticket.details?.error);
+        else console.error("Expo push error", ticket.details?.error ?? "unknown", ticket.message ?? "");
       });
     } catch (error) {
       retry.push(...chunk);
@@ -161,7 +161,11 @@ export const receipts = internalAction({
         const json = (await response.json()) as { data?: Record<string, Ticket> };
         for (const t of chunk) {
           const receipt = json.data?.[t.id];
-          if (receipt?.status === "error" && receipt.details?.error === "DeviceNotRegistered") dead.push(t.token);
+          if (receipt?.status !== "error") continue;
+          if (receipt.details?.error === "DeviceNotRegistered") dead.push(t.token);
+          // InvalidCredentials: Expo has no FCM V1 key (Android) or APNs key
+          // (iOS) for this app in EAS credentials, so nothing reaches phones.
+          else console.error("Expo push receipt error", receipt.details?.error ?? "unknown", receipt.message ?? "");
         }
       } catch (error) {
         console.error("Expo receipts failed", error instanceof Error ? error.message : error);

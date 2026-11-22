@@ -138,10 +138,16 @@ export default function AllFarms() {
         ItemSeparatorComponent={() => <View style={styles.gap} />}
         ListEmptyComponent={
           farms === undefined ? (
-            <View style={styles.list}>
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} height={248} radius={20} />
-              ))}
+            // The loaded list's shape: the count line, then farm cards at their real size
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <View style={styles.countLoading}>
+                <Skeleton height={9} width={110} />
+              </View>
+              <View style={styles.list}>
+                {[0, 1, 2].map((i) => (
+                  <FarmCardSkeleton key={i} />
+                ))}
+              </View>
             </View>
           ) : (
             <View style={styles.empty}>
@@ -168,6 +174,36 @@ export default function AllFarms() {
           </Reveal>
         )}
       />
+    </View>
+  );
+}
+
+/** FarmCard while loading: the photo strip, the farm's photo over its edge, then the name, place, kinds and foot lines. */
+function FarmCardSkeleton() {
+  const line = (height: number, bar: number, width: number | `${number}%`) => (
+    <View style={[styles.lineLoading, { height }]}>
+      <Skeleton height={bar} width={width} />
+    </View>
+  );
+  return (
+    <View style={styles.card}>
+      <Skeleton height={118} radius={0} />
+      <View style={styles.avatarRing}>
+        <Skeleton width={PHOTO} height={PHOTO} radius={PHOTO / 2} />
+      </View>
+      <View style={styles.body}>
+        {line(21, 13, "60%")}
+        {line(16, 10, "45%")}
+        <View style={styles.cats}>
+          {[54, 64, 46].map((w) => (
+            <Skeleton key={w} width={w} height={20} radius={radii.pill} />
+          ))}
+        </View>
+        <View style={styles.foot}>
+          <View style={styles.meta}>{line(16, 10, 120)}</View>
+          <Skeleton width={68} height={30} radius={radii.pill} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -322,7 +358,10 @@ const styles = StyleSheet.create({
   chipTextOn: { color: colors.white },
   count: { paddingHorizontal: spacing.screen, paddingTop: spacing.sm, paddingBottom: spacing.md, fontFamily: fonts.medium, fontSize: 11.5, lineHeight: 15, color: colors.inkMuted },
   // List
-  list: { paddingHorizontal: spacing.screen, paddingTop: spacing.md, gap: spacing.md },
+  list: { paddingHorizontal: spacing.screen, gap: spacing.md },
+  // The count line's place while loading (same padding and line height as `count`)
+  countLoading: { paddingHorizontal: spacing.screen, paddingTop: spacing.sm, paddingBottom: spacing.md, height: spacing.sm + 15 + spacing.md, justifyContent: "center" },
+  lineLoading: { justifyContent: "center" },
   item: { paddingHorizontal: spacing.screen },
   gap: { height: spacing.md },
   empty: { paddingHorizontal: spacing.screen, paddingTop: spacing.xxxl },

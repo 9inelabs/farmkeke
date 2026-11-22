@@ -144,7 +144,16 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
   const r = RANK[o.status] ?? 0;
   const rider = o.rider ? shortName(o.rider.name).split(" ")[0] : null;
   const markArrived = useMutation(api.orders.consumer.markArrived);
+  const markCollected = useMutation(api.orders.consumer.markCollected);
   const [busy, setBusy] = useState(false);
+  const confirm = async (run: () => Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await run();
+    } finally {
+      setBusy(false);
+    }
+  };
   let title: string;
   let body: string;
   let action: ReactNode = null;
@@ -163,14 +172,14 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
     );
   } else if (o.status === "disputed") {
     title = "We're looking into your report";
-    body = "The farm can reply, then our team decides. If you're owed a refund, Farmkeke sends it. We'll text you with the outcome.";
+    body = "The farm can reply, then our team decides. If you're owed a refund, Farmkeke sends it. We'll let you know the outcome.";
     action = <Button label="Follow this case" size="large" pill fullWidth onPress={() => router.push({ pathname: "/order/[id]/dispute", params: { id: o._id } })} />;
   } else if (!o.paid) {
     if (payToken) {
       title = "Pay your bill";
       body = pickup
-        ? `${o.farmName} accepted your order. Pay ${formatNaira(o.bill!.totalKobo)} and they'll get it ready for you to collect.`
-        : `${o.farmName} has packed your order and a rider is arranged. Pay ${formatNaira(o.bill!.totalKobo)}, delivery included, and the rider brings it.`;
+        ? `${o.farmName} accepted your order. Pay ${formatNaira(o.bill!.totalKobo)}, then collect it from the farm with your pickup code.`
+        : `${o.farmName} accepted your order and a rider is arranged. Pay ${formatNaira(o.bill!.totalKobo)}, delivery included, and the rider brings it.`;
       action = <Button label={`Pay ${formatNaira(o.bill!.totalKobo)}`} size="large" pill fullWidth onPress={() => router.push({ pathname: "/pay/[token]", params: { token: payToken } })} />;
     } else {
       title = r <= 1 ? `Waiting for ${o.farmName} to accept` : "We're pricing your delivery";
@@ -181,38 +190,32 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
       title = "Check everything";
       body = reportLine;
       action = o.canReport ? <Button label="Report a problem" variant="secondary" size="large" pill fullWidth onPress={report} /> : null;
+    } else if (o.canMarkCollected) {
+      // The farm can scan the code, but needn't: the shopper says they have it
+      title = "Ready to collect";
+      body = "Show your pickup code at the farm and check everything before you leave. Got it? Tap Collected.";
+      action = <Button label="Collected" size="large" pill fullWidth loading={busy} onPress={() => void confirm(() => markCollected({ orderId: o._id as Id<"orders"> }))} />;
     } else {
-      title = r >= 4.5 ? "Ready to collect" : `${o.farmName} is getting your order ready`;
+      title = r >= 4.5 ? "Ready to collect" : `${o.farmName} accepted your order`;
       body = r >= 4.5 ? "Show your pickup code at the farm. Check everything before you leave." : "We'll tell you when it's ready to collect.";
     }
-  } else if (o.canMarkArrived) {
+  } else if (o.canMarkArrived && o.status === "out_for_delivery") {
     // The shopper can say it arrived without waiting for staff
     title = `${rider ?? "The rider"} is bringing your order`;
     body = "When it's in your hands, check everything and let us know it arrived. Something wrong? Report a problem.";
-    action = (
-      <Button
-        label="It's arrived"
-        size="large"
-        pill
-        fullWidth
-        loading={busy}
-        onPress={async () => {
-          setBusy(true);
-          try {
-            await markArrived({ orderId: o._id as Id<"orders"> });
-          } finally {
-            setBusy(false);
-          }
-        }}
-      />
-    );
+    action = <Button label="It's arrived" size="large" pill fullWidth loading={busy} onPress={() => void confirm(() => markArrived({ orderId: o._id as Id<"orders"> }))} />;
+  } else if (o.canMarkArrived) {
+    // Paid, waiting for the rider: the rider can arrive before staff mark it on its way
+    title = "A Farmkeke rider brings it";
+    body = "We'll let you know when it's on its way. Already in your hands? Tell us it arrived.";
+    action = <Button label="It's arrived" variant="secondary" size="large" pill fullWidth loading={busy} onPress={() => void confirm(() => markArrived({ orderId: o._id as Id<"orders"> }))} />;
   } else if (o.status === "delivered") {
     title = "Check everything arrived";
     body = reportLine;
     action = o.canReport ? <Button label="Report a problem" variant="secondary" size="large" pill fullWidth onPress={report} /> : null;
   } else {
-    title = r <= 1 ? `Waiting for ${o.farmName} to accept` : `${o.farmName} is getting your order ready`;
-    body = "We'll text you when it's on its way.";
+    title = r <= 1 ? `Waiting for ${o.farmName} to accept` : "A Farmkeke rider brings it";
+    body = "We'll let you know when it's on its way.";
   }
 
   const dark = !pickup;
@@ -235,7 +238,8 @@ function NextStep({ o, payToken }: { o: OrderDetail; payToken: string | null }) 
 function CollectFrom({ o }: { o: OrderDetail }) {
   const f = o.collectFrom!;
   const place = [f.address, f.lga, f.state].filter(Boolean).join(", ");
-  const ready = (RANK[o.status] ?? 0) >= 4.5;
+  // Ready as soon as the farm accepts; the days to collect start once it's paid
+  const ready = (RANK[o.status] ?? 0) >= 4.5 && o.paid;
   return (
     <View style={styles.card}>
       <Text variant="small">Collect at the farm</Text>
@@ -243,7 +247,7 @@ function CollectFrom({ o }: { o: OrderDetail }) {
       <Text variant="caption">{place}</Text>
       {f.hours && f.hours.length > 0 ? <Text variant="small">Hands over orders: {formatHours(f.hours)}</Text> : null}
       <Text variant="small">
-        {ready && o.collectBy ? `Ready now. Collect by ${dayLabel(o.collectBy)}.` : `We'll tell you when it's ready. You'll have ${f.collectWithinDays} days to collect.`}
+        {ready && o.collectBy ? `Ready now. Collect by ${dayLabel(o.collectBy)}.` : `Ready once your bill is paid. You'll then have ${f.collectWithinDays} days to collect.`}
       </Text>
       <View style={styles.actions}>
         <Button

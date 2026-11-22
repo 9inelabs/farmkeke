@@ -95,11 +95,11 @@ const STEPS: Array<[string, string]> = [
 const APPLY: Array<[string, string]> = [
   ["Download the Farmkeke app", "Sign up with your phone number."],
   ["Go to Account, then Sell on Farmkeke", "Tell us about your farm and what you grow."],
-  ["Upload your documents", "Take clear photos of each one."],
+  ["Add your NIN, farm photos and bank account", "At least three clear photos of your farm."],
   ["Get approved and start selling", "Our team reviews every application."],
 ];
 
-const NEEDS = ["Government ID (NIN)", "3+ farm photos", "Proof of address", "Association letter", "Bank details"];
+const NEEDS = ["Mobile number", "NIN", "Farm location", "3+ farm photos", "Bank account in your name"];
 
 const PRICES: Array<[string, string, string, string]> = [
   ["Fresh tomatoes", "₦4,500", "basket", "linear-gradient(135deg,#F9DCD2,#F2BFAE)"],
@@ -113,7 +113,7 @@ const FARM_PERKS: Array<[LucideIcon, string, string]> = [
   [Truck, "We deliver", "Farmkeke riders collect from your farm."],
 ];
 
-const CHECKS = ["Government ID", "Farm photos", "Association letter", "Bank details"];
+const CHECKS = ["Phone and NIN", "Farm location", "Farm photos", "Bank details"];
 
 const float = "absolute z-[2] rounded-2xl bg-surface p-4 text-left text-ink shadow-[0_18px_40px_rgba(0,0,0,0.28)]";
 const sub = "m-0 text-sm leading-[22px] text-muted";
@@ -306,7 +306,7 @@ export default function Landing() {
               <div className="flex flex-[1_1_320px] flex-col gap-2.5">
                 <h3 className={`${cardTitle} text-[22px] leading-[1.25] m:text-base`}>Every farm is verified before it can sell</h3>
                 <p className={`${sub} max-w-[380px]`}>
-                  Each farm sends its ID, farm photos and an association letter, and our team approves it before a single listing goes live.
+                  Each farm sends its NIN, location, farm photos and bank details, and our team approves it before a single listing goes live.
                 </p>
                 <Link href={routes.sell} className="mt-1.5 inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold">
                   How farms are checked <ArrowRight aria-hidden size={16} strokeWidth={1.75} />

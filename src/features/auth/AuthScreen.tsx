@@ -7,7 +7,7 @@ import { Image, type ImageSource } from "expo-image";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, StyleSheet, View } from "react-native";
 import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, Extrapolation } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowRight, Check, ChevronLeft, Close, Leaf } from "@/components/icons";
@@ -82,7 +82,7 @@ export function AuthScreen({ title, subtitle, chips, nav = "close", tab, photo =
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={styles.fill} behavior="padding">
         <Animated.ScrollView
           onScroll={onScroll}
           scrollEventThrottle={16}

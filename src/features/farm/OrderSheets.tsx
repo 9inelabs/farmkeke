@@ -1,11 +1,12 @@
-// The sheets on a farm order: decline with a reason (F-42), hand over to the
-// rider with a last check of the items (F-45), and the buyer's 4-digit code
-// for pickup at the farm.
-import { useEffect, useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
-import { Bike, Call, Camera, Danger, Key } from "@/components/icons";
-import { BottomSheet, Button, Checkbox, RadioRow, Text } from "@/components/ui";
-import { displayPhone } from "@/lib/phone";
+// The sheets on a farm order: decline with a reason (F-42), and the buyer's
+// 4-digit code for pickup at the farm (optional since 22 Nov 2026: the buyer
+// can confirm it themselves). The farm no longer hands over to the rider in
+// the app; Farmkeke marks that from Dispatch.
+import { useEffect, useState } from "react";
+import { Platform, StyleSheet, TextInput, View } from "react-native";
+import { Camera, Danger, Key } from "@/components/icons";
+import { PinPad } from "@/components/premium";
+import { BottomSheet, Button, RadioRow, Text } from "@/components/ui";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -89,81 +90,6 @@ export function DeclineSheet({ visible, onClose, paid, onDecline }: { visible: b
   );
 }
 
-/** F-45 Hand to the rider: who's collecting, and a last check of every item. */
-export function HandoverSheet({
-  visible,
-  onClose,
-  rider,
-  items,
-  onConfirm,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  rider: { name: string; phone: string } | null;
-  items: { index: number; name: string; quantity: number; unitLabel: string }[];
-  onConfirm: () => Promise<unknown>;
-}) {
-  const [ticked, setTicked] = useState<number[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (visible) {
-      setTicked([]);
-      setError(null);
-    }
-  }, [visible]);
-  const all = ticked.length === items.length;
-
-  const submit = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      await onConfirm();
-    } catch (e) {
-      setError(errorCode(e) === "NOT_PAID_YET" ? "The buyer hasn't paid yet. Keep the order until they do." : errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <BottomSheet visible={visible} onClose={onClose} dismissible={!busy}>
-      <SheetHead icon={Bike} title="Hand to the rider" note="Check each item as it goes." />
-      <View style={styles.rider}>
-        <View style={styles.riderIcon}>
-          <Bike size={20} color={colors.forest} />
-        </View>
-        <View style={styles.flex}>
-          <Text variant="small">Rider</Text>
-          <Text variant="label">{rider?.name ?? "Farmkeke rider"}</Text>
-        </View>
-        {rider ? (
-          <View style={styles.riderPhone}>
-            <Call size={14} color={colors.inkSoft} />
-            <Text variant="small">{displayPhone(rider.phone)}</Text>
-          </View>
-        ) : null}
-      </View>
-      <View style={styles.checks}>
-        {items.map((it) => (
-          <Checkbox
-            key={it.index}
-            label={`${it.quantity} ${it.unitLabel} · ${it.name}`}
-            checked={ticked.includes(it.index)}
-            onChange={(on) => setTicked((t) => (on ? [...t, it.index] : t.filter((x) => x !== it.index)))}
-          />
-        ))}
-      </View>
-      {error ? (
-        <Text variant="small" color={colors.error} accessibilityLiveRegion="polite">
-          {error}
-        </Text>
-      ) : null}
-      <Button label={all ? "Confirm handover" : `Tick all ${items.length} items`} variant="dark" size="large" pill fullWidth disabled={!all} loading={busy} onPress={() => void submit()} />
-    </BottomSheet>
-  );
-}
-
 /** Pickup at the farm: the buyer's 4-digit code hands the order over. */
 // The camera scanner is for phones; the browser preview types the code
 const CAN_SCAN = Platform.OS !== "web";
@@ -173,14 +99,11 @@ export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; o
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const input = useRef<TextInput>(null);
   useEffect(() => {
     if (visible) {
       setCode("");
       setError(null);
       setScanning(false);
-      const t = setTimeout(() => input.current?.focus(), 350);
-      return () => clearTimeout(t);
     }
   }, [visible]);
 
@@ -212,13 +135,12 @@ export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; o
           fullWidth
           disabled={busy}
           onPress={() => {
-            input.current?.blur();
             setError(null);
             setScanning(true);
           }}
         />
       ) : null}
-      <Pressable onPress={() => input.current?.focus()} style={styles.code} accessibilityLabel="Pickup code" accessibilityHint="Opens the keypad">
+      <View style={styles.code} accessible accessibilityLabel={`Pickup code: ${code.length} of 4 digits entered`} accessibilityLiveRegion="polite">
         {[0, 1, 2, 3].map((i) => {
           const filled = code[i] !== undefined;
           const active = i === code.length && !busy;
@@ -228,24 +150,21 @@ export function CodeSheet({ visible, onClose, onConfirm }: { visible: boolean; o
             </View>
           );
         })}
-        <TextInput
-          ref={input}
-          value={code}
-          onChangeText={(t) => {
-            const v = t.replace(/\D/g, "").slice(0, 4);
-            setCode(v);
-            setError(null);
-            if (v.length === 4) void submit(v);
-          }}
-          keyboardType="number-pad"
-          maxLength={4}
-          autoComplete="one-time-code"
-          textContentType="oneTimeCode"
-          caretHidden
-          style={styles.hidden}
-          accessibilityLabel="Pickup code"
-        />
-      </Pressable>
+      </View>
+      {/* Farmkeke's own keypad: the phone's keyboard doesn't open for a hidden input inside a sheet on Android */}
+      <PinPad
+        tone="light"
+        dots={false}
+        length={4}
+        value={code}
+        onChange={(v) => {
+          setCode(v);
+          setError(null);
+        }}
+        onFilled={(v) => void submit(v)}
+        disabled={busy || scanning}
+        label="Pickup code"
+      />
       {error ? (
         <Text variant="small" color={colors.error} align="center" accessibilityLiveRegion="polite">
           {error}
@@ -275,15 +194,10 @@ const styles = StyleSheet.create({
   note: { minHeight: 76, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft, padding: spacing.md, paddingTop: spacing.md, fontFamily: fonts.regular, fontSize: 15, color: colors.ink, textAlignVertical: "top" },
   noOutline: { outlineStyle: "none" } as object,
   row: { flexDirection: "row", gap: spacing.sm },
-  rider: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft },
-  riderIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, alignItems: "center", justifyContent: "center" },
-  riderPhone: { flexDirection: "row", alignItems: "center", gap: 4 },
-  checks: { gap: spacing.md, paddingVertical: spacing.xs },
   code: { flexDirection: "row", justifyContent: "center", gap: spacing.md, paddingVertical: spacing.sm },
   digit: { width: 60, height: 70, borderRadius: radii.lg, backgroundColor: colors.surfaceSoft, alignItems: "center", justifyContent: "center", borderWidth: borders.strong, borderColor: "transparent" },
   digitFilled: { backgroundColor: colors.tint },
   digitActive: { borderColor: colors.lime, backgroundColor: colors.white },
   digitError: { borderColor: colors.error },
   digitText: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 31, color: colors.forest },
-  hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });

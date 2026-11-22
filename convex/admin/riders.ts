@@ -11,7 +11,9 @@ import { normalizeNigerianPhone } from "../lib/phone";
 import { DAY } from "../lib/settings";
 import { riderIdType, riderVehicle } from "../schema";
 
-const ON_THE_ROAD = ["ready_for_rider", "out_for_delivery", "with_rider"];
+// A rider's jobs: lined up at the farm (the farm only accepts since 22 Nov
+// 2026, so "accepted" orders wait for the rider) or on the road
+const ON_THE_ROAD = ["accepted", "preparing", "ready_for_rider", "out_for_delivery", "with_rider"];
 
 /** Riders added before profiles existed count as approved. */
 const reviewStatus = (r: Doc<"riders">) => r.reviewStatus ?? "approved";

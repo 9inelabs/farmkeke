@@ -90,7 +90,7 @@ async function paid(t: T, s: S, who: U, opts: DeliveryOpts = {}) {
   return placed;
 }
 
-const delivered = (t: T, s: S, orderId: any) => deliver(t, s, orderId, { packed: true });
+const delivered = (t: T, s: S, orderId: any) => deliver(t, s, orderId);
 
 test("the rider note reaches the farm, dispatch and the confirmation page", async () => {
   process.env.PAYMENTS_TEST_STEP = "true";
@@ -101,10 +101,7 @@ test("the rider note reaches the farm, dispatch and the confirmation page", asyn
   const orderId = placed.orders[0].orderId;
   const farm = await as(t, s.farmerA).query(api.orders.farmer.get, { orderId });
   expect(farm.address.note).toBe("Blue gate. Call when you arrive.");
-  const farmer = as(t, s.farmerA);
-  await farmer.mutation(api.orders.farmer.startPreparing, { orderId });
-  await farmer.mutation(api.orders.farmer.markPacked, { orderId });
-  await farmer.mutation(api.orders.farmer.readyForRider, { orderId });
+  // The farm only accepts (22 Nov 2026): the paid order waits on the board for its rider
   const board = await as(t, s.admin).query(api.admin.dispatch.board, { now: Date.now() });
   const row = Object.values(board).flat().find((r: any) => r?.orderId === orderId) as any;
   expect(row?.dropOff.note).toBe("Blue gate. Call when you arrive.");

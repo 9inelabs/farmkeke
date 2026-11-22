@@ -1,13 +1,15 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { useFonts } from "expo-font";
-import { router, Stack, type ErrorBoundaryProps } from "expo-router";
-import { motionFor, navigationFor, ScreenMotionLayout } from "@/components/motion/screenMotion";
+import { router, type ErrorBoundaryProps } from "expo-router";
+import { Stack } from "expo-router/js-stack";
+import { modalRise, rootScreenOptions, ScreenMotionLayout, sectionFade } from "@/components/motion/screenMotion";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { Info, Refresh } from "@/components/icons";
 import { useEffect, type ReactNode } from "react";
 import { Linking, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useReducedMotion } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button, StatusScreen } from "@/components/ui";
 import { ToastHost } from "@/components/feedback/ToastHost";
@@ -16,15 +18,19 @@ import { AddToCartSheet } from "@/features/shop/AddToCartSheet";
 import { AppGate } from "@/features/system/AppGate";
 import { SessionWatcher } from "@/features/system/SessionWatcher";
 import { convex, secureTokenStorage } from "@/lib/convex";
-import { modalRise, sectionFade, stackScreenOptions } from "@/theme/navigation";
+import { preloadImages } from "@/lib/preloadImages";
 import { colors } from "@/theme/tokens";
 import { fontAssets } from "@/theme/typography";
 import { WEB_MAX_WIDTH } from "@/theme/useScreenSize";
 
 void SplashScreen.preventAutoHideAsync();
+// Decode the welcome and sign-up photos while the splash shows (APK #7)
+void preloadImages();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
+  // Read once at launch: with reduce motion on, every screen change is a plain cross-fade
+  const reduceMotion = useReducedMotion();
   const ready = fontsLoaded || fontError !== null;
 
   useEffect(() => {
@@ -41,14 +47,16 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           <AppGate>
             <Stack
-              // Each screen arrives in one of three ways (components/motion/screenMotion.tsx)
-              screenOptions={({ route }) => ({ ...stackScreenOptions, ...navigationFor(motionFor(route.name)), contentStyle: { backgroundColor: colors.white } })}
-              screenLayout={({ route, children }) => <ScreenMotionLayout routeName={route.name}>{children}</ScreenMotionLayout>}
+              // The JS stack, so every screen scales, slides or lifts in and out on both
+              // platforms (components/motion/screenMotion.tsx)
+              screenOptions={({ route }) => rootScreenOptions(route.name, reduceMotion)}
+              screenLayout={({ route, children }) => <ScreenMotionLayout routeKey={route.key}>{children}</ScreenMotionLayout>}
             >
               <Stack.Screen name="index" options={sectionFade} />
               <Stack.Screen name="(shop)" options={sectionFade} />
               <Stack.Screen name="(farm)" options={sectionFade} />
-              <Stack.Screen name="(auth)" options={modalRise} />
+              <Stack.Screen name="(onboarding)" options={sectionFade} />
+              <Stack.Screen name="(auth)" options={modalRise(reduceMotion)} />
               {/* After paying or placing, there is no going back into checkout */}
               <Stack.Screen name="order-placed/[checkoutId]" options={{ gestureEnabled: false }} />
             </Stack>

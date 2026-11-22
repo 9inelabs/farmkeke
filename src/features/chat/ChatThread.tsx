@@ -1,17 +1,32 @@
 // The message list and composer shared by order chat (M-74), the problem
 // case (M-69) and support (M-91). Newest messages sit at the bottom; older
 // ones load as you scroll up. Photos open full screen.
+//
+// Look (APK #4 redesign, approved 22 Nov 2026): the other side's messages in
+// white bubbles on the left, yours in lime on the right, day dividers with
+// thin lines, and a bottom bar with attach, a rounded field and a round send.
+//
+// Keyboard: the bottom bar rises above the phone's keyboard and returns to
+// the bottom when it closes. Android draws edge to edge (SDK 57), so the
+// window no longer shrinks for the keyboard and app.json's
+// softwareKeyboardLayoutMode "resize" alone does nothing; Expo's keyboard
+// guide uses KeyboardAvoidingView with behavior "padding" on both platforms,
+// which works here because every chat screen fills the window and this view
+// sits at its bottom. While the keyboard is up the bar drops the home
+// indicator / navigation bar padding, which the keyboard already covers.
 import { Image } from "expo-image";
-import { useRef, useState, type ReactElement } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useEffect, useRef, useState, type ReactElement } from "react";
+import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Check, ImageAdd, Send } from "@/components/icons";
+import { Check, Send } from "@/components/icons";
 import { Text } from "@/components/ui";
 import { PhotoViewer } from "@/features/shop/PhotoViewer";
 import { dayLabel, hm, lagosDay } from "@/features/orders/format";
-import { colors, radii, spacing } from "@/theme/tokens";
+import { borders, colors, radii, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { AttachmentStrip } from "./AttachmentStrip";
+import { chatPalette } from "./palette";
+import { Paperclip } from "./Paperclip";
 import { useAttachments } from "./useAttachments";
 
 export type ChatMessage = {
@@ -47,8 +62,33 @@ type Props = {
   onSend: (body: string, photoIds: string[]) => Promise<void>;
 };
 
+/** Whether the phone's keyboard is up (iPhone says so as it starts to move; Android once it's shown). */
+function useKeyboardOpen() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const ios = Platform.OS === "ios";
+    const show = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow", () => setOpen(true));
+    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", () => setOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return open;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function dayDivider(at: number) {
+  const day = lagosDay(at);
+  if (day === lagosDay(Date.now())) return "TODAY";
+  if (day === lagosDay(Date.now() - DAY_MS)) return "YESTERDAY";
+  return dayLabel(at).toUpperCase();
+}
+
 export function ChatThread(props: Props) {
   const insets = useSafeAreaInsets();
+  const keyboardOpen = useKeyboardOpen();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,9 +121,11 @@ export function ChatThread(props: Props) {
     return (
       <View>
         {newDay ? (
-          <Text variant="small" align="center" style={styles.day}>
-            {lagosDay(item.at) === lagosDay(Date.now()) ? "Today" : dayLabel(item.at)}
-          </Text>
+          <View style={styles.day}>
+            <View style={styles.dayLine} />
+            <Text style={styles.dayText}>{dayDivider(item.at)}</Text>
+            <View style={styles.dayLine} />
+          </View>
         ) : null}
         <View style={[styles.bubbleRow, item.mine ? styles.mineRow : styles.theirsRow]}>
           {showAuthor ? (
@@ -102,15 +144,13 @@ export function ChatThread(props: Props) {
               </View>
             ) : null}
             {item.body ? (
-              <Text variant="body" color={item.mine ? colors.white : colors.ink} selectable>
+              <Text style={[styles.body, item.mine && styles.bodyMine]} selectable>
                 {item.body}
               </Text>
             ) : null}
             <View style={styles.meta}>
-              <Text variant="small" color={item.mine ? "rgba(255,255,255,0.7)" : colors.inkMuted} style={styles.time}>
-                {hm(item.at)}
-              </Text>
-              {item.mine && item.read ? <Check size={12} color={colors.lime} strokeWidth={2.5} /> : null}
+              <Text style={[styles.time, item.mine && styles.timeMine]}>{hm(item.at)}</Text>
+              {item.mine && item.read ? <Check size={12} color={colors.forest} strokeWidth={2.5} accessibilityLabel="Read" /> : null}
             </View>
           </View>
         </View>
@@ -119,7 +159,7 @@ export function ChatThread(props: Props) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={styles.fill} behavior="padding">
       <FlatList
         ref={list}
         inverted
@@ -150,7 +190,7 @@ export function ChatThread(props: Props) {
         }
       />
       {props.canSend ? (
-        <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+        <View style={[styles.composer, { paddingBottom: keyboardOpen ? spacing.sm : Math.max(insets.bottom, spacing.sm) }]}>
           {attachments.items.length > 0 ? (
             <AttachmentStrip items={attachments.items} onRemove={attachments.remove} onRetry={attachments.retry} full size={56} />
           ) : null}
@@ -167,12 +207,12 @@ export function ChatThread(props: Props) {
               onPress={() => void attachments.add()}
               style={[styles.attach, attachments.full && styles.disabled]}
             >
-              <ImageAdd size={22} color={colors.forest} />
+              <Paperclip size={21} color={colors.forest} />
             </Pressable>
             <TextInput
               value={text}
               onChangeText={setText}
-              placeholder={props.placeholder ?? "Write a message"}
+              placeholder={props.placeholder ?? "Type a message…"}
               placeholderTextColor={colors.inkMuted}
               multiline
               maxLength={2000}
@@ -180,12 +220,12 @@ export function ChatThread(props: Props) {
               accessibilityLabel="Message"
             />
             <Pressable accessibilityRole="button" accessibilityLabel="Send" disabled={!ready || sending} onPress={() => void send()} style={[styles.send, (!ready || sending) && styles.disabled]}>
-              {sending ? <ActivityIndicator color={colors.forest} size="small" /> : <Send size={20} color={colors.forest} variant="solid" />}
+              {sending ? <ActivityIndicator color={colors.lime} size="small" /> : <Send size={20} color={colors.lime} variant="solid" />}
             </Pressable>
           </View>
         </View>
       ) : (
-        <View style={[styles.closed, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        <View style={[styles.closed, { paddingBottom: keyboardOpen ? spacing.md : Math.max(insets.bottom, spacing.md) }]}>
           <Text variant="caption" align="center">
             {props.closedNote ?? "This conversation is closed."}
           </Text>
@@ -202,20 +242,25 @@ const styles = StyleSheet.create({
   headerWrap: { gap: spacing.md, paddingBottom: spacing.md },
   loading: { marginVertical: spacing.md },
   empty: { paddingVertical: spacing.xl, paddingHorizontal: spacing.lg },
-  day: { marginVertical: spacing.md },
-  bubbleRow: { maxWidth: "82%", marginVertical: 2 },
+  day: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginVertical: spacing.md, paddingHorizontal: spacing.lg },
+  dayLine: { flex: 1, height: borders.hairline, backgroundColor: chatPalette.line },
+  dayText: { fontFamily: fonts.semibold, fontSize: 10.5, lineHeight: 14, letterSpacing: 0.6, color: colors.inkMuted },
+  bubbleRow: { maxWidth: "78%", marginVertical: 2 },
   mineRow: { alignSelf: "flex-end", alignItems: "flex-end" },
   theirsRow: { alignSelf: "flex-start", alignItems: "flex-start" },
   author: { marginBottom: 2, marginLeft: spacing.xs, fontFamily: fonts.medium },
-  bubble: { borderRadius: radii.lg + 2, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.xs },
-  mine: { backgroundColor: colors.forest, borderBottomRightRadius: 6 },
-  theirs: { backgroundColor: colors.white, borderBottomLeftRadius: 6 },
-  staff: { backgroundColor: colors.tint, borderBottomLeftRadius: 6, borderWidth: 1, borderColor: colors.lime },
+  bubble: { borderRadius: 18, paddingTop: 10, paddingHorizontal: 13, paddingBottom: 7, gap: 3 },
+  mine: { backgroundColor: colors.lime, borderBottomRightRadius: 6 },
+  theirs: { backgroundColor: colors.white, borderBottomLeftRadius: 6, borderWidth: borders.hairline, borderColor: chatPalette.line },
+  staff: { backgroundColor: colors.tint, borderBottomLeftRadius: 6, borderWidth: borders.hairline, borderColor: colors.lime },
+  body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.ink },
+  bodyMine: { color: colors.forestDeep },
   photos: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
   photo: { width: 120, height: 120, borderRadius: radii.md },
   meta: { flexDirection: "row", alignItems: "center", alignSelf: "flex-end", gap: 3 },
-  time: { fontSize: 11 },
-  composer: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: spacing.sm, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.line },
+  time: { fontFamily: fonts.regular, fontSize: 10.5, lineHeight: 14, color: colors.inkMuted },
+  timeMine: { color: chatPalette.timeOnLime },
+  composer: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: spacing.sm, backgroundColor: colors.white, borderTopWidth: borders.hairline, borderTopColor: chatPalette.line },
   inputRow: { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm },
   attach: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.tint, alignItems: "center", justifyContent: "center" },
   input: {
@@ -223,7 +268,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     maxHeight: 120,
     borderRadius: 22,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: chatPalette.inputFill,
+    borderWidth: borders.hairline,
+    borderColor: chatPalette.inputBorder,
     paddingHorizontal: spacing.lg,
     paddingTop: 12,
     paddingBottom: 12,
@@ -232,7 +279,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : {}),
   },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.lime, alignItems: "center", justifyContent: "center" },
+  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
   disabled: { opacity: 0.45 },
-  closed: { paddingHorizontal: spacing.screen, paddingTop: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.line },
+  closed: { paddingHorizontal: spacing.screen, paddingTop: spacing.md, backgroundColor: colors.white, borderTopWidth: borders.hairline, borderTopColor: chatPalette.line },
 });

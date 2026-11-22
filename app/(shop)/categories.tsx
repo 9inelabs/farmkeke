@@ -10,11 +10,13 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Grid, Sprout } from "@/components/icons";
-import { CategoryTile, EmptyState, ScreenHeader, Skeleton, Text } from "@/components/ui";
+import { CategoryTile, EmptyState, ScreenHeader, Text } from "@/components/ui";
+import { CategoryTileSkeleton, categoryTileSlots } from "@/components/ui/CategoryTile";
 import { ProductGrid } from "@/features/shop/ProductGrid";
 import { useShopContext } from "@/features/shop/useShopContext";
-import { colors, radii, sizes, spacing } from "@/theme/tokens";
+import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
+import { useScreenWidth } from "@/theme/useScreenSize";
 
 const PAGE = 24;
 const ALL = "all";
@@ -33,6 +35,7 @@ export default function Categories() {
     }
   }, [params.c, params.at]);
   const all = chosen === ALL;
+  const screenWidth = useScreenWidth();
   const current = all ? undefined : (categories?.find((c) => c.slug === chosen) ?? categories?.[0]);
   const everything = useQuery(api.storefront.collection, all ? { kind: "fresh", today, limit } : "skip");
   const data = useQuery(api.storefront.categoryListings, current ? { slug: current.slug, today, limit } : "skip");
@@ -53,7 +56,7 @@ export default function Categories() {
     <View style={styles.head}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tilesRow} contentContainerStyle={styles.tiles}>
         {categories === undefined
-          ? [0, 1, 2, 3, 4].map((i) => <Skeleton key={i} width={sizes.categoryTile} height={sizes.categoryTile} radius={radii.lg} />)
+          ? Array.from({ length: categoryTileSlots(screenWidth, spacing.screen - 4, spacing.xxs) }, (_, i) => <CategoryTileSkeleton key={i} index={i} />)
           : [
               <CategoryTile
                 key={ALL}

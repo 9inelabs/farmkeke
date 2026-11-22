@@ -35,15 +35,8 @@ import { ForestBackdrop, Glass } from "@/components/premium";
 import { Button, Text, Wordmark } from "@/components/ui";
 import { colors } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
-
-const PHOTOS = {
-  farmer: require("../../assets/photos/farmer-greens.jpg"),
-  field: require("../../assets/photos/farmer-field.jpg"),
-  tomatoes: require("../../assets/photos/tomatoes-basket.jpg"),
-  fruits: require("../../assets/photos/fruits.jpg"),
-  peppers: require("../../assets/photos/peppers-market.jpg"),
-  carrots: require("../../assets/photos/carrots-peppers.jpg"),
-};
+// The photos, with their blurhash placeholders; they're decoded at launch (src/lib/preloadImages.ts)
+import { photoProps } from "@/lib/preloadImages";
 
 const SLIDES = 3;
 
@@ -83,7 +76,7 @@ export default function Welcome() {
         {/* 1. Fresh from Nigerian farms */}
         <View style={[styles.slide, styles.dark, slide]}>
           <Parallax scrollX={scrollX} index={0} width={width} factor={0.45} style={[styles.heroPhoto, { height: height * 0.68 }]}>
-            <Image source={PHOTOS.farmer} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "30%", top: "20%" }} accessible={false} />
+            <Image {...photoProps("farmerGreens")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "30%", top: "20%" }} accessible={false} />
           </Parallax>
           <LinearGradient
             colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0)", "rgba(11,26,7,0)", "rgba(11,26,7,0.9)", colors.forestDeep]}
@@ -97,7 +90,7 @@ export default function Welcome() {
             <Reveal index={2} delay={250}>
               <Bob>
                 <Glass style={styles.farmCard}>
-                  <Image source={PHOTOS.field} style={styles.farmThumb} contentFit="cover" accessible={false} />
+                  <Image {...photoProps("farmerField")} style={styles.farmThumb} contentFit="cover" accessible={false} />
                   <View>
                     <View style={styles.inline}>
                       <Text style={styles.farmName}>Mama Ada Farms</Text>
@@ -140,12 +133,12 @@ export default function Welcome() {
             <View style={styles.blob} />
             <Parallax scrollX={scrollX} index={1} width={width} factor={0.3} style={styles.collage}>
               <View style={styles.col}>
-                <Image source={PHOTOS.tomatoes} style={[styles.tile, styles.tileArch, { flex: 1.6 }]} contentFit="cover" accessible={false} />
-                <Image source={PHOTOS.carrots} style={[styles.tile, styles.tileFootLeft, { flex: 1 }]} contentFit="cover" accessible={false} />
+                <Image {...photoProps("tomatoes")} style={[styles.tile, styles.tileArch, { flex: 1.6 }]} contentFit="cover" accessible={false} />
+                <Image {...photoProps("carrots")} style={[styles.tile, styles.tileFootLeft, { flex: 1 }]} contentFit="cover" accessible={false} />
               </View>
               <View style={[styles.col, { flex: 0.65 }]}>
-                <Image source={PHOTOS.fruits} style={[styles.tile, styles.tileTopRight, { flex: 1 }]} contentFit="cover" accessible={false} />
-                <Image source={PHOTOS.peppers} style={[styles.tile, styles.tileFootRight, { flex: 1.7 }]} contentFit="cover" contentPosition="bottom" accessible={false} />
+                <Image {...photoProps("fruits")} style={[styles.tile, styles.tileTopRight, { flex: 1 }]} contentFit="cover" accessible={false} />
+                <Image {...photoProps("peppers")} style={[styles.tile, styles.tileFootRight, { flex: 1.7 }]} contentFit="cover" contentPosition="bottom" accessible={false} />
               </View>
             </Parallax>
             <Parallax scrollX={scrollX} index={1} width={width} factor={-0.25} style={styles.riderSlot}>
@@ -199,7 +192,7 @@ export default function Welcome() {
               <View style={styles.stackMid} />
               <View style={[styles.card, styles.orderCard]}>
                 <View style={styles.inline}>
-                  <Image source={PHOTOS.field} style={styles.orderThumb} contentFit="cover" accessible={false} />
+                  <Image {...photoProps("farmerField")} style={styles.orderThumb} contentFit="cover" accessible={false} />
                   <View style={styles.flex}>
                     <Text style={styles.orderFarm} numberOfLines={1}>
                       Mama Ada Farms

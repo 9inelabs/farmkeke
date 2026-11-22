@@ -63,7 +63,7 @@ export const FAQ: { topic: HelpTopic; question: string; answer: string }[] = [
     topic: "ordering",
     question: "Can I order from more than one farm at once?",
     answer:
-      "Yes. One cart can hold several farms. Once they've accepted, you pay one bill, and each farm packs and sends its own order.",
+      "Yes. One cart can hold several farms. Once they've accepted, you pay one bill, and each farm's order comes separately.",
   },
   {
     topic: "payment",
@@ -86,7 +86,7 @@ export const HOW_IT_WORKS: { title: string; body: string }[] = [
   },
   {
     title: "You pay your bill",
-    body: "We send one bill once the farms accept (and, for delivery, once it's priced). Pay within 12 hours through Paystack, then the farm packs your order fresh.",
+    body: "We send one bill once the farms accept (and, for delivery, once it's priced). Pay within 12 hours through Paystack, then a Farmkeke rider brings it, or you collect it from the farm.",
   },
   {
     title: "A rider brings it, or you collect",

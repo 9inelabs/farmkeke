@@ -91,7 +91,7 @@ export default function OrderPlaced() {
   const many = orders.length > 1;
 
   const steps = [
-    { title: many ? "The farms accept and pack your orders" : "The farm accepts and packs your order", detail: "Usually within a few hours" },
+    { title: many ? "The farms accept your orders" : "The farm accepts your order", detail: "Usually within a few hours" },
     ...(delivery
       ? [
           { title: "We price the delivery and send your bill", detail: "By email, text and in the app. You'll have 12 hours to pay." },
@@ -116,8 +116,8 @@ export default function OrderPlaced() {
               Order placed{first ? `. Thank you, ${first}` : ""}
             </Text>
             <Text variant="body" color={colors.inkSoft} align="center">
-              We've sent your {many ? "orders to the farms" : "order to the farm"}.{unpaid ? " Nothing to pay yet." : ""} We'll text{" "}
-              {displayPhone(summary.contact.phone)} at every step.
+              We've sent your {many ? "orders to the farms" : "order to the farm"}.{unpaid ? " Nothing to pay yet." : ""} We'll keep you{" "}
+              posted in the app and by email, and text {displayPhone(summary.contact.phone)} your bill.
             </Text>
           </View>
 

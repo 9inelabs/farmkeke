@@ -4,7 +4,11 @@ import { StyleSheet, View } from "react-native";
 import { colors, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { PressableScale } from "./PressableScale";
+import { Skeleton } from "./Skeleton";
 import { Text } from "./Text";
+
+// The label's line height (Text "small")
+const LABEL_LINE = 15;
 
 // Illustrations bundled with the app, keyed by the category's `illustration`
 // field in Convex. Keys without art yet fall back to a placeholder.
@@ -55,7 +59,30 @@ export function CategoryTile({ name, illustration, selected = false, onPress, ic
   );
 }
 
+/**
+ * CategoryTile's loading shape: the tinted tile and a label line, as tall as
+ * a tile with a two-line label (a row's tallest), so the row doesn't move.
+ */
+export function CategoryTileSkeleton({ index = 0 }: { index?: number }) {
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.wrap, styles.loading]}>
+      <Skeleton width={sizes.categoryTile} height={sizes.categoryTile} radius={radii.lg} style={styles.tileLoading} />
+      <View style={styles.labelLoading}>
+        <Skeleton width={index % 2 === 0 ? 46 : 36} height={9} radius={4} />
+      </View>
+    </View>
+  );
+}
+
+/** How many tiles fill a row `rowWidth` wide that starts `inset` in, so loading rows run edge to edge. */
+export function categoryTileSlots(rowWidth: number, inset: number, gap: number) {
+  return Math.max(1, Math.ceil((rowWidth - inset) / (sizes.categoryTile + 8 + gap)));
+}
+
 const styles = StyleSheet.create({
+  loading: { height: sizes.categoryTile + spacing.xs + 1 + 2 * LABEL_LINE },
+  tileLoading: { backgroundColor: colors.tint },
+  labelLoading: { height: LABEL_LINE, justifyContent: "center" },
   wrap: { width: sizes.categoryTile + 8, alignItems: "center", gap: spacing.xs + 1 },
   tile: {
     width: sizes.categoryTile,

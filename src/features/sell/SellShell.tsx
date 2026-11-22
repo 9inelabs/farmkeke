@@ -6,7 +6,7 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, Close } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
@@ -101,7 +101,7 @@ export function SellShell({ children, footer, back = "back", onBack, tone = "lig
           </View>
         ) : null}
       </View>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView
           contentContainerStyle={[bare ? styles.bare : styles.content, styles.grow]}
           keyboardShouldPersistTaps="handled"

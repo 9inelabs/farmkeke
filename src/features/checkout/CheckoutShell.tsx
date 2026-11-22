@@ -4,7 +4,7 @@
 // the cart.
 import { router } from "expo-router";
 import { useEffect, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stagger } from "@/components/motion/reveal";
 import { BackIcon, Text } from "@/components/ui";
@@ -50,7 +50,7 @@ export function CheckoutShell({ step, title, subtitle, children, footer }: Props
           <View key={s} style={[styles.segment, i < step && styles.segmentOn]} />
         ))}
       </View>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={styles.fill} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Stagger>
             <View style={styles.heading}>

@@ -1,12 +1,12 @@
-// Order states in the farmer's words (F-40 to F-47).
+// Order states in the farmer's words (F-40 to F-47). Since 22 Nov 2026 the
+// farm only accepts or declines; Farmkeke (and the shopper) take it from there.
 import type { BadgeTone } from "@/components/ui";
 
-export type FarmTab = "new" | "to_prepare" | "with_rider" | "completed" | "cancelled" | "disputed";
+export type FarmTab = "new" | "accepted" | "completed" | "cancelled" | "disputed";
 
 export const FARM_TABS: { key: FarmTab; label: string }[] = [
   { key: "new", label: "New" },
-  { key: "to_prepare", label: "To prepare" },
-  { key: "with_rider", label: "Out" },
+  { key: "accepted", label: "Accepted" },
   { key: "completed", label: "Completed" },
   { key: "disputed", label: "Disputed" },
   { key: "cancelled", label: "Cancelled" },
@@ -17,14 +17,14 @@ export function farmBadge(o: { status: string; fulfilment: "delivery" | "pickup"
     case "paid":
     case "placed":
       return { label: "New", tone: "brand" };
+    // "preparing" and "ready_for_rider" are older orders' stages: they read the same as accepted
     case "accepted":
-      return { label: "Accepted", tone: "pending" };
     case "preparing":
-      return { label: o.packedAt ? "Packed" : "Preparing", tone: "pending" };
     case "ready_for_rider":
-      return o.fulfilment === "delivery" && o.paid === false ? { label: "Awaiting payment", tone: "neutral" } : { label: "Ready for rider", tone: "pending" };
+      if (o.paid === false) return { label: "Awaiting payment", tone: "neutral" };
+      return o.fulfilment === "delivery" ? { label: "Rider collecting", tone: "pending" } : { label: "Accepted", tone: "pending" };
     case "ready_for_collection":
-      return { label: "Ready for buyer", tone: "pending" };
+      return o.paid === false ? { label: "Awaiting payment", tone: "neutral" } : { label: "Ready for buyer", tone: "pending" };
     case "with_rider":
     case "out_for_delivery":
       return { label: "With rider", tone: "pending" };

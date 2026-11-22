@@ -8,6 +8,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { getViewer, requireUser } from "./lib/auth";
 import { notify } from "./lib/notify";
+import { photoUrlOfUser } from "./lib/profilePhoto";
 import { hitLimit } from "./lib/rateLimit";
 import { recordReplyMinutes, replyNoteFor, replyTimeMinutes } from "./lib/shop";
 import { validateImageUpload } from "./lib/uploads";
@@ -83,7 +84,13 @@ async function conversationRow(ctx: QueryCtx, c: Doc<"conversations">, side: Sid
     status: order?.status ?? null,
     // Who the viewer is talking to
     name: side === "shop" ? (farm?.name ?? "Farm") : (order?.contact.name.split(/\s+/)[0] ?? "Shopper"),
-    photoUrl: side === "shop" && farm?.photoStorageId ? await ctx.storage.getUrl(farm.photoStorageId) : null,
+    // The farm's photo for the shopper; the shopper's own photo (APK #10) for the farm
+    photoUrl:
+      side === "shop"
+        ? farm?.photoStorageId
+          ? await ctx.storage.getUrl(farm.photoStorageId)
+          : null
+        : await photoUrlOfUser(ctx, c.userId),
     lastMessageAt: c.lastMessageAt,
     preview: c.lastMessagePreview ?? null,
     unread: side === "shop" ? c.consumerUnread : c.farmerUnread,
@@ -126,6 +133,8 @@ export const thread = query({
         itemCount: order.items.length,
         totalKobo: order.totalKobo,
         imageUrl: first?.photoId ? await ctx.storage.getUrl(first.photoId) : null,
+        // The chat header card (APK #4): "Yam tuber × 2"
+        firstItem: first ? { name: first.name, quantity: first.quantity } : null,
       },
       // Phase 5 (W-58): the farm's usual reply time, from its recent replies; null with no history
       replyTimeMinutes: side === "shop" ? await replyTimeMinutes(ctx, order.farmId) : null,
@@ -136,8 +145,12 @@ export const thread = query({
               kind: "farm" as const,
               name: farm?.name ?? "Farm",
               photoUrl: farm?.photoStorageId ? await ctx.storage.getUrl(farm.photoStorageId) : null,
+              // The chat header (APK #4): the farm page link, the verified tick (as on the farm page) and its LGA
+              farmId: order.farmId,
+              verified: farm?.status === "active",
+              lga: farm?.lga ?? null,
             }
-          : { kind: "shopper" as const, name: order.contact.name.split(/\s+/)[0] ?? "Shopper", photoUrl: null },
+          : { kind: "shopper" as const, name: order.contact.name.split(/\s+/)[0] ?? "Shopper", photoUrl: await photoUrlOfUser(ctx, order.userId) },
     };
   },
 });

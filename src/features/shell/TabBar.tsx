@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Cart, Clipboard, Dashboard, Grid, Home, Orders, Shop, Sprout, User, Wallet, type IconComponent } from "@/components/icons";
 import { Text } from "@/components/ui";
 import { keyFeedback } from "@/lib/haptics";
+import { APPLE_EASE_UI } from "@/theme/navigation";
 import { androidUi } from "@/theme/platform";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
@@ -30,7 +31,9 @@ const ICONS: Record<string, TabMeta> = {
   farm: { label: "Farm", icon: Shop },
 };
 
-const SPRING = { damping: 19, stiffness: 230, mass: 0.7, reduceMotion: ReduceMotion.System } as const;
+// Quick and critically-near: settles in about a quarter second with no visible bounce
+const SPRING = { damping: 26, stiffness: 380, mass: 0.7, reduceMotion: ReduceMotion.System } as const;
+const PRESS = { duration: 80, easing: APPLE_EASE_UI, reduceMotion: ReduceMotion.System } as const;
 
 type Route = { key: string; name: string };
 type Props = {
@@ -101,7 +104,7 @@ function DockTab({ meta, focused, badge, onPress }: TabProps) {
       accessibilityState={{ selected: focused }}
       accessibilityLabel={badge ? `${meta.label}, ${badge} items` : meta.label}
       onPress={onPress}
-      onPressIn={() => (scale.value = withTiming(0.88, { duration: 90 }))}
+      onPressIn={() => (scale.value = withTiming(0.9, PRESS))}
       onPressOut={() => (scale.value = withSpring(1, SPRING))}
       style={styles.dockTab}
     >
@@ -135,7 +138,7 @@ function MaterialTab({ meta, focused, badge, onPress }: TabProps) {
   const on = useSharedValue(focused ? 1 : 0);
   const press = useSharedValue(1);
   useEffect(() => {
-    on.value = withTiming(focused ? 1 : 0, { duration: 220, reduceMotion: ReduceMotion.System });
+    on.value = withTiming(focused ? 1 : 0, { duration: 200, easing: APPLE_EASE_UI, reduceMotion: ReduceMotion.System });
   }, [focused, on]);
   const pill = useAnimatedStyle(() => ({ opacity: on.value, transform: [{ scaleX: 0.45 + 0.55 * on.value }] }));
   const icon = useAnimatedStyle(() => ({ transform: [{ scale: press.value }] }));
@@ -146,7 +149,7 @@ function MaterialTab({ meta, focused, badge, onPress }: TabProps) {
       accessibilityState={{ selected: focused }}
       accessibilityLabel={badge ? `${meta.label}, ${badge} items` : meta.label}
       onPress={onPress}
-      onPressIn={() => (press.value = withTiming(0.88, { duration: 90 }))}
+      onPressIn={() => (press.value = withTiming(0.9, PRESS))}
       onPressOut={() => (press.value = withSpring(1, SPRING))}
       android_ripple={{ color: "rgba(30, 59, 22, 0.10)", borderless: true, radius: 34 }}
       style={styles.tab}

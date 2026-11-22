@@ -238,6 +238,9 @@ async function eraseUser(ctx: MutationCtx, userId: Id<"users">) {
       if (limit !== null) await ctx.db.delete("authRateLimits", limit._id);
       await ctx.db.delete("authAccounts", account._id);
     }
+    // The profile photo file goes with the account
+    const user = await ctx.db.get("users", userId);
+    if (user?.photoStorageId) await ctx.storage.delete(user.photoStorageId);
     await ctx.db.delete("users", userId);
 }
 

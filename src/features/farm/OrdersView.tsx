@@ -1,11 +1,12 @@
 // F-40 Orders: one tab per stage, with counts. New orders show the time left
-// to reply; the rest show where they're up to.
+// to reply; the rest show where they're up to. The farm only accepts or
+// declines (22 Nov 2026), so every accepted order sits in one tab.
 import { api } from "@convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { router } from "expo-router";
 import { FlatList, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Box, Clipboard, Flag, Messages, TruckFast, Verified, Ban, type IconComponent } from "@/components/icons";
+import { Clipboard, Flag, Messages, TruckFast, Verified, Ban, type IconComponent } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
 import { colors, radii, spacing } from "@/theme/tokens";
 import { FARM_TABS, farmBadge, type FarmTab } from "./status";
@@ -15,8 +16,7 @@ type Row = FunctionReturnType<typeof api.orders.farmer.list>[number];
 
 const EMPTY: Record<FarmTab, { icon: IconComponent; title: string; note: string }> = {
   new: { icon: Clipboard, title: "No new orders", note: "You'll have 24 hours to reply to each one." },
-  to_prepare: { icon: Box, title: "Nothing to prepare", note: "Accepted orders wait here." },
-  with_rider: { icon: TruckFast, title: "Nothing on the way", note: "Orders with a rider or buyer show here." },
+  accepted: { icon: TruckFast, title: "No accepted orders", note: "Orders you accept show here. Farmkeke and the buyer take it from there." },
   completed: { icon: Verified, title: "No completed orders", note: "Orders that have closed." },
   disputed: { icon: Flag, title: "No problems reported", note: "Reports from buyers show here." },
   cancelled: { icon: Ban, title: "Nothing cancelled", note: "Declined and expired orders." },

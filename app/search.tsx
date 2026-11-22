@@ -10,13 +10,15 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Avatar, CategoryTile, EmptyState, ScreenHeader, SearchPill, Skeleton, Text } from "@/components/ui";
+import { CategoryTileSkeleton, categoryTileSlots } from "@/components/ui/CategoryTile";
 import { activeCount, areaKey, FilterSheet, filterArgs, type FarmArea, type Filters } from "@/features/shop/FilterSheet";
 import { ProductGrid } from "@/features/shop/ProductGrid";
-import { ProductRow } from "@/features/shop/ProductRow";
+import { ProductRow, ProductRowSkeleton } from "@/features/shop/ProductRow";
 import { ResultsBar } from "@/features/shop/ResultsBar";
 import { useShopContext } from "@/features/shop/useShopContext";
 import { useSearches } from "@/store/searches";
 import { borders, colors, radii, spacing } from "@/theme/tokens";
+import { useScreenWidth } from "@/theme/useScreenSize";
 
 const PAGE = 24;
 
@@ -58,6 +60,7 @@ export default function Search() {
 
   const popular = useQuery(api.storefront.popular, searching ? "skip" : { today, limit: 10 });
   const categories = useQuery(api.catalog.listCategories);
+  const screenWidth = useScreenWidth();
 
   const run = (t: string) => {
     setText(t);
@@ -121,19 +124,21 @@ export default function Search() {
               Browse Categories
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tileRow} contentContainerStyle={styles.tileScroll}>
-              {categories?.map((c) => (
-                <CategoryTile
-                  key={c._id}
-                  name={c.name}
-                  illustration={c.illustration}
-                  onPress={() => router.push({ pathname: "/category/[slug]", params: { slug: c.slug, name: c.name } })}
-                />
-              ))}
+              {categories === undefined
+                ? Array.from({ length: categoryTileSlots(screenWidth, spacing.screen - 4, spacing.xxs) }, (_, i) => <CategoryTileSkeleton key={i} index={i} />)
+                : categories.map((c) => (
+                    <CategoryTile
+                      key={c._id}
+                      name={c.name}
+                      illustration={c.illustration}
+                      onPress={() => router.push({ pathname: "/category/[slug]", params: { slug: c.slug, name: c.name } })}
+                    />
+                  ))}
             </ScrollView>
           </View>
           <View style={styles.popular}>
             {popular === undefined ? (
-              <Skeleton height={200} radius={radii.lg} />
+              <ProductRowSkeleton title="Popular right now" />
             ) : (
               <ProductRow title="Popular right now" items={popular} />
             )}
@@ -153,7 +158,11 @@ export default function Search() {
           onFilter={() => setShowFilters(true)}
         />
       ) : (
-        <Skeleton height={20} width={200} />
+        // ResultsBar's shape: the summary line and the round Filter button
+        <View style={styles.resultsLoading}>
+          <Skeleton height={12} width={180} />
+          <Skeleton height={36} width={84} radius={radii.pill} />
+        </View>
       )}
       {shown && shown.farms.length > 0 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.farmRow} contentContainerStyle={styles.farms}>
@@ -240,6 +249,7 @@ const styles = StyleSheet.create({
   tileScroll: { gap: spacing.xxs, paddingHorizontal: spacing.screen - 4 },
   tiles: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: spacing.lg, paddingTop: spacing.sm },
   popular: { marginTop: spacing.sm },
+  resultsLoading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
   resultsHead: { gap: spacing.md, paddingBottom: spacing.sm },
   farmRow: { marginHorizontal: -spacing.screen },
   farms: { gap: spacing.sm, paddingHorizontal: spacing.screen },

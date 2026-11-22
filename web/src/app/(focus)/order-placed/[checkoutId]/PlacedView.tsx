@@ -133,7 +133,7 @@ function Placed({ summary }: { summary: PlacedSummary }) {
 
   const steps = [
     {
-      title: orders.length > 1 ? "The farms accept and pack your orders" : "The farm accepts and packs your order",
+      title: orders.length > 1 ? "The farms accept your orders" : "The farm accepts your order",
       detail: "Usually within a few hours",
     },
     ...(delivery

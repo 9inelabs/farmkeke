@@ -3,9 +3,11 @@
 // A-53 / A-54 Dispatch board, one stage at a time (tabs with counts, wide
 // cards). Delivery orders arrive unpaid: once the farm
 // accepts, staff assign and brief a rider and set the delivery price, which
-// completes the shopper's bill. Paid orders then move to "Ready for a rider",
-// on the road and delivered. Pickup orders wait at the farm for the shopper.
-// The shopper and the farm are told at each step.
+// completes the shopper's bill. Since 22 Nov 2026 the farm only accepts, so
+// staff move every paid order on: out for delivery when the rider has it,
+// then delivered (the shopper can also tap "It's arrived"). Pickup orders
+// wait at the farm for the shopper, who (or the farm's code scan, or staff
+// here) marks them collected. The shopper and the farm are told at each step.
 import { useMutation, useQuery } from "convex/react";
 import { Bike, Clock, MapPin, Phone, Receipt, Store, User } from "lucide-react";
 import Link from "next/link";
@@ -24,12 +26,13 @@ import type { Board, BoardRow } from "@/convex/returns/adminOps";
 import { isoDayLabel } from "@/components/orders/format";
 import { clock, dateTime, displayPhone, naira } from "@/lib/format";
 
-type Step = "collected_from_farm" | "dropped_at_pickup_point" | "delivered" | "collected_by_consumer";
+type Step = "collected_from_farm" | "dropped_at_pickup_point" | "delivered" | "collected_by_consumer" | "ready_at_farm";
 const STEP_LABEL: Record<Step, string> = {
-  collected_from_farm: "Collected from the farm",
+  collected_from_farm: "Out for delivery",
   dropped_at_pickup_point: "Dropped at the pickup point",
   delivered: "Delivered",
   collected_by_consumer: "Collected by the shopper",
+  ready_at_farm: "Ready to collect at the farm",
 };
 
 type Rider = Board["riders"][number];
@@ -71,9 +74,21 @@ const STAGES: { key: StageKey; title: string; hint: string; empty: string; rows:
     empty: "No deliveries to price. New ones appear here when a farm accepts.",
     rows: (b) => b.awaitingBill,
   },
-  { key: "ready", title: "Ready for a rider", hint: "Paid and waiting at the farm. Mark them collected when the rider has them.", empty: "Nothing paid and waiting at farms.", rows: (b) => b.readyForRider },
-  { key: "road", title: "With a rider", hint: "On the road. Mark each one delivered when the shopper has it.", empty: "No one on the road.", rows: (b) => b.withRider },
-  { key: "waiting", title: "Waiting for the shopper", hint: "Pickup orders waiting to be collected. Ask for the shopper's pickup code.", empty: "No pickup orders waiting at farms.", rows: (b) => b.atPickupPoint },
+  {
+    key: "ready",
+    title: "Ready for a rider",
+    hint: "Paid and waiting at the farm. The farm only accepts, so mark each one out for delivery when the rider has it (or delivered, if it's already there).",
+    empty: "Nothing paid and waiting at farms.",
+    rows: (b) => b.readyForRider,
+  },
+  { key: "road", title: "With a rider", hint: "On the road. Mark each one delivered when the shopper has it. The shopper can also tap It's arrived.", empty: "No one on the road.", rows: (b) => b.withRider },
+  {
+    key: "waiting",
+    title: "Waiting for the shopper",
+    hint: "Pickup orders waiting to be collected. The shopper can tap Collected and the farm can scan their code; mark it here when either tells you.",
+    empty: "No pickup orders waiting at farms.",
+    rows: (b) => b.atPickupPoint,
+  },
   { key: "delivered", title: "Delivered recently", hint: "Done. Kept here for a little while.", empty: "Nothing delivered yet.", rows: (b) => b.delivered },
 ];
 
@@ -302,16 +317,29 @@ export function DispatchView() {
           {priceButton(r)}
         </>
       ) : null,
-    ready: (r) => (
-      <>
-        {assignButton(r)}
-        {canDispatch && r.status === "ready_for_rider" && r.rider ? (
-          <Button size="sm" variant="ghost" onClick={() => step(r, "collected_from_farm")}>
-            Collected
+    ready: (r) =>
+      r.dropOff.kind === "farm" ? (
+        // An older pickup-at-farm order the farm never marked ready
+        canDispatch ? (
+          <Button size="sm" variant="ghost" onClick={() => step(r, "ready_at_farm")}>
+            Ready to collect
           </Button>
-        ) : null}
-      </>
-    ),
+        ) : null
+      ) : (
+        <>
+          {assignButton(r)}
+          {canDispatch && r.rider ? (
+            <Button size="sm" variant="lime" onClick={() => step(r, "collected_from_farm")}>
+              {r.fulfilment === "delivery" ? "Out for delivery" : "With the rider"}
+            </Button>
+          ) : null}
+          {canDispatch && r.fulfilment === "delivery" ? (
+            <Button size="sm" variant="ghost" onClick={() => step(r, "delivered")}>
+              Delivered
+            </Button>
+          ) : null}
+        </>
+      ),
     road: (r) =>
       canDispatch ? (
         <Button size="sm" variant="ghost" onClick={() => step(r, r.fulfilment === "delivery" ? "delivered" : "dropped_at_pickup_point")}>
@@ -430,8 +458,12 @@ export function DispatchView() {
         title={stepping ? `${stepping.row.number}: ${STEP_LABEL[stepping.step]}` : ""}
         description={
           stepping?.step === "collected_by_consumer"
-            ? "Ask for the shopper's pickup code and enter it."
-            : stepping?.step === "delivered"
+            ? stepping.row.dropOff.kind === "farm"
+              ? "Enter the shopper's pickup code if you have it. Without it, say in the note who told you (the shopper or the farm)."
+              : "Ask for the shopper's pickup code and enter it."
+            : stepping?.step === "ready_at_farm"
+              ? "The shopper is told it's ready, with their code, and has 3 days to collect."
+              : stepping?.step === "delivered"
               ? "The shopper is asked to check their order. They can report a problem for a day, then it closes."
               : stepping?.step === "dropped_at_pickup_point"
                 ? "The shopper gets their pickup code and the time they have to collect."
@@ -441,13 +473,24 @@ export function DispatchView() {
         variant="lime"
         onConfirm={async () => {
           if (!stepping) return;
-          if (stepping.step === "collected_by_consumer" && code.replace(/\D/g, "").length === 0) throw new FormError("Enter the pickup code.");
+          const atFarm = stepping.row.dropOff.kind === "farm";
+          if (stepping.step === "collected_by_consumer" && !atFarm && code.replace(/\D/g, "").length === 0) throw new FormError("Enter the pickup code.");
+          if (stepping.step === "collected_by_consumer" && atFarm && code.replace(/\D/g, "").length === 0 && note.trim() === "") {
+            throw new FormError("Enter the pickup code, or say in the note who told you it was collected.");
+          }
           await recordStep({ orderId: stepping.row.orderId, step: stepping.step, note: note || undefined, pickupCode: code || undefined });
           setDone(`${stepping.row.number}: ${STEP_LABEL[stepping.step].toLowerCase()}.`);
         }}
       >
         {stepping?.step === "collected_by_consumer" ? (
-          <TextField label="Pickup code" inputMode="numeric" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} />
+          <TextField
+            label="Pickup code"
+            labelNote={stepping.row.dropOff.kind === "farm" ? "(if you have it)" : undefined}
+            inputMode="numeric"
+            autoComplete="off"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
         ) : null}
         <TextField label="Note" labelNote="(optional)" value={note} onChange={(e) => setNote(e.target.value)} />
       </ConfirmDialog>

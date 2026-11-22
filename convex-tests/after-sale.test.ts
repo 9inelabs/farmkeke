@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { modules } from "./modules";
-import { closeOrder, deliver, handOver, paidOrder } from "./orderFlow";
+import { billDelivery, closeOrder, deliver, handOver, paidOrder, placeDelivery } from "./orderFlow";
 import { grantStaff } from "./staff";
 
 beforeEach(() => {
@@ -230,7 +230,9 @@ test("notifications: preferences decide push, SMS and email; delivery uses Expo 
   expect(p.push).toHaveLength(0);
   // No text fallback for order updates: only lib/alerts SMS_KINDS are texted (cost)
   expect(p.sms).toBeNull();
-  expect((await plan("ready_for_pickup"))!.sms).toMatchObject({ to: "+2348031112222" });
+  // Ready for pickup stopped texting on 22 Nov 2026 (cost); only the bill still texts a shopper
+  expect((await plan("ready_for_pickup"))!.sms).toBeNull();
+  expect((await plan("bill_ready"))!.sms).toMatchObject({ to: "+2348031112222" });
   // The whole alert off: nothing at all
   await account.mutation(api.notifications.setPreference, { side: "shop", alert: "order_updates", on: false });
   p = (await plan("order_accepted"))!;
@@ -340,10 +342,14 @@ test("the shopper says a delivery arrived while the rider is bringing it, or rep
   const guest = as(t, s.guest);
   const read = async (id: any) => await t.run(async (ctx) => (await ctx.db.get(id))!);
 
-  // Not before the rider has it
+  // Not before it's paid
+  const unpaid = await placeDelivery(t, s, s.guest);
+  await billDelivery(t, s, unpaid.orders[0].orderId);
+  expect((await guest.query(api.orders.consumer.get, { orderId: unpaid.orders[0].orderId }))!).toMatchObject({ canMarkArrived: false, canReport: false });
+  await expect(guest.mutation(api.orders.consumer.markArrived, { orderId: unpaid.orders[0].orderId })).rejects.toThrow(/NOT_OUT_FOR_DELIVERY/);
+  // Paid and waiting for the rider: the shopper may already say it arrived (the rider can beat staff), but can't report yet
   const orderId = await paidOrder(t, s, s.guest, "delivery");
-  expect((await guest.query(api.orders.consumer.get, { orderId }))!).toMatchObject({ canMarkArrived: false, canReport: false, reportBy: null });
-  await expect(guest.mutation(api.orders.consumer.markArrived, { orderId })).rejects.toThrow(/NOT_OUT_FOR_DELIVERY/);
+  expect((await guest.query(api.orders.consumer.get, { orderId }))!).toMatchObject({ canMarkArrived: true, canReport: false, reportBy: null });
 
   // Out for delivery: the shopper can say it arrived, which marks it delivered and starts the day for reporting
   await handOver(t, s, orderId);
@@ -363,8 +369,9 @@ test("the shopper says a delivery arrived while the rider is bringing it, or rep
   const delivered = events.find((e) => e.kind === "delivered")!;
   expect(delivered.actorKind).toBe("guest");
   expect(delivered.note).toBe("The shopper said it arrived");
-  // Staff can't mark it delivered after that
-  await expect(as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" })).rejects.toThrow(/WRONG_STATUS/);
+  // Staff marking it delivered after that changes nothing (the shopper's word stands)
+  expect(await as(t, s.admin).mutation(api.admin.dispatch.recordStep, { orderId, step: "delivered" })).toEqual({ status: "delivered" });
+  expect((await read(orderId)).deliveredAt).toBe(arrived.deliveredAt);
   // A day later it closes, and can't be reported any more
   await closeOrder(t, orderId);
   expect((await read(orderId)).status).toBe("completed");

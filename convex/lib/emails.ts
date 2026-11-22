@@ -637,7 +637,9 @@ export function orderAcceptedEmail(
         ? `A Farmkeke rider will bring it to you${p.window ? ` on <strong>${esc(p.window)}</strong>` : ""}. We'll email you when it's on its way.`
         : p.pickupPointName
           ? `It will go to <strong>${esc(p.pickupPointName)}</strong>. We'll email your pickup code when it's ready.`
-          : "You'll collect it at the farm. We'll email the address and your pickup code when it's ready.";
+          : p.unpaid
+            ? "You'll collect it at the farm. We'll send your bill next; once it's paid, it's ready to collect and we'll email the address and your pickup code."
+            : "It's ready to collect at the farm. We'll email the address and your pickup code.";
   const nextText =
     p.fulfilment === "delivery" && p.unpaid
       ? "Farmkeke is arranging a rider. We'll send your bill, with the delivery price, as soon as it's set. You'll have 12 hours to pay."
@@ -645,11 +647,13 @@ export function orderAcceptedEmail(
         ? `A Farmkeke rider will bring it to you${p.window ? ` on ${p.window}` : ""}. We'll email you when it's on its way.`
         : p.pickupPointName
           ? `It will go to ${p.pickupPointName}. We'll email your pickup code when it's ready.`
-          : "You'll collect it at the farm. We'll email the address and your pickup code when it's ready.";
+          : p.unpaid
+            ? "You'll collect it at the farm. We'll send your bill next; once it's paid, it's ready to collect and we'll email the address and your pickup code."
+            : "It's ready to collect at the farm. We'll email the address and your pickup code.";
   const moneyNote = p.unpaid ? "You haven't paid anything yet." : "You've paid. The farm has its share.";
   const body = [
     H1("Your order was accepted"),
-    P(`${esc(hi(p.name))} <strong>${esc(p.farmName)}</strong> accepted order <strong>${esc(p.number)}</strong>. They're getting it ready now.`),
+    P(`${esc(hi(p.name))} <strong>${esc(p.farmName)}</strong> accepted order <strong>${esc(p.number)}</strong>.`),
     P(next),
     NOTE(esc(moneyNote)),
     BUTTON(cta.url, cta.label),
@@ -658,7 +662,7 @@ export function orderAcceptedEmail(
     lines: [
       "Your order was accepted",
       "",
-      `${hi(p.name)} ${p.farmName} accepted order ${p.number}. They're getting it ready now.`,
+      `${hi(p.name)} ${p.farmName} accepted order ${p.number}.`,
       nextText,
       moneyNote,
     ],
@@ -668,7 +672,7 @@ export function orderAcceptedEmail(
   return {
     to: p.to,
     subject: oneLine(`${p.farmName} accepted order ${p.number}`),
-    html: page({ preheader: "The farm is getting your order ready.", body, reason }),
+    html: page({ preheader: "The farm accepted your order.", body, reason }),
     text,
   };
 }
@@ -1198,7 +1202,9 @@ const SECURITY_REASON =
   "This is a security email about your Farmkeke account. We always send these, even if you've turned other emails off.";
 
 // ---------------------------------------------------------------------------
-// 13. Order being prepared (the farm started preparing)
+// 13. Order being prepared (the farm started preparing). Not sent since 22 Nov
+// 2026: the farm only accepts now, so nothing raises order_preparing. Kept for
+// the store's older notifications and the email previews.
 // ---------------------------------------------------------------------------
 
 export function orderPreparingEmail(
@@ -1940,13 +1946,13 @@ export function farmRiderAssignedEmail(
     preheader: `${p.riderName} will collect it${p.collectAt ? ` on ${p.collectAt}` : ""}.`,
     title: p.changed ? "A new rider is collecting" : "A rider is coming",
     blocks: [
-      b.p(hi(p.name), " ", { b: p.riderName }, " will collect order ", { b: p.number }, ". Have it packed and ready."),
+      b.p(hi(p.name), " ", { b: p.riderName }, " will collect order ", { b: p.number }, ". Have it ready."),
       b.rows([
         { label: "Rider", value: p.riderName },
         { label: "Phone", value: p.riderPhone },
         ...(p.collectAt ? [{ label: "Collecting", value: p.collectAt, strong: true }] : []),
       ]),
-      b.p("When you hand it over, mark it as handed to the rider in the app."),
+      b.p("There's nothing to mark in the app: Farmkeke tracks the delivery from here."),
       b.inApp(farmOrderPath(p.number)),
     ],
     cta: openApp(),

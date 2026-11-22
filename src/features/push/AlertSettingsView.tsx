@@ -36,8 +36,8 @@ const SHORT: Record<string, string> = {
 };
 
 const SMS_NOTE = {
-  shop: "Texts only go out for bills and pickup codes.",
-  farm: "Texts only go out for new orders and bank changes.",
+  shop: "Texts only go out for your bill.",
+  farm: "Texts only go out for bank account changes.",
 };
 
 function PushCard({ status, onEnable }: { status: PushStatus | null; onEnable: () => void }) {

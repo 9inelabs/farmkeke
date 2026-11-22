@@ -146,7 +146,7 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
     title: o.status === "disputed" ? "We're looking into your report" : r >= 6 ? "Closed" : "Order closes",
     detail:
       o.status === "disputed"
-        ? "We'll email or text you with the outcome"
+        ? "We'll let you know the outcome"
         : r >= 6
           ? at(o.endedAt)
           : o.reportBy
@@ -182,28 +182,36 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
     : [];
 
   if (pickup) {
-    // Older orders went to a pickup point; new ones are collected at the farm
+    // Older orders went to a pickup point with a Farmkeke rider; new ones are
+    // collected at the farm, ready as soon as the farm accepts (the farm has no
+    // "preparing" or "ready" steps since 22 Nov 2026) and the bill is paid.
     const point = o.pickupPoint?.name;
     const waiting = point ? "Waiting at the pickup point" : `Ready to collect at ${farm}`;
+    const ready = point ? r >= 4.5 : r >= 2 && isPaid;
     return [
       placed,
       ...(billFirst ? [accepted, ...bill] : []),
-      {
-        key: "packed",
-        title: r >= 4 ? `Packed by ${farm}` : `${farm} is preparing your order`,
-        detail: r >= 4 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt ?? o.acceptedAt) : undefined,
-        state: state(r >= 4, r >= 2 && r < 4 && isPaid),
-      },
+      ...(point
+        ? [
+            {
+              key: "rider",
+              title: r >= 4 ? `Taken to ${point}` : `A Farmkeke rider takes it to ${point}`,
+              detail: r >= 4 ? at(o.outForDeliveryAt) : undefined,
+              state: state(r >= 4.5, r >= 2 && r < 4.5 && isPaid),
+            } satisfies TimelineStep,
+          ]
+        : []),
       {
         key: "point",
-        title: r >= 4.5 ? waiting : r >= 4 && point ? `On its way to ${point}` : waiting,
-        detail:
-          r >= 4.5
-            ? [o.arrivedAt ? `Arrived ${dayTime(o.arrivedAt)}` : "", o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : ""]
-                .filter(Boolean)
-                .join(" · ")
+        title: waiting,
+        detail: ready
+          ? [o.arrivedAt && point ? `Arrived ${dayTime(o.arrivedAt)}` : "", o.collectBy ? `Collect by ${dayLabel(o.collectBy)}` : ""]
+              .filter(Boolean)
+              .join(" · ") || undefined
+          : r >= 2 && !isPaid
+            ? "Once you've paid"
             : undefined,
-        state: state(r >= 5, r >= 4 && r < 5),
+        state: state(r >= 5, ready && r < 5),
       },
       { key: "collected", title: o.status === "disputed" ? "Collected · Problem reported" : "Collected", detail: at(o.deliveredAt), state: state(r >= 5, false) },
       close,
@@ -215,15 +223,10 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
     placed,
     accepted,
     ...bill,
-    {
-      key: "packed",
-      title: r >= 4 ? "Packed and handed to the rider" : r >= 3.5 ? "Packed, waiting for the rider" : "Being prepared",
-      detail: r >= 4 ? at(o.outForDeliveryAt ?? o.packedAt) : r >= 3.5 ? at(o.readyAt ?? o.packedAt) : r >= 2 ? at(o.preparingAt) : undefined,
-      state: state(r >= 4, r >= 2 && r < 4 && (isPaid || !billFirst)),
-    },
+    // The farm only accepts (22 Nov 2026): a Farmkeke rider collects it once it's paid
     {
       key: "out",
-      title: "Out for delivery",
+      title: r >= 4 ? "Out for delivery" : "A Farmkeke rider brings it",
       detail:
         r === 4 ? (
           <>
@@ -233,7 +236,7 @@ function steps(o: OrderDetail, now: number, riderCard: ReactNode): TimelineStep[
         ) : r < 4 ? (
           arriving
         ) : undefined,
-      state: state(r >= 5, r === 4),
+      state: state(r >= 5, r >= 2 && r < 5 && (isPaid || !billFirst)),
     },
     { key: "delivered", title: o.status === "disputed" ? "Delivered · Problem reported" : "Delivered", detail: at(o.deliveredAt), state: state(r >= 5, false) },
     close,
@@ -490,8 +493,38 @@ function NextStep({ order: o }: { order: OrderDetail }) {
   const r = RANK[o.status] ?? 0;
   const rider = o.rider ? shortName(o.rider.name).split(" ")[0] : null;
   const markArrived = useMutation(api.orders.consumer.markArrived);
+  const markCollected = useMutation(api.orders.consumer.markCollected);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // "It's arrived" / "Collected": the shopper confirms without waiting for staff or the farm
+  const confirmButton = (label: ReactNode, run: () => Promise<unknown>, variant: "lime" | "ghost" = "lime") => (
+    <>
+      <Button
+        variant={variant}
+        fullWidth
+        loading={busy}
+        className="mt-4 min-h-[52px] rounded-[14px]"
+        onClick={async () => {
+          setBusy(true);
+          setFailed(false);
+          try {
+            await run();
+          } catch {
+            setFailed(true);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {label}
+      </Button>
+      {failed ? (
+        <div role="alert" className={`mt-2 text-center text-xs ${pickup ? "text-err" : "text-on-forest"}`}>
+          We couldn&apos;t save that. Check your connection and try again.
+        </div>
+      ) : null}
+    </>
+  );
   // Problems are reported until the order closes, a day after delivery or collection
   const reportLine = o.reportBy
     ? `Something wrong? Report it by ${dayTime(o.reportBy)}. After that, the order closes.`
@@ -537,8 +570,8 @@ function NextStep({ order: o }: { order: OrderDetail }) {
     if (payable(o)) {
       title = "Pay your bill";
       body = pickup
-        ? `${o.farmName} accepted your order. Pay ${naira(o.bill.totalKobo)} and they'll get it ready for you to collect.`
-        : `${o.farmName} has packed your order and a rider is arranged. Pay ${naira(o.bill.totalKobo)}, delivery included, and the rider brings it.`;
+        ? `${o.farmName} accepted your order. Pay ${naira(o.bill.totalKobo)}, then collect it from the farm with your pickup code.`
+        : `${o.farmName} accepted your order and a rider is arranged. Pay ${naira(o.bill.totalKobo)}, delivery included, and the rider brings it.`;
       action = (
         <ButtonLink href={routes.payBill(o.bill.payToken)} variant="lime" fullWidth className="mt-4 min-h-[52px] rounded-[14px]">
           Pay {naira(o.bill.totalKobo)}
@@ -555,50 +588,33 @@ function NextStep({ order: o }: { order: OrderDetail }) {
       title = "Check everything";
       body = reportLine;
       action = reportButton;
+    } else if (o.canMarkCollected) {
+      // The farm can scan the code, but needn't: the shopper says they have it
+      title = "Ready to collect";
+      body = `Show your pickup code at ${where} and check everything before you leave. Got it? Tell us it's collected.`;
+      action = confirmButton("Collected", () => markCollected({ orderId: o._id as Id<"orders"> }));
     } else {
-      title = r >= 4.5 ? "Ready to collect" : `${o.farmName} is getting your order ready`;
+      title = r >= 4.5 ? "Ready to collect" : `${o.farmName} accepted your order`;
       body = r >= 4.5 ? `Show your pickup code at ${where}. Check everything before you leave.` : "We'll tell you when it's ready to collect.";
       action = null;
     }
-  } else if (o.canMarkArrived) {
+  } else if (o.canMarkArrived && o.status === "out_for_delivery") {
     // The shopper can say it arrived without waiting for staff
     title = `${rider ?? "The rider"} is bringing your order`;
     body = "When it's in your hands, check everything and let us know it arrived. Something wrong? Report a problem.";
-    action = (
-      <>
-        <Button
-          variant="lime"
-          fullWidth
-          loading={busy}
-          className="mt-4 min-h-[52px] rounded-[14px]"
-          onClick={async () => {
-            setBusy(true);
-            setFailed(false);
-            try {
-              await markArrived({ orderId: o._id as Id<"orders"> });
-            } catch {
-              setFailed(true);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          It&apos;s arrived
-        </Button>
-        {failed ? (
-          <div role="alert" className="mt-2 text-center text-xs text-on-forest">
-            We couldn&apos;t save that. Check your connection and try again.
-          </div>
-        ) : null}
-      </>
-    );
+    action = confirmButton(<>It&apos;s arrived</>, () => markArrived({ orderId: o._id as Id<"orders"> }));
+  } else if (o.canMarkArrived) {
+    // Paid, waiting for the rider: the rider can arrive before staff mark it on its way
+    title = "A Farmkeke rider brings it";
+    body = "We'll let you know when it's on its way. Already in your hands? Tell us it arrived.";
+    action = confirmButton(<>It&apos;s arrived</>, () => markArrived({ orderId: o._id as Id<"orders"> }), "ghost");
   } else if (o.status === "delivered") {
     title = "Check everything arrived";
     body = reportLine;
     action = reportButton;
   } else {
-    title = r <= 1 ? `Waiting for ${o.farmName} to accept` : `${o.farmName} is getting your order ready`;
-    body = "We'll text you when it's on its way.";
+    title = r <= 1 ? `Waiting for ${o.farmName} to accept` : "A Farmkeke rider brings it";
+    body = "We'll let you know when it's on its way.";
     action = null;
   }
 
@@ -668,7 +684,8 @@ function CollectFromCard({ order: o }: { order: OrderDetail }) {
   const f = o.collectFrom;
   if (!f) return null;
   const hours = hoursSummary(f.hours);
-  const ready = (RANK[o.status] ?? 0) >= 4.5;
+  // Ready as soon as the farm accepts; the days to collect start once it's paid
+  const ready = (RANK[o.status] ?? 0) >= 4.5 && o.paid === true;
   const place = [f.address, f.lga, f.state].filter(Boolean).join(", ");
   return (
     <section aria-labelledby="farm-title" className="card p-5">
@@ -681,7 +698,7 @@ function CollectFromCard({ order: o }: { order: OrderDetail }) {
       <p className="cap mt-2">
         {ready && o.collectBy
           ? `Ready now. Collect by ${dayLabel(o.collectBy)}.`
-          : `We'll tell you when it's ready. You'll have ${f.collectWithinDays} days to collect.`}
+          : `Ready once your bill is paid. You'll then have ${f.collectWithinDays} days to collect.`}
       </p>
       <div className="mt-4 flex flex-wrap gap-2.5">
         <a
@@ -712,8 +729,7 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
   const rows: Array<{ title: string; at?: number | null; current?: boolean }> = [
     { title: o.fulfilment === "delivery" && o.paidAt === null ? "Order placed" : "Order placed and paid", at: o.paidAt ?? o.placedAt },
   ];
-  if (r >= 3 || o.packedAt) rows.push({ title: "Accepted and packed", at: o.packedAt ?? o.acceptedAt });
-  else if (r >= 2) rows.push({ title: `Accepted by ${o.farmName}`, at: o.acceptedAt });
+  if (r >= 2) rows.push({ title: `Accepted by ${o.farmName}`, at: o.acceptedAt });
   if (r >= 5)
     rows.push({
       title: o.fulfilment === "pickup" ? (o.pickupPoint ? "Collected from the pickup point" : "Collected from the farm") : `Delivered${area ? ` to ${area}` : ""}`,
@@ -738,10 +754,12 @@ function ViewOnly({ order: o }: { order: OrderDetail }) {
                 ? o.fulfilment === "pickup"
                   ? o.pickupPoint
                     ? "On its way to the pickup point"
-                    : "Being prepared at the farm"
+                    : "Accepted by the farm"
                   : "Out for delivery"
                 : r >= 2
-                  ? "Being prepared"
+                  ? o.fulfilment === "pickup"
+                    ? "Accepted by the farm"
+                    : "Accepted · a Farmkeke rider brings it"
                   : "Waiting for the farm to accept";
   if (o.status === "completed") rows.push({ title: "Receipt confirmed", at: o.confirmedAt });
 

@@ -106,24 +106,25 @@ async function deliver(t: ReturnType<typeof convexTest>, side: "shop" | "farm", 
   await t.action(internal.notifications.deliver.send, { notificationId });
 }
 
-test("only the six chosen events send a text; everything else doesn't", async () => {
+test("only the two chosen events send a text (owner, 22 Nov 2026); everything else doesn't", async () => {
   const sent = termii();
   const t = convexTest(schema, modules);
   const texted = [
     ["shop", "bill_ready"],
-    ["shop", "ready_for_pickup"],
-    ["farm", "application_received"],
-    ["farm", "application_approved"],
-    ["farm", "order_new"],
     ["farm", "payout_account_changed"],
   ] as const;
   // Signed-in shopper with no push token used to get every update by text: no longer.
   for (const [side, kind] of texted) await deliver(t, side, kind, { email: "a@b.co" });
-  expect(sent.map((s) => String(s.body.sms))).toHaveLength(6);
+  expect(sent.map((s) => String(s.body.sms))).toHaveLength(2);
   expect(sent[0]!.body.to).toBe("2348031234567");
 
   sent.length = 0;
   const notTexted = [
+    // Texted until 22 Nov 2026: now push, in-app and email only
+    ["shop", "ready_for_pickup"],
+    ["farm", "application_received"],
+    ["farm", "application_approved"],
+    ["farm", "order_new"],
     ["shop", "order_placed"],
     ["shop", "order_accepted"],
     ["shop", "out_for_delivery"],
@@ -135,25 +136,28 @@ test("only the six chosen events send a text; everything else doesn't", async ()
     ["farm", "dispute_opened"],
   ] as const;
   for (const [side, kind] of notTexted) await deliver(t, side, kind, { isAnonymous: true });
+  // A guest with a phone and no push or email used to get these by text: not any more
+  for (const [side, kind] of [["shop", "ready_for_pickup"], ["farm", "order_new"]] as const) await deliver(t, side, kind, {});
   expect(sent).toHaveLength(0);
 });
 
-test("a person who switched SMS off for an alert gets no text", async () => {
+test("the texts that remain are locked on; switching SMS off elsewhere doesn't stop them", async () => {
   const sent = termii();
   const t = convexTest(schema, modules);
   const notificationId = await t.run(async (ctx) => {
     const userId = await ctx.db.insert("users", { email: "a@b.co" });
+    await ctx.db.insert("notificationPrefs", { userId, side: "shop", alert: "payments", channel: "sms", on: false } as never);
     await ctx.db.insert("notificationPrefs", { userId, side: "shop", alert: "order_updates", channel: "sms", on: false } as never);
     return await ctx.db.insert("notifications", {
       userId,
       side: "shop",
-      kind: "ready_for_pickup",
-      title: "Ready",
+      kind: "bill_ready",
+      title: "Your bill",
       body: "Body.",
       href: "/x",
       smsTo: "+2348031234567",
     } as never);
   });
   await t.action(internal.notifications.deliver.send, { notificationId });
-  expect(sent).toHaveLength(0);
+  expect(sent).toHaveLength(1);
 });

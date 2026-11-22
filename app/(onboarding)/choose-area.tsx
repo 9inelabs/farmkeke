@@ -70,7 +70,15 @@ export default function ChooseArea() {
 
   return (
     <Screen
-      header={<ScreenHeader title="Choose your area" />}
+      header={
+        <ScreenHeader
+          title="Choose your area"
+          // Back leaves the area as it was (nothing is saved until Confirm). With
+          // no history (opened from a link), go to Home, or to the location primer
+          // on a first visit with no area yet.
+          onBack={() => (router.canGoBack() ? router.back() : router.replace(current || from === "home" ? "/home" : "/location"))}
+        />
+      }
       footer={<Button label="Confirm area" fullWidth disabled={selected === null} onPress={confirm} />}
     >
       <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>

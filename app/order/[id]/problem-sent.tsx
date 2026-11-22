@@ -35,7 +35,7 @@ export default function ProblemSent() {
     <StatusScreen
       icon={ShieldCheck}
       title="We've got your report"
-      message="Our team is looking into it. If you're owed a refund, Farmkeke sends it. We'll update you by text, email and in the app."
+      message="Our team is looking into it. If you're owed a refund, Farmkeke sends it. We'll update you by email and in the app."
       actions={
         <>
           <Button label="Follow this case" variant="dark" size="large" pill fullWidth onPress={() => router.replace({ pathname: "/order/[id]/dispute", params: { id } })} />

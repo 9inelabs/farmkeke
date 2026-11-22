@@ -8,15 +8,18 @@
 // This file only draws: the route (app/(shop)/home.tsx) supplies the data.
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bell, Cart, ChevronDown, ChevronRight, Grid, Pin, Search, Sliders, User, type IconComponent } from "@/components/icons";
 import { Stagger } from "@/components/motion/reveal";
 import { ForestBackdrop } from "@/components/premium";
 import { CategoryTile, PressableScale, ProductCard, Skeleton, Text } from "@/components/ui";
 import { initials } from "@/components/ui/Avatar";
-import { borders, colors, radii, sizes, spacing } from "@/theme/tokens";
+import { CategoryTileSkeleton, categoryTileSlots } from "@/components/ui/CategoryTile";
+import { ProductCardSkeleton } from "@/components/ui/ProductCard";
+import { borders, colors, motion, radii, sizes, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 import { useScreenWidth } from "@/theme/useScreenSize";
 import { AlmostGoneRow } from "./AlmostGoneRow";
@@ -43,6 +46,8 @@ type Props = {
   greeting: string;
   /** The shopper's full name; guests have none. */
   name?: string;
+  /** The shopper's profile photo; without one the header shows their initials. */
+  photoUrl?: string | null;
   areaLabel: string;
   unreadAlerts: number;
   onAlerts: () => void;
@@ -79,6 +84,9 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 export function HomeView(props: Props) {
   const insets = useSafeAreaInsets();
   const width = useScreenWidth();
+  // A banner that arrives after a load opens out; one already there when Home opens (cached) just shows.
+  const bannerWasLoading = useRef(false);
+  if (props.banner === undefined) bannerWasLoading.current = true;
   // Narrow phones get a slimmer margin.
   const side = width < 360 ? spacing.lg : spacing.screen;
   // Two cards and part of a third show at once, so the row reads as scrollable.
@@ -105,7 +113,7 @@ export function HomeView(props: Props) {
   const productRow = (products: HomeProduct[] | undefined) => (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={row.style} contentContainerStyle={[row.contentContainerStyle, styles.cards]}>
       {products === undefined
-        ? [0, 1, 2].map((i) => <Skeleton key={i} width={cardWidth} height={cardWidth + 74} radius={radii.lg} />)
+        ? [0, 1, 2].map((i) => <ProductCardSkeleton key={i} width={cardWidth} />)
         : products.map((p) => (
             <ProductCard
               key={p.id}
@@ -124,10 +132,37 @@ export function HomeView(props: Props) {
     </ScrollView>
   );
 
+  // A row's header while loading: the title, and "View all" where the loaded row has one.
+  const sectionLoading = (title: string | null, seeAll: boolean) => (
+    <View style={styles.sectionHeader}>
+      {title ? (
+        <Text accessibilityRole="header" maxFontSizeMultiplier={MAX_TEXT} style={[styles.sectionTitle, styles.shrink]}>
+          {title}
+        </Text>
+      ) : (
+        <View style={styles.lineTitle}>
+          <Skeleton width={96} height={12} radius={4} />
+        </View>
+      )}
+      {seeAll ? (
+        <View style={styles.lineSeeAll}>
+          <Skeleton width={52} height={10} radius={4} />
+        </View>
+      ) : null}
+    </View>
+  );
+
+  // Placeholders fill the row's width, as the loaded row does.
+  const rowWidth = Math.min(width, 640);
+  const categorySlots = categoryTileSlots(rowWidth, side - CATEGORY_INSET, spacing.xxs);
+  const farmSlots = Math.ceil((rowWidth - 2 * side - spacing.lg) / (FARM_WIDTH + spacing.md));
+
+  // No placeholder for the banner: most shoppers have none, and a grey block
+  // that then vanished moved the whole page up. The banner comes in the same
+  // load as the rows; when there is one it opens out smoothly instead.
   const banner =
-    props.banner === undefined ? (
-      <Skeleton height={150} radius={BANNER_RADIUS} />
-    ) : props.banner === null ? null : (
+    props.banner === undefined || props.banner === null ? null : (
+      <GrowIn height={BANNER_HEIGHT} gap={spacing.xl} animate={bannerWasLoading.current}>
       <PressableScale
         accessibilityRole={props.onBanner ? "button" : undefined}
         accessibilityLabel={`${props.banner.title}. ${props.banner.buttonLabel}`}
@@ -170,6 +205,7 @@ export function HomeView(props: Props) {
           </View>
         </View>
       </PressableScale>
+      </GrowIn>
     );
 
   const showFarms = props.farms === undefined || props.farms.length > 0;
@@ -196,9 +232,15 @@ export function HomeView(props: Props) {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.farms}>
         {props.farms === undefined
-          ? [0, 1, 2, 3, 4].map((i) => (
-              <View key={i} style={styles.farm}>
+          ? Array.from({ length: farmSlots }, (_, i) => (
+              <View key={i} style={styles.farm} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                 <View style={[styles.farmRing, styles.farmRingLoading]} />
+                <View style={styles.farmLine}>
+                  <View style={[styles.farmBar, styles.farmBarName]} />
+                </View>
+                <View style={styles.farmLineArea}>
+                  <View style={[styles.farmBar, styles.farmBarArea]} />
+                </View>
               </View>
             ))
           : props.farms.map((farm) => (
@@ -240,7 +282,13 @@ export function HomeView(props: Props) {
         <View style={styles.inner}>
           <View style={styles.headRow}>
             <View style={styles.avatar}>
-              {props.name ? <Text style={styles.avatarText}>{initials(props.name)}</Text> : <User size={18} color={colors.lime} variant="solid" />}
+              {props.photoUrl ? (
+                <Image source={{ uri: props.photoUrl }} contentFit="cover" transition={150} cachePolicy="memory-disk" style={styles.avatarPhoto} />
+              ) : props.name ? (
+                <Text style={styles.avatarText}>{initials(props.name)}</Text>
+              ) : (
+                <User size={18} color={colors.lime} variant="solid" />
+              )}
             </View>
             <View style={styles.who}>
               <Text accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={MAX_TEXT} style={styles.name}>
@@ -277,11 +325,7 @@ export function HomeView(props: Props) {
           <View style={styles.section}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={row.style} contentContainerStyle={[styles.categories, { paddingHorizontal: side - CATEGORY_INSET }]}>
               {props.categories === undefined
-                ? [0, 1, 2, 3, 4].map((i) => (
-                    <View key={i} style={styles.categoryLoading}>
-                      <Skeleton width={sizes.categoryTile} height={sizes.categoryTile} radius={radii.lg} />
-                    </View>
-                  ))
+                ? Array.from({ length: categorySlots }, (_, i) => <CategoryTileSkeleton key={i} index={i} />)
                 : props.categories.map((c) => <CategoryTile key={c.id} name={c.name} illustration={c.illustration} onPress={() => props.onCategory?.(c)} />)}
             </ScrollView>
             {props.onAllCategories ? (
@@ -296,7 +340,13 @@ export function HomeView(props: Props) {
 
           {props.sections === undefined ? (
             <View style={styles.section}>
-              {section("Fresh Picks")}
+              {sectionLoading("Fresh Picks", props.onSeeAll !== undefined)}
+              {productRow(undefined)}
+            </View>
+          ) : null}
+          {props.sections === undefined ? (
+            <View style={styles.section}>
+              {sectionLoading(null, false)}
               {productRow(undefined)}
             </View>
           ) : props.sections.length === 0 ? (
@@ -355,7 +405,29 @@ function IconButton({ icon: Icon, label, count = 0, tone, onPress }: { icon: Ico
   );
 }
 
+/**
+ * Opens a block out from nothing: its height (and the gap above the next
+ * block) grows to full while it fades in, so what's below slides down
+ * instead of jumping. Shows at once when `animate` is off or motion is reduced.
+ */
+function GrowIn({ height, gap, animate, children }: { height: number; gap: number; animate: boolean; children: ReactNode }) {
+  const reduceMotion = useReducedMotion();
+  const progress = useSharedValue(animate && !reduceMotion ? 0 : 1);
+  useEffect(() => {
+    progress.value = withTiming(1, { duration: motion.slow, easing: Easing.out(Easing.cubic) });
+  }, [progress]);
+  const style = useAnimatedStyle(() => ({
+    height: progress.value * height,
+    // The parent's gap below this block is taken back until it has opened
+    marginBottom: (progress.value - 1) * gap,
+    opacity: progress.value,
+  }));
+  return <Animated.View style={[styles.grow, style]}>{children}</Animated.View>;
+}
+
 const BANNER_RADIUS = 20;
+const BANNER_HEIGHT = 150;
+const FARM_WIDTH = 66;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
@@ -366,6 +438,7 @@ const styles = StyleSheet.create({
   inner: { width: "100%", maxWidth: 640, alignSelf: "center", gap: spacing.md },
   headRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2 },
   avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.forest, alignItems: "center", justifyContent: "center" },
+  avatarPhoto: { width: 42, height: 42, borderRadius: 21 },
   avatarText: { fontFamily: fonts.bold, fontSize: 14, lineHeight: 18, color: colors.lime },
   who: { flex: 1, minWidth: 0, gap: 2 },
   name: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 20, letterSpacing: -0.2, color: colors.ink },
@@ -423,7 +496,10 @@ const styles = StyleSheet.create({
   seeAllText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.limeInk },
   cards: { gap: CARD_GAP },
   categories: { gap: spacing.xxs },
-  categoryLoading: { width: sizes.categoryTile + 8, height: sizes.categoryTile + 37, alignItems: "center" },
+  // A row header's lines while loading, at the title's and "View all"'s line heights
+  lineTitle: { height: 20, justifyContent: "center" },
+  lineSeeAll: { height: 16, justifyContent: "center" },
+  grow: { overflow: "hidden" },
   moreCategories: {
     height: 38,
     borderRadius: radii.pill,
@@ -438,7 +514,7 @@ const styles = StyleSheet.create({
   moreCategoriesText: { fontFamily: fonts.semibold, fontSize: 12.5, lineHeight: 16, color: colors.ink },
   emptyRow: { backgroundColor: colors.tint, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.xxs },
   // Banner
-  banner: { height: 150, borderRadius: BANNER_RADIUS, overflow: "hidden", backgroundColor: colors.forestDeep, justifyContent: "center" },
+  banner: { height: BANNER_HEIGHT, borderRadius: BANNER_RADIUS, overflow: "hidden", backgroundColor: colors.forestDeep, justifyContent: "center" },
   bannerPhotoWrap: { position: "absolute", top: 0, bottom: 0, right: 0, width: "46%", backgroundColor: colors.tint },
   // The fade covers only the photo's left edge
   bannerSeam: { position: "absolute", top: 0, bottom: 0, left: 0, width: "34%" },
@@ -457,9 +533,15 @@ const styles = StyleSheet.create({
   farmsTitle: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 20, letterSpacing: -0.2, color: colors.white },
   farmsSub: { fontFamily: fonts.regular, fontSize: 11.5, lineHeight: 15, color: colors.onForest },
   farms: { paddingHorizontal: spacing.lg, gap: spacing.md },
-  farm: { width: 66, alignItems: "center", gap: 3 },
+  farm: { width: FARM_WIDTH, alignItems: "center", gap: 3 },
   farmRing: { width: FARM_PHOTO + 6, height: FARM_PHOTO + 6, borderRadius: (FARM_PHOTO + 6) / 2, borderWidth: borders.strong, borderColor: colors.lime, alignItems: "center", justifyContent: "center", marginBottom: 2 },
   farmRingLoading: { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)" },
+  // Name and area lines under a loading circle, at the loaded lines' heights
+  farmLine: { height: 14, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  farmLineArea: { height: 13, alignSelf: "stretch", alignItems: "center", justifyContent: "center" },
+  farmBar: { height: 8, borderRadius: 4 },
+  farmBarName: { width: 52, backgroundColor: "rgba(255,255,255,0.16)" },
+  farmBarArea: { width: 40, backgroundColor: "rgba(163,230,53,0.22)" },
   farmPhoto: { width: FARM_PHOTO, height: FARM_PHOTO, borderRadius: FARM_PHOTO / 2, backgroundColor: colors.forestMid },
   farmInitials: { alignItems: "center", justifyContent: "center" },
   farmInitialsText: { fontFamily: fonts.bold, fontSize: 16, lineHeight: 20, color: colors.lime },

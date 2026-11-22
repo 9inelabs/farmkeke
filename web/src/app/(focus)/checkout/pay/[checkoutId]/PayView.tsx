@@ -592,7 +592,7 @@ function Awaiting({
         </span>
         <h1 className={title}>Waiting for your bank to confirm</h1>
         <p className="p mt-2.5">
-          Bank transfers can take up to 10 minutes. This page updates by itself, and we&apos;ll text you once your payment
+          Bank transfers can take up to 10 minutes. This page updates by itself, and we&apos;ll let you know once your payment
           is confirmed.
         </p>
         <ol className="m-0 mt-[22px] w-full list-none rounded-[14px] bg-soft px-[18px] py-1.5 text-left">
@@ -690,8 +690,8 @@ function BillSummary({ checkout }: { checkout: CheckoutForPay }) {
       </div>
       {checkout.payBy ? (
         <p className="cap mt-2">
-          Pay by <strong className="text-ink">{dateTime(checkout.payBy)}</strong>, or the order is cancelled. The farm has it packed and
-          ready for the rider.
+          Pay by <strong className="text-ink">{dateTime(checkout.payBy)}</strong>, or the order is cancelled. The farm has accepted it and
+          a rider is arranged.
         </p>
       ) : null}
     </div>

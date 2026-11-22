@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { getViewer } from "./lib/auth";
+import { photoUrlOf } from "./lib/profilePhoto";
 
 /** The signed-in user's own profile, or null when signed out. */
 export const viewer = query({
@@ -14,6 +15,10 @@ export const viewer = query({
       phone: user.phone ?? null,
       isGuest: user.isAnonymous === true,
       staffRole: user.staffRole ?? null,
+      // APK #10: the uploaded profile photo, or null (the app shows initials)
+      photoUrl: await photoUrlOf(ctx, user),
+      // When the account was made ("Member since" on Edit profile)
+      memberSince: user._creationTime,
     };
   },
 });

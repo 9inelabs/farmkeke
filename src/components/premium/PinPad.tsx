@@ -2,6 +2,11 @@
 // that light up lime as you type, round keys with a light tap on iPhone, and
 // a shake with a buzz when the PIN is wrong. On the web, typing digits and
 // Backspace on a keyboard works too.
+//
+// tone="light" is the same pad for white screens and bottom sheets (forest
+// keys on soft grey, slightly shorter), used where the phone's keyboard can't
+// be relied on to open over a sheet on Android. dots={false} leaves the dots
+// out for callers that draw their own display (the pickup code boxes).
 import { useEffect, useRef } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
@@ -30,11 +35,16 @@ type Props = {
   error?: boolean;
   disabled?: boolean;
   label: string;
+  /** "dark" (default) for the forest PIN screens; "light" for white screens and sheets. */
+  tone?: "dark" | "light";
+  /** Show the dots above the keys (default true). */
+  dots?: boolean;
 };
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"] as const;
 
-export function PinPad({ value, onChange, onFilled, length = 4, error = false, disabled = false, label }: Props) {
+export function PinPad({ value, onChange, onFilled, length = 4, error = false, disabled = false, label, tone = "dark", dots = true }: Props) {
+  const light = tone === "light";
   const reduceMotion = useReducedMotion();
   const shake = useSharedValue(0);
   const latest = useRef(value);
@@ -80,23 +90,25 @@ export function PinPad({ value, onChange, onFilled, length = 4, error = false, d
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
 
   return (
-    <View style={styles.wrap}>
-      <Animated.View
-        style={[styles.dots, shakeStyle]}
-        accessible
-        accessibilityLabel={`${label}: ${value.length} of ${length} digits entered`}
-        accessibilityLiveRegion="polite"
-      >
-        {Array.from({ length }, (_, i) => (
-          <Dot key={i} on={i < value.length} error={error} />
-        ))}
-      </Animated.View>
-      <View style={styles.pad}>
+    <View style={[styles.wrap, light && styles.wrapLight]}>
+      {dots ? (
+        <Animated.View
+          style={[styles.dots, shakeStyle]}
+          accessible
+          accessibilityLabel={`${label}: ${value.length} of ${length} digits entered`}
+          accessibilityLiveRegion="polite"
+        >
+          {Array.from({ length }, (_, i) => (
+            <Dot key={i} on={i < value.length} error={error} light={light} />
+          ))}
+        </Animated.View>
+      ) : null}
+      <View style={[styles.pad, light && styles.padLight]}>
         {KEYS.map((key, i) =>
           key === "" ? (
-            <View key={i} style={styles.key} />
+            <View key={i} style={[styles.key, light && styles.keyLight]} />
           ) : (
-            <Key key={i} label={key} disabled={disabled} onPress={() => press(key)} />
+            <Key key={i} label={key} disabled={disabled} light={light} onPress={() => press(key)} />
           ),
         )}
       </View>
@@ -104,16 +116,16 @@ export function PinPad({ value, onChange, onFilled, length = 4, error = false, d
   );
 }
 
-function Dot({ on, error }: { on: boolean; error: boolean }) {
+function Dot({ on, error, light }: { on: boolean; error: boolean; light: boolean }) {
   const scale = useSharedValue(1);
   useEffect(() => {
     if (on) scale.value = withSequence(withTiming(1.35, { duration: 90, reduceMotion: ReduceMotion.System }), withSpring(1, { damping: 12, reduceMotion: ReduceMotion.System }));
   }, [on, scale]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  return <Animated.View style={[styles.dot, on ? styles.dotOn : styles.dotOff, error && styles.dotError, style]} />;
+  return <Animated.View style={[styles.dot, on ? (light ? styles.dotOnLight : styles.dotOn) : light ? styles.dotOffLight : styles.dotOff, error && styles.dotError, style]} />;
 }
 
-function Key({ label, onPress, disabled }: { label: string; onPress: () => void; disabled: boolean }) {
+function Key({ label, onPress, disabled, light }: { label: string; onPress: () => void; disabled: boolean; light: boolean }) {
   const del = label === "del";
   return (
     <Pressable
@@ -121,14 +133,19 @@ function Key({ label, onPress, disabled }: { label: string; onPress: () => void;
       accessibilityLabel={del ? "Delete" : label}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.key, !del && styles.keyFace, pressed && (del ? styles.delPressed : styles.keyPressed)]}
+      style={({ pressed }) => [
+        styles.key,
+        light && styles.keyLight,
+        !del && (light ? styles.keyFaceLight : styles.keyFace),
+        pressed && (del ? styles.delPressed : light ? styles.keyPressedLight : styles.keyPressed),
+      ]}
     >
       {del ? (
         <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-          <Path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1zM12 9l6 6M18 9l-6 6" stroke={colors.white} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          <Path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1zM12 9l6 6M18 9l-6 6" stroke={light ? colors.forest : colors.white} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
         </Svg>
       ) : (
-        <Text style={styles.digit}>{label}</Text>
+        <Text style={[styles.digit, light && styles.digitLight]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -147,4 +164,13 @@ const styles = StyleSheet.create({
   keyPressed: { backgroundColor: "rgba(169,214,84,0.28)", borderColor: colors.lime, transform: [{ scale: 0.95 }] },
   delPressed: { opacity: 0.6 },
   digit: { fontFamily: fonts.displayBold, fontSize: 26, lineHeight: 32, color: colors.white },
+  // Light tone: white screens and bottom sheets
+  wrapLight: { gap: 24 },
+  dotOffLight: { borderWidth: 2, borderColor: colors.forestFaint },
+  dotOnLight: { backgroundColor: colors.forest, boxShadow: "0px 0px 0px 4px rgba(169,214,84,0.35)" },
+  padLight: { width: 288, rowGap: 10 },
+  keyLight: { height: 58, borderRadius: 29 },
+  keyFaceLight: { backgroundColor: colors.surfaceSoft, borderWidth: 1, borderColor: colors.line },
+  keyPressedLight: { backgroundColor: colors.tint, borderColor: colors.lime, transform: [{ scale: 0.95 }] },
+  digitLight: { color: colors.forest },
 });

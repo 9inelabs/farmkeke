@@ -1145,6 +1145,10 @@
                 {
                   "type": "literal",
                   "value": "collected_by_consumer"
+                },
+                {
+                  "type": "literal",
+                  "value": "ready_at_farm"
                 }
               ]
             },

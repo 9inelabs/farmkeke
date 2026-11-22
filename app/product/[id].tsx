@@ -5,6 +5,7 @@
 // sold out, paused or removed.
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { BoxRemove, Cart } from "@/components/icons";
 import { useState } from "react";
@@ -20,9 +21,11 @@ import { useCart, useCartSummary } from "@/store/cart";
 import { showToast } from "@/store/toast";
 import { colors, radii, shadow, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
+import { useScreenWidth } from "@/theme/useScreenSize";
 
 export default function ProductPage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, img } = useLocalSearchParams<{ id: string; img?: string }>();
+  const width = useScreenWidth();
   const { today, serviceAreaId } = useShopContext();
   const product = useQuery(api.storefront.product, { id, today, ...(serviceAreaId ? { serviceAreaId } : {}) });
   const viewer = useQuery(api.users.viewer);
@@ -41,8 +44,13 @@ export default function ProductPage() {
 
   if (product === undefined) {
     return (
-      <SafeAreaView style={styles.screen}>
-        <Skeleton height={320} radius={0} />
+      <SafeAreaView edges={["bottom"]} style={styles.screen}>
+        {/* The photo the shopper tapped is already cached, so it shows at once (APK #8) */}
+        {img ? (
+          <Image source={{ uri: img }} style={{ width, height: Math.round(width * 1.02) }} contentFit="cover" cachePolicy="memory-disk" />
+        ) : (
+          <Skeleton height={Math.round(width * 1.02)} radius={0} />
+        )}
         <View style={styles.loading}>
           <Skeleton height={28} width={220} />
           <Skeleton height={22} width={140} />

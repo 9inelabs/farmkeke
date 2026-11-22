@@ -1,6 +1,26 @@
 {
   "functions": [
     {
+      "identifier": "orders/consumer.js:markCollected",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "orderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "orders"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "account.js:changeEmail",
       "functionType": "Action",
       "visibility": {
@@ -1809,6 +1829,10 @@
                 {
                   "type": "literal",
                   "value": "collected_by_consumer"
+                },
+                {
+                  "type": "literal",
+                  "value": "ready_at_farm"
                 }
               ]
             },
@@ -10791,26 +10815,6 @@
       "returns": null
     },
     {
-      "identifier": "orders/farmer.js:confirmHandover",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "orders/farmer.js:counts",
       "functionType": "Query",
       "visibility": {
@@ -10918,11 +10922,7 @@
                 },
                 {
                   "type": "literal",
-                  "value": "to_prepare"
-                },
-                {
-                  "type": "literal",
-                  "value": "with_rider"
+                  "value": "accepted"
                 },
                 {
                   "type": "literal",
@@ -10935,28 +10935,16 @@
                 {
                   "type": "literal",
                   "value": "disputed"
+                },
+                {
+                  "type": "literal",
+                  "value": "to_prepare"
+                },
+                {
+                  "type": "literal",
+                  "value": "with_rider"
                 }
               ]
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "orders/farmer.js:markPacked",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
             },
             "optional": false
           }
@@ -10976,46 +10964,6 @@
           "orderId": {
             "fieldType": {
               "type": "string"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "orders/farmer.js:readyForRider",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
-      "identifier": "orders/farmer.js:startPreparing",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
             },
             "optional": false
           }

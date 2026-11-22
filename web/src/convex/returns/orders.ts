@@ -111,8 +111,10 @@ export type OrderDetail = {
   events: Array<{ kind: string; status: string; at: number; actorKind?: string; note: string | null }>;
   pickupCode: string | null;
   contact: { name: string; phone: string | null; email?: string };
-  /** The rider is bringing it: the shopper can say it arrived */
+  /** Paid delivery, on its way or waiting for the rider: the shopper can say it arrived */
   canMarkArrived: boolean;
+  /** Paid pickup waiting to be collected: the shopper can say they have it (since 22 Nov 2026) */
+  canMarkCollected?: boolean;
   /** Problems can be reported until the order closes (a day after delivery or collection) */
   canReport: boolean;
   reportBy: number | null;

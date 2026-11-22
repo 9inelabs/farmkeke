@@ -19,6 +19,7 @@ import { Button, Text } from "@/components/ui";
 import { nextStepPath } from "@/features/farmer/constants";
 import { useSwitchMode } from "@/features/farmer/useSwitchMode";
 import { errorCode, errorData, errorMessage } from "@/lib/errors";
+import { photoProps } from "@/lib/preloadImages";
 import { colors, spacing } from "@/theme/tokens";
 import { fonts } from "@/theme/typography";
 
@@ -71,7 +72,7 @@ export default function SellOnFarmkeke() {
     <View style={styles.screen}>
       <StatusBar style="light" />
       <View style={[styles.photo, { height: Math.min(500, height * 0.58) }]}>
-        <Image source={require("../../assets/photos/farmer-field-hd.jpg")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "50%", top: "12%" }} accessible={false} />
+        <Image {...photoProps("farmerFieldHd")} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: "50%", top: "12%" }} accessible={false} />
         <LinearGradient
           colors={["rgba(11,26,7,0.6)", "rgba(11,26,7,0)", "rgba(11,26,7,0.15)", "rgba(11,26,7,0.92)", colors.forestDeep]}
           locations={[0, 0.22, 0.45, 0.85, 1]}

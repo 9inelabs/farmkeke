@@ -2,7 +2,7 @@
 // optional notices and a pinned footer. Used by the farmer application
 // (F-03 to F-08) and the listing steps (F-21 to F-25).
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Reveal, Stagger } from "@/components/motion/reveal";
 import { colors, radii, spacing } from "@/theme/tokens";
@@ -40,7 +40,7 @@ export function StepScreen({ headerTitle, title, step, totalSteps, intro, loadin
           </Text>
         </View>
       )}
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Stagger>
             <View style={styles.heading}>
