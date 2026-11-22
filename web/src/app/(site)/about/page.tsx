@@ -84,22 +84,6 @@ export default function AboutPage() {
               />
               <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(30,59,22,0.1)_0%,rgba(30,59,22,0.35)_45%,rgba(20,42,14,0.95)_100%)]" />
             </div>
-            <a
-              href="https://commons.wikimedia.org/wiki/File:A_scene_from_a_nigerian_market.jpg"
-              target="_blank"
-              rel="noreferrer"
-              className="absolute right-4 bottom-3 text-[10.5px] text-white/75 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] hover:text-white m:hidden"
-            >
-              Photo: Biggiepopa, Wikimedia Commons, CC BY-SA 4.0
-            </a>
-            <a
-              href="https://commons.wikimedia.org/wiki/File:A_woman_arranging_vegetable_(Amaranthus_caudatus).jpg"
-              target="_blank"
-              rel="noreferrer"
-              className="absolute top-3 right-4 hidden text-[10.5px] text-white/75 hover:text-white m:block"
-            >
-              Photo: Anniwinner, Wikimedia Commons, CC BY-SA 4.0
-            </a>
             <div className="absolute bottom-11 left-12 max-w-[520px] text-white m:right-5 m:bottom-5 m:left-5">
               <div className="text-[13px] font-semibold text-lime">Our mission</div>
               <p className="m-0 mt-2 font-display text-[28px] leading-9 font-bold m:mt-1 m:text-lg m:leading-6">
@@ -213,6 +197,22 @@ export default function AboutPage() {
               Get in touch
             </Link>
           </div>
+          {/* The mission photos are CC BY-SA 4.0, which needs a credit */}
+          <p className="mx-auto mt-12 max-w-[720px] text-center text-[11.5px] leading-[18px] text-faint m:mt-8">
+            Photo credits:{" "}
+            <a href="https://commons.wikimedia.org/wiki/File:A_scene_from_a_nigerian_market.jpg" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
+              Biggiepopa
+            </a>{" "}
+            and{" "}
+            <a href="https://commons.wikimedia.org/wiki/File:A_woman_arranging_vegetable_(Amaranthus_caudatus).jpg" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
+              Anniwinner
+            </a>
+            , Wikimedia Commons,{" "}
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
+              CC BY-SA 4.0
+            </a>
+            .
+          </p>
         </FadeUp>
       </section>
     </>
