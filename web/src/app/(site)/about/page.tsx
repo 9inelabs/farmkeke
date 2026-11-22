@@ -52,25 +52,43 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:mt-7 m:h-[300px] m:rounded-[20px]">
-            {/* A Nigerian farmer with her fresh greens, fading into the green behind the mission */}
-            <div className="absolute inset-y-0 right-0 w-[60%] [mask-image:linear-gradient(90deg,transparent_0%,black_42%)] m:w-full m:[mask-image:none]">
+            {/* Desktop: a Nigerian market, where a family buys fresh greens straight from the
+                woman who grows them, filling the whole panel. Phones: the farmer with her greens. */}
+            <div className="absolute inset-0 m:hidden">
+              <Image
+                src="/photos/market-fresh-greens.jpg"
+                alt="A shopper buying fresh greens from a farmer at a Nigerian market"
+                fill
+                sizes="1136px"
+                className="object-cover object-[50%_20%]"
+                priority
+              />
+              {/* Only a soft shade behind the words, so they read on the photo */}
+              <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,18,8,0.72)_0%,rgba(10,18,8,0.45)_32%,rgba(10,18,8,0)_60%),linear-gradient(0deg,rgba(10,18,8,0.55)_0%,rgba(10,18,8,0)_55%)]" />
+            </div>
+            <div className="absolute inset-0 hidden m:block">
               <Image
                 src="/photos/farmer-greens.jpg"
                 alt="A Nigerian farmer arranging fresh amaranth greens at her stall"
                 fill
-                sizes="(max-width: 760px) 100vw, 720px"
+                sizes="100vw"
                 className="object-cover object-[50%_10%]"
-                priority
               />
-              <div aria-hidden className="absolute inset-0 bg-[rgba(20,42,14,0.12)] m:bg-[linear-gradient(180deg,rgba(30,59,22,0.1)_0%,rgba(30,59,22,0.35)_45%,rgba(20,42,14,0.95)_100%)]" />
+              <div aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(30,59,22,0.1)_0%,rgba(30,59,22,0.35)_45%,rgba(20,42,14,0.95)_100%)]" />
             </div>
-            <div aria-hidden className="absolute -top-10 -right-10 size-80 rounded-full bg-[rgba(169,214,84,0.16)] m:hidden" />
-            <div aria-hidden className="absolute bottom-0 left-0 h-full w-1/2 bg-[radial-gradient(70%_60%_at_0%_100%,rgba(169,214,84,0.18),rgba(169,214,84,0))] m:hidden" />
+            <a
+              href="https://commons.wikimedia.org/wiki/File:A_scene_from_a_nigerian_market.jpg"
+              target="_blank"
+              rel="noreferrer"
+              className="absolute right-4 bottom-3 text-[10.5px] text-white/75 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)] hover:text-white m:hidden"
+            >
+              Photo: Biggiepopa, Wikimedia Commons, CC BY-SA 4.0
+            </a>
             <a
               href="https://commons.wikimedia.org/wiki/File:A_woman_arranging_vegetable_(Amaranthus_caudatus).jpg"
               target="_blank"
               rel="noreferrer"
-              className="absolute right-4 bottom-3 text-[10.5px] text-white/70 hover:text-white m:top-3 m:bottom-auto"
+              className="absolute top-3 right-4 hidden text-[10.5px] text-white/75 hover:text-white m:block"
             >
               Photo: Anniwinner, Wikimedia Commons, CC BY-SA 4.0
             </a>
