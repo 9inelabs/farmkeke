@@ -1,6 +1,7 @@
 // W-83 Get the app (also where "Coming soon" store buttons and the QR code lead).
-import { ArrowRight, Clock, MapPin, MessageCircle, RefreshCw, Search, Smartphone, Sprout, Star, Store, type LucideIcon } from "lucide-react";
+import { ArrowRight, Clock, MapPin, MessageCircle, RefreshCw, Smartphone, Sprout, Star, Store, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { StoreButtons } from "@/components/brand/StoreButtons";
 import { QrCode } from "@/components/site/QrCode";
@@ -46,48 +47,15 @@ export default function GetTheAppPage() {
             </div>
           </div>
           <div className="flex justify-center">
-            <div
-              aria-hidden
-              className="h-[596px] w-[290px] flex-none rounded-[44px] bg-ink p-2.5 shadow-[0_30px_60px_rgba(30,59,22,0.18)] m:[zoom:0.78]"
-            >
-              <div className="flex size-full flex-col overflow-hidden rounded-[35px] bg-[#F7F7F5]">
-                <div className="px-[18px] pt-[38px]">
-                  <div className="text-xs text-subtle">Good morning, Adaeze</div>
-                  <div className="mt-0.5 font-display text-[19px] font-bold">What are you buying today?</div>
-                  <div className="mt-3.5 flex h-10 items-center gap-2 rounded-full bg-surface px-3.5 text-xs text-[#9A9E95] shadow-[inset_0_0_0_1px_var(--color-field)]">
-                    <Search size={14} strokeWidth={2} />
-                    Search produce or farms
-                  </div>
-                  <div className="mt-3.5 rounded-2xl bg-forest p-3.5 text-white">
-                    <div className="text-[11px] font-semibold text-lime">Your order is on the way</div>
-                    <div className="mt-0.5 text-sm font-bold">FK-10234 · Okafor Farms</div>
-                    <div className="mt-2.5 h-1.5 rounded-md bg-white/16">
-                      <div className="h-full w-[72%] rounded-md bg-lime" />
-                    </div>
-                  </div>
-                  <div className="mt-4 font-display text-sm font-bold">Fresh picks</div>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {[
-                      ["Tomatoes", "₦4,500", "#F6E3DC"],
-                      ["Farm eggs", "₦5,200", "#F4EEDD"],
-                    ].map(([n, p, bg]) => (
-                      <div key={n} className="rounded-xl bg-surface p-[7px] shadow-[inset_0_0_0_1px_#ECEEE8]">
-                        <div className="h-[78px] rounded-lg" style={{ background: bg }} />
-                        <div className="mt-1.5 text-[11px] font-semibold">{n}</div>
-                        <div className="font-display text-xs font-bold text-forest">{p}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="mt-auto flex h-[58px] items-center justify-around bg-surface text-[10px] font-semibold text-[#9A9E95] shadow-[inset_0_1px_0_#ECEEE8]">
-                  <span className="text-forest">Home</span>
-                  <span>Categories</span>
-                  <span>Cart</span>
-                  <span>Orders</span>
-                  <span>Account</span>
-                </div>
-              </div>
-            </div>
+            {/* A screenshot of the app's Home on a phone (decorative) */}
+            <Image
+              src="/hero/app-home.png"
+              alt=""
+              width={720}
+              height={1391}
+              sizes="(max-width: 760px) 240px, 310px"
+              className="h-auto w-[310px] flex-none drop-shadow-[0_30px_50px_rgba(30,59,22,0.22)] m:w-[240px]"
+            />
           </div>
         </div>
       </FadeUp>

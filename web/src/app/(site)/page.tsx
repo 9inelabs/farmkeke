@@ -15,7 +15,6 @@ import {
   MessageCircle,
   Package,
   Plus,
-  Search,
   ShieldCheck,
   ShoppingBasket,
   Smartphone,
@@ -592,56 +591,18 @@ export default function Landing() {
   );
 }
 
-/* The app on a phone in the hero: Home with the Forest header (decorative). */
+/* The app on a phone in the hero: a screenshot of the app's Home (decorative). */
 function HeroPhone() {
   return (
-    <div className="relative z-[1] h-[620px] w-[300px] rounded-[48px] bg-[#0D0D0D] p-2.5 shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_40px_80px_rgba(0,0,0,0.45)] m:[zoom:0.77]">
-      <div className="size-full overflow-hidden rounded-[38px] bg-[#F7F7F7] text-left text-ink">
-        <div className="rounded-b-[22px] bg-[linear-gradient(160deg,#25481C_0%,#1E3B16_60%,#173011_100%)] px-4 pt-[30px] pb-[18px] text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[11px] text-on-forest-lime">Deliver to New Owerri</div>
-              <div className="mt-0.5 font-display text-base font-bold">Good morning, Adaeze</div>
-            </div>
-            <span className="flex size-8 items-center justify-center rounded-full bg-white/12">
-              <Bell size={16} strokeWidth={1.75} />
-            </span>
-          </div>
-          <div className="mt-3.5 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 text-xs text-[#8C8C8C]">
-            <Search size={15} strokeWidth={1.75} />
-            Search tomatoes, yam, ugwu…
-          </div>
-        </div>
-        <div className="grid grid-cols-4 gap-1.5 px-3 pt-4 pb-1 text-center text-[10px] text-[#333]">
-          {[
-            ["Vegetables", "#DAECAE"],
-            ["Fruits", "#F6E3D2"],
-            ["Grains", "#EFE6CF"],
-            ["Eggs", "#F3EBDD"],
-          ].map(([n, c]) => (
-            <div key={n}>
-              <div className="mx-auto mb-[5px] size-11 rounded-full" style={{ background: c }} />
-              {n}
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
-          <span className="font-display text-sm font-bold">Fresh Picks</span>
-          <span className="text-[11px] font-semibold text-forest">See all</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2 px-3">
-          {PRICES.slice(0, 2).map(([name, price, unit, bg]) => (
-            <div key={name} className="rounded-[14px] bg-white p-1.5 shadow-[inset_0_0_0_1px_#EDEDED]">
-              <div className="h-[92px] rounded-[10px]" style={{ background: bg }} />
-              <div className="mt-1.5 text-[11px] font-semibold">{name}</div>
-              <div className="text-[10px] text-muted-2">
-                <span className="text-xs font-bold text-forest">{price}</span> per {unit}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Image
+      src="/hero/app-home.png"
+      alt=""
+      width={720}
+      height={1391}
+      priority
+      sizes="(max-width: 760px) 250px, 330px"
+      className="relative z-[1] h-auto w-[330px] self-start drop-shadow-[0_40px_60px_rgba(0,0,0,0.45)] m:w-[250px]"
+    />
   );
 }
 
