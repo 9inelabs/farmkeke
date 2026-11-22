@@ -1,6 +1,7 @@
 // W-84 About Farmkeke
 import { BadgeCheck, Heart, Mail, ShieldCheck, Sprout, Star, Store, Tag, Users, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Eyebrow, S, Tile, lead, num, para, surface } from "@/components/site/ui";
 import { FadeUp } from "@/lib/motion";
@@ -50,9 +51,29 @@ export default function AboutPage() {
               who buy it should pay less. Today we connect households with verified farmers across Imo State.
             </p>
           </div>
-          <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:mt-7 m:h-[230px] m:rounded-[20px]">
-            <div aria-hidden className="absolute -top-10 -right-10 size-80 rounded-full bg-[rgba(169,214,84,0.16)]" />
-            <div aria-hidden className="absolute right-[120px] -bottom-20 size-[220px] rounded-full bg-white/6" />
+          <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:mt-7 m:h-[300px] m:rounded-[20px]">
+            {/* A Nigerian farmer with her fresh greens, fading into the green behind the mission */}
+            <div className="absolute inset-y-0 right-0 w-[60%] [mask-image:linear-gradient(90deg,transparent_0%,black_42%)] m:w-full m:[mask-image:none]">
+              <Image
+                src="/photos/farmer-greens.jpg"
+                alt="A Nigerian farmer arranging fresh amaranth greens at her stall"
+                fill
+                sizes="(max-width: 760px) 100vw, 720px"
+                className="object-cover object-[50%_10%]"
+                priority
+              />
+              <div aria-hidden className="absolute inset-0 bg-[rgba(20,42,14,0.12)] m:bg-[linear-gradient(180deg,rgba(30,59,22,0.1)_0%,rgba(30,59,22,0.35)_45%,rgba(20,42,14,0.95)_100%)]" />
+            </div>
+            <div aria-hidden className="absolute -top-10 -right-10 size-80 rounded-full bg-[rgba(169,214,84,0.16)] m:hidden" />
+            <div aria-hidden className="absolute bottom-0 left-0 h-full w-1/2 bg-[radial-gradient(70%_60%_at_0%_100%,rgba(169,214,84,0.18),rgba(169,214,84,0))] m:hidden" />
+            <a
+              href="https://commons.wikimedia.org/wiki/File:A_woman_arranging_vegetable_(Amaranthus_caudatus).jpg"
+              target="_blank"
+              rel="noreferrer"
+              className="absolute right-4 bottom-3 text-[10.5px] text-white/70 hover:text-white m:top-3 m:bottom-auto"
+            >
+              Photo: Anniwinner, Wikimedia Commons, CC BY-SA 4.0
+            </a>
             <div className="absolute bottom-11 left-12 max-w-[520px] text-white m:right-5 m:bottom-5 m:left-5">
               <div className="text-[13px] font-semibold text-lime">Our mission</div>
               <p className="m-0 mt-2 font-display text-[28px] leading-9 font-bold m:mt-1 m:text-lg m:leading-6">
