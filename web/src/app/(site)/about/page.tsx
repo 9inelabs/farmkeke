@@ -31,7 +31,7 @@ const TEAM: { name: string; role: string; bio: string; photo: string }[] = [
   {
     name: "Ejike Daniel Chukwuemeka",
     role: "Founder / CEO",
-    bio: "Leads Farmkeke's vision, farmer partnerships and growth across Imo State.",
+    bio: "Leads Farmkeke's vision, farmer partnerships and growth across Nigeria.",
     photo: "/team/ejike-daniel.jpg",
   },
   {
