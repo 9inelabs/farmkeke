@@ -26,12 +26,20 @@ const CHECKS: Array<[string, string]> = [
   ["Ongoing reviews", "Ratings and problem reports help us keep standards high."],
 ];
 
-// Placeholder names, as in the design, until the team details are provided.
-const TEAM: Array<[string, string, string]> = [
-  ["FN", "[Founder name]", "Founder"],
-  ["OP", "[Name]", "Operations and riders"],
-  ["FS", "[Name]", "Farmer success"],
-  ["CS", "[Name]", "Customer support"],
+// The people behind Farmkeke (photos in public/team).
+const TEAM: { name: string; role: string; bio: string; photo: string }[] = [
+  {
+    name: "Ejike Daniel Chukwuemeka",
+    role: "Founder / CEO",
+    bio: "Leads Farmkeke's vision, farmer partnerships and growth across Imo State.",
+    photo: "/team/ejike-daniel.jpg",
+  },
+  {
+    name: "Franklyn Raymond Nobei",
+    role: "Co-Founder / CTO",
+    bio: "Leads the technology behind Farmkeke's app, website and payments.",
+    photo: "/team/franklyn-nobei.jpg",
+  },
 ];
 
 const bodyLg = "m-0 text-base leading-[27px] text-muted m:text-sm m:leading-[22px]";
@@ -177,18 +185,20 @@ export default function AboutPage() {
             <Eyebrow icon={Users}>The team</Eyebrow>
             <h2 className={S.h2}>The people behind Farmkeke</h2>
           </div>
-          <ul className="m-0 grid list-none grid-cols-4 gap-5 p-0 min-[761px]:max-[1000px]:grid-cols-2 m:grid-cols-2 m:gap-2.5">
-            {TEAM.map(([ini, name, role]) => (
-              <li key={role} className={`${S.card} flex items-center gap-3.5 p-6 m:flex-col m:items-start m:gap-2.5 m:p-3.5`}>
-                <span
-                  aria-hidden
-                  className="flex size-14 flex-none items-center justify-center rounded-full bg-lime-soft font-display text-[17px] font-bold text-forest m:size-10 m:text-sm"
-                >
-                  {ini}
-                </span>
-                <div>
-                  <div className="text-[15px] font-bold m:text-sm m:leading-5">{name}</div>
-                  <div className="mt-0.5 text-xs leading-4 text-subtle">{role}</div>
+          <ul className="m-0 mx-auto grid max-w-[760px] list-none grid-cols-2 gap-5 p-0 m:grid-cols-1 m:gap-3">
+            {TEAM.map((person) => (
+              <li key={person.name} className={`${S.card} flex items-start gap-5 p-6 m:gap-4 m:p-4`}>
+                <Image
+                  src={person.photo}
+                  alt={person.name}
+                  width={96}
+                  height={96}
+                  className="size-24 flex-none rounded-full object-cover shadow-[0_0_0_4px_var(--color-lime-soft)] m:size-16"
+                />
+                <div className="min-w-0">
+                  <div className="font-display text-[18px] leading-6 font-bold text-ink m:text-base m:leading-[22px]">{person.name}</div>
+                  <div className="mt-2 inline-flex rounded-full bg-tint px-2.5 py-1 text-xs font-semibold text-forest">{person.role}</div>
+                  <p className="m-0 mt-2.5 text-[13.5px] leading-5 text-muted">{person.bio}</p>
                 </div>
               </li>
             ))}
