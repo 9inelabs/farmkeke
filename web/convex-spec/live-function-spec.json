@@ -1,26 +1,6 @@
 {
   "functions": [
     {
-      "identifier": "orders/consumer.js:markCollected",
-      "functionType": "Mutation",
-      "visibility": {
-        "kind": "public"
-      },
-      "args": {
-        "type": "object",
-        "value": {
-          "orderId": {
-            "fieldType": {
-              "type": "id",
-              "tableName": "orders"
-            },
-            "optional": false
-          }
-        }
-      },
-      "returns": null
-    },
-    {
       "identifier": "account.js:changeEmail",
       "functionType": "Action",
       "visibility": {
@@ -10719,6 +10699,26 @@
       "returns": null
     },
     {
+      "identifier": "orders/consumer.js:markCollected",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "orderId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "orders"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "orders/consumer.js:placedSummary",
       "functionType": "Query",
       "visibility": {
@@ -12221,6 +12221,50 @@
       "returns": null
     },
     {
+      "identifier": "profilePhoto.js:generateUploadUrl",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "profilePhoto.js:remove",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "profilePhoto.js:set",
+      "functionType": "Mutation",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "storageId": {
+            "fieldType": {
+              "type": "id",
+              "tableName": "_storage"
+            },
+            "optional": false
+          }
+        }
+      },
+      "returns": null
+    },
+    {
       "identifier": "reviews.js:forOrder",
       "functionType": "Query",
       "visibility": {
@@ -12930,6 +12974,49 @@
       "args": {
         "type": "object",
         "value": {}
+      },
+      "returns": null
+    },
+    {
+      "identifier": "storefront.js:farms",
+      "functionType": "Query",
+      "visibility": {
+        "kind": "public"
+      },
+      "args": {
+        "type": "object",
+        "value": {
+          "today": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "state": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "lga": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "lat": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          },
+          "lng": {
+            "fieldType": {
+              "type": "number"
+            },
+            "optional": true
+          }
+        }
       },
       "returns": null
     },

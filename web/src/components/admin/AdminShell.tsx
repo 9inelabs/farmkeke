@@ -235,9 +235,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </Link>
           <span aria-hidden className="mx-1.5 h-7 w-px bg-line-2 m:hidden" />
           <Link href={adminRoutes.account} className="inline-flex min-h-11 items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-surface">
-            <span aria-hidden className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2B5220,#1E3B16)] text-xs font-bold text-lime ring-2 ring-white">
-              {initials(me.name)}
-            </span>
+            {me.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- a Convex storage URL, already sized
+              <img src={me.photoUrl} alt="" className="size-9 flex-none rounded-full object-cover ring-2 ring-white" />
+            ) : (
+              <span aria-hidden className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2B5220,#1E3B16)] text-xs font-bold text-lime ring-2 ring-white">
+                {initials(me.name)}
+              </span>
+            )}
             <span className="flex flex-col leading-tight m:hidden">
               <span className="text-[13.5px] font-semibold text-ink">{me.name}</span>
               <span className="text-[11.5px] text-subtle">{me.role.name}</span>
@@ -259,7 +264,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu" width={320}>
+      <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Menu" width={320} side="left">
         <NavList groups={groups} active={active} counts={counts} onNavigate={() => setMenuOpen(false)} />
         <button
           type="button"

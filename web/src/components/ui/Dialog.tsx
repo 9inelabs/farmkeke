@@ -24,6 +24,12 @@ type DialogProps = {
   hideTitle?: boolean;
   /** Max width in px (modal) or width (drawer). */
   width?: number;
+  /**
+   * Drawer only. "right" (default): slides in from the right; on phones it rises
+   * as a bottom sheet. "left": a full-height menu that slides in from the left
+   * edge on every screen size (the Admin Portal's menu).
+   */
+  side?: "right" | "left";
   className?: string;
   /** Overrides the title's type style (default "h2 text-[22px] leading-7"). */
   titleClassName?: string;
@@ -175,7 +181,8 @@ export function Modal({ open, onClose, title, description, children, footer, hid
   );
 }
 
-export function Drawer({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 440, className }: DialogProps) {
+export function Drawer({ open, onClose, title, description, children, footer, hideTitle, titleClassName, headerClassName, footerClassName, bodyClassName, width = 440, className, side = "right" }: DialogProps) {
+  const left = side === "left";
   const titleId = useId();
   const descId = useId();
   const panel = useDialogBehaviour(open, onClose);
@@ -194,7 +201,7 @@ export function Drawer({ open, onClose, title, description, children, footer, hi
             onClick={onClose}
             aria-hidden
           />
-          {/* Desktop: slides in from the right. Phone: rises as a bottom sheet. */}
+          {/* Desktop: slides in from the right. Phone: rises as a bottom sheet. side="left": slides in from the left edge. */}
           <m.div
             ref={panel}
             role="dialog"
@@ -202,17 +209,23 @@ export function Drawer({ open, onClose, title, description, children, footer, hi
             aria-labelledby={titleId}
             aria-describedby={description ? descId : undefined}
             tabIndex={-1}
-            className={`fk-drawer absolute top-0 right-0 flex h-full w-full flex-col bg-surface shadow-[-12px_0_40px_rgba(20,28,16,0.18)] outline-none m:top-auto m:bottom-0 m:h-auto m:max-h-[90dvh] m:rounded-t-[22px] ${className ?? ""}`}
+            className={
+              left
+                ? `fk-drawer absolute inset-y-0 left-0 flex h-dvh w-[86vw] flex-col bg-surface shadow-[12px_0_40px_rgba(20,28,16,0.22)] outline-none ${className ?? ""}`
+                : `fk-drawer absolute top-0 right-0 flex h-full w-full flex-col bg-surface shadow-[-12px_0_40px_rgba(20,28,16,0.18)] outline-none m:top-auto m:bottom-0 m:h-auto m:max-h-[90dvh] m:rounded-t-[22px] ${className ?? ""}`
+            }
             style={{ maxWidth: width }}
             variants={{
               hidden: { opacity: 0.6, x: "100%", y: 0 },
+              hiddenLeft: { opacity: 1, x: "-100%", y: 0 },
               hiddenSheet: { opacity: 0.6, x: 0, y: "100%" },
               shown: { opacity: 1, x: 0, y: 0 },
             }}
-            initial={isPhone() ? "hiddenSheet" : "hidden"}
+            initial={left ? "hiddenLeft" : isPhone() ? "hiddenSheet" : "hidden"}
             animate="shown"
-            exit={isPhone() ? "hiddenSheet" : "hidden"}
-            transition={{ duration: 0.3, ease: transition.base.ease }}
+            exit={left ? "hiddenLeft" : isPhone() ? "hiddenSheet" : "hidden"}
+            // The left menu is quick and settles softly (ease-out); exits a touch faster
+            transition={left ? { duration: 0.24, ease: [0.22, 1, 0.36, 1] } : { duration: 0.3, ease: transition.base.ease }}
           >
             <Header titleId={titleId} descId={descId} title={title} description={description} hideTitle={hideTitle} onClose={onClose} titleClassName={titleClassName} headerClassName={headerClassName} />
             <div className={`min-h-0 flex-1 overflow-y-auto ${bodyClassName ?? "px-6 pb-6 m:px-4"}`}>{children}</div>

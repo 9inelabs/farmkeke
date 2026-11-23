@@ -66,6 +66,8 @@ export const me = query({
       permissions: [...staff.permissions],
       isFounder: staff.role.key === "founder",
       sessionEndsAt: session ? session.verifiedAt + STAFF_SESSION_HOURS * HOUR : null,
+      // The account's profile photo (profilePhoto.ts), shown in the portal's top bar
+      photoUrl: user.photoStorageId ? await ctx.storage.getUrl(user.photoStorageId) : null,
     };
   },
 });

@@ -30,6 +30,8 @@ export type AdminMe =
       permissions: string[];
       isFounder: boolean;
       sessionEndsAt: number | null;
+      /** The account's profile photo, if set (older backends send none). */
+      photoUrl?: string | null;
     };
 
 export type StaffMe = Extract<AdminMe, { state: "staff" }>;

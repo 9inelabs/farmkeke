@@ -176,6 +176,11 @@ export const api = {
     mine: makeFunctionReference<"query", Record<string, never>, any>("phoneAuth:mine"),
     sendCode: makeFunctionReference<"action", { "phone": string; "by"?: "sms" | "voice" }, any>("phoneAuth:sendCode"),
   },
+  profilePhoto: {
+    generateUploadUrl: makeFunctionReference<"mutation", Record<string, never>, any>("profilePhoto:generateUploadUrl"),
+    remove: makeFunctionReference<"mutation", Record<string, never>, any>("profilePhoto:remove"),
+    set: makeFunctionReference<"mutation", { "storageId": Id<"_storage"> }, any>("profilePhoto:set"),
+  },
   reviews: {
     forOrder: makeFunctionReference<"query", { "orderId": Id<"orders"> }, any>("reviews:forOrder"),
     listMine: makeFunctionReference<"query", { "paginationOpts": { "numItems": number; "cursor": string | null; "endCursor"?: string | null; "id"?: number; "maximumRowsRead"?: number; "maximumBytesRead"?: number }; "stars"?: number }, any>("reviews:listMine"),
@@ -193,6 +198,7 @@ export const api = {
     collection: makeFunctionReference<"query", { "kind": "fresh" | "picked_today"; "today": string; "delivery"?: boolean; "farmLga"?: string; "farmState"?: string; "limit"?: number; "maxPriceKobo"?: number; "minPriceKobo"?: number; "pickup"?: boolean; "sort"?: "newest" | "price_low" | "price_high" | "freshest" | "nearest" | "top_rated"; "harvestedWithinDays"?: number; "minRating"?: number; "maxDistanceKm"?: number; "lat"?: number; "lng"?: number }, any>("storefront:collection"),
     farm: makeFunctionReference<"query", { "id": string; "today"?: string; "lat"?: number; "lng"?: number }, any>("storefront:farm"),
     farmAreas: makeFunctionReference<"query", Record<string, never>, any>("storefront:farmAreas"),
+    farms: makeFunctionReference<"query", { "today"?: string; "state"?: string; "lga"?: string; "lat"?: number; "lng"?: number }, any>("storefront:farms"),
     home: makeFunctionReference<"query", { "today": string; "state"?: string; "lga"?: string; "lat"?: number; "lng"?: number }, any>("storefront:home"),
     popular: makeFunctionReference<"query", { "limit"?: number; "today"?: string; "lat"?: number; "lng"?: number }, any>("storefront:popular"),
     product: makeFunctionReference<"query", { "id": string; "today"?: string; "lat"?: number; "lng"?: number; "serviceAreaId"?: string }, any>("storefront:product"),
