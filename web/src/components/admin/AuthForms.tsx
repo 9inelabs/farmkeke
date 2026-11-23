@@ -8,7 +8,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { Check, KeyRound, LockKeyhole, LogIn, Mail, MailCheck, TimerOff, User, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { AdminAuthCard, adminAuthLead, adminAuthTitle } from "./AuthLayout";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { PasswordField, PhoneField, TextArea, TextField } from "@/components/ui/Field";
@@ -18,6 +18,55 @@ import type { AdminMe } from "@/convex/returns/admin";
 import { adminError } from "./errors";
 import { adminRoutes, safeAdminNext } from "./routes";
 import { Notice } from "./ui";
+
+// While a code is on its way, the form remembers it in this browser for 10
+// minutes (the code's life): phone browsers often reload a page when you switch
+// to your email app, and without this you'd land back on the password step.
+// Only the email and the step are kept, never the password.
+const CODE_STEP_KEY = "fk.admin.codeStep";
+const CODE_STEP_MS = 10 * 60_000;
+type CodeStepState = { purpose: "signin" | "confirm"; email: string; at: number };
+const codeStepListeners = new Set<() => void>();
+
+function readCodeStep(): string | null {
+  try {
+    const raw = window.localStorage.getItem(CODE_STEP_KEY);
+    if (raw === null) return null;
+    const saved = JSON.parse(raw) as CodeStepState;
+    if (typeof saved.email !== "string" || Date.now() - saved.at > CODE_STEP_MS) {
+      window.localStorage.removeItem(CODE_STEP_KEY);
+      return null;
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+function saveCodeStep(next: Omit<CodeStepState, "at"> | null) {
+  try {
+    if (next) window.localStorage.setItem(CODE_STEP_KEY, JSON.stringify({ ...next, at: Date.now() }));
+    else window.localStorage.removeItem(CODE_STEP_KEY);
+  } catch {
+    // Storage blocked: the code step still works until the page reloads.
+  }
+  codeStepListeners.forEach((l) => l());
+}
+
+/** The remembered code step for this form, if one is waiting. */
+function useCodeStep(purpose: CodeStepState["purpose"]): CodeStepState | null {
+  const raw = useSyncExternalStore(
+    (listener) => {
+      codeStepListeners.add(listener);
+      return () => codeStepListeners.delete(listener);
+    },
+    readCodeStep,
+    () => null,
+  );
+  if (raw === null) return null;
+  const saved = JSON.parse(raw) as CodeStepState;
+  return saved.purpose === purpose ? saved : null;
+}
 
 function Card({ children, width = 440, icon }: { children: ReactNode; width?: number; icon?: ReactNode }) {
   return (
@@ -163,6 +212,9 @@ export function SignInForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
+  const [askPassword, setAskPassword] = useState(false);
+  // Back from the email app after the page reloaded: still on the code step
+  const waiting = useCodeStep("signin");
 
   // Already signed in and verified: straight in. Session expired: keep the email.
   useEffect(() => {
@@ -183,6 +235,8 @@ export function SignInForm() {
     try {
       await send();
       setStep("code");
+      setAskPassword(false);
+      saveCodeStep({ purpose: "signin", email: email.trim().toLowerCase() });
     } catch (err) {
       setError(adminError(err));
     } finally {
@@ -190,18 +244,30 @@ export function SignInForm() {
     }
   };
 
-  if (step === "code") {
+  if (step === "code" || waiting !== null) {
+    const codeEmail = step === "code" ? email.trim().toLowerCase() : waiting!.email;
     return (
       <Card icon={<MailCheck strokeWidth={1.75} />}>
         <CodeStep
-          email={email.trim().toLowerCase()}
+          email={codeEmail}
           purpose="signin"
-          resend={send}
+          resend={async () => {
+            if (password) return send();
+            // After a reload the password is gone (it's never kept): ask for it again
+            saveCodeStep(null);
+            setEmail(codeEmail);
+            setStep("password");
+            setAskPassword(true);
+          }}
           onBack={() => {
+            saveCodeStep(null);
             setStep("password");
             setPassword("");
           }}
-          onDone={() => router.replace(next)}
+          onDone={() => {
+            saveCodeStep(null);
+            router.replace(next);
+          }}
         />
       </Card>
     );
@@ -212,7 +278,11 @@ export function SignInForm() {
     <Card icon={<LogIn strokeWidth={1.75} />}>
       <h1 className={adminAuthTitle}>Sign in to the admin portal</h1>
       <p className={adminAuthLead}>For Farmkeke staff. After your password, we email you a code to finish signing in.</p>
-      {reason === "idle" ? (
+      {askPassword ? (
+        <div className="mt-5">
+          <Notice tone="pend">Enter your password again and we&apos;ll email you a new code.</Notice>
+        </div>
+      ) : reason === "idle" ? (
         <div className="mt-5">
           <Notice tone="pend">You were signed out after 30 minutes without activity.</Notice>
         </div>
@@ -259,6 +329,7 @@ export function ApplyForm() {
   const [step, setStep] = useState<"form" | "code">("form");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const waiting = useCodeStep("confirm");
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const send = async () => {
@@ -279,6 +350,7 @@ export function ApplyForm() {
     try {
       await send();
       setStep("code");
+      saveCodeStep({ purpose: "confirm", email: form.email.trim().toLowerCase() });
     } catch (err) {
       setError(adminError(err));
     } finally {
@@ -286,15 +358,28 @@ export function ApplyForm() {
     }
   };
 
-  if (step === "code") {
+  if (step === "code" || waiting !== null) {
+    const codeEmail = step === "code" ? form.email.trim().toLowerCase() : waiting!.email;
     return (
       <Card icon={<MailCheck strokeWidth={1.75} />}>
         <CodeStep
-          email={form.email.trim().toLowerCase()}
+          email={codeEmail}
           purpose="confirm"
-          resend={send}
-          onBack={() => setStep("form")}
-          onDone={() => router.replace(adminRoutes.home)}
+          resend={async () => {
+            if (form.password) return send();
+            // After a reload the form is gone: fill it in again for a new code
+            saveCodeStep(null);
+            setForm((f) => ({ ...f, email: codeEmail }));
+            setStep("form");
+          }}
+          onBack={() => {
+            saveCodeStep(null);
+            setStep("form");
+          }}
+          onDone={() => {
+            saveCodeStep(null);
+            router.replace(adminRoutes.home);
+          }}
         />
       </Card>
     );
