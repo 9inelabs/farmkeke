@@ -12,6 +12,7 @@ export const routes = {
   about: "/about",
   help: "/help",
   contact: "/contact",
+  credits: "/credits",
   legal: (doc: LegalDoc = "refunds") => `/legal/${doc}`,
 
   // Shop (W-01 to W-07)

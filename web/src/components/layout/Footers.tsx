@@ -118,6 +118,9 @@ function FooterBody({ columns, wide }: { columns: Col[]; wide: boolean }) {
         </span>
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <CookieSettingsButton className="border-0 bg-transparent p-0 text-xs text-[#9FB394] hover:text-white" />
+          <Link href={routes.credits} className="text-xs text-[#9FB394] hover:text-white">
+            Photo credits
+          </Link>
           <span>Made in Owerri, Nigeria</span>
         </span>
       </div>

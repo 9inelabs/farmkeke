@@ -29,13 +29,13 @@ const CHECKS: Array<[string, string]> = [
 // The people behind Farmkeke (photos in public/team).
 const TEAM: { name: string; role: string; bio: string; photo: string }[] = [
   {
-    name: "Ejike Daniel Chukwuemeka",
+    name: "Chukwuemeka Daniel Ejike",
     role: "Founder & CEO",
     bio: "Leads Farmkeke's vision, farmer partnerships and growth across Nigeria.",
     photo: "/team/ejike-daniel.jpg",
   },
   {
-    name: "Franklyn Raymond Nobei",
+    name: "Franklyn Raymond",
     role: "Co-Founder & CTO",
     bio: "Leads the technology behind Farmkeke's app, website and payments.",
     photo: "/team/franklyn-nobei.jpg",
@@ -60,6 +60,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="relative mt-12 h-[380px] overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#1E3B16_0%,#2F5A22_60%,#A9D654_160%)] m:mt-7 m:h-[300px] m:rounded-[20px]">
+            {/* Credited on /credits (CC BY-SA 4.0), linked from the footer. */}
             {/* Desktop: a Nigerian market, where a family buys fresh greens straight from the
                 woman who grows them, filling the whole panel. Phones: the farmer with her greens. */}
             <div className="absolute inset-0 m:hidden">
@@ -197,22 +198,6 @@ export default function AboutPage() {
               Get in touch
             </Link>
           </div>
-          {/* The mission photos are CC BY-SA 4.0, which needs a credit */}
-          <p className="mx-auto mt-12 max-w-[720px] text-center text-[11.5px] leading-[18px] text-faint m:mt-8">
-            Photo credits:{" "}
-            <a href="https://commons.wikimedia.org/wiki/File:A_scene_from_a_nigerian_market.jpg" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
-              Biggiepopa
-            </a>{" "}
-            and{" "}
-            <a href="https://commons.wikimedia.org/wiki/File:A_woman_arranging_vegetable_(Amaranthus_caudatus).jpg" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
-              Anniwinner
-            </a>
-            , Wikimedia Commons,{" "}
-            <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer" className="text-faint underline hover:text-ink">
-              CC BY-SA 4.0
-            </a>
-            .
-          </p>
         </FadeUp>
       </section>
     </>
