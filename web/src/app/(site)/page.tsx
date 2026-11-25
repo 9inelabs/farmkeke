@@ -247,7 +247,7 @@ export default function Landing() {
           <div className="mx-auto mb-10 flex max-w-[560px] flex-col items-center gap-3 text-center m:mb-6 m:items-start m:text-left">
             <Eyebrow icon={Sprout}>What is Farmkeke</Eyebrow>
             <h2 id="why-h" className={`${L.h2} m-0`}>
-              A fairer way to buy fresh food
+              A trusted way to buy fresh food
             </h2>
             <p className={sub}>We connect households with the farmers who grow their food, and keep every payment safe until the order arrives.</p>
           </div>
